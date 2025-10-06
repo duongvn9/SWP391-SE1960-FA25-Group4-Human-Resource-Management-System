@@ -4,7 +4,7 @@
         <!-- Footer -->
         <footer class="footer">
             <div class="container">
-                <div class="row">
+                <div class="row justify-content-center">
                     <div class="col-lg-4 col-md-6 mb-4">
                         <h5>HRMS</h5>
                         <p>Hệ thống quản lý nhân sự hiện đại, giúp doanh nghiệp tối ưu hóa quy trình quản lý và phát
@@ -16,22 +16,15 @@
                             <a href="#"><i class="fab fa-instagram"></i></a>
                         </div>
                     </div>
-                    <div class="col-lg-2 col-md-6 mb-4">
+                    <div class="col-lg-4 col-md-6 mb-4 text-center">
                         <h5>Liên kết</h5>
                         <a href="${pageContext.request.contextPath}/">Trang chủ</a>
-                        <a href="${pageContext.request.contextPath}/about">Về chúng tôi</a>
+                        <a href="${pageContext.request.contextPath}/about">Giới thiệu</a>
                         <a href="${pageContext.request.contextPath}/contact">Liên hệ</a>
                         <a href="${pageContext.request.contextPath}/faqs">FAQs</a>
+                        <a href="#features">Tính năng</a>
                     </div>
-                    <div class="col-lg-3 col-md-6 mb-4">
-                        <h5>Tính năng</h5>
-                        <a href="#">Quản lý nhân viên</a>
-                        <a href="#">Chấm công</a>
-                        <a href="#">Tính lương</a>
-                        <a href="#">Nghỉ phép</a>
-                        <a href="#">Báo cáo</a>
-                    </div>
-                    <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="col-lg-4 col-md-6 mb-4 text-end">
                         <h5>Liên hệ</h5>
                         <a href="mailto:support@hrms.com"><i class="fas fa-envelope me-2"></i>support@hrms.com</a>
                         <a href="tel:+84123456789"><i class="fas fa-phone me-2"></i>+84 123 456 789</a>
