@@ -1,0 +1,2 @@
+Thư mục layout: giữ lại để commit cấu trúc layout (header/footer).
+Xóa khi bạn đã thêm file JSP thật.

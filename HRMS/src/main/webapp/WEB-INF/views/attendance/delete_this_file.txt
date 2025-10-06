@@ -1,0 +1,2 @@
+Thư mục attendance: giữ lại để commit view chấm công.
+Xóa khi bạn đã thêm file JSP thật.
