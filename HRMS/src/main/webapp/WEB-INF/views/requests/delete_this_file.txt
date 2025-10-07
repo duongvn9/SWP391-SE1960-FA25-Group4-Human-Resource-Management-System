@@ -1,0 +1,2 @@
+Thư mục requests: giữ lại để commit các view liên quan đến yêu cầu.
+Xóa khi bạn đã thêm file JSP thật.

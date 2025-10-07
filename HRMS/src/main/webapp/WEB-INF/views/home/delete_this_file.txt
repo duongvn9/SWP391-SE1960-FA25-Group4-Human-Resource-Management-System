@@ -1,0 +1,2 @@
+Thư mục home: giữ lại để commit view trang chủ.
+Xóa khi bạn đã thêm file JSP thật.

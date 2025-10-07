@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+    <rect width="400" height="300" fill="#f8f9fa"/>
+    <g fill="#2c5aa0" opacity="0.2">
+        <circle cx="320" cy="100" r="60" />
+        <rect x="250" y="160" width="120" height="60" rx="8"/>
+        <circle cx="80" cy="200" r="40" />
+        <rect x="40" y="250" width="80" height="40" rx="4"/>
+    </g>
+    <text x="200" y="40" text-anchor="middle" fill="#2c5aa0" font-family="Arial" font-size="24" font-weight="bold">HRMS</text>
+</svg>

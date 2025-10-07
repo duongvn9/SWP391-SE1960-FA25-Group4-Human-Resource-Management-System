@@ -1,0 +1,348 @@
+/* Login Page Specific Styles */
+
+/* CSS Variables for Login */
+:root {
+  --primary: #6366f1;
+  --primary-dark: #4f46e5;
+  --success: #10b981;
+  --danger: #ef4444;
+  --surface: #ffffff;
+  --surface-variant: #f8fafc;
+  --on-surface: #1e293b;
+  --on-surface-variant: #64748b;
+  --outline: #e2e8f0;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1),
+    0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1),
+    0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+/* Login Body - Full Screen Background */
+body.login-page {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  line-height: 1.6;
+  color: var(--on-surface);
+}
+
+/* Reset input styles để đảm bảo border-radius đồng nhất */
+input[type="text"],
+input[type="password"],
+input[type="email"],
+button,
+.btn,
+.form-control {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
+  -moz-border-radius: 8px !important;
+}
+
+/* Force consistent border-radius on all interactive elements */
+.login-card * {
+  border-radius: inherit;
+}
+
+.form-control,
+.btn-login,
+.btn-google {
+  border-radius: 8px !important;
+}
+
+/* Login Container */
+.login-container {
+  max-width: 420px;
+  width: 100%;
+}
+
+.login-card {
+  background: var(--surface);
+  border-radius: 16px;
+  box-shadow: var(--shadow-xl);
+  padding: 3rem 2.5rem;
+  text-align: center;
+  border: 1px solid var(--outline);
+}
+
+/* Login Header */
+.login-header {
+  margin-bottom: 2.5rem;
+}
+
+.login-header .logo {
+  width: 72px;
+  height: 72px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+  font-size: 1.75rem;
+  color: white;
+  box-shadow: var(--shadow-lg);
+}
+
+.login-header h1 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--on-surface);
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.025em;
+}
+
+.login-header p {
+  color: var(--on-surface-variant);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+/* Form Styles */
+.form-group {
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.form-label {
+  font-weight: 500;
+  color: var(--on-surface);
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  letter-spacing: 0.025em;
+}
+
+.form-control {
+  width: 100%;
+  border-radius: 8px !important;
+  border: 1.5px solid var(--outline);
+  padding: 0.875rem 1rem;
+  font-size: 0.95rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--surface);
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.form-control:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  outline: none;
+}
+
+.form-control::placeholder {
+  color: var(--on-surface-variant);
+  opacity: 0.7;
+}
+
+/* Input Groups */
+.input-group {
+  position: relative;
+}
+
+.input-group .form-control {
+  padding-left: 3rem;
+  border-radius: 8px !important;
+}
+
+.input-group-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--on-surface-variant);
+  z-index: 2;
+  font-size: 1rem;
+  pointer-events: none;
+}
+
+.password-input-group {
+  position: relative;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--on-surface-variant);
+  cursor: pointer;
+  z-index: 2;
+  padding: 0.25rem;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+}
+
+.password-toggle-btn:hover {
+  color: var(--primary);
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.password-toggle-btn:focus {
+  outline: none;
+  color: var(--primary);
+}
+
+/* Buttons */
+.btn-login {
+  background: var(--primary);
+  border: none;
+  border-radius: 8px !important;
+  padding: 0.875rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  width: 100%;
+  color: white;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow);
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.btn-login:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-login:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow);
+}
+
+/* Alert Styles */
+.alert {
+  border-radius: 10px;
+  border: none;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Divider */
+.divider {
+  margin: 2rem 0;
+  text-align: center;
+  position: relative;
+}
+
+.divider::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--outline);
+}
+
+.divider span {
+  background: var(--surface);
+  padding: 0 1rem;
+  color: var(--on-surface-variant);
+  font-size: 0.875rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* Google Button */
+.btn-google {
+  background: #f5f5f5;
+  border: 1px solid #dadce0;
+  border-radius: 8px !important;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  width: 100%;
+  color: #3c4043;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+  font-family: "Roboto", sans-serif;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.btn-google:hover {
+  background: #f8f9fa;
+  border-color: #dadce0;
+  color: #3c4043;
+  text-decoration: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.btn-google:active {
+  background: #f1f3f4;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+
+.google-icon {
+  width: 18px;
+  height: 18px;
+  display: inline-block;
+}
+
+/* Back Home Button */
+.back-home {
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 0.75rem 1.25rem;
+  border-radius: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.back-home:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateX(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .login-container {
+    padding: 1rem;
+  }
+
+  .login-card {
+    padding: 2rem 1.5rem;
+  }
+
+  .back-home {
+    position: static;
+    display: block;
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+}

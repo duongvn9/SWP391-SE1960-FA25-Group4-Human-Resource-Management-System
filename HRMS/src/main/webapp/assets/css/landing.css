@@ -1,0 +1,349 @@
+/* Landing Page Specific Styles */
+
+/* CSS Variables - Define them first */
+:root {
+  --primary-color: #2c5aa0;
+  --secondary-color: #f8f9fa;
+  --accent-color: #667eea;
+  --success-color: #28a745;
+  --text-dark: #333;
+  --text-light: #666;
+}
+
+/* Global body styles for landing page */
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.6;
+  color: #333;
+  color: var(--text-dark);
+}
+
+/* Hero Section */
+.hero-section {
+  background: linear-gradient(135deg, #2c5aa0 0%, #667eea 100%);
+  background: linear-gradient(
+    135deg,
+    var(--primary-color) 0%,
+    var(--accent-color) 100%
+  );
+  color: white;
+  padding: 150px 0 100px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-section::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" fill="white" opacity="0.1"><polygon points="1000,100 1000,0 0,100"/></svg>');
+  background-size: cover;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+}
+
+.hero-section h1 {
+  font-size: 3.5rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  line-height: 1.2;
+}
+
+.hero-section p {
+  font-size: 1.3rem;
+  opacity: 0.9;
+  margin-bottom: 2rem;
+  max-width: 600px;
+}
+
+.hero-section::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" fill="white" opacity="0.1"><polygon points="1000,100 1000,0 0,100"/></svg>');
+  background-size: cover;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+}
+
+.hero-section h1 {
+  font-size: 3.5rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  line-height: 1.2;
+}
+
+.hero-section p {
+  font-size: 1.3rem;
+  opacity: 0.9;
+  margin-bottom: 2rem;
+  max-width: 600px;
+}
+
+/* Features Section */
+.features-section {
+  padding: 100px 0;
+  background: #f8f9fa;
+  background: var(--secondary-color);
+}
+
+.feature-card {
+  background: white;
+  border-radius: 20px;
+  padding: 3rem 2rem;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  height: 100%;
+  border: 1px solid #f0f0f0;
+}
+
+.feature-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.feature-icon {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #2c5aa0, #667eea);
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--accent-color)
+  );
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 2rem;
+  margin: 0 auto 1.5rem;
+}
+.feature-card h4 {
+  color: #2c5aa0;
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.feature-card p {
+  color: #666;
+  color: var(--text-light);
+  line-height: 1.7;
+}
+
+/* Stats Section */
+.stats-section {
+  background: linear-gradient(
+    135deg,
+    var(--primary-color) 0%,
+    var(--accent-color) 100%
+  );
+  color: white;
+  padding: 80px 0;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+.stat-number {
+  font-size: 3rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.stat-label {
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+/* Services Section */
+.services-section {
+  padding: 100px 0;
+}
+
+.service-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 3rem;
+  padding: 2rem 0;
+}
+
+.service-icon {
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--accent-color)
+  );
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 2.5rem;
+  margin-right: 2rem;
+  flex-shrink: 0;
+}
+
+.service-content h4 {
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.service-content p {
+  color: var(--text-light);
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* CTA Section */
+.cta-section {
+  background: var(--secondary-color);
+  padding: 80px 0;
+  text-align: center;
+}
+
+.cta-section h2 {
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+  font-weight: bold;
+}
+
+.cta-section p {
+  color: var(--text-light);
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+}
+
+/* Stats Section */
+.stats-section {
+  background: linear-gradient(
+    135deg,
+    var(--primary-color) 0%,
+    var(--accent-color) 100%
+  );
+  color: white;
+  padding: 80px 0;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+.stat-number {
+  font-size: 3rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.stat-label {
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+/* Services Section */
+.services-section {
+  padding: 100px 0;
+}
+
+.service-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 3rem;
+  padding: 2rem 0;
+}
+
+.service-icon {
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--accent-color)
+  );
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 2.5rem;
+  margin-right: 2rem;
+  flex-shrink: 0;
+}
+
+.service-content h4 {
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.service-content p {
+  color: var(--text-light);
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* CTA Section */
+.cta-section {
+  background: var(--secondary-color);
+  padding: 80px 0;
+  text-align: center;
+}
+
+.cta-section h2 {
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+  font-weight: bold;
+}
+
+.cta-section p {
+  color: var(--text-light);
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .hero-section h1 {
+    font-size: 2.5rem;
+  }
+
+  .hero-section p {
+    font-size: 1.1rem;
+  }
+
+  .service-item {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .service-icon {
+    margin-right: 0;
+    margin-bottom: 1rem;
+  }
+
+  .stat-number {
+    font-size: 2rem;
+  }
+}

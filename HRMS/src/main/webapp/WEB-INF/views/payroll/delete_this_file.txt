@@ -1,0 +1,2 @@
+Thư mục payroll: giữ lại để commit view bảng lương.
+Xóa khi bạn đã thêm file JSP thật.
