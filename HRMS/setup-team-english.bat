@@ -22,7 +22,8 @@ if not exist "src\main\resources\db.properties" (
     (
         echo # MySQL Database Configuration for Team Members
         echo db.driver=com.mysql.cj.jdbc.Driver
-        echo db.url=jdbc:mysql://36.50.135.207:3306/hrmsv2?useSSL=false^&serverTimezone=Asia/Ho_Chi_Minh^&allowPublicKeyRetrieval=true^&useUnicode=true^&characterEncoding=UTF-8
+        echo db.url=jdbc:mysql://36.50.135.207:3306/hrms?useSSL=false^&serverTimezone=Asia/Ho_Chi_Minh^&allowPublicKeyRetrieval=true^&useUnicode=true^&characterEncoding=UTF-8
+
         echo db.username=sa
         echo db.password=sa
         echo db.charset=utf8mb4
@@ -72,11 +73,11 @@ echo.
 echo 🚀 Next steps:
 echo    1. Deploy via NetBeans IDE
 echo    2. Or copy target\HRMS-1.0-SNAPSHOT.war to Tomcat webapps
-echo    3. Test connection: http://localhost:8080/HRMS/test-db
+echo    3. Test connection: http://localhost:9999/HRMS/test-db
 echo.
 echo 🔑 Database credentials:
 echo    Server: 36.50.135.207:3306
-echo    Database: hrmsv2
+echo    Database: hrms
 echo    Username: sa
 echo    Password: sa
 echo.
