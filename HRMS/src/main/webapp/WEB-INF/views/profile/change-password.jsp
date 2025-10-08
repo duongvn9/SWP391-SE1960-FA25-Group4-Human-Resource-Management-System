@@ -1,10 +1,10 @@
 <%@ page contentType="text/html; charset=UTF-8" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <jsp:include page="../layout/head.jsp">
-        <jsp:param name="pageTitle" value="Đổi mật khẩu" />
+        <jsp:param name="pageTitle" value="Change Password" />
         <jsp:param name="cssFiles" value="profile" />
     </jsp:include>
 </head>

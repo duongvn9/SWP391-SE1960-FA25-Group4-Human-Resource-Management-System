@@ -1,11 +1,11 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
     <%@ taglib uri="jakarta.tags.core" prefix="c" %>
         <!DOCTYPE html>
-        <html lang="vi">
+        <html lang="en">
 
         <head>
             <jsp:include page="../layout/head.jsp">
-                <jsp:param name="pageTitle" value="Đăng nhập" />
+                <jsp:param name="pageTitle" value="Login" />
                 <jsp:param name="pageCss" value="login.css" />
             </jsp:include>
 
@@ -20,7 +20,7 @@
         <body class="login-page">
             <a href="${pageContext.request.contextPath}/" class="back-home">
                 <i class="fas fa-arrow-left"></i>
-                Về trang chủ
+                Back to Home
             </a>
 
             <div class="login-container">
@@ -29,11 +29,11 @@
                         <div class="logo">
                             <i class="fas fa-users-cog"></i>
                         </div>
-                        <h1>Đăng nhập HRMS</h1>
-                        <p>Hệ thống Quản lý Nhân sự</p>
+                        <h1>Login to HRMS</h1>
+                        <p>Human Resource Management System</p>
                     </div>
 
-                    <!-- Hiển thị lỗi nếu có -->
+                    <!-- Display error if any -->
                     <c:if test="${not empty error}">
                         <div class="alert alert-danger">
                             <i class="fas fa-exclamation-circle me-2"></i>${error}
@@ -45,20 +45,20 @@
                         <input type="hidden" name="_csrf_token" value="${csrfToken}">
 
                         <div class="form-group">
-                            <label class="form-label" for="username">Tên đăng nhập</label>
+                            <label class="form-label" for="username">Username</label>
                             <div class="input-group">
                                 <i class="fas fa-user input-group-icon"></i>
                                 <input type="text" id="username" name="username" class="form-control"
-                                    placeholder="Nhập tên đăng nhập" value="${param.username}" required>
+                                    placeholder="Enter username" value="${param.username}" required>
                             </div>
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label" for="password">Mật khẩu</label>
+                            <label class="form-label" for="password">Password</label>
                             <div class="input-group password-input-group">
                                 <i class="fas fa-lock input-group-icon"></i>
                                 <input type="password" id="password" name="password" class="form-control"
-                                    placeholder="Nhập mật khẩu" required>
+                                    placeholder="Enter password" required>
                                 <button type="button" class="password-toggle-btn" onclick="togglePassword()">
                                     <i class="fas fa-eye" id="password-eye"></i>
                                 </button>
@@ -66,13 +66,13 @@
                         </div>
 
                         <button type="submit" class="btn btn-login">
-                            <i class="fas fa-sign-in-alt me-2"></i>Đăng nhập
+                            <i class="fas fa-sign-in-alt me-2"></i>Login
                         </button>
                     </form>
 
                     <!-- Divider -->
                     <div class="divider">
-                        <span>hoặc</span>
+                        <span>or</span>
                     </div>
 
                     <!-- Google Login Button -->
@@ -87,14 +87,14 @@
                             <path fill="#EA4335"
                                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                         </svg>
-                        Đăng nhập với Google
+                        Sign in with Google
                     </a>
                 </div>
             </div>
 
             <!-- Login Page Scripts -->
             <script>
-                // Auto focus vào username field
+                // Auto focus to username field
                 document.addEventListener('DOMContentLoaded', function () {
                     const usernameField = document.querySelector('input[name="username"]');
                     if (usernameField) {
@@ -102,10 +102,10 @@
                     }
                 });
 
-                // Xử lý form submit với loading state
+                // Handle form submit with loading state
                 document.querySelector('form').addEventListener('submit', function () {
                     const submitBtn = document.querySelector('.btn-login');
-                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý...';
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
                     submitBtn.disabled = true;
                 });
 
