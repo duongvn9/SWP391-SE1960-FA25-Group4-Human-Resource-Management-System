@@ -5,8 +5,11 @@
 <head>
     <jsp:include page="../layout/head.jsp">
         <jsp:param name="pageTitle" value="Change Password" />
-        <jsp:param name="cssFiles" value="profile" />
     </jsp:include>
+    <!-- Dashboard Layout CSS -->
+    <link href="${pageContext.request.contextPath}/assets/css/common.css" rel="stylesheet">
+    <!-- Profile Page CSS -->
+    <link href="${pageContext.request.contextPath}/assets/css/profile.css" rel="stylesheet">
 </head>
 <body>
     <div class="dashboard-wrapper">
@@ -19,7 +22,7 @@
         <div class="main-content">
             <!-- Header -->
             <jsp:include page="../layout/dashboard-header.jsp">
-                <jsp:param name="pageTitle" value="Đổi mật khẩu" />
+                <jsp:param name="pageTitle" value="Change Password" />
             </jsp:include>
 
             <!-- Page Content -->
@@ -46,7 +49,7 @@
                             <div class="card-header change-password-header">
                                 <h4 class="mb-0">
                                     <i class="fas fa-key"></i>
-                                    Đổi mật khẩu
+                                    Change Password
                                 </h4>
                             </div>
                             <div class="card-body password-form">
@@ -62,9 +65,9 @@
                                                class="form-control" 
                                                id="currentPassword" 
                                                name="currentPassword" 
-                                               placeholder="Mật khẩu hiện tại"
+                                               placeholder="Current Password"
                                                required>
-                                        <label for="currentPassword">Mật khẩu hiện tại</label>
+                                        <label for="currentPassword">Current Password</label>
                                         <button type="button" class="password-toggle" onclick="togglePassword('currentPassword')">
                                             <i class="fas fa-eye" id="currentPasswordIcon"></i>
                                         </button>
@@ -77,9 +80,9 @@
                                                class="form-control" 
                                                id="newPassword" 
                                                name="newPassword" 
-                                               placeholder="Mật khẩu mới"
+                                               placeholder="New Password"
                                                required>
-                                        <label for="newPassword">Mật khẩu mới</label>
+                                        <label for="newPassword">New Password</label>
                                         <button type="button" class="password-toggle" onclick="togglePassword('newPassword')">
                                             <i class="fas fa-eye" id="newPasswordIcon"></i>
                                         </button>
@@ -96,26 +99,26 @@
 
                                     <!-- Password Requirements -->
                                     <div class="password-requirements">
-                                        <h6><i class="fas fa-info-circle"></i> Yêu cầu mật khẩu:</h6>
+                                        <h6><i class="fas fa-info-circle"></i> Password Requirements:</h6>
                                         <div class="requirement-item" id="lengthReq">
                                             <i class="fas fa-circle"></i>
-                                            Ít nhất 8 ký tự
+                                            At least 8 characters
                                         </div>
                                         <div class="requirement-item" id="uppercaseReq">
                                             <i class="fas fa-circle"></i>
-                                            Ít nhất 1 chữ hoa
+                                            At least 1 uppercase letter
                                         </div>
                                         <div class="requirement-item" id="lowercaseReq">
                                             <i class="fas fa-circle"></i>
-                                            Ít nhất 1 chữ thường
+                                            At least 1 lowercase letter
                                         </div>
                                         <div class="requirement-item" id="numberReq">
                                             <i class="fas fa-circle"></i>
-                                            Ít nhất 1 số
+                                            At least 1 number
                                         </div>
                                         <div class="requirement-item" id="specialReq">
                                             <i class="fas fa-circle"></i>
-                                            Ít nhất 1 ký tự đặc biệt (!@#$%^&*)
+                                            At least 1 special character (!@#$%^&*)
                                         </div>
                                     </div>
 
@@ -125,9 +128,9 @@
                                                class="form-control" 
                                                id="confirmPassword" 
                                                name="confirmPassword" 
-                                               placeholder="Xác nhận mật khẩu mới"
+                                               placeholder="Confirm New Password"
                                                required>
-                                        <label for="confirmPassword">Xác nhận mật khẩu mới</label>
+                                        <label for="confirmPassword">Confirm New Password</label>
                                         <button type="button" class="password-toggle" onclick="togglePassword('confirmPassword')">
                                             <i class="fas fa-eye" id="confirmPasswordIcon"></i>
                                         </button>
@@ -139,13 +142,13 @@
                                         <a href="${pageContext.request.contextPath}/profile" 
                                            class="btn btn-cancel">
                                             <i class="fas fa-times me-1"></i>
-                                            Hủy
+                                            Cancel
                                         </a>
                                         <button type="submit" 
                                                 class="btn btn-change-password" 
                                                 id="submitBtn">
                                             <i class="fas fa-save me-1"></i>
-                                            Đổi mật khẩu
+                                            Change Password
                                         </button>
                                     </div>
                                 </form>
@@ -157,24 +160,24 @@
                             <div class="card-body">
                                 <h6 class="card-title">
                                     <i class="fas fa-shield-alt text-primary me-2"></i>
-                                    Lời khuyên bảo mật
+                                    Security Tips
                                 </h6>
                                 <ul class="mb-0 text-muted">
-                                    <li>Sử dụng mật khẩu mạnh và duy nhất cho tài khoản này</li>
-                                    <li>Không chia sẻ mật khẩu với bất kỳ ai</li>
-                                    <li>Thay đổi mật khẩu định kỳ (3-6 tháng một lần)</li>
-                                    <li>Đăng xuất sau khi sử dụng xong, đặc biệt trên máy tính chung</li>
+                                    <li>Use a strong and unique password for this account</li>
+                                    <li>Never share your password with anyone</li>
+                                    <li>Change your password regularly (every 3-6 months)</li>
+                                    <li>Always log out after use, especially on shared computers</li>
                                 </ul>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+            
+            <!-- Footer -->
+            <jsp:include page="../layout/dashboard-footer.jsp" />
         </div>
     </div>
-
-    <!-- Footer -->
-    <jsp:include page="../layout/dashboard-footer.jsp" />
 
     <!-- Change Password JavaScript -->
     <script>
@@ -251,19 +254,19 @@
 
                 if (validCount <= 2) {
                     strengthBar.classList.add('strength-weak');
-                    strengthText.textContent = 'Yếu';
+                    strengthText.textContent = 'Weak';
                     strengthText.style.color = '#dc3545';
                 } else if (validCount === 3) {
                     strengthBar.classList.add('strength-fair');
-                    strengthText.textContent = 'Trung bình';
+                    strengthText.textContent = 'Fair';
                     strengthText.style.color = '#fd7e14';
                 } else if (validCount === 4) {
                     strengthBar.classList.add('strength-good');
-                    strengthText.textContent = 'Tốt';
+                    strengthText.textContent = 'Good';
                     strengthText.style.color = '#ffc107';
                 } else {
                     strengthBar.classList.add('strength-strong');
-                    strengthText.textContent = 'Mạnh';
+                    strengthText.textContent = 'Strong';
                     strengthText.style.color = '#28a745';
                 }
             }
@@ -287,7 +290,7 @@
                 } else {
                     confirmPasswordInput.classList.remove('is-valid');
                     confirmPasswordInput.classList.add('is-invalid');
-                    feedback.textContent = 'Mật khẩu xác nhận không khớp';
+                    feedback.textContent = 'Passwords do not match';
                 }
             }
 
