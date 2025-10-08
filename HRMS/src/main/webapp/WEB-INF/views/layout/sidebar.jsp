@@ -110,6 +110,14 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a href="${pageContext.request.contextPath}/profile/change-password"
+                        class="nav-link ${param.currentPage == 'change-password' ? 'active' : ''}"
+                        data-tooltip="Đổi mật khẩu">
+                        <i class="fas fa-key"></i>
+                        <span>Đổi mật khẩu</span>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="${pageContext.request.contextPath}/" class="nav-link" data-tooltip="Về trang chủ">
                         <i class="fas fa-home"></i>
                         <span>Về trang chủ</span>

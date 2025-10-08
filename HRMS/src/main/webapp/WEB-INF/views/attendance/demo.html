@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Attendance Period Management Demo</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background: #fafafa;
+      }
+
+      /* Header actions */
+      #actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+      }
+      button {
+        padding: 8px 14px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        color: white;
+        font-weight: 500;
+        background-color: #1976d2;
+        transition: 0.2s;
+      }
+      button:hover {
+        background-color: #125aa1;
+      }
+
+      #editBtn {
+        background: #ff9800;
+      }
+      #submitBtn {
+        background: #4caf50;
+        display: none;
+      }
+      #deleteBtn {
+        background: #f44336;
+      }
+
+      /* Slider lock */
+      #sliderContainer {
+        position: relative;
+        width: 80px;
+        height: 28px;
+        background: #ccc;
+        border-radius: 14px;
+        cursor: pointer;
+        transition: background 0.3s;
+      }
+      #sliderHandle {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: white;
+        transition: all 0.3s;
+      }
+      #sliderContainer.locked {
+        background: #4caf50;
+      }
+      #sliderContainer.locked #sliderHandle {
+        left: 54px;
+      }
+      #sliderStatus {
+        margin-left: 8px;
+        font-weight: bold;
+      }
+
+      /* Table */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+      }
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: center;
+      }
+      th {
+        background: #f2f2f2;
+      }
+      tr:hover {
+        background: #f9f9f9;
+        cursor: pointer;
+      }
+
+      input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+      }
+
+      /* Popup */
+      #popup {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 400px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        padding: 20px;
+        z-index: 1000;
+      }
+      #popup h3 {
+        margin-top: 0;
+      }
+      #overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 999;
+      }
+      #closePopup {
+        background: #d32f2f;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Attendance Period Management</h2>
+
+    <div id="actions">
+      <button onclick="importAttendance()">Import dữ liệu chấm công mới</button>
+      <button onclick="exportData('csv')">Export CSV</button>
+      <button onclick="exportData('xls')">Export XLS</button>
+      <button onclick="exportData('pdf')">Export PDF</button>
+
+      <div id="sliderContainer" onclick="togglePeriodLock(this)">
+        <div id="sliderHandle"></div>
+      </div>
+      <span id="sliderStatus">Unlocked</span>
+
+      <button id="editBtn" onclick="enableEdit()">Edit</button>
+      <button id="submitBtn" onclick="submitChanges()">Submit</button>
+      <button id="deleteBtn" onclick="toggleDeleteMode()">Delete</button>
+    </div>
+
+    <table id="attendanceTable">
+      <thead>
+        <tr>
+          <th class="delete-col" style="display: none">
+            <input type="checkbox" onclick="selectAll(this)" />
+          </th>
+          <th>ID</th>
+          <th>Tên nhân viên</th>
+          <th>Ngày</th>
+          <th>Giờ vào</th>
+          <th>Giờ ra</th>
+          <th>Ghi chú</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr onclick="openDetail(this)">
+          <td class="delete-col" style="display: none">
+            <input type="checkbox" />
+          </td>
+          <td>1</td>
+          <td>Nguyễn Văn A</td>
+          <td>2025-10-08</td>
+          <td>08:00</td>
+          <td>17:00</td>
+          <td></td>
+        </tr>
+        <tr onclick="openDetail(this)">
+          <td class="delete-col" style="display: none">
+            <input type="checkbox" />
+          </td>
+          <td>2</td>
+          <td>Trần Thị B</td>
+          <td>2025-10-08</td>
+          <td>08:15</td>
+          <td>17:10</td>
+          <td>Đi muộn</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Overlay + Popup -->
+    <div id="overlay"></div>
+    <div id="popup">
+      <h3>Chi tiết chấm công</h3>
+      <div id="popupContent"></div>
+      <br />
+      <button id="closePopup" onclick="closePopup()">Đóng</button>
+    </div>
+
+    <script>
+      let editMode = false;
+      let deleteMode = false;
+
+      // --- SLIDER ---
+      function togglePeriodLock(slider) {
+        slider.classList.toggle("locked");
+        const status = document.getElementById("sliderStatus");
+        const isLocked = slider.classList.contains("locked");
+        status.textContent = isLocked ? "Locked" : "Unlocked";
+        status.style.color = isLocked ? "#4caf50" : "#d32f2f";
+      }
+
+      // --- IMPORT / EXPORT ---
+      function importAttendance() {
+        alert("Import dữ liệu chấm công mới (demo)");
+      }
+      function exportData(fmt) {
+        alert("Export " + fmt.toUpperCase());
+      }
+
+      // --- EDIT MODE ---
+      function enableEdit() {
+        if (deleteMode) toggleDeleteMode(false);
+        editMode = true;
+        document.getElementById("editBtn").style.display = "none";
+        document.getElementById("submitBtn").style.display = "inline-block";
+        const rows = document.querySelectorAll("#attendanceTable tbody tr");
+        rows.forEach((row) => {
+          row.querySelectorAll("td").forEach((td, i) => {
+            if (i === 0 || i === 1) return; // skip checkbox + ID
+            const val = td.textContent.trim();
+            td.innerHTML = `<input value="${val}">`;
+          });
+          row.onclick = null;
+        });
+      }
+
+      function submitChanges() {
+        editMode = false;
+        document.getElementById("editBtn").style.display = "inline-block";
+        document.getElementById("submitBtn").style.display = "none";
+        const rows = document.querySelectorAll("#attendanceTable tbody tr");
+        rows.forEach((row) => {
+          row.querySelectorAll("td").forEach((td, i) => {
+            const input = td.querySelector("input");
+            if (input) td.textContent = input.value;
+          });
+          row.onclick = () => openDetail(row);
+        });
+        alert("Đã lưu thay đổi (demo)");
+      }
+
+      // --- DELETE MODE ---
+      function toggleDeleteMode(forceOff = null) {
+        deleteMode = forceOff === null ? !deleteMode : !forceOff;
+        const show = deleteMode ? "table-cell" : "none";
+        document
+          .querySelectorAll(".delete-col")
+          .forEach((td) => (td.style.display = show));
+        document
+          .querySelectorAll("#attendanceTable tbody tr")
+          .forEach((row) => {
+            row.onclick = deleteMode ? null : () => openDetail(row);
+          });
+        if (!deleteMode) {
+          const checked = document.querySelectorAll(
+            "tbody input[type=checkbox]:checked"
+          );
+          if (checked.length)
+            alert("Đã xoá " + checked.length + " dòng (demo)");
+        }
+      }
+
+      function selectAll(cb) {
+        document
+          .querySelectorAll("tbody input[type=checkbox]")
+          .forEach((ch) => (ch.checked = cb.checked));
+      }
+
+      // --- POPUP ---
+      function openDetail(row) {
+        if (editMode || deleteMode) return;
+        const cells = row.querySelectorAll("td");
+        const content = `
+      <b>ID:</b> ${cells[1].textContent}<br>
+      <b>Tên nhân viên:</b> ${cells[2].textContent}<br>
+      <b>Ngày:</b> ${cells[3].textContent}<br>
+      <b>Giờ vào:</b> ${cells[4].textContent}<br>
+      <b>Giờ ra:</b> ${cells[5].textContent}<br>
+      <b>Ghi chú:</b> ${cells[6].textContent}
+    `;
+        document.getElementById("popupContent").innerHTML = content;
+        document.getElementById("overlay").style.display = "block";
+        document.getElementById("popup").style.display = "block";
+      }
+
+      function closePopup() {
+        document.getElementById("popup").style.display = "none";
+        document.getElementById("overlay").style.display = "none";
+      }
+    </script>
+  </body>
+</html>
