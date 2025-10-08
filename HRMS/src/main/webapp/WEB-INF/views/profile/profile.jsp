@@ -1,10 +1,10 @@
 <%@ page contentType="text/html; charset=UTF-8" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Hồ sơ cá nhân</title>
+    <title>Profile</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -57,12 +57,12 @@
 
             <div class="left-actions mb-3">
                 <a class="text-primary" href="${pageContext.request.contextPath}/salary/history">
-                    <i class="fa-solid fa-receipt"></i> Xem lịch sử lương
+                    <i class="fa-solid fa-receipt"></i> View Salary History
                 </a>
             </div>
 
             <a href="${pageContext.request.contextPath}/dashboard" class="btn btn-outline-primary w-100">
-                <i class="fa-solid fa-arrow-left-long me-1"></i> Quay về Dashboard
+                <i class="fa-solid fa-arrow-left-long me-1"></i> Back to Dashboard
             </a>
         </div>
 
@@ -72,11 +72,11 @@
                 <i class="fa-solid fa-users-gear hrms-logo-icon"></i>
                 <div class="hrms-logo-text">HRMS</div>
             </div>
-            <div class="profile-header-title">Hồ sơ cá nhân</div>
+            <div class="profile-header-title">Personal Profile</div>
 
             <form>
                 <div class="mb-3">
-                    <label class="form-label">Họ và tên</label>
+                    <label class="form-label">Full Name</label>
                     <input type="text" class="form-control" value="${user.fullName}" readonly>
                 </div>
                 <div class="mb-3">
@@ -84,26 +84,26 @@
                     <input type="email" class="form-control" value="${user.email}" readonly>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Số điện thoại</label>
+                    <label class="form-label">Phone Number</label>
                     <input type="text" class="form-control" value="${user.phone}" readonly>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Phòng ban</label>
+                    <label class="form-label">Department</label>
                     <input type="text" class="form-control" value="${user.department}" readonly>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Chức vụ</label>
+                    <label class="form-label">Position</label>
                     <input type="text" class="form-control" value="${user.position}" readonly>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Thông tin ngân hàng</label>
+                    <label class="form-label">Bank Information</label>
                     <input type="text" class="form-control" value="${user.bankInfo}" readonly>
                 </div>
 
-                <!-- nút Cập nhật căn giữa -->
+                <!-- Update button centered -->
                 <div class="text-center mt-4">
                     <button type="button" class="btn btn-success px-4">
-                        <i class="fa-solid fa-pen-to-square me-1"></i> Cập nhật
+                        <i class="fa-solid fa-pen-to-square me-1"></i> Update Profile
                     </button>
                 </div>
             </form>

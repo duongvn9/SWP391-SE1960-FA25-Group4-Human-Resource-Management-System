@@ -18,22 +18,22 @@
             </button>
             <ul class="dropdown-menu">
                 <li><a class="dropdown-item" href="${pageContext.request.contextPath}/user-profile">
-                        <i class="fas fa-user me-2"></i>Thông tin cá nhân
+                        <i class="fas fa-user me-2"></i>Profile
                     </a></li>
                 <li><a class="dropdown-item" href="${pageContext.request.contextPath}/contracts">
-                        <i class="bi bi-file-earmark-text"></i> 📝Hợp đồng lao động
+                        <i class="bi bi-file-earmark-text"></i> 📝Employment Contract
                     </a></li>
                 <li><a class="dropdown-item" href="${pageContext.request.contextPath}/settings">
-                        <i class="fas fa-cog me-2"></i>Cài đặt
+                        <i class="fas fa-cog me-2"></i>Settings
                     </a></li>
                 <li>
                     <hr class="dropdown-divider">
                 </li>
                 <li><a class="dropdown-item" href="${pageContext.request.contextPath}/">
-                        <i class="fas fa-home me-2"></i>Về trang chủ
+                        <i class="fas fa-home me-2"></i>Back to Home
                     </a></li>
                 <li><a class="dropdown-item" href="${pageContext.request.contextPath}/logout">
-                        <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
+                        <i class="fas fa-sign-out-alt me-2"></i>Logout
                     </a></li>
             </ul>
         </div>
