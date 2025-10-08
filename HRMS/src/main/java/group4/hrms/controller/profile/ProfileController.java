@@ -8,7 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
-@WebServlet("/profile")
+@WebServlet("/user-profile")
 public class ProfileController extends HttpServlet {
 
     @Override
@@ -21,9 +21,6 @@ public class ProfileController extends HttpServlet {
             return;
         } */
 
-        // TODO: Lấy thông tin người dùng từ DB nếu cần
-       
-
         req.getRequestDispatcher("/WEB-INF/views/profile/profile.jsp").forward(req, resp);
       
     }
@@ -32,6 +29,6 @@ public class ProfileController extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         
-        resp.sendRedirect(req.getContextPath() + "/profile");
+        resp.sendRedirect(req.getContextPath() + "/user-profile");
     }
 }

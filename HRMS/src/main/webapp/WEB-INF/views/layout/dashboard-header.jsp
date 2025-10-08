@@ -17,7 +17,7 @@
                 ${sessionScope.userFullName != null ? sessionScope.userFullName : 'User'}
             </button>
             <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/profile">
+                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/user-profile">
                         <i class="fas fa-user me-2"></i>Thông tin cá nhân
                     </a></li>
                 <li><a class="dropdown-item" href="${pageContext.request.contextPath}/contracts">
