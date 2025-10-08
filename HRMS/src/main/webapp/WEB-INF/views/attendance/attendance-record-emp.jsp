@@ -34,14 +34,29 @@
                 <option value="Import">Import</option>
             </select>
 
-            <button type="button" id="filterBtn">Filter</button>
-        </form>
+            <label for="periodSelect">Select Period:</label>
+            <select id="periodSelect" name="periodSelect">
+                <option value="">-- All Periods --</option>
+                <c:forEach var="p" items="${periodList}">
+                    <option value="${p.id}">${p.name}</option>
+                </c:forEach>
+            </select>
 
-        <br>
+            <button type="button" id="filterBtn">Filter</button>
+            <button type="button" id="resetBtn">Reset</button>
+        </form>
+        <br/><br/>
+
+        <!-- 🔹 Export Buttons -->
+        <button type="button" id="exportXLSBtn">Export XLS</button>
+        <button type="button" id="exportCSVBtn">Export CSV</button>
+        <button type="button" id="exportPDFBtn">Export PDF</button>
+        <br/><br/>
 
         <table id="attendanceTable" border="1" cellpadding="6">
             <thead>
                 <tr>
+                    <th>Select</th>
                     <th>Date</th>
                     <th>Check-in</th>
                     <th>Check-out</th>
@@ -52,73 +67,112 @@
                 </tr>
             </thead>
             <tbody>
-                <tr class="attendance-row" data-employee="E001" data-notes="Came late due to traffic" 
-                    data-attachments="none" data-lockedby="HR001" data-lockedat="2025-09-30" 
-                    data-audit="Edited by HR 2025-09-29 09:30">
-                    <td>2025-10-01</td>
-                    <td>08:45</td>
-                    <td>17:30</td>
-                    <td>Late</td>
-                    <td>App</td>
-                    <td>Oct-2025</td>
-                    <td>No</td>
+            <c:forEach var="record" items="${attendanceList}">
+                <tr class="attendance-row"
+                    data-employee="${record.employeeId}"
+                    data-notes="${record.notes}"
+                    data-attachments="${record.attachments}"
+                    data-lockedby="${record.lockedBy}"
+                    data-lockedat="${record.lockedAt}"
+                    data-audit="${record.auditTrail}">
+
+                    <td>
+                        <button type="button" class="selectAttendanceBtn">Select</button>
+                    </td>
+                    <td>${record.date}</td>
+                    <td>${record.checkIn}</td>
+                    <td>${record.checkOut}</td>
+                    <td>${record.status}</td>
+                    <td>${record.source}</td>
+                    <td>${record.period}</td>
+                    <td>
+                <c:choose>
+                    <c:when test="${record.locked}">Yes</c:when>
+                    <c:otherwise>No</c:otherwise>
+                </c:choose>
+                </td>
                 </tr>
-                <tr class="attendance-row" data-employee="E001" data-notes="Normal day" 
-                    data-attachments="screenshot.png" data-lockedby="HR002" data-lockedat="2025-09-30" 
-                    data-audit="Imported automatically">
-                    <td>2025-10-02</td>
-                    <td>08:00</td>
-                    <td>17:00</td>
-                    <td>Approved</td>
-                    <td>Import</td>
-                    <td>Oct-2025</td>
-                    <td>Yes</td>
+            </c:forEach>
+
+            <c:if test="${empty attendanceList}">
+                <tr>
+                    <td colspan="8" style="text-align:center;">No records found</td>
                 </tr>
-            </tbody>
-        </table>
+            </c:if>
+        </tbody>
+    </table>
 
-        <!-- 📄 Pop-up Detail Modal -->
-        <div id="attendancePopup" style="display:none; border:1px solid #000; padding:15px; background:#fff; width:400px; position:absolute; top:20%; left:35%;">
-            <h3>Attendance Details</h3>
-            <p><strong>Date:</strong> <span id="popupDate"></span></p>
-            <p><strong>Check-in:</strong> <span id="popupIn"></span></p>
-            <p><strong>Check-out:</strong> <span id="popupOut"></span></p>
-            <p><strong>Status:</strong> <span id="popupStatus"></span></p>
-            <p><strong>Source:</strong> <span id="popupSource"></span></p>
-            <p><strong>Notes / Reason:</strong> <span id="popupNotes"></span></p>
-            <p><strong>Attachments:</strong> <span id="popupAttachments"></span></p>
-            <p><strong>Locked By:</strong> <span id="popupLockedBy"></span></p>
-            <p><strong>Locked At:</strong> <span id="popupLockedAt"></span></p>
-            <p><strong>Audit Trail:</strong> <span id="popupAudit"></span></p>
-            <button id="closePopup">Close</button>
-        </div>
+    <br/>
 
-        <script>
-            const rows = document.querySelectorAll('.attendance-row');
-            const popup = document.getElementById('attendancePopup');
-            const closeBtn = document.getElementById('closePopup');
 
-            rows.forEach(row => {
-                row.addEventListener('click', () => {
-                    // Lấy dữ liệu từ dòng
-                    document.getElementById('popupDate').textContent = row.cells[0].textContent;
-                    document.getElementById('popupIn').textContent = row.cells[1].textContent;
-                    document.getElementById('popupOut').textContent = row.cells[2].textContent;
-                    document.getElementById('popupStatus').textContent = row.cells[3].textContent;
-                    document.getElementById('popupSource').textContent = row.cells[4].textContent;
-                    document.getElementById('popupNotes').textContent = row.getAttribute('data-notes');
-                    document.getElementById('popupAttachments').textContent = row.getAttribute('data-attachments');
-                    document.getElementById('popupLockedBy').textContent = row.getAttribute('data-lockedby');
-                    document.getElementById('popupLockedAt').textContent = row.getAttribute('data-lockedat');
-                    document.getElementById('popupAudit').textContent = row.getAttribute('data-audit');
 
-                    popup.style.display = 'block';
-                });
+    <!-- 📄 Pop-up Detail Modal -->
+    <div id="attendancePopup" style="display:none; border:1px solid #000; padding:15px; background:#fff; width:400px; position:absolute; top:20%; left:35%;">
+        <h3>Attendance Details</h3>
+        <p><strong>Date:</strong> <span id="popupDate"></span></p>
+        <p><strong>Check-in:</strong> <span id="popupIn"></span></p>
+        <p><strong>Check-out:</strong> <span id="popupOut"></span></p>
+        <p><strong>Status:</strong> <span id="popupStatus"></span></p>
+        <p><strong>Source:</strong> <span id="popupSource"></span></p>
+        <p><strong>Notes / Reason:</strong> <span id="popupNotes"></span></p>
+        <p><strong>Attachments:</strong> <span id="popupAttachments"></span></p>
+        <p><strong>Locked By:</strong> <span id="popupLockedBy"></span></p>
+        <p><strong>Locked At:</strong> <span id="popupLockedAt"></span></p>
+        <p><strong>Audit Trail:</strong> <span id="popupAudit"></span></p>
+        <button id="closePopup">Close</button>
+    </div>
+
+    <script>
+        const rows = document.querySelectorAll('.attendance-row');
+        const popup = document.getElementById('attendancePopup');
+        const closeBtn = document.getElementById('closePopup');
+
+        rows.forEach(row => {
+            // Show detail popup on row click
+            row.addEventListener('click', () => {
+                document.getElementById('popupDate').textContent = row.cells[1].textContent;
+                document.getElementById('popupIn').textContent = row.cells[2].textContent;
+                document.getElementById('popupOut').textContent = row.cells[3].textContent;
+                document.getElementById('popupStatus').textContent = row.cells[4].textContent;
+                document.getElementById('popupSource').textContent = row.cells[5].textContent;
+                document.getElementById('popupNotes').textContent = row.getAttribute('data-notes');
+                document.getElementById('popupAttachments').textContent = row.getAttribute('data-attachments');
+                document.getElementById('popupLockedBy').textContent = row.getAttribute('data-lockedby');
+                document.getElementById('popupLockedAt').textContent = row.getAttribute('data-lockedat');
+                document.getElementById('popupAudit').textContent = row.getAttribute('data-audit');
+
+                popup.style.display = 'block';
             });
 
-            closeBtn.addEventListener('click', () => {
-                popup.style.display = 'none';
+            // Select button for attendance record
+            const selectBtn = row.querySelector('.selectAttendanceBtn');
+            selectBtn.addEventListener('click', (event) => {
+                event.stopPropagation(); // tránh click row mở popup
+                const attendanceId = row.getAttribute('data-employee'); // hoặc ID riêng nếu có
+                alert('Selected attendance ID: ' + attendanceId);
+                // TODO: logic thêm record này vào form kháng nghị
             });
-        </script>
-    </body>
+        });
+
+        closeBtn.addEventListener('click', () => {
+            popup.style.display = 'none';
+        });
+
+        // Filter reset button
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            document.getElementById('filterForm').reset();
+        });
+
+        // Export buttons
+        document.getElementById('exportXLSBtn').addEventListener('click', () => {
+            alert('Export XLS');
+        });
+        document.getElementById('exportCSVBtn').addEventListener('click', () => {
+            alert('Export CSV');
+        });
+        document.getElementById('exportPDFBtn').addEventListener('click', () => {
+            alert('Export PDF');
+        });
+    </script>
+</body>
 </html>
