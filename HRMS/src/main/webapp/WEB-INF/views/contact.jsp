@@ -1,11 +1,11 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
     <%@ taglib uri="jakarta.tags.core" prefix="c" %>
         <!DOCTYPE html>
-        <html lang="vi">
+        <html lang="en">
 
         <head>
             <jsp:include page="layout/head.jsp">
-                <jsp:param name="pageTitle" value="Liên hệ - HRMS" />
+                <jsp:param name="pageTitle" value="Contact - HRMS" />
                 <jsp:param name="pageCss" value="contact.css" />
             </jsp:include>
         </head>
@@ -19,9 +19,8 @@
             <!-- Hero Section -->
             <section class="hero-section">
                 <div class="container">
-                    <h1 data-aos="fade-up">Liên hệ với chúng tôi</h1>
-                    <p data-aos="fade-up" data-aos-delay="200">Chúng tôi luôn sẵn sàng hỗ trợ bạn với các giải pháp quản
-                        lý nhân sự tối ưu</p>
+                    <h1 data-aos="fade-up">Contact Us</h1>
+                    <p data-aos="fade-up" data-aos-delay="200">We are always ready to support you with optimal HR management solutions</p>
                 </div>
             </section>
 
@@ -49,15 +48,15 @@
                         <!-- Contact Information -->
                         <div class="col-lg-5 col-md-6 mb-5" data-aos="fade-right">
                             <div class="contact-info">
-                                <h3><i class="fas fa-info-circle me-2"></i>Thông tin liên hệ</h3>
+                                <h3><i class="fas fa-info-circle me-2"></i>Contact Information</h3>
 
                                 <div class="contact-item" data-aos="fade-up" data-aos-delay="100">
                                     <div class="contact-icon">
                                         <i class="fas fa-map-marker-alt"></i>
                                     </div>
                                     <div class="contact-details">
-                                        <h5>Địa chỉ</h5>
-                                        <p>Đại học FPT Hà Nội<br>Khu Công nghệ cao Hòa Lạc<br>Thạch Thất, Hà Nội</p>
+                                        <h5>Address</h5>
+                                        <p>FPT University Hanoi<br>Hoa Lac Hi-Tech Park<br>Thach That, Hanoi</p>
                                     </div>
                                 </div>
 
@@ -66,7 +65,7 @@
                                         <i class="fas fa-phone"></i>
                                     </div>
                                     <div class="contact-details">
-                                        <h5>Điện thoại</h5>
+                                        <h5>Phone</h5>
                                         <p>Hotline: +84 123 456 789<br>Support: +84 987 654 321</p>
                                     </div>
                                 </div>
@@ -86,8 +85,8 @@
                                         <i class="fas fa-clock"></i>
                                     </div>
                                     <div class="contact-details">
-                                        <h5>Giờ làm việc</h5>
-                                        <p>Thứ 2 - Thứ 6: 8:00 - 17:30<br>Thứ 7: 8:00 - 12:00<br>Chủ nhật: Nghỉ</p>
+                                        <h5>Working Hours</h5>
+                                        <p>Monday - Friday: 8:00 AM - 5:30 PM<br>Saturday: 8:00 AM - 12:00 PM<br>Sunday: Closed</p>
                                     </div>
                                 </div>
                             </div>
@@ -96,24 +95,24 @@
                         <!-- Contact Form -->
                         <div class="col-lg-7 col-md-6" data-aos="fade-left">
                             <div class="contact-form">
-                                <h3><i class="fas fa-paper-plane me-2"></i>Gửi tin nhắn</h3>
-                                <p>Hãy để lại thông tin, chúng tôi sẽ liên hệ với bạn trong thời gian sớm nhất.</p>
+                                <h3><i class="fas fa-paper-plane me-2"></i>Send Message</h3>
+                                <p>Leave your information, and we will contact you as soon as possible.</p>
 
                                 <form action="${pageContext.request.contextPath}/contact" method="post"
                                     id="contactForm">
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="form-group">
-                                                <label for="name">Họ và tên <span class="text-danger">*</span></label>
+                                                <label for="name">Full Name <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control" id="name" name="name"
-                                                    placeholder="Nhập họ và tên của bạn" required value="${param.name}">
+                                                    placeholder="Enter your full name" required value="${param.name}">
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="form-group">
                                                 <label for="email">Email <span class="text-danger">*</span></label>
                                                 <input type="email" class="form-control" id="email" name="email"
-                                                    placeholder="Nhập địa chỉ email" required value="${param.email}">
+                                                    placeholder="Enter email address" required value="${param.email}">
                                             </div>
                                         </div>
                                     </div>
@@ -121,41 +120,39 @@
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="form-group">
-                                                <label for="phone">Số điện thoại</label>
+                                                <label for="phone">Phone Number</label>
                                                 <input type="tel" class="form-control" id="phone" name="phone"
-                                                    placeholder="Nhập số điện thoại" value="${param.phone}">
+                                                    placeholder="Enter phone number" value="${param.phone}">
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="form-group">
-                                                <label for="subject">Chủ đề</label>
+                                                <label for="subject">Subject</label>
                                                 <select class="form-control" id="subject" name="subject">
-                                                    <option value="">Chọn chủ đề</option>
+                                                    <option value="">Select subject</option>
                                                     <option value="support" ${param.subject=='support' ? 'selected' : ''
-                                                        }>Hỗ trợ kỹ thuật</option>
-                                                    <option value="demo" ${param.subject=='demo' ? 'selected' : '' }>Yêu
-                                                        cầu demo</option>
+                                                        }>Technical Support</option>
+                                                    <option value="demo" ${param.subject=='demo' ? 'selected' : '' }>Request Demo</option>
                                                     <option value="pricing" ${param.subject=='pricing' ? 'selected' : ''
-                                                        }>Báo giá sản phẩm</option>
+                                                        }>Product Pricing</option>
                                                     <option value="partnership" ${param.subject=='partnership'
-                                                        ? 'selected' : '' }>Hợp tác kinh doanh</option>
-                                                    <option value="other" ${param.subject=='other' ? 'selected' : '' }>
-                                                        Khác</option>
+                                                        ? 'selected' : '' }>Business Partnership</option>
+                                                    <option value="other" ${param.subject=='other' ? 'selected' : '' }>Other</option>
                                                 </select>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div class="form-group">
-                                        <label for="message">Nội dung <span class="text-danger">*</span></label>
+                                        <label for="message">Message <span class="text-danger">*</span></label>
                                         <textarea class="form-control" id="message" name="message" rows="6"
-                                            placeholder="Nhập nội dung tin nhắn của bạn..."
+                                            placeholder="Enter your message..."
                                             required>${param.message}</textarea>
                                     </div>
 
                                     <div class="text-center">
                                         <button type="submit" class="btn btn-primary btn-lg">
-                                            <i class="fas fa-paper-plane me-2"></i>Gửi tin nhắn
+                                            <i class="fas fa-paper-plane me-2"></i>Send Message
                                         </button>
                                     </div>
                                 </form>
@@ -169,15 +166,15 @@
             <section class="map-section">
                 <div class="container">
                     <h3 data-aos="fade-up">
-                        <i class="fas fa-map-marked-alt me-2"></i>Vị trí của chúng tôi
+                        <i class="fas fa-map-marked-alt me-2"></i>Our Location
                     </h3>
                     <div class="map-container" data-aos="fade-up" data-aos-delay="200">
                         <div class="map-placeholder">
                             <div>
                                 <i class="fas fa-map-marker-alt fa-3x mb-3"></i>
-                                <h5>Đại học FPT Hà Nội</h5>
-                                <p>Khu Công nghệ cao Hòa Lạc, Thạch Thất, Hà Nội</p>
-                                <small class="text-muted">Bản đồ sẽ được tích hợp trong phiên bản tiếp theo</small>
+                                <h5>FPT University Hanoi</h5>
+                                <p>Hoa Lac Hi-Tech Park, Thach That, Hanoi</p>
+                                <small class="text-muted">Map will be integrated in the next version</small>
                             </div>
                         </div>
                     </div>
@@ -216,7 +213,7 @@
                         const submitBtn = form.querySelector('button[type="submit"]');
                         const originalText = submitBtn.innerHTML;
 
-                        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang gửi...';
+                        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending...';
                         submitBtn.disabled = true;
 
                         // Re-enable after 3 seconds if form doesn't submit

@@ -3,7 +3,9 @@
 ## Vai trò & Ngôn ngữ
 
 - Đóng vai **Expert Software Engineer** chuyên: Java Core (Servlet), Maven, JDBC với MySQL, JSP + Bootstrap.
-- **Luôn phản hồi, chú thích và sinh nội dung bằng tiếng Việt.**
+- **Luôn phản hồi và giao tiếp bằng tiếng Việt.**
+- **Tất cả nội dung trang web (JSP, HTML, label, placeholder, message, button text, menu items, form fields) phải viết bằng tiếng Anh.**
+- **Chú thích code (comment) trong Java/JSP nên bằng tiếng Anh; nếu cần giải thích phức tạp có thể dùng tiếng Việt.**
 
 ## Tài liệu ràng buộc
 
@@ -47,6 +49,8 @@
 
 - Giao diện theo **Bootstrap 5.3+**, responsive.
 - Tổ chức layout: `WEB-INF/views/layout/header.jsp`, `footer.jsp`, `sidebar.jsp`; trang con include từ layout.
+- **Tất cả text trong JSP (title, heading, label, button, menu, placeholder, error message) phải viết bằng tiếng Anh.**
+- Thuộc tính `lang` trong HTML nên đặt `lang="en"` thay vì `lang="vi"`.
 - Form: có **CSRF token** (ẩn), **server-side validation** là bắt buộc; client-side chỉ hỗ trợ UX.
 - JSTL cho Jakarta EE 10: dùng URI `jakarta.tags.core` thay cho `http://java.sun.com/jsp/jstl/core`.
 
@@ -71,8 +75,9 @@
 
 ## I18N & UX
 
-- Mặc định **vi-VN**; file message ở `WEB-INF/i18n`.
-- Viết label, placeholder, thông báo lỗi **ngắn gọn, dễ hiểu**.
+- Ngôn ngữ giao diện: **en-US** (tiếng Anh). Tất cả nội dung hiển thị trên trang web phải bằng tiếng Anh.
+- File message/properties nếu có dùng ở `WEB-INF/i18n`, cũng cần viết bằng tiếng Anh.
+- Viết label, placeholder, thông báo lỗi **ngắn gọn, dễ hiểu, bằng tiếng Anh**.
 
 ## Do / Don’t
 

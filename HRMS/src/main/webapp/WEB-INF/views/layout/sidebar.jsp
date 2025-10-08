@@ -20,32 +20,32 @@
                 <li class="nav-item">
                     <a href="${pageContext.request.contextPath}/identity/employees"
                         class="nav-link ${param.currentPage == 'employees' ? 'active' : ''}"
-                        data-tooltip="Quản lý Nhân viên">
+                        data-tooltip="Employee Management">
                         <i class="fas fa-users"></i>
-                        <span>Quản lý Nhân viên</span>
+                        <span>Employee Management</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="${pageContext.request.contextPath}/attendance"
-                        class="nav-link ${param.currentPage == 'attendance' ? 'active' : ''}" data-tooltip="Chấm công">
+                        class="nav-link ${param.currentPage == 'attendance' ? 'active' : ''}" data-tooltip="Attendance">
                         <i class="fas fa-clock"></i>
-                        <span>Chấm công</span>
+                        <span>Attendance</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="${pageContext.request.contextPath}/payroll"
-                        class="nav-link ${param.currentPage == 'payroll' ? 'active' : ''}" data-tooltip="Bảng lương">
+                        class="nav-link ${param.currentPage == 'payroll' ? 'active' : ''}" data-tooltip="Payroll">
                         <i class="fas fa-money-bill-wave"></i>
-                        <span>Bảng lương</span>
+                        <span>Payroll</span>
                     </a>
                 </li>
 
-                <!-- Dropdown: Đơn từ -->
+                <!-- Dropdown: Requests -->
                 <li class="nav-item">
                     <a href="#" class="nav-link sidebar-dropdown-toggle" data-target="requests-submenu"
-                        data-tooltip="Đơn từ">
+                        data-tooltip="Requests">
                         <i class="fas fa-clipboard-list"></i>
-                        <span>Đơn từ</span>
+                        <span>Requests</span>
                         <i class="fas fa-chevron-right dropdown-arrow ms-auto"></i>
                     </a>
                     <ul class="sidebar-submenu" id="requests-submenu">
@@ -53,21 +53,21 @@
                             <a href="${pageContext.request.contextPath}/requests/leave/create"
                                 class="nav-link submenu-link ${param.currentPage == 'leave-request' ? 'active' : ''}">
                                 <i class="fas fa-calendar-times"></i>
-                                <span>Xin nghỉ phép</span>
+                                <span>Leave Request</span>
                             </a>
                         </li>
                         <li>
                             <a href="${pageContext.request.contextPath}/requests/overtime/create"
                                 class="nav-link submenu-link ${param.currentPage == 'overtime-request' ? 'active' : ''}">
                                 <i class="fas fa-clock"></i>
-                                <span>Xin làm thêm</span>
+                                <span>Overtime Request</span>
                             </a>
                         </li>
                         <li>
                             <a href="${pageContext.request.contextPath}/requests/appeal"
                                 class="nav-link submenu-link ${param.currentPage == 'appeal-request' ? 'active' : ''}">
                                 <i class="fas fa-exclamation-circle"></i>
-                                <span>Khiếu nại chấm công</span>
+                                <span>Attendance Appeal</span>
                             </a>
                         </li>
                     </ul>
@@ -78,24 +78,24 @@
                     <li class="nav-item">
                         <a href="${pageContext.request.contextPath}/admin/accounts"
                             class="nav-link ${param.currentPage == 'accounts' ? 'active' : ''}"
-                            data-tooltip="Quản lý tài khoản">
+                            data-tooltip="Account Management">
                             <i class="fas fa-user-shield"></i>
-                            <span>Quản lý tài khoản</span>
+                            <span>Account Management</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a href="${pageContext.request.contextPath}/reports"
-                            class="nav-link ${param.currentPage == 'reports' ? 'active' : ''}" data-tooltip="Báo cáo">
+                            class="nav-link ${param.currentPage == 'reports' ? 'active' : ''}" data-tooltip="Reports">
                             <i class="fas fa-chart-bar"></i>
-                            <span>Báo cáo</span>
+                            <span>Reports</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a href="${pageContext.request.contextPath}/system/settings"
                             class="nav-link ${param.currentPage == 'settings' ? 'active' : ''}"
-                            data-tooltip="Cài đặt hệ thống">
+                            data-tooltip="System Settings">
                             <i class="fas fa-cogs"></i>
-                            <span>Cài đặt hệ thống</span>
+                            <span>System Settings</span>
                         </a>
                     </li>
                 </c:if>
@@ -104,21 +104,29 @@
                 <li class="nav-item mt-3">
                     <a href="${pageContext.request.contextPath}/profile"
                         class="nav-link ${param.currentPage == 'profile' ? 'active' : ''}"
-                        data-tooltip="Thông tin cá nhân">
+                        data-tooltip="Profile">
                         <i class="fas fa-user"></i>
-                        <span>Thông tin cá nhân</span>
+                        <span>Profile</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="${pageContext.request.contextPath}/" class="nav-link" data-tooltip="Về trang chủ">
+                    <a href="${pageContext.request.contextPath}/profile/change-password"
+                        class="nav-link ${param.currentPage == 'change-password' ? 'active' : ''}"
+                        data-tooltip="Change Password">
+                        <i class="fas fa-key"></i>
+                        <span>Change Password</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="${pageContext.request.contextPath}/" class="nav-link" data-tooltip="Back to Home">
                         <i class="fas fa-home"></i>
-                        <span>Về trang chủ</span>
+                        <span>Back to Home</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="${pageContext.request.contextPath}/logout" class="nav-link" data-tooltip="Đăng xuất">
+                    <a href="${pageContext.request.contextPath}/logout" class="nav-link" data-tooltip="Logout">
                         <i class="fas fa-sign-out-alt"></i>
-                        <span>Đăng xuất</span>
+                        <span>Logout</span>
                     </a>
                 </li>
             </ul>
