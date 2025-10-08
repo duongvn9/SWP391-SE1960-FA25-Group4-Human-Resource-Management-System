@@ -1,0 +1,339 @@
+/* ======================
+   Profile Page Styles
+   ====================== */
+
+/* Change Password Card */
+.change-password-card {
+    background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.change-password-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+    color: white;
+    padding: 1.5rem;
+    border-bottom: none;
+    position: relative;
+}
+
+.change-password-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+    opacity: 0.3;
+}
+
+.change-password-header h4 {
+    margin: 0;
+    font-weight: 600;
+    position: relative;
+    z-index: 1;
+}
+
+.change-password-header i {
+    font-size: 1.5rem;
+    margin-right: 0.5rem;
+    position: relative;
+    z-index: 1;
+}
+
+/* Form Styling */
+.password-form {
+    padding: 2rem;
+}
+
+.form-floating {
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.form-floating .form-control {
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    padding: 1rem 0.75rem 1rem 2.5rem;
+    height: 58px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background-color: #fafbfc;
+}
+
+.form-floating .form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(44, 90, 160, 0.1);
+    background-color: white;
+}
+
+.form-floating label {
+    padding-left: 2.5rem;
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+/* Input Icons */
+.form-floating::before {
+    content: '\f023';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-light);
+    z-index: 4;
+    transition: color 0.3s ease;
+}
+
+.form-floating:focus-within::before {
+    color: var(--primary-color);
+}
+
+/* Password Strength Indicator */
+.password-strength {
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.strength-bar {
+    height: 4px;
+    border-radius: 2px;
+    background-color: #e9ecef;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.strength-fill {
+    height: 100%;
+    transition: all 0.3s ease;
+    border-radius: 2px;
+}
+
+.strength-weak .strength-fill {
+    width: 25%;
+    background-color: #dc3545;
+}
+
+.strength-fair .strength-fill {
+    width: 50%;
+    background-color: #fd7e14;
+}
+
+.strength-good .strength-fill {
+    width: 75%;
+    background-color: #ffc107;
+}
+
+.strength-strong .strength-fill {
+    width: 100%;
+    background-color: #28a745;
+}
+
+.strength-text {
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    font-weight: 500;
+}
+
+/* Password Requirements */
+.password-requirements {
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid var(--primary-color);
+}
+
+.password-requirements h6 {
+    color: var(--primary-color);
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.requirement-item {
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+    color: var(--text-light);
+    transition: color 0.3s ease;
+}
+
+.requirement-item i {
+    margin-right: 0.5rem;
+    width: 12px;
+    font-size: 0.75rem;
+}
+
+.requirement-item.valid {
+    color: #28a745;
+}
+
+.requirement-item.invalid {
+    color: #dc3545;
+}
+
+/* Buttons */
+.btn-change-password {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+    border: none;
+    color: white;
+    padding: 0.875rem 2rem;
+    border-radius: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(44, 90, 160, 0.2);
+}
+
+.btn-change-password:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(44, 90, 160, 0.3);
+    color: white;
+}
+
+.btn-change-password:active {
+    transform: translateY(0);
+}
+
+.btn-change-password:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Cancel Button */
+.btn-cancel {
+    background-color: #6c757d;
+    border: none;
+    color: white;
+    padding: 0.875rem 2rem;
+    border-radius: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    margin-right: 1rem;
+}
+
+.btn-cancel:hover {
+    background-color: #5a6268;
+    color: white;
+    transform: translateY(-1px);
+}
+
+/* Show/Hide Password Toggle */
+.password-toggle {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-light);
+    cursor: pointer;
+    z-index: 5;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: color 0.3s ease;
+}
+
+.password-toggle:hover {
+    color: var(--primary-color);
+}
+
+/* Alert Messages */
+.alert {
+    border-radius: 10px;
+    border: none;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1.5rem;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    color: #155724;
+    border-left: 4px solid #28a745;
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, #f8d7da 0%, #f1b0b7 100%);
+    color: #721c24;
+    border-left: 4px solid #dc3545;
+}
+
+.alert-warning {
+    background: linear-gradient(135deg, #fff3cd 0%, #fce8b2 100%);
+    color: #856404;
+    border-left: 4px solid #ffc107;
+}
+
+/* Loading State */
+.btn-loading {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.btn-loading::after {
+    content: '';
+    width: 16px;
+    height: 16px;
+    margin-left: 0.5rem;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .change-password-card {
+        margin: 1rem;
+        border-radius: 10px;
+    }
+    
+    .password-form {
+        padding: 1.5rem;
+    }
+    
+    .change-password-header {
+        padding: 1rem 1.5rem;
+    }
+    
+    .btn-change-password,
+    .btn-cancel {
+        width: 100%;
+        margin-bottom: 0.5rem;
+        margin-right: 0;
+    }
+}
+
+/* Animation */
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
