@@ -212,12 +212,14 @@
         <c:if test="${not empty param.pageCss}">
             <link href="${pageContext.request.contextPath}/assets/css/${param.pageCss}" rel="stylesheet">
         </c:if>
+<<<<<<< HEAD
+=======
 
         <!-- CSS Files parameter support -->
         <c:if test="${not empty param.cssFiles}">
             <link href="${pageContext.request.contextPath}/assets/css/${param.cssFiles}.css" rel="stylesheet">
         </c:if>
+>>>>>>> d34c3fa115d309b2aba93cde0c1728777b327d74
 
         <!-- Debug CSS path -->
         <!-- CSS Path: ${pageContext.request.contextPath}/assets/css/${param.pageCss} -->
-        <!-- CSS Files: ${pageContext.request.contextPath}/assets/css/${param.cssFiles}.css -->
