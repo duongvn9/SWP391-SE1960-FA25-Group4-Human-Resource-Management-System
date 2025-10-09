@@ -37,57 +37,57 @@ public class AttendanceLogDto {
     // Constructors
     public AttendanceLogDto() {}
     
-    public AttendanceLogDto(AttendanceLog attendanceLog) {
-        this.id = attendanceLog.getId();
-        this.userId = attendanceLog.getUserId();
-        this.workDate = attendanceLog.getWorkDate();
-        this.checkInTime = attendanceLog.getCheckInTime();
-        this.checkOutTime = attendanceLog.getCheckOutTime();
-        this.checkInType = attendanceLog.getCheckInType();
-        this.checkOutType = attendanceLog.getCheckOutType();
-        this.workingHours = attendanceLog.getWorkingHours();
-        this.overtimeHours = attendanceLog.getOvertimeHours();
-        this.status = attendanceLog.getStatus();
-        this.notes = attendanceLog.getNotes();
-        this.checkInIp = attendanceLog.getCheckInIp();
-        this.checkOutIp = attendanceLog.getCheckOutIp();
-        this.checkInLocation = attendanceLog.getCheckInLocation();
-        this.checkOutLocation = attendanceLog.getCheckOutLocation();
-        this.createdAt = attendanceLog.getCreatedAt();
-        this.updatedAt = attendanceLog.getUpdatedAt();
-        
-        // Set display values
-        this.statusDisplay = getStatusDisplayText(this.status);
-        this.checkInTypeDisplay = getCheckTypeDisplayText(this.checkInType);
-        this.checkOutTypeDisplay = getCheckTypeDisplayText(this.checkOutType);
-    }
-    
-    // Factory methods
-    public static AttendanceLogDto fromEntity(AttendanceLog attendanceLog) {
-        return new AttendanceLogDto(attendanceLog);
-    }
-    
-    public AttendanceLog toEntity() {
-        AttendanceLog attendanceLog = new AttendanceLog();
-        attendanceLog.setId(this.id);
-        attendanceLog.setUserId(this.userId);
-        attendanceLog.setWorkDate(this.workDate);
-        attendanceLog.setCheckInTime(this.checkInTime);
-        attendanceLog.setCheckOutTime(this.checkOutTime);
-        attendanceLog.setCheckInType(this.checkInType);
-        attendanceLog.setCheckOutType(this.checkOutType);
-        attendanceLog.setWorkingHours(this.workingHours);
-        attendanceLog.setOvertimeHours(this.overtimeHours);
-        attendanceLog.setStatus(this.status);
-        attendanceLog.setNotes(this.notes);
-        attendanceLog.setCheckInIp(this.checkInIp);
-        attendanceLog.setCheckOutIp(this.checkOutIp);
-        attendanceLog.setCheckInLocation(this.checkInLocation);
-        attendanceLog.setCheckOutLocation(this.checkOutLocation);
-        attendanceLog.setCreatedAt(this.createdAt);
-        attendanceLog.setUpdatedAt(this.updatedAt);
-        return attendanceLog;
-    }
+//    public AttendanceLogDto(AttendanceLog attendanceLog) {
+//        this.id = attendanceLog.getId();
+//        this.userId = attendanceLog.getUserId();
+//        this.workDate = attendanceLog.getWorkDate();
+//        this.checkInTime = attendanceLog.getCheckInTime();
+//        this.checkOutTime = attendanceLog.getCheckOutTime();
+//        this.checkInType = attendanceLog.getCheckInType();
+//        this.checkOutType = attendanceLog.getCheckOutType();
+//        this.workingHours = attendanceLog.getWorkingHours();
+//        this.overtimeHours = attendanceLog.getOvertimeHours();
+//        this.status = attendanceLog.getStatus();
+//        this.notes = attendanceLog.getNotes();
+//        this.checkInIp = attendanceLog.getCheckInIp();
+//        this.checkOutIp = attendanceLog.getCheckOutIp();
+//        this.checkInLocation = attendanceLog.getCheckInLocation();
+//        this.checkOutLocation = attendanceLog.getCheckOutLocation();
+//        this.createdAt = attendanceLog.getCreatedAt();
+//        this.updatedAt = attendanceLog.getUpdatedAt();
+//        
+//        // Set display values
+//        this.statusDisplay = getStatusDisplayText(this.status);
+//        this.checkInTypeDisplay = getCheckTypeDisplayText(this.checkInType);
+//        this.checkOutTypeDisplay = getCheckTypeDisplayText(this.checkOutType);
+//    }
+//    
+//    // Factory methods
+//    public static AttendanceLogDto fromEntity(AttendanceLog attendanceLog) {
+//        return new AttendanceLogDto(attendanceLog);
+//    }
+//    
+//    public AttendanceLog toEntity() {
+//        AttendanceLog attendanceLog = new AttendanceLog();
+//        attendanceLog.setId(this.id);
+//        attendanceLog.setUserId(this.userId);
+//        attendanceLog.setWorkDate(this.workDate);
+//        attendanceLog.setCheckInTime(this.checkInTime);
+//        attendanceLog.setCheckOutTime(this.checkOutTime);
+//        attendanceLog.setCheckInType(this.checkInType);
+//        attendanceLog.setCheckOutType(this.checkOutType);
+//        attendanceLog.setWorkingHours(this.workingHours);
+//        attendanceLog.setOvertimeHours(this.overtimeHours);
+//        attendanceLog.setStatus(this.status);
+//        attendanceLog.setNotes(this.notes);
+//        attendanceLog.setCheckInIp(this.checkInIp);
+//        attendanceLog.setCheckOutIp(this.checkOutIp);
+//        attendanceLog.setCheckInLocation(this.checkInLocation);
+//        attendanceLog.setCheckOutLocation(this.checkOutLocation);
+//        attendanceLog.setCreatedAt(this.createdAt);
+//        attendanceLog.setUpdatedAt(this.updatedAt);
+//        return attendanceLog;
+//    }
     
     // Getters và Setters
     public Long getId() {

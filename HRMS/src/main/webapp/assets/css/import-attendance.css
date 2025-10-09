@@ -1,0 +1,51 @@
+.tab-btn {
+    padding: 10px 20px;
+    margin: 0 5px;
+    border: none;
+    cursor: pointer;
+    background-color: #f0f0f0;
+}
+.tab-btn.active {
+    background-color: #007bff;
+    color: white;
+}
+.excel-table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 10px;
+}
+.excel-table th, .excel-table td {
+    border: 1px solid #ddd;
+    padding: 4px;
+    text-align: left;
+}
+.excel-table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+.excel-table input {
+    width: 100%;
+    border: none;
+    padding: 4px;
+    box-sizing: border-box;
+    outline: none;
+}
+.excel-table input:focus {
+    background-color: #e6f3ff;
+}
+.excel-table .delete-btn {
+    padding: 4px 8px;
+    background-color: #ff4444;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+.excel-table .delete-btn:hover {
+    background-color: #cc0000;
+}
+.excel-table td.selected {
+    background-color: #add8e6; /* Màu nền khi chọn, giống Excel */
+}
+.excel-table td.selected input {
+    background-color: #add8e6;
+}
