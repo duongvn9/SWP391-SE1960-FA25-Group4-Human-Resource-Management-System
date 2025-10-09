@@ -7,7 +7,8 @@
                 <div class="row justify-content-center">
                     <div class="col-lg-4 col-md-6 mb-4">
                         <h5>HRMS</h5>
-                        <p>Modern human resource management system that helps businesses optimize management processes and effectively develop human resources.</p>
+                        <p>Modern human resource management system that helps businesses optimize management processes
+                            and effectively develop human resources.</p>
                         <div class="social-links">
                             <a href="#"><i class="fab fa-facebook-f"></i></a>
                             <a href="#"><i class="fab fa-twitter"></i></a>
