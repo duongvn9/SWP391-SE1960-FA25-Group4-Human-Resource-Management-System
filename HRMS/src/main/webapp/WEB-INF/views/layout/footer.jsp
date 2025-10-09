@@ -1,18 +1,38 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 
-<!-- Footer -->
-<footer class="footer">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-4 col-md-6 mb-4">
-                <h5>HRMS</h5>
-                <p>Modern human resource management system that helps businesses optimize management processes and effectively develop human resources.</p>
-                <div class="social-links">
-                    <a href="#"><i class="fab fa-facebook-f"></i></a>
-                    <a href="#"><i class="fab fa-twitter"></i></a>
-                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
-                    <a href="#"><i class="fab fa-instagram"></i></a>
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <h5>HRMS</h5>
+                        <p>Modern human resource management system that helps businesses optimize management processes
+                            and effectively develop human resources.</p>
+                        <div class="social-links">
+                            <a href="#"><i class="fab fa-facebook-f"></i></a>
+                            <a href="#"><i class="fab fa-twitter"></i></a>
+                            <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                            <a href="#"><i class="fab fa-instagram"></i></a>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-4 text-center">
+                        <h5>Quick Links</h5>
+                        <a href="${pageContext.request.contextPath}/">Home</a>
+                        <a href="${pageContext.request.contextPath}/about">About</a>
+                        <a href="${pageContext.request.contextPath}/contact">Contact</a>
+                        <a href="${pageContext.request.contextPath}/faqs">FAQs</a>
+                        <a href="#features">Features</a>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-4 text-end">
+                        <h5>Contact</h5>
+                        <a href="mailto:support@hrms.com"><i class="fas fa-envelope me-2"></i>support@hrms.com</a>
+                        <a href="tel:+84123456789"><i class="fas fa-phone me-2"></i>+84 123 456 789</a>
+                        <a href="#"><i class="fas fa-map-marker-alt me-2"></i>Hanoi, Vietnam</a>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p>&copy; 2025 HRMS. Developed by SWP391-SE1960NJ-FA25-Group4. All rights reserved.</p>
                 </div>
             </div>
             <div class="col-lg-4 col-md-6 mb-4 text-center">
