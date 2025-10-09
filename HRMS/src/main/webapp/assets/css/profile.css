@@ -43,7 +43,7 @@ body {
     width: calc(100% - var(--sidebar-width));
 }
 
-.sidebar.collapsed ~ .main-content {
+.sidebar.collapsed~.main-content {
     margin-left: 70px;
     width: calc(100% - 70px);
 }
@@ -148,8 +148,13 @@ body {
 }
 
 @keyframes headerPattern {
-    0% { transform: translate(0, 0) rotate(0deg); }
-    100% { transform: translate(50px, 50px) rotate(360deg); }
+    0% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+
+    100% {
+        transform: translate(50px, 50px) rotate(360deg);
+    }
 }
 
 .change-password-header h4 {
@@ -240,8 +245,8 @@ body {
     transition: all 0.3s ease;
 }
 
-.form-floating .form-control:focus ~ label,
-.form-floating .form-control:not(:placeholder-shown) ~ label {
+.form-floating .form-control:focus~label,
+.form-floating .form-control:not(:placeholder-shown)~label {
     color: #4a7bc8;
     transform: scale(0.85) translateY(-1rem) translateX(0.15rem);
 }
@@ -331,8 +336,13 @@ body {
 }
 
 @keyframes shine {
-    0% { left: -100%; }
-    100% { left: 200%; }
+    0% {
+        left: -100%;
+    }
+
+    100% {
+        left: 200%;
+    }
 }
 
 .strength-text {
@@ -591,6 +601,7 @@ body {
         opacity: 0;
         transform: translateY(-20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -665,8 +676,13 @@ body {
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 /* Invalid Feedback Message */
@@ -680,14 +696,24 @@ body {
     animation: shake 0.4s ease;
 }
 
-.form-control.is-invalid ~ .invalid-feedback {
+.form-control.is-invalid~.invalid-feedback {
     display: block;
 }
 
 @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    75% { transform: translateX(5px); }
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-5px);
+    }
+
+    75% {
+        transform: translateX(5px);
+    }
 }
 
 /* Security Tips Card - Modern Info Box */
@@ -778,7 +804,7 @@ body {
         margin-left: 0 !important;
         width: 100% !important;
     }
-    
+
     .dashboard-wrapper {
         flex-direction: column;
     }
@@ -788,48 +814,48 @@ body {
     .container-fluid {
         padding: 1rem;
     }
-    
+
     .dashboard-header {
         padding: 1rem;
     }
-    
+
     .dashboard-header h1 {
         font-size: 1.25rem;
     }
-    
+
     .dashboard-footer {
         padding: 1.25rem 1rem;
         font-size: 0.85rem;
         text-align: center;
     }
-    
+
     .dashboard-footer p {
         margin: 0.2rem 0;
     }
-    
+
     .change-password-card {
         margin: 0;
         border-radius: 16px;
     }
-    
+
     .password-form {
         padding: 1.5rem;
     }
-    
+
     .change-password-header {
         padding: 1.5rem;
     }
-    
+
     .change-password-header h4 {
         font-size: 1.35rem;
         gap: 0.75rem;
     }
-    
+
     .change-password-header i {
         font-size: 1.5rem;
         padding: 0.6rem;
     }
-    
+
     .btn-change-password,
     .btn-cancel {
         width: 100%;
@@ -838,30 +864,30 @@ body {
         padding: 0.875rem 1.5rem;
         font-size: 0.9rem;
     }
-    
+
     .form-floating .form-control {
         font-size: 0.95rem;
         padding: 1.1rem 3rem 1.1rem 2.75rem;
         height: 58px;
     }
-    
+
     .password-requirements {
         padding: 1.25rem;
     }
-    
+
     .password-requirements h6 {
         font-size: 0.9rem;
     }
-    
+
     .requirement-item {
         font-size: 0.875rem;
         margin-bottom: 0.5rem;
     }
-    
+
     .card-body {
         padding: 1.5rem;
     }
-    
+
     .card-body ul li {
         font-size: 0.9rem;
         padding: 0.75rem 0;
@@ -876,16 +902,16 @@ body {
         text-align: center;
         gap: 0.5rem;
     }
-    
+
     .password-form {
         padding: 1.25rem;
     }
-    
+
     .form-floating .form-control {
         height: 54px;
         font-size: 0.9rem;
     }
-    
+
     .password-toggle {
         width: 38px;
         height: 38px;
@@ -903,6 +929,7 @@ body {
         opacity: 0;
         transform: translateY(30px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -911,9 +938,12 @@ body {
 
 /* Pulse Animation for Icons */
 @keyframes pulse {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: scale(1);
     }
+
     50% {
         transform: scale(1.05);
     }
