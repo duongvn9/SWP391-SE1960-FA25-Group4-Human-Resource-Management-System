@@ -2,13 +2,13 @@
     <%@ taglib uri="jakarta.tags.core" prefix="c" %>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="description" content="HRMS - Hệ thống Quản lý Nhân sự hiện đại">
-        <meta name="keywords" content="HRMS, quản lý nhân sự, HR, nhân viên">
+        <meta name="description" content="HRMS - Modern Human Resource Management System">
+        <meta name="keywords" content="HRMS, human resource management, HR, employee">
         <meta name="author" content="Group4 - SWP391">
         <title>
             <c:choose>
                 <c:when test="${not empty param.pageTitle}">${param.pageTitle} - HRMS</c:when>
-                <c:otherwise>HRMS - Hệ thống Quản lý Nhân sự</c:otherwise>
+                <c:otherwise>HRMS - Human Resource Management System</c:otherwise>
             </c:choose>
         </title>
 

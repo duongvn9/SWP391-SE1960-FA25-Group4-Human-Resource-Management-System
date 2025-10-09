@@ -2,10 +2,13 @@
 :root {
   --primary-color: #2c5aa0;
   --secondary-color: #f8f9fa;
+  --accent-color: #667eea;
   --success-color: #28a745;
   --danger-color: #dc3545;
   --warning-color: #ffc107;
   --info-color: #17a2b8;
+  --text-dark: #333;
+  --text-light: #666;
   --sidebar-width: 260px;
 }
 
