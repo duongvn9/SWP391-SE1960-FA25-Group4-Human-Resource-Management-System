@@ -31,7 +31,8 @@
                         <div class="col-lg-6">
                             <div class="hero-content" data-aos="fade-right">
                                 <h1>Smart & Efficient <br>Human Resource Management</h1>
-                                <p>Modern HRMS helps businesses optimize HR management processes, from recruitment to career development.</p>
+                                <p>Modern HRMS helps businesses optimize HR management processes, from recruitment to
+                                    career development.</p>
                                 <div class="hero-buttons">
                                     <c:choose>
                                         <c:when test="${not empty sessionScope.userId}">
@@ -77,7 +78,8 @@
                                     <i class="fas fa-users"></i>
                                 </div>
                                 <h4>Employee Management</h4>
-                                <p>Comprehensive employee information management, from personal records to work history and performance evaluation.</p>
+                                <p>Comprehensive employee information management, from personal records to work history
+                                    and performance evaluation.</p>
                             </div>
                         </div>
 
@@ -87,7 +89,8 @@
                                     <i class="fas fa-clock"></i>
                                 </div>
                                 <h4>Smart Attendance</h4>
-                                <p>Automated attendance system with multiple methods: web, mobile app, and integrated time clock devices.</p>
+                                <p>Automated attendance system with multiple methods: web, mobile app, and integrated
+                                    time clock devices.</p>
                             </div>
                         </div>
 
@@ -97,7 +100,8 @@
                                     <i class="fas fa-money-bill-wave"></i>
                                 </div>
                                 <h4>Automatic Payroll</h4>
-                                <p>Accurate salary calculation based on attendance, allowances, bonuses, and deductions according to regulations.</p>
+                                <p>Accurate salary calculation based on attendance, allowances, bonuses, and deductions
+                                    according to regulations.</p>
                             </div>
                         </div>
 
@@ -107,7 +111,8 @@
                                     <i class="fas fa-calendar-alt"></i>
                                 </div>
                                 <h4>Leave Management</h4>
-                                <p>Register, approve, and track leave online with automated workflow and real-time notifications.</p>
+                                <p>Register, approve, and track leave online with automated workflow and real-time
+                                    notifications.</p>
                             </div>
                         </div>
 
@@ -117,7 +122,8 @@
                                     <i class="fas fa-chart-bar"></i>
                                 </div>
                                 <h4>Reports & Analytics</h4>
-                                <p>Intuitive dashboard with detailed reports on HR, performance, and development trends.</p>
+                                <p>Intuitive dashboard with detailed reports on HR, performance, and development trends.
+                                </p>
                             </div>
                         </div>
 
@@ -127,7 +133,8 @@
                                     <i class="fas fa-shield-alt"></i>
                                 </div>
                                 <h4>Advanced Security</h4>
-                                <p>Protect HR data with advanced encryption, detailed permissions, and compliance with security standards.</p>
+                                <p>Protect HR data with advanced encryption, detailed permissions, and compliance with
+                                    security standards.</p>
                             </div>
                         </div>
                     </div>
@@ -182,7 +189,8 @@
                                 </div>
                                 <div class="service-content">
                                     <h4>Recruitment & Selection</h4>
-                                    <p>Manage the entire recruitment process from job posting, resume screening, interviews to hiring decisions.</p>
+                                    <p>Manage the entire recruitment process from job posting, resume screening,
+                                        interviews to hiring decisions.</p>
                                 </div>
                             </div>
                         </div>
@@ -194,7 +202,8 @@
                                 </div>
                                 <div class="service-content">
                                     <h4>Training & Development</h4>
-                                    <p>Plan training, track learning progress, and evaluate the effectiveness of employee development programs.</p>
+                                    <p>Plan training, track learning progress, and evaluate the effectiveness of
+                                        employee development programs.</p>
                                 </div>
                             </div>
                         </div>
@@ -206,7 +215,8 @@
                                 </div>
                                 <div class="service-content">
                                     <h4>Performance Evaluation</h4>
-                                    <p>KPI evaluation system, 360 feedback, and personal goal tracking to improve work efficiency.</p>
+                                    <p>KPI evaluation system, 360 feedback, and personal goal tracking to improve work
+                                        efficiency.</p>
                                 </div>
                             </div>
                         </div>
@@ -218,7 +228,8 @@
                                 </div>
                                 <div class="service-content">
                                     <h4>Process Automation</h4>
-                                    <p>Automated workflows for HR processes, minimizing manual work and increasing operational efficiency.</p>
+                                    <p>Automated workflows for HR processes, minimizing manual work and increasing
+                                        operational efficiency.</p>
                                 </div>
                             </div>
                         </div>

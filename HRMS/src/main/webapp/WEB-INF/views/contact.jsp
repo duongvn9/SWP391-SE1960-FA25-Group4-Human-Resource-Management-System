@@ -5,7 +5,7 @@
 
         <head>
             <jsp:include page="layout/head.jsp">
-                <jsp:param name="pageTitle" value="Contact - HRMS" />
+                <jsp:param name="pageTitle" value="Contact" />
                 <jsp:param name="pageCss" value="contact.css" />
             </jsp:include>
         </head>
@@ -20,7 +20,8 @@
             <section class="hero-section">
                 <div class="container">
                     <h1 data-aos="fade-up">Contact Us</h1>
-                    <p data-aos="fade-up" data-aos-delay="200">We are always ready to support you with optimal HR management solutions</p>
+                    <p data-aos="fade-up" data-aos-delay="200">We are always ready to support you with optimal HR
+                        management solutions</p>
                 </div>
             </section>
 
@@ -86,7 +87,8 @@
                                     </div>
                                     <div class="contact-details">
                                         <h5>Working Hours</h5>
-                                        <p>Monday - Friday: 8:00 AM - 5:30 PM<br>Saturday: 8:00 AM - 12:00 PM<br>Sunday: Closed</p>
+                                        <p>Monday - Friday: 8:00 AM - 5:30 PM<br>Saturday: 8:00 AM - 12:00 PM<br>Sunday:
+                                            Closed</p>
                                     </div>
                                 </div>
                             </div>
@@ -132,12 +134,14 @@
                                                     <option value="">Select subject</option>
                                                     <option value="support" ${param.subject=='support' ? 'selected' : ''
                                                         }>Technical Support</option>
-                                                    <option value="demo" ${param.subject=='demo' ? 'selected' : '' }>Request Demo</option>
+                                                    <option value="demo" ${param.subject=='demo' ? 'selected' : '' }>
+                                                        Request Demo</option>
                                                     <option value="pricing" ${param.subject=='pricing' ? 'selected' : ''
                                                         }>Product Pricing</option>
                                                     <option value="partnership" ${param.subject=='partnership'
                                                         ? 'selected' : '' }>Business Partnership</option>
-                                                    <option value="other" ${param.subject=='other' ? 'selected' : '' }>Other</option>
+                                                    <option value="other" ${param.subject=='other' ? 'selected' : '' }>
+                                                        Other</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -146,8 +150,7 @@
                                     <div class="form-group">
                                         <label for="message">Message <span class="text-danger">*</span></label>
                                         <textarea class="form-control" id="message" name="message" rows="6"
-                                            placeholder="Enter your message..."
-                                            required>${param.message}</textarea>
+                                            placeholder="Enter your message..." required>${param.message}</textarea>
                                     </div>
 
                                     <div class="text-center">

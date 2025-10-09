@@ -18,7 +18,7 @@
     <body>
         <div class="dashboard-wrapper">
             <jsp:include page="../layout/sidebar.jsp">
-                <jsp:param name="currentPage" value="recruitment-request" />
+                <jsp:param name="currentPage" value="recruitment-create" />
             </jsp:include>
 
             <div class="main-content">

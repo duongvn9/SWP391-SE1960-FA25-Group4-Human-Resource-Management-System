@@ -1,7 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 
-<!-- Sidebar -->
 <nav class="sidebar" id="sidebar">
     <div class="sidebar-header">
         <i class="fas fa-users-cog fs-2 mb-2"></i>
@@ -10,6 +9,7 @@
     </div>
 
     <ul class="sidebar-nav nav flex-column">
+        
         <li class="nav-item">
             <a href="${pageContext.request.contextPath}/dashboard"
                class="nav-link ${param.currentPage == 'dashboard' ? 'active' : ''}" data-tooltip="Dashboard">
@@ -40,7 +40,6 @@
             </a>
         </li>
 
-        <!-- Dropdown: Requests -->
         <li class="nav-item">
             <a href="#" class="nav-link sidebar-dropdown-toggle" data-target="requests-submenu"
                data-tooltip="Requests">
@@ -72,6 +71,7 @@
                 </li>
             </ul>
         </li>
+        
         <li class="nav-section">
             <span class="nav-section-title">Recruitment</span>
         </li>
@@ -79,53 +79,57 @@
         <c:if test="${sessionScope.userRole == 'MANAGER'}">
             <li class="nav-item">
                 <a href="${pageContext.request.contextPath}/recruitment/request/form"
-                   class="nav-link ${param.currentPage == 'recruitment-create' ? 'active' : ''}">
+                   class="nav-link ${param.currentPage == 'recruitment-create' ? 'active' : ''}" data-tooltip="Create Recruitment Request">
                     <i class="fas fa-file-signature"></i>
                     <span>Create Request</span>
                 </a>
             </li>
-
             <li class="nav-item">
                 <a href="${pageContext.request.contextPath}/requests/drafts"
-                   class="nav-link ${param.currentPage == 'recruitment-drafts' ? 'active' : ''}">
+                   class="nav-link ${param.currentPage == 'recruitment-drafts' ? 'active' : ''}" data-tooltip="Saved Drafts">
                     <i class="fas fa-save"></i>
                     <span>My Drafts</span>
                 </a>
             </li>
         </c:if>
-
-        <c:if test="${sessionScope.userRole == 'MANAGER' 
-                      || sessionScope.userRole == 'HR' || sessionScope.userRole == 'HRM'}">
-              <li class="nav-item">
-                  <a href="${pageContext.request.contextPath}/requests/list"
-                     class="nav-link ${param.currentPage == 'recruitment-list' ? 'active' : ''}">
-                      <i class="fas fa-list"></i>
-                      <span>My Requests</span>
-                  </a>
-              </li>
+        
+        <c:if test="${sessionScope.userRole == 'MANAGER' || sessionScope.userRole == 'HR' || sessionScope.userRole == 'HRM'}">
+             <li class="nav-item">
+                 <a href="${pageContext.request.contextPath}/requests/list"
+                    class="nav-link ${param.currentPage == 'recruitment-list' ? 'active' : ''}" data-tooltip="My Sent Requests">
+                     <i class="fas fa-list"></i>
+                     <span>My Requests</span>
+                 </a>
+             </li>
         </c:if>
-
+        
         <li class="nav-section">
             <span class="nav-section-title">Workflow</span>
         </li>
 
         <c:if test="${sessionScope.userRole == 'HR' || sessionScope.userRole == 'HRM'}">
-            <li class="nav-section"><span>Review & Approvals</span></li>
-
             <li class="nav-item">
-                <a href=".../review/hr"><span>Review Requests (HR Step)</span></a>
+                <a href="${pageContext.request.contextPath}/recruitment/review/hr"
+                   class="nav-link ${param.currentPage == 'recruitment-review-hr' ? 'active' : ''}" data-tooltip="Review Requests (HR Step)">
+                    <i class="fas fa-user-check"></i>
+                    <span>Review Requests (HR)</span>
+                </a>
             </li>
         </c:if>
-
 
         <c:if test="${sessionScope.userRole == 'HRM'}">
-
             <li class="nav-item">
-                <a href=".../review/hrm"><i class="fas fa-gavel"></i>
-                    <span>Final Approval (HRM Step)</span></a>
+                <a href="${pageContext.request.contextPath}/recruitment/review/hrm"
+                   class="nav-link ${param.currentPage == 'recruitment-review-hrm' ? 'active' : ''}" data-tooltip="Final Approval (HRM Step)">
+                    <i class="fas fa-gavel"></i>
+                    <span>Final Approval (HRM)</span>
+                </a>
             </li>
         </c:if>
-        <!-- Admin Only -->
+
+        <li class="nav-section">
+            <span class="nav-section-title">Admin & System</span>
+        </li>
         <c:if test="${sessionScope.userRole == 'ADMIN' || sessionScope.userRole == 'Admin'}">
             <li class="nav-item">
                 <a href="${pageContext.request.contextPath}/admin/accounts"
@@ -152,8 +156,10 @@
             </li>
         </c:if>
 
-        <!-- Profile & Logout -->
-        <li class="nav-item mt-3">
+        <li class="nav-section">
+            <span class="nav-section-title">User</span>
+        </li>
+        <li class="nav-item">
             <a href="${pageContext.request.contextPath}/profile"
                class="nav-link ${param.currentPage == 'profile' ? 'active' : ''}"
                data-tooltip="Profile">
