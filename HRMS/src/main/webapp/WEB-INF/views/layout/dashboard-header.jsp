@@ -18,11 +18,9 @@
             </button>
             <ul class="dropdown-menu">
                 <li><a class="dropdown-item" href="${pageContext.request.contextPath}/user-profile">
-<<<<<<< HEAD
-                        <i class="fas fa-user me-2"></i>Thông tin cá nhân
-=======
+
                         <i class="fas fa-user me-2"></i>Profile
->>>>>>> 2432be8d7905b5243e2e8d233ef76e3bc47a8b80
+
                     </a></li>
                 <li><a class="dropdown-item" href="${pageContext.request.contextPath}/contracts">
                         <i class="bi bi-file-earmark-text"></i> 📝Employment Contract
