@@ -1,2 +1,0 @@
-Thư mục này được giữ lại để tránh bị bỏ trống trong Git.
-Bạn có thể xóa file này nếu muốn.
