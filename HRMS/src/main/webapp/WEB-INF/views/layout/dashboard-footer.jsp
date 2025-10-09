@@ -4,8 +4,8 @@
         <!-- Dashboard Footer -->
         <div class="dashboard-footer">
             <p><strong>HRMS - Human Resource Management System</strong></p>
-            <p class="text-muted">Bản quyền © 2024 Group 4. Tất cả quyền được bảo lưu.</p>
-            <p class="text-muted">Cập nhật lần cuối: <span id="lastUpdate"></span></p>
+            <p class="text-muted">Copyright © 2024 Group 4. All rights reserved.</p>
+            <p class="text-muted">Last updated: <span id="lastUpdate"></span></p>
         </div>
 
         <!-- Bootstrap JS -->

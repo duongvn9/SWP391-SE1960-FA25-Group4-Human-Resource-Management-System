@@ -16,28 +16,28 @@
                     <ul class="navbar-nav ms-auto">
                         <li class="nav-item">
                             <a class="nav-link ${param.currentPage == 'home' ? 'active' : ''}"
-                                href="${pageContext.request.contextPath}/">Trang chủ</a>
+                                href="${pageContext.request.contextPath}/">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#features">Tính năng</a>
+                            <a class="nav-link" href="#features">Features</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link ${param.currentPage == 'about' ? 'active' : ''}"
-                                href="${pageContext.request.contextPath}/about">Giới thiệu</a>
+                                href="${pageContext.request.contextPath}/about">About</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link ${param.currentPage == 'contact' ? 'active' : ''}"
-                                href="${pageContext.request.contextPath}/contact">Liên hệ</a>
+                                href="${pageContext.request.contextPath}/contact">Contact</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link ${param.currentPage == 'faqs' ? 'active' : ''}"
                                 href="${pageContext.request.contextPath}/faqs">FAQs</a>
                         </li>
 
-                        <!-- Hiển thị menu theo trạng thái đăng nhập -->
+                        <!-- Display menu based on login status -->
                         <c:choose>
                             <c:when test="${not empty sessionScope.userId}">
-                                <!-- User đã đăng nhập -->
+                                <!-- User logged in -->
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button"
                                         data-bs-toggle="dropdown">
@@ -53,17 +53,17 @@
                                         </li>
                                         <li><a class="dropdown-item"
                                                 href="${pageContext.request.contextPath}/auth/logout">
-                                                <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
+                                                <i class="fas fa-sign-out-alt me-2"></i>Logout
                                             </a></li>
                                     </ul>
                                 </li>
                             </c:when>
                             <c:otherwise>
-                                <!-- User chưa đăng nhập -->
+                                <!-- User not logged in -->
                                 <li class="nav-item">
                                     <a class="nav-link ${currentPage == 'login' ? 'active' : ''}"
                                         href="${pageContext.request.contextPath}/login">
-                                        <i class="fas fa-sign-in-alt me-1"></i>Đăng nhập
+                                        <i class="fas fa-sign-in-alt me-1"></i>Login
                                     </a>
                                 </li>
                             </c:otherwise>
