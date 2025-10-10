@@ -255,8 +255,8 @@
                                 <i class="fas fa-clock"></i><span>Overtime Request</span>
                             </a>
                         </li>
-<<<<<<< Updated upstream
-=======
+
+
                         <c:if test="${sessionScope.userRole == 'MANAGER' || sessionScope.userRole == 'Manager'}">
                             <li>
                                 <a href="${pageContext.request.contextPath}/requests/recruitment/create"
@@ -265,7 +265,7 @@
                                 </a>
                             </li>
                         </c:if>
->>>>>>> Stashed changes
+
                         <li>
                             <a href="${pageContext.request.contextPath}/requests/appeal"
                                 class="nav-link ${param.currentPage == 'appeal-request' ? 'active' : ''}">
