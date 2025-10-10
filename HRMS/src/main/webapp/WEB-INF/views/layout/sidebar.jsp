@@ -255,6 +255,17 @@
                                 <i class="fas fa-clock"></i><span>Overtime Request</span>
                             </a>
                         </li>
+
+
+                        <c:if test="${sessionScope.userRole == 'MANAGER' || sessionScope.userRole == 'Manager'}">
+                            <li>
+                                <a href="${pageContext.request.contextPath}/requests/recruitment/create"
+                                   class="nav-link ${param.currentPage == 'recruitment-create' ? 'active' : ''}">
+                                    <i class="fas fa-user-plus"></i><span>Recruitment Request</span>
+                                </a>
+                            </li>
+                        </c:if>
+
                         <li>
                             <a href="${pageContext.request.contextPath}/requests/appeal"
                                 class="nav-link ${param.currentPage == 'appeal-request' ? 'active' : ''}">
