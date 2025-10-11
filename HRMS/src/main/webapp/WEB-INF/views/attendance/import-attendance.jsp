@@ -1,43 +1,87 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <html>
     <head>
         <title>Import Attendance</title>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/import-attendance.css">
-        <script src="${pageContext.request.contextPath}/assets/js/import-attendance.js"></script>
+        <script src="${pageContext.request.contextPath}/assets/js/import-attendance.js" defer></script>
     </head>
     <body>
         <h2>Import Attendance</h2>
 
         <!-- Tabs -->
         <div>
-            <button class="tab-btn" id="upload-btn" onclick="showTab('upload')" aria-selected="false">Upload File</button>
-            <button class="tab-btn" id="google-btn" onclick="showTab('google')" aria-selected="false">Google Sheets</button>
-            <button class="tab-btn active" id="manual-btn" onclick="showTab('manual')" aria-selected="true">Manual Entry</button>
+            <button class="tab-btn" id="upload-btn">Upload File</button>
+            <button class="tab-btn" id="google-btn">Google Sheets</button>
+            <button class="tab-btn" id="manual-btn">Manual Entry</button>
         </div>
 
         <hr/>
 
-        <div id="upload" class="tab-content" style="display:none;">
+        <!-- Upload File Tab -->
+        <div id="upload" class="tab-content">
             <h3>Upload File (Excel / CSV)</h3>
-
-            <!-- Form gửi file lên servlet -->
             <form action="${pageContext.request.contextPath}/attendance/import" method="post" enctype="multipart/form-data">
-                <input type="file" id="fileInput" name="file" accept=".xlsx,.csv" required/>
+                <input type="file" id="fileInput" name="file" accept=".xlsx,.csv"/>
                 <p id="fileName"></p>
                 <table border="1" cellpadding="6" id="filePreview"></table>
                 <div style="margin-top: 10px;">
-                    <!-- Nút Preview -->
-                    <input type="submit" id="preview" name="action" value="Preview" />
-
-                    <!-- Nút Import -->
-                    <input type="submit" id="import" name="action" value="Import" />
+                    <input type="submit" id="preview" name="action" value="Preview"/>
+                    <input type="submit" id="import" name="action" value="Import"/>
                 </div>
+
+                <!-- Hiển thị thông báo -->
+                <c:if test="${not empty error}">
+                    <div style="color: red; margin-top: 10px;">
+                        ${error}
+                    </div>
+                </c:if>
+                <c:if test="${not empty success}">
+                    <div style="color: green; margin-top: 10px;">
+                        ${success}
+                    </div>
+                </c:if>
+
+                <!-- Khu vực hiển thị bảng preview dữ liệu -->
+                <c:if test="${not empty previewLogs}">
+                    <h4 style="margin-top: 20px;">Preview Data</h4>
+                    <table border="1" cellpadding="6" style="border-collapse: collapse; margin-top: 10px; width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>Employee ID</th>
+                                <th>Employee Name</th>
+                                <th>Department</th>
+                                <th>Date</th>
+                                <th>Check-in</th>
+                                <th>Check-out</th>
+                                <th>Status</th>
+                                <th>Source</th>
+                                <th>Period</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <c:forEach var="log" items="${previewLogs}">
+                                <tr>
+                                    <td>${log.employeeId}</td>
+                                    <td>${log.employeeName}</td>
+                                    <td>${log.department}</td>
+                                    <td>${log.date}</td>
+                                    <td>${log.checkIn}</td>
+                                    <td>${log.checkOut}</td>
+                                    <td>${log.status}</td>
+                                    <td>${log.source}</td>
+                                    <td>${log.period}</td>
+                                </tr>
+                            </c:forEach>
+                        </tbody>
+                    </table>
+                </c:if>
+
             </form>
         </div>
 
-
-        <!-- Google Sheets Tab (unchanged) -->
-        <div id="google" class="tab-content" style="display:none;">
+        <!-- Google Sheets Tab -->
+        <div id="google" class="tab-content">
             <h3>Import from Google Sheets</h3>
             <button onclick="alert('Google OAuth...')">Connect Google Account</button><br/><br/>
             <label>Sheet URL:</label>
@@ -49,10 +93,6 @@
         <!-- Manual Entry Tab -->
         <div id="manual" class="tab-content">
             <h3>Manual Entry (Excel-like Grid)</h3>
-            <button onclick="addRow(document.getElementById('manualTable').getElementsByTagName('tbody')[0])">Add Row</button>
-            <button onclick="validateManual()">Validate</button>
-            <button onclick="alert('Import success!')">Import</button>
-            <br/><br/>
             <table id="manualTable" class="excel-table">
                 <thead>
                     <tr>

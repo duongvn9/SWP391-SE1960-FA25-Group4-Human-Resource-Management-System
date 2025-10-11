@@ -9,7 +9,7 @@ public class AttendanceLog {
 
     private Long id;
     private Long userId;
-    private String checkType; // IN / OUT / etc.
+    private String checkType; 
     private LocalDateTime checkedAt;
     private String source;
     private String note;
