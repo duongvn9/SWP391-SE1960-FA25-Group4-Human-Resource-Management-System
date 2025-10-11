@@ -81,54 +81,46 @@
             <thead>
                 <tr>
                     <th><input type="checkbox" onclick="selectAll(this)" /></th>
-                    <th>Employee Name</th>
                     <th>Employee ID</th>
-                    <th>Department / Team</th>
+                    <th>Employee Name</th>
+                    <th>Department</th>
                     <th>Date</th>
                     <th>Check-in</th>
                     <th>Check-out</th>
                     <th>Status</th>
                     <th>Source</th>
                     <th>Period</th>
-                    <th>Locked</th>
                     <th class="edit-col" style="display:none;">Actions</th>
                 </tr>
             </thead>
             <tbody>
-                <!-- DEMO DATA -->
-                <tr onclick="openDetail({
-                            id: 1,
-                            employeeName: 'Nguyễn Văn A',
-                            employeeId: 'EMP001',
-                            department: 'IT',
-                            date: '2025-10-08',
-                            checkIn: '08:05',
-                            checkOut: '17:00',
-                            status: 'Approved',
-                            source: 'App',
-                            period: '2025-10',
-                            locked: false,
-                            notes: 'Quên chấm công buổi sáng, đã bổ sung.',
-                            attachments: 'chamcong_1008.png',
-                            lockedBy: 'Trần Thị HR',
-                            lockedAt: '2025-10-09 09:00',
-                            auditTrail: '08/10 chỉnh giờ check-in; 09/10 HR approve.'
-                        })">
-                    <td><input type="checkbox" /></td>
-                    <td>Nguyễn Văn A</td>
-                    <td>EMP001</td>
-                    <td>IT</td>
-                    <td>2025-10-08</td>
-                    <td>08:05</td>
-                    <td>17:00</td>
-                    <td>Approved</td>
-                    <td>App</td>
-                    <td>2025-10</td>
-                    <td>No</td>
-                    <td class="edit-col" style="display:none;">
-                        <button>Delete</button>
-                    </td>
-                </tr>
+                <c:forEach var="att" items="${attendanceList}">
+                    <tr>
+                        <td><input type="checkbox" /></td>
+                        <td>${att.employeeId}</td>
+                        <td>${att.employeeName}</td>
+                        <td>${att.department}</td>
+                        <!-- LocalDate hiển thị trực tiếp -->
+                        <td><c:out value="${att.date}" /></td>
+                        <!-- LocalTime lấy HH:mm -->
+                        <td>
+                            <c:if test="${att.checkIn != null}">
+                                ${att.checkIn.toString().substring(0,5)}
+                            </c:if>
+                        </td>
+                        <td>
+                            <c:if test="${att.checkOut != null}">
+                                ${att.checkOut.toString().substring(0,5)}
+                            </c:if>
+                        </td>
+                        <td><c:out value="${att.status}" /></td>
+                        <td><c:out value="${att.source}" /></td>
+                        <td><c:out value="${att.period}" /></td>
+                        <td class="edit-col" style="display:none;">
+                            <button>Delete</button>
+                        </td>
+                    </tr>
+                </c:forEach>
             </tbody>
         </table>
 

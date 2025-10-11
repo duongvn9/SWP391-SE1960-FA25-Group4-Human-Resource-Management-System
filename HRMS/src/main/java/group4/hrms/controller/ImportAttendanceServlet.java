@@ -369,7 +369,7 @@ public class ImportAttendanceServlet extends HttpServlet {
                         long totalSeconds = Math.round(timePortion * 24 * 60 * 60);
                         return LocalTime.ofSecondOfDay(totalSeconds);
                     } else if (evaluated.getCellType() == CellType.STRING) {
-                        return parseTime(cell); // đệ quy parse lại
+                        return parseTime(cell); 
                     }
                 }
             }

@@ -1,5 +1,6 @@
 package group4.hrms.dao;
 
+import group4.hrms.dto.AttendanceLogDto;
 import group4.hrms.model.AttendanceLog;
 import group4.hrms.util.DatabaseUtil;
 
@@ -7,6 +8,7 @@ import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -199,6 +201,70 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
         }
     }
 
+    public List<AttendanceLogDto> findAllForOverview() throws SQLException {
+        String sql = """
+            SELECT
+              u.id AS employee_id,
+              u.employee_code AS employee_code,
+              u.full_name AS employee_name,
+              d.name AS department_name,
+              DATE(al.checked_at) AS work_date,
+              MIN(CASE WHEN al.check_type = 'IN'  THEN al.checked_at END)  AS check_in,
+              MAX(CASE WHEN al.check_type = 'OUT' THEN al.checked_at END)  AS check_out,
+              COALESCE(
+                MIN(CASE WHEN al.check_type = 'IN'  THEN al.note END),
+                MAX(CASE WHEN al.check_type = 'OUT' THEN al.note END),
+                'No Records'
+              ) AS status,
+              GROUP_CONCAT(DISTINCT al.source SEPARATOR ', ') AS source,
+              tp.name AS period_name
+            FROM attendance_logs al
+            JOIN users u ON al.user_id = u.id
+            LEFT JOIN departments d ON u.department_id = d.id
+            LEFT JOIN timesheet_periods tp ON al.period_id = tp.id
+            GROUP BY
+              u.id,
+              u.employee_code,
+              u.full_name,
+              d.name,
+              tp.name,
+              DATE(al.checked_at)
+            ORDER BY DATE(al.checked_at) DESC, u.full_name;
+        """;
+
+        List<AttendanceLogDto> results = new ArrayList<>();
+
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                AttendanceLogDto dto = new AttendanceLogDto();
+                dto.setEmployeeId(rs.getLong("employee_id"));
+                dto.setEmployeeName(rs.getString("employee_name"));
+                dto.setDepartment(rs.getString("department_name"));
+
+                // Lấy LocalDate từ sql Date
+                Date sqlDate = rs.getDate("work_date");
+                dto.setDate(sqlDate != null ? sqlDate.toLocalDate() : null);
+
+                // Lấy LocalTime từ Timestamp
+                Timestamp inTs = rs.getTimestamp("check_in");
+                Timestamp outTs = rs.getTimestamp("check_out");
+                dto.setCheckIn(inTs != null ? inTs.toLocalDateTime().toLocalTime() : null);
+                dto.setCheckOut(outTs != null ? outTs.toLocalDateTime().toLocalTime() : null);
+
+                dto.setStatus(rs.getString("status"));
+                dto.setSource(rs.getString("source"));
+                dto.setPeriod(rs.getString("period_name"));
+
+                results.add(dto);
+            }
+
+        } catch (SQLException e) {
+        }
+
+        return results;
+    }
+
     /**
      * Tìm attendance log theo user và work date
      */
@@ -231,13 +297,31 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
     /**
      * Tìm attendance logs theo user ID
      */
-    public List<AttendanceLog> findByUserId(Long userId) throws SQLException {
+    public List<AttendanceLogDto> findByUserId(Long userId) throws SQLException {
         if (userId == null) {
-            return new ArrayList<>();
+            return Collections.emptyList();
         }
 
-        List<AttendanceLog> logs = new ArrayList<>();
-        String sql = "SELECT * FROM attendance_logs WHERE user_id = ? ORDER BY date DESC";
+        String sql = """
+        SELECT
+          DATE(al.checked_at) AS work_date,
+          MIN(CASE WHEN al.check_type = 'IN'  THEN al.checked_at END) AS check_in,
+          MAX(CASE WHEN al.check_type = 'OUT' THEN al.checked_at END) AS check_out,
+          COALESCE(
+            MIN(CASE WHEN al.check_type = 'IN'  THEN al.note END),
+            MAX(CASE WHEN al.check_type = 'OUT' THEN al.note END),
+            'No Records'
+          ) AS status,
+          GROUP_CONCAT(DISTINCT al.source SEPARATOR ', ') AS source,
+          tp.name AS period_name
+        FROM attendance_logs al
+        LEFT JOIN timesheet_periods tp ON al.period_id = tp.id
+        WHERE al.user_id = ?
+        GROUP BY DATE(al.checked_at), tp.name
+        ORDER BY DATE(al.checked_at) DESC;
+    """;
+
+        List<AttendanceLogDto> results = new ArrayList<>();
 
         try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -245,17 +329,28 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    logs.add(mapResultSetToEntity(rs));
+                    AttendanceLogDto dto = new AttendanceLogDto();
+
+                    Date sqlDate = rs.getDate("work_date");
+                    dto.setDate(sqlDate != null ? sqlDate.toLocalDate() : null);
+
+                    Timestamp inTs = rs.getTimestamp("check_in");
+                    Timestamp outTs = rs.getTimestamp("check_out");
+                    dto.setCheckIn(inTs != null ? inTs.toLocalDateTime().toLocalTime() : null);
+                    dto.setCheckOut(outTs != null ? outTs.toLocalDateTime().toLocalTime() : null);
+
+                    dto.setStatus(rs.getString("status"));
+                    dto.setSource(rs.getString("source"));
+                    dto.setPeriod(rs.getString("period_name"));
+
+                    results.add(dto);
                 }
             }
-
-            logger.debug("Found {} attendance logs for user {}", logs.size(), userId);
-            return logs;
-
         } catch (SQLException e) {
-            logger.error("Error finding attendance logs by user {}: {}", userId, e.getMessage(), e);
             throw e;
         }
+
+        return results;
     }
 
     /**

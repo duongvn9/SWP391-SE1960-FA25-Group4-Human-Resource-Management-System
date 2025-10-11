@@ -94,6 +94,18 @@ public class AttendanceLogDto {
         this.period = period;
     }
 
+    public String getDateStr() {
+        return date != null ? date.toString() : "";
+    }
+
+    public String getCheckInStr() {
+        return checkIn != null ? checkIn.toString().substring(0, 5) : "";
+    }
+
+    public String getCheckOutStr() {
+        return checkOut != null ? checkOut.toString().substring(0, 5) : "";
+    }
+
     // -------- toString() để debug --------
     @Override
     public String toString() {
