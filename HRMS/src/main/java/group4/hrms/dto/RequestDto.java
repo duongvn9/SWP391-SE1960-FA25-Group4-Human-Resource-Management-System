@@ -37,54 +37,54 @@ public class RequestDto {
     // Constructors
     public RequestDto() {}
     
-    public RequestDto(Request request) {
-        this.id = request.getId();
-        this.userId = request.getUserId();
-        this.requestTypeId = request.getRequestTypeId();
-        this.title = request.getTitle();
-        this.description = request.getDescription();
-        this.status = request.getStatus();
-        this.priority = request.getPriority();
-        this.startDate = request.getStartDate();
-        this.endDate = request.getEndDate();
-        this.dayCount = request.getDayCount();
-        this.attachmentPath = request.getAttachmentPath();
-        this.rejectReason = request.getRejectReason();
-        this.approvedBy = request.getApprovedBy();
-        this.approvedAt = request.getApprovedAt();
-        this.createdAt = request.getCreatedAt();
-        this.updatedAt = request.getUpdatedAt();
-        
-        // Set display values
-        this.statusDisplay = getStatusDisplayText(this.status);
-        this.priorityDisplay = getPriorityDisplayText(this.priority);
-    }
-    
-    // Factory methods
-    public static RequestDto fromEntity(Request request) {
-        return new RequestDto(request);
-    }
-    
-    public Request toEntity() {
-        Request request = new Request();
-        request.setId(this.id);
-        request.setUserId(this.userId);
-        request.setRequestTypeId(this.requestTypeId);
-        request.setTitle(this.title);
-        request.setDescription(this.description);
-        request.setStatus(this.status);
-        request.setPriority(this.priority);
-        request.setStartDate(this.startDate);
-        request.setEndDate(this.endDate);
-        request.setDayCount(this.dayCount);
-        request.setAttachmentPath(this.attachmentPath);
-        request.setRejectReason(this.rejectReason);
-        request.setApprovedBy(this.approvedBy);
-        request.setApprovedAt(this.approvedAt);
-        request.setCreatedAt(this.createdAt);
-        request.setUpdatedAt(this.updatedAt);
-        return request;
-    }
+//    public RequestDto(Request request) {
+//        this.id = request.getId();
+//        this.userId = request.getUserId();
+//        this.requestTypeId = request.getRequestTypeId();
+//        this.title = request.getTitle();
+//        this.description = request.getDescription();
+//        this.status = request.getStatus();
+//        this.priority = request.getPriority();
+//        this.startDate = request.getStartDate();
+//        this.endDate = request.getEndDate();
+//        this.dayCount = request.getDayCount();
+//        this.attachmentPath = request.getAttachmentPath();
+//        this.rejectReason = request.getRejectReason();
+//        this.approvedBy = request.getApprovedBy();
+//        this.approvedAt = request.getApprovedAt();
+//        this.createdAt = request.getCreatedAt();
+//        this.updatedAt = request.getUpdatedAt();
+//        
+//        // Set display values
+//        this.statusDisplay = getStatusDisplayText(this.status);
+//        this.priorityDisplay = getPriorityDisplayText(this.priority);
+//    }
+//    
+//    // Factory methods
+//    public static RequestDto fromEntity(Request request) {
+//        return new RequestDto(request);
+//    }
+//    
+//    public Request toEntity() {
+//        Request request = new Request();
+//        request.setId(this.id);
+//        request.setUserId(this.userId);
+//        request.setRequestTypeId(this.requestTypeId);
+//        request.setTitle(this.title);
+//        request.setDescription(this.description);
+//        request.setStatus(this.status);
+//        request.setPriority(this.priority);
+//        request.setStartDate(this.startDate);
+//        request.setEndDate(this.endDate);
+//        request.setDayCount(this.dayCount);
+//        request.setAttachmentPath(this.attachmentPath);
+//        request.setRejectReason(this.rejectReason);
+//        request.setApprovedBy(this.approvedBy);
+//        request.setApprovedAt(this.approvedAt);
+//        request.setCreatedAt(this.createdAt);
+//        request.setUpdatedAt(this.updatedAt);
+//        return request;
+//    }
     
     // Getters và Setters
     public Long getId() {

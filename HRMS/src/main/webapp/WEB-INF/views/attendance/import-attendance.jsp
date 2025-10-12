@@ -4,7 +4,7 @@
     <head>
         <title>Import Attendance</title>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/import-attendance.css">
-        <script src="${pageContext.request.contextPath}/assets/js/import-attendance.js" defer></script>
+        <script src="${pageContext.request.contextPath}/assets/js/import-attendance.js"></script>
     </head>
     <body>
         <h2>Import Attendance</h2>
