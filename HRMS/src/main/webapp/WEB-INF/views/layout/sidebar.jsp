@@ -259,7 +259,7 @@
 
                         <c:if test="${sessionScope.userRole == 'MANAGER' || sessionScope.userRole == 'Manager'}">
                             <li>
-                                <a href="${pageContext.request.contextPath}/requests/recruitment/create"
+                                <a href="${pageContext.request.contextPath}/recruitment/request/form"
                                    class="nav-link ${param.currentPage == 'recruitment-create' ? 'active' : ''}">
                                     <i class="fas fa-user-plus"></i><span>Recruitment Request</span>
                                 </a>
