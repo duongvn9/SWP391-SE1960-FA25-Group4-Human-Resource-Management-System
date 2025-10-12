@@ -30,6 +30,13 @@ document.getElementById("saveDraftBtn").addEventListener("click", function() {
     form.submit();
 });
 
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get("success") === "draft-saved") {
+  showToast("Draft saved successfully!", "success");
+}else if (urlParams.get("success") === "submitted") {
+  showToast("Recruitment request submitted successfully!", "success");
+}
+
 document.getElementById("recruitmentRequestForm").addEventListener("submit", function(event) {
     // Luôn đảm bảo action là /requests/create cho việc SUBMIT chính thức
     // (Trong trường hợp người dùng nhấn SUBMIT REQUEST)

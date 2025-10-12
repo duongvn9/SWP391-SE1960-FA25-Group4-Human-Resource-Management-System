@@ -22,7 +22,7 @@ public class RecruitmentRequestFormServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse res)
             throws ServletException, IOException {
-        req.getRequestDispatcher("/WEB-INF/views/requests/recruitment_request.jsp")
+        req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp")
                 .forward(req, res);
 
     }
