@@ -618,4 +618,111 @@ public class RequestDao extends BaseDao<Request, Long> {
 
         return requests;
     }
+
+    /**
+     * Lấy danh sách yêu cầu tuyển dụng nháp (DRAFT) của 1 user
+     */
+    public List<Request> findDraftsByUserId(Long userId) {
+        List<Request> drafts = new ArrayList<>();
+        String sql = "SELECT * FROM " + getTableName() +
+                     " WHERE created_by_user_id = ? AND status = 'DRAFT' ORDER BY updated_at DESC";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setLong(1, userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    drafts.add(mapResultSetToEntity(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error finding draft requests for userId " + userId, e);
+        }
+        return drafts;
+    }
+
+    public List<RequestDto> findDraftsByUserIdWithDetails(Long userId) {
+        List<RequestDto> drafts = new ArrayList<>();
+        String sql = SELECT_WITH_DETAILS + " WHERE r.created_by_user_id = ? AND r.status = 'DRAFT' ORDER BY r.created_at DESC";
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, userId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    drafts.add(mapResultSetToDto(rs));
+                }
+            }
+
+        } catch (SQLException e) {
+            logger.error("Error finding draft requests with details for user id: {}", userId, e);
+            throw new RuntimeException("Error finding draft requests with details for user id: " + userId, e);
+        }
+
+        return drafts;
+    }
+
+    public List<Request> findPendingRecruitmentRequests() {
+        List<Request> list = new ArrayList<>();
+        String sql = """
+            SELECT * FROM requests
+            WHERE request_type_id = 2
+              AND status IN ('PENDING', 'HR_APPROVED', 'HR_REJECTED')
+            ORDER BY created_at DESC
+        """;
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                list.add(mapResultSetToEntity(rs));
+            }
+
+        } catch (Exception e) {
+            logger.error("Error finding pending recruitment requests", e);
+        }
+        return list;
+    }
+
+    /**
+     * Tìm requests theo loại và trạng thái (ví dụ: Recruitment + PENDING)
+     */
+    public List<Request> findByTypeAndStatus(Long requestTypeId, String status) {
+        List<Request> requests = new ArrayList<>();
+        String sql = SELECT_ALL + " WHERE request_type_id = ? AND status = ? ORDER BY created_at DESC";
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, requestTypeId);
+            stmt.setString(2, status);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    requests.add(mapResultSetToEntity(rs));
+                }
+            }
+
+        } catch (SQLException e) {
+            logger.error("Error finding requests by type and status: typeId={}, status={}", requestTypeId, status, e);
+            throw new RuntimeException("Error finding requests by type and status", e);
+        }
+
+        return requests;
+    }
+
+    /**
+     * Lấy danh sách yêu cầu tuyển dụng đang chờ HR duyệt
+     */
+    public List<Request> findPendingForHR() {
+        return findByTypeAndStatus(2L, "PENDING");
+    }
+
+    /**
+     * Lấy danh sách yêu cầu tuyển dụng đã duyệt qua HR, chờ HRM xác nhận
+     */
+    public List<Request> findPendingForHRM() {
+        return findByTypeAndStatus(2L, "HR_APPROVED");
+    }
 }

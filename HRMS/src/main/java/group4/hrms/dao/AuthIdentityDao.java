@@ -264,4 +264,18 @@ public class AuthIdentityDao extends BaseDao<AuthIdentity, Long> {
             throw e;
         }
     }
+
+    /**
+     * Alias method for compatibility with AuthService
+     */
+    public Optional<AuthIdentity> findByAccountIdAndProvider(Long accountId, String provider) throws SQLException {
+        return findByAccountAndProvider(accountId, provider);
+    }
+
+    /**
+     * Alias method for compatibility with AuthService
+     */
+    public AuthIdentity create(AuthIdentity identity) throws SQLException {
+        return save(identity);
+    }
 }

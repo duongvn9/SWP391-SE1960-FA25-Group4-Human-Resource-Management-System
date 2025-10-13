@@ -49,5 +49,13 @@ public class AppStartupListener implements ServletContextListener {
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
         logger.info("Application shutting down...");
+
+        try {
+            // Shutdown HikariCP connection pool
+            group4.hrms.util.DatabaseUtil.shutdown();
+            logger.info("Database connection pool shutdown completed");
+        } catch (Exception e) {
+            logger.error("Error during application shutdown", e);
+        }
     }
 }
