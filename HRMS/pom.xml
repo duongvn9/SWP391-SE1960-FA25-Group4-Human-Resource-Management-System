@@ -16,6 +16,13 @@
         <jakartaee>10.0.0</jakartaee>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>jakarta.platform</groupId>
@@ -83,6 +90,13 @@
             <version>2.16.1</version>
         </dependency>
 
+        <!-- Gson for JSON processing -->
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.10.1</version>
+        </dependency>
+
         <!-- Apache POI for Excel processing -->
         <dependency>
             <groupId>org.apache.poi</groupId>
@@ -138,6 +152,13 @@
             <artifactId>h2</artifactId>
             <version>2.2.224</version>
             <scope>test</scope>
+        </dependency>
+
+        <!-- Lunar Calendar Library for Vietnamese holidays -->
+        <dependency>
+            <groupId>com.github.6tail</groupId>
+            <artifactId>lunar-java</artifactId>
+            <version>master-SNAPSHOT</version>
         </dependency>
 
         <!-- Jakarta EL Implementation -->

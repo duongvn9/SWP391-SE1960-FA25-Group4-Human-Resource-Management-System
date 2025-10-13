@@ -1,2 +1,0 @@
-Thư mục auth: giữ lại để commit view đăng nhập.
-Xóa khi bạn đã thêm file JSP thật.

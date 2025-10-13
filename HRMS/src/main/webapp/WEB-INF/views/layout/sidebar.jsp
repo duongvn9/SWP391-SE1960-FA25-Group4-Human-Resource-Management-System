@@ -250,9 +250,9 @@
                             </a>
                         </li>
                         <li>
-                            <a href="${pageContext.request.contextPath}/requests/overtime/create"
-                                class="nav-link ${param.currentPage == 'overtime-request' ? 'active' : ''}">
-                                <i class="fas fa-clock"></i><span>Overtime Request</span>
+                            <a href="${pageContext.request.contextPath}/request/ot?action=create"
+                                class="nav-link ${param.currentPage == 'ot-request' ? 'active' : ''}">
+                                <i class="fas fa-business-time"></i><span>OT Request</span>
                             </a>
                         </li>
                         <li>
