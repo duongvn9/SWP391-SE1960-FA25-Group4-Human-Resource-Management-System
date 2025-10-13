@@ -14,6 +14,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 
 import group4.hrms.dao.AttendanceLogDao;
+import group4.hrms.dao.TimesheetPeriodDao;
 import group4.hrms.dto.AttendanceLogDto;
 import group4.hrms.model.AttendanceLog;
 import jakarta.servlet.ServletException;
@@ -27,6 +28,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.CellValue;
@@ -105,6 +109,8 @@ public class ImportAttendanceServlet extends HttpServlet {
         } catch (ServletException | IOException e) {
             req.setAttribute("error", "Error processing file: " + e.getMessage());
             req.getRequestDispatcher("/WEB-INF/views/attendance/import-attendance.jsp").forward(req, resp);
+        } catch (SQLException ex) {
+            Logger.getLogger(ImportAttendanceServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -369,7 +375,7 @@ public class ImportAttendanceServlet extends HttpServlet {
                         long totalSeconds = Math.round(timePortion * 24 * 60 * 60);
                         return LocalTime.ofSecondOfDay(totalSeconds);
                     } else if (evaluated.getCellType() == CellType.STRING) {
-                        return parseTime(cell); 
+                        return parseTime(cell);
                     }
                 }
             }
@@ -380,7 +386,9 @@ public class ImportAttendanceServlet extends HttpServlet {
     }
 
     // ----------- Chuyển từ DTO sang Entity (AttendanceLog) ----------- 
-    private List<AttendanceLog> convertDtoToEntity(List<AttendanceLogDto> dtos) {
+    private List<AttendanceLog> convertDtoToEntity(
+            List<AttendanceLogDto> dtos) throws SQLException {
+        TimesheetPeriodDao periodDao = new TimesheetPeriodDao();
         List<AttendanceLog> entities = new ArrayList<>();
 
         for (AttendanceLogDto dto : dtos) {
@@ -388,6 +396,15 @@ public class ImportAttendanceServlet extends HttpServlet {
                 continue;
             }
 
+            // Tra periodId bằng DAO
+            Optional<Long> periodIdOpt = Optional.empty();
+
+            if (dto.getPeriod() != null) {
+                periodIdOpt = periodDao.findIdByName(dto.getPeriod());
+            }
+            
+            Long periodId = periodIdOpt.orElse(null);
+            System.out.println(periodId);
             // Check-in
             if (dto.getCheckIn() != null && dto.getDate() != null) {
                 AttendanceLog checkInLog = new AttendanceLog();
@@ -396,14 +413,7 @@ public class ImportAttendanceServlet extends HttpServlet {
                 checkInLog.setCheckedAt(LocalDateTime.of(dto.getDate(), dto.getCheckIn()));
                 checkInLog.setSource(dto.getSource());
                 checkInLog.setNote(dto.getStatus());
-                // periodId có thể null nếu DTO không có giá trị
-                if (dto.getPeriod() != null) {
-                    try {
-                        checkInLog.setPeriodId(Long.valueOf(dto.getPeriod()));
-                    } catch (NumberFormatException e) {
-                        checkInLog.setPeriodId(null); // nếu không parse được
-                    }
-                }
+                checkInLog.setPeriodId(periodId);
                 entities.add(checkInLog);
             }
 
@@ -415,13 +425,7 @@ public class ImportAttendanceServlet extends HttpServlet {
                 checkOutLog.setCheckedAt(LocalDateTime.of(dto.getDate(), dto.getCheckOut()));
                 checkOutLog.setSource(dto.getSource());
                 checkOutLog.setNote(dto.getStatus());
-                if (dto.getPeriod() != null) {
-                    try {
-                        checkOutLog.setPeriodId(Long.valueOf(dto.getPeriod()));
-                    } catch (NumberFormatException e) {
-                        checkOutLog.setPeriodId(null);
-                    }
-                }
+                checkOutLog.setPeriodId(periodId);
                 entities.add(checkOutLog);
             }
         }
