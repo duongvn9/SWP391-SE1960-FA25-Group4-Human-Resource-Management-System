@@ -1,0 +1,46 @@
+body {
+    min-height: 100vh;
+    background: linear-gradient(160deg, #7b8dfb 0%, #7b5ffb 100%);
+}
+
+.contract-page-wrap {
+    max-width: 600px;
+    margin: 48px auto;
+    padding: 0 16px;
+}
+
+.contract-card {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, .07);
+    padding: 32px;
+}
+
+.contract-header-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #7b8dfb;
+    letter-spacing: 1px;
+    display: inline-block;
+}
+
+.contract-logo-icon {
+    font-size: 2.5rem;
+    color: #7b8dfb;
+}
+
+.form-label {
+    font-weight: 500;
+}
+
+.form-control[readonly], textarea[readonly] {
+    background: #f6f7fa;
+    border: none;
+    color: #222;
+    font-weight: 500;
+}
+
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+}

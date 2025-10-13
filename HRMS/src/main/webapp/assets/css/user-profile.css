@@ -1,0 +1,119 @@
+               body {
+                    min-height: 100vh;
+                    background: linear-gradient(160deg, #7b8dfb 0%, #7b5ffb 100%);
+                }
+
+                .page-wrap {
+                    max-width: 1100px;
+                    margin: 48px auto;
+                    padding: 0 16px;
+                }
+
+                .profile-shell {
+                    display: flex;
+                    gap: 28px;
+                    align-items: flex-start;
+                }
+
+                /* LEFT */
+                .left-card {
+                    width: 340px;
+                    background: #fff;
+                    border-radius: 18px;
+                    box-shadow: 0 4px 24px rgba(0, 0, 0, .07);
+                    padding: 24px;
+                }
+
+                .name-row {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    flex-wrap: wrap;
+                }
+
+                .left-name {
+                    font-size: 1.1rem;
+                    font-weight: 700;
+                    margin: 0;
+                }
+
+                .badge-admin {
+                    background: #fdecec;
+                    color: #d12a2a;
+                    font-weight: 600;
+                    border-radius: 999px;
+                    padding: 4px 10px;
+                    font-size: .8rem;
+                }
+
+                .left-email {
+                    color: #6c757d;
+                    margin-top: 4px;
+                    margin-bottom: 12px;
+                    word-break: break-all;
+                }
+
+                .left-actions a {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                    text-decoration: none;
+                }
+
+                /* RIGHT (form) */
+                .profile-card {
+                    flex: 1;
+                    background: #fff;
+                    border-radius: 18px;
+                    box-shadow: 0 4px 24px rgba(0, 0, 0, .07);
+                    padding: 32px;
+                }
+
+                .hrms-logo {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    margin-bottom: 10px;
+                }
+
+                .hrms-logo-icon {
+                    font-size: 2.5rem;
+                    color: #7b8dfb;
+                }
+
+                .hrms-logo-text {
+                    font-weight: 700;
+                    font-size: 1.1rem;
+                    color: #7b8dfb;
+                    letter-spacing: 1px;
+                }
+
+                .profile-header-title {
+                    text-align: center;
+                    font-size: 1.25rem;
+                    font-weight: 600;
+                    margin-bottom: 18px;
+                    color: #222;
+                }
+
+                .form-control[readonly] {
+                    background: #f6f7fa;
+                    border: none;
+                    color: #222;
+                    font-weight: 500;
+                }
+
+                .btn {
+                    border-radius: 8px;
+                    font-weight: 500;
+                }
+
+                @media (max-width: 992px) {
+                    .profile-shell {
+                        flex-direction: column-reverse
+                    }
+
+                    .left-card {
+                        width: 100%
+                    }
+                }
