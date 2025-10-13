@@ -275,6 +275,27 @@
                     </ul>
                 </li>
 
+                
+                <c:if test="${sessionScope.userRole == 'HR'}">
+                    <li>
+                        <a href="${pageContext.request.contextPath}/recruitment/hr"
+                            class="${param.currentPage == 'recruitment-hr' ? 'active' : ''}">
+                            <i class="fas fa-clipboard-check"></i> HR Approvals
+                        </a>
+                    </li>
+                </c:if>
+
+                <c:if test="${sessionScope.userRole == 'HRM'}">
+                    <li>
+                        <a href="${pageContext.request.contextPath}/recruitment/hrm"
+                        class="${param.currentPage == 'recruitment-hrm' ? 'active' : ''}">
+                            <i class="fas fa-user-tie"></i> HRM Final Approvals
+                        </a>
+                    </li>
+                </c:if>
+
+
+
                 <!-- Admin Only -->
                 <c:if test="${sessionScope.userRole == 'ADMIN' || sessionScope.userRole == 'Admin'}">
                     <li class="nav-item">

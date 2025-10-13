@@ -1,16 +1,22 @@
 package group4.hrms.dao;
 
-import group4.hrms.model.Request;
-import group4.hrms.dto.RequestDto;
-import group4.hrms.util.DatabaseUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import group4.hrms.dto.RequestDto;
+import group4.hrms.model.Request;
+import group4.hrms.util.DatabaseUtil;
 
 /**
  * DAO cho Request - Yêu cầu/Đơn từ
@@ -315,7 +321,118 @@ public class RequestDao extends BaseDao<Request, Long> {
         
         return requests;
     }
+    /**
+ * Lấy danh sách yêu cầu tuyển dụng nháp (DRAFT) của 1 user
+ */
+public List<Request> findDraftsByUserId(Long userId) {
+    List<Request> drafts = new ArrayList<>();
+    String sql = "SELECT * FROM " + getTableName() +
+                 " WHERE user_id = ? AND status = 'DRAFT' ORDER BY updated_at DESC";
+    try (Connection conn = DatabaseUtil.getConnection();
+         PreparedStatement stmt = conn.prepareStatement(sql)) {
+        stmt.setLong(1, userId);
+        try (ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                drafts.add(mapResultSetToEntity(rs));
+            }
+        }
+    } catch (SQLException e) {
+        throw new RuntimeException("Error finding draft requests for userId " + userId, e);
+    }
+    return drafts;
+}
+
+public List<RequestDto> findDraftsByUserIdWithDetails(Long userId) {
+    List<RequestDto> drafts = new ArrayList<>();
+    String sql = SELECT_WITH_DETAILS + " WHERE r.user_id = ? AND r.status = 'DRAFT' ORDER BY r.created_at DESC";
     
+    try (Connection conn = DatabaseUtil.getConnection();
+         PreparedStatement stmt = conn.prepareStatement(sql)) {
+        
+        stmt.setLong(1, userId);
+        
+        try (ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                drafts.add(mapResultSetToDto(rs));
+            }
+        }
+        
+    } catch (SQLException e) {
+        logger.error("Error finding draft requests with details for user id: {}", userId, e);
+        throw new RuntimeException("Error finding draft requests with details for user id: " + userId, e);
+    }
+    
+    return drafts;
+}
+  public List<Request> findPendingRecruitmentRequests() {
+        List<Request> list = new ArrayList<>();
+        String sql = """
+            SELECT * FROM requests 
+            WHERE request_type_id = 2 
+              AND status IN ('PENDING', 'HR_APPROVED', 'HR_REJECTED')
+            ORDER BY created_at DESC
+        """;
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                Request req = new Request();
+                req.setId(rs.getLong("id"));
+                req.setUserId(rs.getLong("user_id"));
+                req.setTitle(rs.getString("title"));
+                req.setDescription(rs.getString("description"));
+                req.setStatus(rs.getString("status"));
+                req.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+                req.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
+                list.add(req);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+    /**
+ * Tìm requests theo loại và trạng thái (ví dụ: Recruitment + PENDING)
+ */
+public List<Request> findByTypeAndStatus(Long requestTypeId, String status) {
+    List<Request> requests = new ArrayList<>();
+    String sql = SELECT_ALL + " WHERE request_type_id = ? AND status = ? ORDER BY created_at DESC";
+
+    try (Connection conn = DatabaseUtil.getConnection();
+         PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+        stmt.setLong(1, requestTypeId);
+        stmt.setString(2, status);
+
+        try (ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                requests.add(mapResultSetToEntity(rs));
+            }
+        }
+
+    } catch (SQLException e) {
+        logger.error("Error finding requests by type and status: typeId={}, status={}", requestTypeId, status, e);
+        throw new RuntimeException("Error finding requests by type and status", e);
+    }
+
+    return requests;
+}
+/**
+ * Lấy danh sách yêu cầu tuyển dụng đang chờ HR duyệt
+ */
+public List<Request> findPendingForHR() {
+    return findByTypeAndStatus(2L, "PENDING");
+}
+
+/**
+ * Lấy danh sách yêu cầu tuyển dụng đã duyệt qua HR, chờ HRM xác nhận
+ */
+public List<Request> findPendingForHRM() {
+    return findByTypeAndStatus(2L, "HR_APPROVED");
+}
+
     /**
      * Tìm requests theo trạng thái
      */
