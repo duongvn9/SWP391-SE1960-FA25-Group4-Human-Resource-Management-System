@@ -12,8 +12,8 @@ public class PasswordUtil {
     
     private static final Logger logger = LoggerFactory.getLogger(PasswordUtil.class);
     
-    // BCrypt work factor (độ phức tạp)
-    private static final int WORK_FACTOR = 12;
+    // BCrypt work factor (độ phức tạp) - đọc từ config
+    private static final int WORK_FACTOR = ConfigUtil.getBCryptCost();
     
     /**
      * Private constructor để ngăn tạo instance
@@ -72,6 +72,29 @@ public class PasswordUtil {
             logger.error("Error checking password: {}", e.getMessage(), e);
             return false;
         }
+    }
+    
+    /**
+     * Alias cho checkPassword
+     */
+    public static boolean verifyPassword(String plainPassword, String hashedPassword) {
+        return checkPassword(plainPassword, hashedPassword);
+    }
+    
+    /**
+     * Main method để generate password hash cho testing
+     */
+    public static void main(String[] args) {
+        if (args.length < 1) {
+            System.out.println("Usage: java PasswordUtil <password>");
+            return;
+        }
+        
+        String password = args[0];
+        String hash = hashPassword(password);
+        System.out.println("Password: " + password);
+        System.out.println("Hash: " + hash);
+        System.out.println("Verification: " + verifyPassword(password, hash));
     }
     
     /**

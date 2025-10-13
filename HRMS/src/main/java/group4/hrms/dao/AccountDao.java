@@ -21,21 +21,24 @@ public class AccountDao {
     
     // SQL queries
     private static final String INSERT_ACCOUNT = 
-        "INSERT INTO accounts (user_id, username, email_login, department_id, position_id, status, failed_attempts, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        "INSERT INTO accounts (user_id, username, email_login, status, failed_attempts, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)";
     
     private static final String UPDATE_ACCOUNT = 
-        "UPDATE accounts SET username = ?, email_login = ?, department_id = ?, position_id = ?, status = ?, updated_at = ? WHERE id = ?";
+        "UPDATE accounts SET username = ?, email_login = ?, status = ?, updated_at = ? WHERE id = ?";
     
     private static final String DELETE_ACCOUNT = "DELETE FROM accounts WHERE id = ?";
     
     private static final String SELECT_ACCOUNT_BY_ID = 
-        "SELECT id, user_id, username, email_login, department_id, position_id, status, failed_attempts, last_login_at, created_at, updated_at FROM accounts WHERE id = ?";
+        "SELECT id, user_id, username, email_login, status, failed_attempts, last_login_at, created_at, updated_at FROM accounts WHERE id = ?";
     
     private static final String SELECT_ACCOUNT_BY_USERNAME = 
-        "SELECT id, user_id, username, email_login, department_id, position_id, status, failed_attempts, last_login_at, created_at, updated_at FROM accounts WHERE username = ?";
+        "SELECT id, user_id, username, email_login, status, failed_attempts, last_login_at, created_at, updated_at FROM accounts WHERE username = ?";
+    
+    private static final String SELECT_ACCOUNT_BY_EMAIL = 
+        "SELECT id, user_id, username, email_login, status, failed_attempts, last_login_at, created_at, updated_at FROM accounts WHERE email_login = ?";
     
     private static final String SELECT_ALL_ACCOUNTS = 
-        "SELECT id, user_id, username, email_login, department_id, position_id, status, failed_attempts, last_login_at, created_at, updated_at FROM accounts ORDER BY username";
+        "SELECT id, user_id, username, email_login, status, failed_attempts, last_login_at, created_at, updated_at FROM accounts ORDER BY username";
     
     /**
      * Tạo mới account
@@ -51,12 +54,10 @@ public class AccountDao {
             stmt.setLong(1, account.getUserId());
             stmt.setString(2, account.getUsername());
             stmt.setString(3, account.getEmailLogin());
-            setNullableLong(stmt, 4, account.getDepartmentId());
-            setNullableLong(stmt, 5, account.getPositionId());
-            stmt.setString(6, account.getStatus());
-            stmt.setInt(7, account.getFailedAttempts() != null ? account.getFailedAttempts().intValue() : 0);
-            stmt.setTimestamp(8, Timestamp.valueOf(now));
-            stmt.setTimestamp(9, Timestamp.valueOf(now));
+            stmt.setString(4, account.getStatus());
+            stmt.setInt(5, account.getFailedAttempts() != null ? account.getFailedAttempts().intValue() : 0);
+            stmt.setTimestamp(6, Timestamp.valueOf(now));
+            stmt.setTimestamp(7, Timestamp.valueOf(now));
             
             int affectedRows = stmt.executeUpdate();
             
@@ -96,11 +97,9 @@ public class AccountDao {
             
             stmt.setString(1, account.getUsername());
             stmt.setString(2, account.getEmailLogin());
-            setNullableLong(stmt, 3, account.getDepartmentId());
-            setNullableLong(stmt, 4, account.getPositionId());
-            stmt.setString(5, account.getStatus());
-            stmt.setTimestamp(6, Timestamp.valueOf(now));
-            stmt.setLong(7, account.getId());
+            stmt.setString(3, account.getStatus());
+            stmt.setTimestamp(4, Timestamp.valueOf(now));
+            stmt.setLong(5, account.getId());
             
             int affectedRows = stmt.executeUpdate();
             
@@ -228,6 +227,34 @@ public class AccountDao {
     }
     
     /**
+     * Tìm account theo email login
+     */
+    public Optional<Account> findByEmailLogin(String emailLogin) {
+        logger.debug("Tìm account theo email login: {}", emailLogin);
+        
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(SELECT_ACCOUNT_BY_EMAIL)) {
+            
+            stmt.setString(1, emailLogin);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Account account = mapResultSetToAccount(rs);
+                    logger.debug("Tìm thấy account: {}", account.getUsername());
+                    return Optional.of(account);
+                }
+                
+                logger.debug("Không tìm thấy account với email login: {}", emailLogin);
+                return Optional.empty();
+            }
+            
+        } catch (SQLException e) {
+            logger.error("Lỗi khi tìm account theo email login {}: {}", emailLogin, e.getMessage(), e);
+            throw new RuntimeException("Lỗi khi tìm account", e);
+        }
+    }
+
+    /**
      * Kiểm tra username đã tồn tại chưa
      */
     public boolean existsByUsername(String username) {
@@ -246,19 +273,6 @@ public class AccountDao {
         account.setUserId(rs.getLong("user_id"));
         account.setUsername(rs.getString("username"));
         account.setEmailLogin(rs.getString("email_login"));
-        
-        // Department ID có thể null
-        Long departmentId = rs.getLong("department_id");
-        if (!rs.wasNull()) {
-            account.setDepartmentId(departmentId);
-        }
-        
-        // Position ID có thể null
-        Long positionId = rs.getLong("position_id");
-        if (!rs.wasNull()) {
-            account.setPositionId(positionId);
-        }
-        
         account.setStatus(rs.getString("status"));
         account.setFailedAttempts(rs.getInt("failed_attempts"));
         
