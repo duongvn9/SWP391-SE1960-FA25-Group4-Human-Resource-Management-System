@@ -10,47 +10,49 @@
         <h2>Attendance Period Management</h2>
 
         <!-- ========== FILTER SECTION ========== -->
-        <form id="filterForm" method="get" action="attendance.jsp">
+        <form id="filterForm" method="post" action="${pageContext.request.contextPath}/attendance/record/HR">
             <label>From:</label>
-            <input type="date" name="startDate" />
+            <input type="date" name="startDate" value="${param.startDate}" />
+
             <label>To:</label>
-            <input type="date" name="endDate" />
+            <input type="date" name="endDate" value="${param.endDate}" />
+
 
             <label>Department:</label>
             <select name="department">
                 <option value="">--All--</option>
-                <option value="HR">HR</option>
-                <option value="IT">IT</option>
-                <option value="Finance">Finance</option>
+                <c:forEach var="dept" items="${departmentList}">
+                    <option value="${dept.name}" 
+                            ${param.department != null && param.department == dept.name ? 'selected' : ''}>
+                        ${dept.name}
+                    </option>
+                </c:forEach>
             </select>
 
             <label>Employee:</label>
-            <input type="text" name="employee" placeholder="Name or ID" />
+            <input type="text" name="employee" placeholder="Name or ID" value="${param.employee}" />
 
             <label>Status:</label>
-            <select name="status">
-                <option value="">--All--</option>
-                <option value="Late">Late</option>
-                <option value="Missing">Missing</option>
-                <option value="Approved">Approved</option>
-                <option value="Pending">Pending</option>
-                <option value="Corrected">Corrected</option>
+            <select id="status" name="status">
+                <option value="">All</option>
+                <option value="On time" ${param.status == 'On time' ? 'selected' : ''}>On time</option>
+                <option value="Late" ${param.status == 'Late' ? 'selected' : ''}>Late</option>
             </select>
 
             <label>Source:</label>
-            <select name="source">
-                <option value="">--All--</option>
-                <option value="App">App</option>
-                <option value="Kiosk">Kiosk</option>
-                <option value="Manual">Manual</option>
-                <option value="Import">Import</option>
+            <select id="source" name="source">
+                <option value="">All</option>
+                <option value="Google" ${param.source == 'Google' ? 'selected' : ''}>Google sheet</option>
+                <option value="Manual" ${param.source == 'Manual' ? 'selected' : ''}>Manual</option>
+                <option value="Import" ${param.source == 'Import' ? 'selected' : ''}>Import</option>
             </select>
 
             <label>Period:</label>
-            <select name="period">
-                <option value="">--All--</option>
-                <option value="2025-10">2025-10</option>
-                <option value="2025-09">2025-09</option>
+            <select id="periodSelect" name="periodSelect">
+                <option value="">-- All Periods --</option>
+                <c:forEach var="p" items="${periodList}">
+                    <option value="${p.id}" ${param.periodSelect == p.id.toString() ? 'selected' : ''}>${p.name}</option>
+                </c:forEach>
             </select>
 
             <button type="submit">Search</button>
