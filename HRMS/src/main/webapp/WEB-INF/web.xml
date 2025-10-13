@@ -22,9 +22,15 @@
         <mime-type>image/svg+xml</mime-type>
     </mime-mapping>
 
+
+
     <session-config>
         <session-timeout>
             30
         </session-timeout>
+        <cookie-config>
+            <http-only>true</http-only>
+            <secure>false</secure>
+        </cookie-config>
     </session-config>
 </web-app>

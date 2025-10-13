@@ -23,7 +23,7 @@ public class UserDao {
     private static final String SELECT_ALL = """
         SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
                u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
-               u.start_work_date, u.base_salary, u.salary_currency, u.created_at, u.updated_at,
+               u.start_work_date, u.created_at, u.updated_at,
                d.name as department_name, p.name as position_name
         FROM users u
         LEFT JOIN departments d ON u.department_id = d.id
@@ -34,7 +34,7 @@ public class UserDao {
     private static final String SELECT_BY_ID = """
         SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
                u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
-               u.start_work_date, u.base_salary, u.salary_currency, u.created_at, u.updated_at,
+               u.start_work_date, u.created_at, u.updated_at,
                d.name as department_name, p.name as position_name
         FROM users u
         LEFT JOIN departments d ON u.department_id = d.id
@@ -45,7 +45,7 @@ public class UserDao {
     private static final String SELECT_BY_EMPLOYEE_CODE = """
         SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
                u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
-               u.start_work_date, u.base_salary, u.salary_currency, u.created_at, u.updated_at,
+               u.start_work_date, u.created_at, u.updated_at,
                d.name as department_name, p.name as position_name
         FROM users u
         LEFT JOIN departments d ON u.department_id = d.id
@@ -56,7 +56,7 @@ public class UserDao {
     private static final String SELECT_BY_EMAIL = """
         SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
                u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
-               u.start_work_date, u.base_salary, u.salary_currency, u.created_at, u.updated_at,
+               u.start_work_date, u.created_at, u.updated_at,
                d.name as department_name, p.name as position_name
         FROM users u
         LEFT JOIN departments d ON u.department_id = d.id
@@ -67,7 +67,7 @@ public class UserDao {
     private static final String SELECT_BY_DEPARTMENT = """
         SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
                u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
-               u.start_work_date, u.base_salary, u.salary_currency, u.created_at, u.updated_at,
+               u.start_work_date, u.created_at, u.updated_at,
                d.name as department_name, p.name as position_name
         FROM users u
         LEFT JOIN departments d ON u.department_id = d.id
@@ -78,16 +78,15 @@ public class UserDao {
     
     private static final String INSERT_USER = """
         INSERT INTO users (employee_code, full_name, cccd, email_company, phone, 
-                          department_id, position_id, status, date_joined, start_work_date,
-                          base_salary, salary_currency)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                          department_id, position_id, status, date_joined, start_work_date)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """;
     
     private static final String UPDATE_USER = """
         UPDATE users SET 
             employee_code = ?, full_name = ?, cccd = ?, email_company = ?, phone = ?,
             department_id = ?, position_id = ?, status = ?, date_joined = ?, start_work_date = ?,
-            base_salary = ?, salary_currency = ?, updated_at = GETUTCDATE()
+            updated_at = NOW()
         WHERE id = ?
         """;
     
@@ -253,8 +252,7 @@ public class UserDao {
             ps.setString(8, user.getStatus() != null ? user.getStatus() : "active");
             setDateOrNull(ps, 9, user.getDateJoined());
             setDateOrNull(ps, 10, user.getStartWorkDate());
-            setBigDecimalOrNull(ps, 11, user.getBaseSalary());
-            ps.setString(12, user.getSalaryCurrency());
+            // Removed base_salary and salary_currency parameters since they don't exist in database
             
             int affectedRows = ps.executeUpdate();
             
@@ -296,9 +294,8 @@ public class UserDao {
             ps.setString(8, user.getStatus());
             setDateOrNull(ps, 9, user.getDateJoined());
             setDateOrNull(ps, 10, user.getStartWorkDate());
-            setBigDecimalOrNull(ps, 11, user.getBaseSalary());
-            ps.setString(12, user.getSalaryCurrency());
-            ps.setLong(13, user.getId());
+            // Removed base_salary and salary_currency parameters since they don't exist in database
+            ps.setLong(11, user.getId()); // Updated parameter index
             
             int affectedRows = ps.executeUpdate();
             
@@ -432,12 +429,13 @@ public class UserDao {
             user.setStartWorkDate(startWorkDate.toLocalDate());
         }
         
-        BigDecimal baseSalary = rs.getBigDecimal("base_salary");
-        if (baseSalary != null) {
-            user.setBaseSalary(baseSalary);
-        }
-        
-        user.setSalaryCurrency(rs.getString("salary_currency"));
+        // Note: base_salary and salary_currency columns don't exist in current database schema
+        // These lines are commented out until the database schema is updated
+        // BigDecimal baseSalary = rs.getBigDecimal("base_salary");
+        // if (baseSalary != null) {
+        //     user.setBaseSalary(baseSalary);
+        // }
+        // user.setSalaryCurrency(rs.getString("salary_currency"));
         
         Timestamp createdAt = rs.getTimestamp("created_at");
         if (createdAt != null) {

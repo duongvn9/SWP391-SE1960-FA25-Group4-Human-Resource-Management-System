@@ -92,6 +92,13 @@ public class AuthLocalCredentialsDao extends BaseDao<AuthLocalCredentials, Long>
         }
     }
     
+    /**
+     * Alias cho findById
+     */
+    public Optional<AuthLocalCredentials> findByIdentityId(Long identityId) throws SQLException {
+        return findById(identityId);
+    }
+    
     @Override
     public boolean deleteById(Long identityId) throws SQLException {
         if (identityId == null) {
@@ -165,5 +172,12 @@ public class AuthLocalCredentialsDao extends BaseDao<AuthLocalCredentials, Long>
         
         Optional<AuthLocalCredentials> credentials = findById(identityId);
         return credentials.map(c -> c.isPasswordExpired(maxDaysValid)).orElse(false);
+    }
+
+    /**
+     * Alias method for compatibility with AuthService
+     */
+    public AuthLocalCredentials create(AuthLocalCredentials credentials) throws SQLException {
+        return save(credentials);
     }
 }
