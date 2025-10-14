@@ -1,15 +1,22 @@
 package group4.hrms.dao;
 
-import group4.hrms.model.Request;
-import group4.hrms.dto.RequestDto;
-import group4.hrms.util.DatabaseUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import group4.hrms.dto.RequestDto;
+import group4.hrms.model.Request;
+import group4.hrms.util.DatabaseUtil;
 
 /**
  * DAO cho Request - Yêu cầu/Đơn từ
@@ -37,67 +44,46 @@ public class RequestDao extends BaseDao<Request, Long> {
 
     @Override
     protected String createInsertSql() {
-        return "INSERT INTO requests ("
-                + "request_type_id, title, detail, "
-                + "created_by_account_id, created_by_user_id, department_id, "
-                + "status, current_approver_account_id"
-                + ") VALUES (?, ?, CAST(? AS JSON), ?, ?, ?, ?, ?)";
+        return "INSERT INTO requests (user_id, request_type_id, title, description, "
+                + "status, priority, start_date, end_date, created_at, updated_at) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     }
 
     @Override
     protected String createUpdateSql() {
-        return "UPDATE requests SET "
-                + "request_type_id = ?, "
-                + "title = ?, "
-                + "detail = CAST(? AS JSON), "
-                + "created_by_account_id = ?, "
-                + "created_by_user_id = ?, "
-                + "department_id = ?, "
-                + "status = ?, "
-                + "current_approver_account_id = ?, "
-                + "updated_at = UTC_TIMESTAMP() "
-                + "WHERE id = ?";
+        return "UPDATE requests SET user_id = ?, request_type_id = ?, title = ?, "
+                + "description = ?, status = ?, priority = ?, start_date = ?, end_date = ?, "
+                + "updated_at = ? WHERE id = ?";
     }
 
     @Override
     protected void setInsertParameters(PreparedStatement stmt, Request request) throws SQLException {
-        stmt.setLong(1, request.getRequestTypeId());
-        stmt.setString(2, request.getTitle());
-        stmt.setString(3, request.getDetail());
-        stmt.setLong(4, request.getCreatedByAccountId());
-        stmt.setLong(5, request.getCreatedByUserId());
-        if (request.getDepartmentId() != null) {
-            stmt.setLong(6, request.getDepartmentId());
-        } else {
-            stmt.setNull(6, java.sql.Types.BIGINT);
-        }
-        stmt.setString(7, request.getStatus());
-        if (request.getCurrentApproverAccountId() != null) {
-            stmt.setLong(8, request.getCurrentApproverAccountId());
-        } else {
-            stmt.setNull(8, java.sql.Types.BIGINT);
-        }
+        stmt.setLong(1, request.getUserId());
+        stmt.setLong(2, request.getRequestTypeId());
+        stmt.setString(3, request.getTitle());
+        stmt.setString(4, request.getDescription());
+        stmt.setString(5, request.getStatus());
+        stmt.setString(6, request.getPriority());
+        setTimestamp(stmt, 7, request.getStartDate());
+        setTimestamp(stmt, 8, request.getEndDate());
+
+        LocalDateTime now = LocalDateTime.now();
+        setTimestamp(stmt, 9, now);
+        setTimestamp(stmt, 10, now);
     }
 
     @Override
     protected void setUpdateParameters(PreparedStatement stmt, Request request) throws SQLException {
-        stmt.setLong(1, request.getRequestTypeId());
-        stmt.setString(2, request.getTitle());
-        stmt.setString(3, request.getDetail());
-        stmt.setLong(4, request.getCreatedByAccountId());
-        stmt.setLong(5, request.getCreatedByUserId());
-        if (request.getDepartmentId() != null) {
-            stmt.setLong(6, request.getDepartmentId());
-        } else {
-            stmt.setNull(6, java.sql.Types.BIGINT);
-        }
-        stmt.setString(7, request.getStatus());
-        if (request.getCurrentApproverAccountId() != null) {
-            stmt.setLong(8, request.getCurrentApproverAccountId());
-        } else {
-            stmt.setNull(8, java.sql.Types.BIGINT);
-        }
-        stmt.setLong(9, request.getId());
+        stmt.setLong(1, request.getUserId());
+        stmt.setLong(2, request.getRequestTypeId());
+        stmt.setString(3, request.getTitle());
+        stmt.setString(4, request.getDescription());
+        stmt.setString(5, request.getStatus());
+        stmt.setString(6, request.getPriority());
+        setTimestamp(stmt, 7, request.getStartDate());
+        setTimestamp(stmt, 8, request.getEndDate());
+        setTimestamp(stmt, 9, LocalDateTime.now());
+        stmt.setLong(10, request.getId());
     }
 
     private static final String SELECT_ALL
@@ -120,9 +106,9 @@ public class RequestDao extends BaseDao<Request, Long> {
             + "LEFT JOIN users approver ON r.approved_by = approver.id ";
 
     private static final String INSERT
-            = "INSERT INTO requests "
-            + "(request_type_id, title, detail, created_by_account_id, created_by_user_id, department_id, status) "
-            + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+            = "INSERT INTO " + TABLE_NAME + " (user_id, request_type_id, title, description, status, priority, "
+            + "start_date, end_date, day_count, attachment_path, created_at, updated_at) "
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     private static final String UPDATE
             = "UPDATE " + TABLE_NAME + " SET user_id = ?, request_type_id = ?, title = ?, description = ?, "
@@ -193,25 +179,22 @@ public class RequestDao extends BaseDao<Request, Long> {
     private Request insert(Request request) {
         try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS)) {
 
-            stmt.setLong(1, request.getRequestTypeId());
-            stmt.setString(2, request.getTitle());
-            stmt.setString(3, request.getDetail());
-            stmt.setLong(4, request.getCreatedByAccountId());
-            stmt.setLong(5, request.getCreatedByUserId());
+            LocalDateTime now = LocalDateTime.now();
+            request.setCreatedAt(now);
+            request.setUpdatedAt(now);
 
-            if (request.getDepartmentId() != null) {
-                stmt.setLong(6, request.getDepartmentId());
-            } else {
-                stmt.setNull(6, java.sql.Types.BIGINT);
-            }
-
-            stmt.setString(7, request.getStatus());
-
-//            if (request.getCurrentApproverAccountId() != null) {
-//                stmt.setLong(8, request.getCurrentApproverAccountId());
-//            } else {
-//                stmt.setNull(8, java.sql.Types.BIGINT);
-//            }
+            stmt.setLong(1, request.getUserId());
+            stmt.setLong(2, request.getRequestTypeId());
+            stmt.setString(3, request.getTitle());
+            stmt.setString(4, request.getDescription());
+            stmt.setString(5, request.getStatus());
+            stmt.setString(6, request.getPriority());
+            stmt.setTimestamp(7, request.getStartDate() != null ? Timestamp.valueOf(request.getStartDate()) : null);
+            stmt.setTimestamp(8, request.getEndDate() != null ? Timestamp.valueOf(request.getEndDate()) : null);
+            stmt.setObject(9, request.getDayCount());
+            stmt.setString(10, request.getAttachmentPath());
+            stmt.setTimestamp(11, Timestamp.valueOf(request.getCreatedAt()));
+            stmt.setTimestamp(12, Timestamp.valueOf(request.getUpdatedAt()));
 
             int rowsAffected = stmt.executeUpdate();
 
@@ -233,32 +216,26 @@ public class RequestDao extends BaseDao<Request, Long> {
         throw new RuntimeException("Failed to create request");
     }
 
-    @Override
     public Request update(Request request) {
         try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(UPDATE)) {
 
-            // Set các parameter theo SQL mới (cập nhật 8 cột, updated_at = UTC_TIMESTAMP() trong SQL)
-            stmt.setLong(1, request.getRequestTypeId());
-            stmt.setString(2, request.getTitle());
-            stmt.setString(3, request.getDetail()); // detail JSON
-            stmt.setLong(4, request.getCreatedByAccountId());
-            stmt.setLong(5, request.getCreatedByUserId());
+            request.setUpdatedAt(LocalDateTime.now());
 
-            if (request.getDepartmentId() != null) {
-                stmt.setLong(6, request.getDepartmentId());
-            } else {
-                stmt.setNull(6, java.sql.Types.BIGINT);
-            }
-
-            stmt.setString(7, request.getStatus());
-
-            if (request.getCurrentApproverAccountId() != null) {
-                stmt.setLong(8, request.getCurrentApproverAccountId());
-            } else {
-                stmt.setNull(8, java.sql.Types.BIGINT);
-            }
-
-            stmt.setLong(9, request.getId()); // WHERE id = ?
+            stmt.setLong(1, request.getUserId());
+            stmt.setLong(2, request.getRequestTypeId());
+            stmt.setString(3, request.getTitle());
+            stmt.setString(4, request.getDescription());
+            stmt.setString(5, request.getStatus());
+            stmt.setString(6, request.getPriority());
+            stmt.setTimestamp(7, request.getStartDate() != null ? Timestamp.valueOf(request.getStartDate()) : null);
+            stmt.setTimestamp(8, request.getEndDate() != null ? Timestamp.valueOf(request.getEndDate()) : null);
+            stmt.setObject(9, request.getDayCount());
+            stmt.setString(10, request.getAttachmentPath());
+            stmt.setString(11, request.getRejectReason());
+            stmt.setObject(12, request.getApprovedBy());
+            stmt.setTimestamp(13, request.getApprovedAt() != null ? Timestamp.valueOf(request.getApprovedAt()) : null);
+            stmt.setTimestamp(14, Timestamp.valueOf(request.getUpdatedAt()));
+            stmt.setLong(15, request.getId());
 
             int rowsAffected = stmt.executeUpdate();
 
@@ -338,6 +315,116 @@ public class RequestDao extends BaseDao<Request, Long> {
     }
 
     /**
+     * Lấy danh sách yêu cầu tuyển dụng nháp (DRAFT) của 1 user
+     */
+    public List<Request> findDraftsByUserId(Long userId) {
+        List<Request> drafts = new ArrayList<>();
+        String sql = "SELECT * FROM " + getTableName()
+                + " WHERE user_id = ? AND status = 'DRAFT' ORDER BY updated_at DESC";
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setLong(1, userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    drafts.add(mapResultSetToEntity(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error finding draft requests for userId " + userId, e);
+        }
+        return drafts;
+    }
+
+    public List<RequestDto> findDraftsByUserIdWithDetails(Long userId) {
+        List<RequestDto> drafts = new ArrayList<>();
+        String sql = SELECT_WITH_DETAILS + " WHERE r.user_id = ? AND r.status = 'DRAFT' ORDER BY r.created_at DESC";
+
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, userId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    drafts.add(mapResultSetToDto(rs));
+                }
+            }
+
+        } catch (SQLException e) {
+            logger.error("Error finding draft requests with details for user id: {}", userId, e);
+            throw new RuntimeException("Error finding draft requests with details for user id: " + userId, e);
+        }
+
+        return drafts;
+    }
+
+    public List<Request> findPendingRecruitmentRequests() {
+        List<Request> list = new ArrayList<>();
+        String sql = """
+            SELECT * FROM requests 
+            WHERE request_type_id = 2 
+              AND status IN ('PENDING', 'HR_APPROVED', 'HR_REJECTED')
+            ORDER BY created_at DESC
+        """;
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                Request req = new Request();
+                req.setId(rs.getLong("id"));
+                req.setUserId(rs.getLong("user_id"));
+                req.setTitle(rs.getString("title"));
+                req.setDescription(rs.getString("description"));
+                req.setStatus(rs.getString("status"));
+                req.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+                req.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
+                list.add(req);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    /**
+     * Tìm requests theo loại và trạng thái (ví dụ: Recruitment + PENDING)
+     */
+    public List<Request> findByTypeAndStatus(Long requestTypeId, String status) {
+        List<Request> requests = new ArrayList<>();
+        String sql = SELECT_ALL + " WHERE request_type_id = ? AND status = ? ORDER BY created_at DESC";
+
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, requestTypeId);
+            stmt.setString(2, status);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    requests.add(mapResultSetToEntity(rs));
+                }
+            }
+
+        } catch (SQLException e) {
+            logger.error("Error finding requests by type and status: typeId={}, status={}", requestTypeId, status, e);
+            throw new RuntimeException("Error finding requests by type and status", e);
+        }
+
+        return requests;
+    }
+
+    /**
+     * Lấy danh sách yêu cầu tuyển dụng đang chờ HR duyệt
+     */
+    public List<Request> findPendingForHR() {
+        return findByTypeAndStatus(2L, "PENDING");
+    }
+
+    /**
+     * Lấy danh sách yêu cầu tuyển dụng đã duyệt qua HR, chờ HRM xác nhận
+     */
+    public List<Request> findPendingForHRM() {
+        return findByTypeAndStatus(2L, "HR_APPROVED");
+    }
+
+    /**
      * Tìm requests theo trạng thái
      */
     public List<Request> findByStatus(String status) {
@@ -365,75 +452,86 @@ public class RequestDao extends BaseDao<Request, Long> {
     /**
      * Tìm requests với thông tin chi tiết (join với user, request_type)
      */
-//    public List<RequestDto> findAllWithDetails(int offset, int limit) {
-//        List<RequestDto> requests = new ArrayList<>();
-//        String sql = SELECT_WITH_DETAILS + " ORDER BY r.created_at DESC LIMIT ? OFFSET ?";
-//
-//        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-//
-//            stmt.setInt(1, limit);
-//            stmt.setInt(2, offset);
-//
-//            try (ResultSet rs = stmt.executeQuery()) {
-//                while (rs.next()) {
-//                    requests.add(mapResultSetToDto(rs));
-//                }
-//            }
-//
-//        } catch (SQLException e) {
-//            logger.error("Error finding requests with details", e);
-//            throw new RuntimeException("Error finding requests with details", e);
-//        }
-//
-//        return requests;
-//    }
+    public List<RequestDto> findAllWithDetails(int offset, int limit) {
+        List<RequestDto> requests = new ArrayList<>();
+        String sql = SELECT_WITH_DETAILS + " ORDER BY r.created_at DESC LIMIT ? OFFSET ?";
+
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, limit);
+            stmt.setInt(2, offset);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    requests.add(mapResultSetToDto(rs));
+                }
+            }
+
+        } catch (SQLException e) {
+            logger.error("Error finding requests with details", e);
+            throw new RuntimeException("Error finding requests with details", e);
+        }
+
+        return requests;
+    }
+
     /**
      * Tìm requests của user với thông tin chi tiết
      */
-//    public List<RequestDto> findByUserIdWithDetails(Long userId, int offset, int limit) {
-//        List<RequestDto> requests = new ArrayList<>();
-//        String sql = SELECT_WITH_DETAILS + " WHERE r.user_id = ? ORDER BY r.created_at DESC LIMIT ? OFFSET ?";
-//
-//        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-//
-//            stmt.setLong(1, userId);
-//            stmt.setInt(2, limit);
-//            stmt.setInt(3, offset);
-//
-//            try (ResultSet rs = stmt.executeQuery()) {
-//                while (rs.next()) {
-//                    requests.add(mapResultSetToDto(rs));
-//                }
-//            }
-//
-//        } catch (SQLException e) {
-//            logger.error("Error finding requests by user id with details: {}", userId, e);
-//            throw new RuntimeException("Error finding requests by user id with details: " + userId, e);
-//        }
-//
-//        return requests;
-//    }
+    public List<RequestDto> findByUserIdWithDetails(Long userId, int offset, int limit) {
+        List<RequestDto> requests = new ArrayList<>();
+        String sql = SELECT_WITH_DETAILS + " WHERE r.user_id = ? ORDER BY r.created_at DESC LIMIT ? OFFSET ?";
+
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, userId);
+            stmt.setInt(2, limit);
+            stmt.setInt(3, offset);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    requests.add(mapResultSetToDto(rs));
+                }
+            }
+
+        } catch (SQLException e) {
+            logger.error("Error finding requests by user id with details: {}", userId, e);
+            throw new RuntimeException("Error finding requests by user id with details: " + userId, e);
+        }
+
+        return requests;
+    }
+
     @Override
     protected Request mapResultSetToEntity(ResultSet rs) throws SQLException {
         Request request = new Request();
 
         request.setId(rs.getLong("id"));
+        request.setUserId(rs.getLong("user_id"));
         request.setRequestTypeId(rs.getLong("request_type_id"));
         request.setTitle(rs.getString("title"));
-        request.setDetail(rs.getString("detail")); // detail JSON
-        request.setCreatedByAccountId(rs.getLong("created_by_account_id"));
-        request.setCreatedByUserId(rs.getLong("created_by_user_id"));
+        request.setDescription(rs.getString("description"));
+        request.setStatus(rs.getString("status"));
+        request.setPriority(rs.getString("priority"));
 
-        long deptId = rs.getLong("department_id");
-        if (!rs.wasNull()) {
-            request.setDepartmentId(deptId);
+        Timestamp startDate = rs.getTimestamp("start_date");
+        if (startDate != null) {
+            request.setStartDate(startDate.toLocalDateTime());
         }
 
-        request.setStatus(rs.getString("status"));
+        Timestamp endDate = rs.getTimestamp("end_date");
+        if (endDate != null) {
+            request.setEndDate(endDate.toLocalDateTime());
+        }
 
-        long approverId = rs.getLong("current_approver_account_id");
-        if (!rs.wasNull()) {
-            request.setCurrentApproverAccountId(approverId);
+        request.setDayCount((Integer) rs.getObject("day_count"));
+        request.setAttachmentPath(rs.getString("attachment_path"));
+        request.setRejectReason(rs.getString("reject_reason"));
+        request.setApprovedBy((Long) rs.getObject("approved_by"));
+
+        Timestamp approvedAt = rs.getTimestamp("approved_at");
+        if (approvedAt != null) {
+            request.setApprovedAt(approvedAt.toLocalDateTime());
         }
 
         request.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
@@ -445,20 +543,20 @@ public class RequestDao extends BaseDao<Request, Long> {
     /**
      * Map ResultSet to RequestDto (với thông tin join)
      */
-//    private RequestDto mapResultSetToDto(ResultSet rs) throws SQLException {
-//        RequestDto dto = new RequestDto(mapResultSetToEntity(rs));
-//
-//        // Thông tin user
-//        dto.setUserName(rs.getString("username"));
-//        dto.setUserFullName(rs.getString("full_name"));
-//
-//        // Thông tin request type
-//        dto.setRequestTypeName(rs.getString("request_type_name"));
-//        dto.setRequestTypeCode(rs.getString("request_type_code"));
-//
-//        // Thông tin approver
-//        dto.setApproverName(rs.getString("approver_name"));
-//
-//        return dto;
-//    }
+    private RequestDto mapResultSetToDto(ResultSet rs) throws SQLException {
+        RequestDto dto = new RequestDto(mapResultSetToEntity(rs));
+
+        // Thông tin user
+        dto.setUserName(rs.getString("username"));
+        dto.setUserFullName(rs.getString("full_name"));
+
+        // Thông tin request type
+        dto.setRequestTypeName(rs.getString("request_type_name"));
+        dto.setRequestTypeCode(rs.getString("request_type_code"));
+
+        // Thông tin approver
+        dto.setApproverName(rs.getString("approver_name"));
+
+        return dto;
+    }
 }

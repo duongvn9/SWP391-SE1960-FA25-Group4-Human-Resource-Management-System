@@ -47,9 +47,9 @@ public class AttendanceRecordHRServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
-            Long userId = null; 
+            Long userId = null;
 
-            String employeeKeyword = req.getParameter("employee"); 
+            String employeeKeyword = req.getParameter("employee");
             String departmentIdStr = req.getParameter("department");
             String startDateStr = req.getParameter("startDate");
             String endDateStr = req.getParameter("endDate");

@@ -23,7 +23,6 @@ if not exist "src\main\resources\db.properties" (
         echo # MySQL Database Configuration for Team Members
         echo db.driver=com.mysql.cj.jdbc.Driver
         echo db.url=jdbc:mysql://36.50.135.207:3306/hrms?useSSL=false^&serverTimezone=Asia/Ho_Chi_Minh^&allowPublicKeyRetrieval=true^&useUnicode=true^&characterEncoding=UTF-8
-
         echo db.username=sa
         echo db.password=sa
         echo db.charset=utf8mb4

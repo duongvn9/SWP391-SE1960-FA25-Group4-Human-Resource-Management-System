@@ -7,7 +7,8 @@
                 <div class="row justify-content-center">
                     <div class="col-lg-4 col-md-6 mb-4">
                         <h5>HRMS</h5>
-                        <p>Modern human resource management system that helps businesses optimize management processes and effectively develop human resources.</p>
+                        <p>Modern human resource management system that helps businesses optimize management processes
+                            and effectively develop human resources.</p>
                         <div class="social-links">
                             <a href="#"><i class="fab fa-facebook-f"></i></a>
                             <a href="#"><i class="fab fa-twitter"></i></a>
@@ -33,6 +34,8 @@
                 <div class="footer-bottom">
                     <p>&copy; 2025 HRMS. Developed by SWP391-SE1960NJ-FA25-Group4. All rights reserved.</p>
                 </div>
+            </div>
+
             </div>
         </footer>
 
@@ -63,19 +66,21 @@
             // Counter animation
             function animateCounters() {
                 const counters = document.querySelectorAll('.stat-number');
-
                 counters.forEach(counter => {
                     const target = parseInt(counter.getAttribute('data-count'));
+                    if (isNaN(target))
+                        return; // Skip if no valid number
+                    const originalText = counter.textContent;
+                    const suffix = originalText.replace(/^\d+/, ''); // Lấy phần ký tự sau số
                     const increment = target / 200;
                     let current = 0;
-
                     const timer = setInterval(() => {
                         current += increment;
                         if (current >= target) {
-                            counter.textContent = target;
+                            counter.textContent = target + suffix;
                             clearInterval(timer);
                         } else {
-                            counter.textContent = Math.floor(current);
+                            counter.textContent = Math.floor(current) + suffix;
                         }
                     }, 10);
                 });

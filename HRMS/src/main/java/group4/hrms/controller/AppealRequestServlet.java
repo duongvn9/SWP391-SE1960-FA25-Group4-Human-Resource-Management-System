@@ -28,81 +28,80 @@ public class AppealRequestServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        req.setCharacterEncoding("UTF-8");
-
-        // 1️⃣ Nhận dữ liệu từ form
-        String requestTypeId = req.getParameter("request_type_id");
-        String title = req.getParameter("title");
-        String detailText = req.getParameter("detail");
-        String attendanceDate = req.getParameter("attendance_date");
-        String selectedLogIds = req.getParameter("selected_log_ids");
-        Part attachmentPart = req.getPart("attachment");
-
-        // 2️⃣ Chuẩn bị JSON detail
-        Map<String, Object> detail = new LinkedHashMap<>();
-        detail.put("detail_text", detailText);
-
-        if (attendanceDate != null && !attendanceDate.isEmpty()) {
-            detail.put("attendance_dates", List.of(attendanceDate));
-        }
-
-        if (selectedLogIds != null && !selectedLogIds.isEmpty()) {
-            List<String> logIdList = Arrays.asList(selectedLogIds.split(","));
-            detail.put("selected_log_ids", logIdList);
-        }
-
-        // 3️⃣ Xử lý file upload (nếu có)
-        if (attachmentPart != null && attachmentPart.getSize() > 0) {
-            String savedPath = saveFileToServer(req, attachmentPart);
-            detail.put("attachment_path", savedPath);
-        }
-
-        // Convert sang JSON string
-        ObjectMapper mapper = new ObjectMapper();
-        String detailJson;
-        try {
-            detailJson = mapper.writeValueAsString(detail);
-        } catch (JsonProcessingException e) {
-            throw new ServletException("Failed to convert detail to JSON", e);
-        }
-
-        // 4️⃣ Lấy thông tin người tạo (demo, sau này lấy từ session)
-        Long createdByAccountId = 6L;
-        Long createdByUserId = 8L;
-        Long departmentId = null;
-        Long currentApproverAccountId = null;
-
-        // 4️⃣ Lấy thông tin người tạo từ session
-//        HttpSession session = req.getSession(false);
-//        if (session == null || session.getAttribute("accountId") == null || session.getAttribute("userId") == null) {
-//            throw new ServletException("User not logged in or session expired");
+//        req.setCharacterEncoding("UTF-8");
+//
+//        // 1️⃣ Nhận dữ liệu từ form
+//        String requestTypeId = req.getParameter("request_type_id");
+//        String title = req.getParameter("title");
+//        String detailText = req.getParameter("detail");
+//        String attendanceDate = req.getParameter("attendance_date");
+//        String selectedLogIds = req.getParameter("selected_log_ids");
+//        Part attachmentPart = req.getPart("attachment");
+//
+//        // 2️⃣ Chuẩn bị JSON detail
+//        Map<String, Object> detail = new LinkedHashMap<>();
+//        detail.put("detail_text", detailText);
+//
+//        if (attendanceDate != null && !attendanceDate.isEmpty()) {
+//            detail.put("attendance_dates", List.of(attendanceDate));
 //        }
 //
-//        Long createdByAccountId = (Long) session.getAttribute("accountId");
-//        Long createdByUserId = (Long) session.getAttribute("userId");
+//        if (selectedLogIds != null && !selectedLogIds.isEmpty()) {
+//            List<String> logIdList = Arrays.asList(selectedLogIds.split(","));
+//            detail.put("selected_log_ids", logIdList);
+//        }
 //
-//        // Truy vấn departmentId dựa theo user
-//        UserDao userDao = new UserDao();
-//        Long departmentId = userDao.findDepartmentIdByUserId(createdByUserId);
-//     
+//        // 3️⃣ Xử lý file upload (nếu có)
+//        if (attachmentPart != null && attachmentPart.getSize() > 0) {
+//            String savedPath = saveFileToServer(req, attachmentPart);
+//            detail.put("attachment_path", savedPath);
+//        }
+//
+//        // Convert sang JSON string
+//        ObjectMapper mapper = new ObjectMapper();
+//        String detailJson;
+//        try {
+//            detailJson = mapper.writeValueAsString(detail);
+//        } catch (JsonProcessingException e) {
+//            throw new ServletException("Failed to convert detail to JSON", e);
+//        }
+//
+//        // 4️⃣ Lấy thông tin người tạo (demo, sau này lấy từ session)
+//        Long createdByAccountId = 6L;
+//        Long createdByUserId = 8L;
+//        Long departmentId = null;
 //        Long currentApproverAccountId = null;
-
-        // 5️⃣ Tạo Request object
-        Request request = new Request();
-        request.setRequestTypeId(Long.valueOf(requestTypeId));
-        request.setTitle(title);
-        request.setDetail(detailJson);
-        request.setCreatedByAccountId(createdByAccountId);
-        request.setCreatedByUserId(createdByUserId);
-        request.setDepartmentId(departmentId);
-        request.setCurrentApproverAccountId(currentApproverAccountId);
-        request.setStatus("DRAFT");
-
-        RequestDao requestDAO = new RequestDao();
-        requestDAO.save(request);
-
-        req.setAttribute("message", "Request saved successfully");
-        req.getRequestDispatcher("/WEB-INF/views/requests/appeal-form.jsp").forward(req, resp);
+//
+//        // 4️⃣ Lấy thông tin người tạo từ session
+////        HttpSession session = req.getSession(false);
+////        if (session == null || session.getAttribute("accountId") == null || session.getAttribute("userId") == null) {
+////            throw new ServletException("User not logged in or session expired");
+////        }
+////
+////        Long createdByAccountId = (Long) session.getAttribute("accountId");
+////        Long createdByUserId = (Long) session.getAttribute("userId");
+////
+////        // Truy vấn departmentId dựa theo user
+////        UserDao userDao = new UserDao();
+////        Long departmentId = userDao.findDepartmentIdByUserId(createdByUserId);
+////     
+////        Long currentApproverAccountId = null;
+//        // 5️⃣ Tạo Request object
+//        Request request = new Request();
+//        request.setRequestTypeId(Long.valueOf(requestTypeId));
+//        request.setTitle(title);
+//        request.setDetail(detailJson);
+//        request.setCreatedByAccountId(createdByAccountId);
+//        request.setCreatedByUserId(createdByUserId);
+//        request.setDepartmentId(departmentId);
+//        request.setCurrentApproverAccountId(currentApproverAccountId);
+//        request.setStatus("DRAFT");
+//
+//        RequestDao requestDAO = new RequestDao();
+//        requestDAO.save(request);
+//
+//        req.setAttribute("message", "Request saved successfully");
+//        req.getRequestDispatcher("/WEB-INF/views/requests/appeal-form.jsp").forward(req, resp);
     }
 
     @Override

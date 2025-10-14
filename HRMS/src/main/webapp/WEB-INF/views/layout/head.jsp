@@ -7,7 +7,7 @@
         <meta name="author" content="Group4 - SWP391">
         <title>
             <c:choose>
-                <c:when test="${not empty param.pageTitle}">${param.pageTitle} - HRMS</c:when>
+                <c:when test="${not empty param.pageTitle}">${param.pageTitle}</c:when>
                 <c:otherwise>HRMS - Human Resource Management System</c:otherwise>
             </c:choose>
         </title>
@@ -212,12 +212,6 @@
         <c:if test="${not empty param.pageCss}">
             <link href="${pageContext.request.contextPath}/assets/css/${param.pageCss}" rel="stylesheet">
         </c:if>
-        
-        <!-- CSS Files parameter support -->
-        <c:if test="${not empty param.cssFiles}">
-            <link href="${pageContext.request.contextPath}/assets/css/${param.cssFiles}.css" rel="stylesheet">
-        </c:if>
 
         <!-- Debug CSS path -->
         <!-- CSS Path: ${pageContext.request.contextPath}/assets/css/${param.pageCss} -->
-        <!-- CSS Files: ${pageContext.request.contextPath}/assets/css/${param.cssFiles}.css -->

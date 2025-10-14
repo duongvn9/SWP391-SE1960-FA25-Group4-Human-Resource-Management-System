@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.ArrayList;
 
 @WebServlet("/attendance/record/emp")
 public class AttendanceRecordEmpServlet extends HttpServlet {
@@ -117,5 +118,9 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
         } catch (SQLException ex) {
             Logger.getLogger(AttendanceRecordEmpServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
+        ArrayList<String> attendanceList = new ArrayList<>();
+        req.setAttribute("attendanceList", attendanceList);
+        req.getRequestDispatcher("/WEB-INF/views/attendance/attendance-record-emp.jsp").forward(req, resp);
+
     }
 }

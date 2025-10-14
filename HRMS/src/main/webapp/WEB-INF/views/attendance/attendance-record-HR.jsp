@@ -5,6 +5,12 @@
     <head>
         <meta charset="UTF-8">
         <title>Attendance Management</title>
+        <script>
+            function selectAll(source) {
+                const checkboxes = document.querySelectorAll('#attendanceTable tbody input[type="checkbox"]');
+                checkboxes.forEach(cb => cb.checked = source.checked);
+            }
+        </script>
     </head>
     <body>
         <h2>Attendance Period Management</h2>
@@ -17,13 +23,12 @@
             <label>To:</label>
             <input type="date" name="endDate" value="${param.endDate}" />
 
-
             <label>Department:</label>
             <select name="department">
                 <option value="">--All--</option>
                 <c:forEach var="dept" items="${departmentList}">
                     <option value="${dept.name}" 
-                            ${param.department != null && param.department == dept.name ? 'selected' : ''}>
+                            <c:if test="${param.department eq dept.name}">selected</c:if>>
                         ${dept.name}
                     </option>
                 </c:forEach>
@@ -35,48 +40,30 @@
             <label>Status:</label>
             <select id="status" name="status">
                 <option value="">All</option>
-                <option value="On time" ${param.status == 'On time' ? 'selected' : ''}>On time</option>
-                <option value="Late" ${param.status == 'Late' ? 'selected' : ''}>Late</option>
-            </select>
+                <option value="On time" <c:if test="${param.status eq 'On time'}">selected</c:if>>On time</option>
+                <option value="Late" <c:if test="${param.status eq 'Late'}">selected</c:if>>Late</option>
+                </select>
 
-            <label>Source:</label>
-            <select id="source" name="source">
-                <option value="">All</option>
-                <option value="Google" ${param.source == 'Google' ? 'selected' : ''}>Google sheet</option>
-                <option value="Manual" ${param.source == 'Manual' ? 'selected' : ''}>Manual</option>
-                <option value="Import" ${param.source == 'Import' ? 'selected' : ''}>Import</option>
-            </select>
+                <label>Source:</label>
+                <select id="source" name="source">
+                    <option value="">All</option>
+                    <option value="Google" <c:if test="${param.source eq 'Google'}">selected</c:if>>Google sheet</option>
+                <option value="Manual" <c:if test="${param.source eq 'Manual'}">selected</c:if>>Manual</option>
+                <option value="Import" <c:if test="${param.source eq 'Import'}">selected</c:if>>Import</option>
+                </select>
 
-            <label>Period:</label>
-            <select id="periodSelect" name="periodSelect">
-                <option value="">-- All Periods --</option>
+                <label>Period:</label>
+                <select id="periodSelect" name="periodId">
+                    <option value="">-- All Periods --</option>
                 <c:forEach var="p" items="${periodList}">
-                    <option value="${p.id}" ${param.periodSelect == p.id.toString() ? 'selected' : ''}>${p.name}</option>
+                    <option value="${p.id}" <c:if test="${param.periodId eq p.id.toString()}">selected</c:if>>
+                        ${p.name}
+                    </option>
                 </c:forEach>
             </select>
 
-            <button type="submit">Search</button>
-            <button type="button" onclick="resetFilters()">Reset</button>
+            <button type="submit">Filter</button>
         </form>
-
-        <hr>
-
-        <!-- ========== ACTION BUTTONS ========== -->
-        <div id="actions">
-            <button onclick="previewImport()">Preview Import</button>
-            <button onclick="exportData('csv')">Export CSV</button>
-            <button onclick="exportData('xls')">Export XLS</button>
-            <button onclick="exportData('pdf')">Export PDF</button>
-
-            <button id="editBtn" onclick="enableEdit()">Edit</button>
-            <button id="submitBtn" style="display:none" onclick="submitChanges()">Submit</button>
-            <button id="deleteBtn" onclick="toggleDeleteMode()">Delete</button>
-            <button id="bulkDeleteBtn" style="display:none" onclick="bulkDelete()">Delete Selected</button>
-
-            <button id="lockBtn" onclick="toggleLock()">Lock/Unlock Period</button>
-        </div>
-
-        <br>
 
         <!-- ========== MAIN TABLE ========== -->
         <table id="attendanceTable" border="1" cellspacing="0" cellpadding="6">
@@ -102,19 +89,9 @@
                         <td>${att.employeeId}</td>
                         <td>${att.employeeName}</td>
                         <td>${att.department}</td>
-                        <!-- LocalDate hiển thị trực tiếp -->
                         <td><c:out value="${att.date}" /></td>
-                        <!-- LocalTime lấy HH:mm -->
-                        <td>
-                            <c:if test="${att.checkIn != null}">
-                                ${att.checkIn.toString().substring(0,5)}
-                            </c:if>
-                        </td>
-                        <td>
-                            <c:if test="${att.checkOut != null}">
-                                ${att.checkOut.toString().substring(0,5)}
-                            </c:if>
-                        </td>
+                        <td><c:if test="${att.checkIn != null}">${att.checkIn.toString().substring(0,5)}</c:if></td>
+                        <td><c:if test="${att.checkOut != null}">${att.checkOut.toString().substring(0,5)}</c:if></td>
                         <td><c:out value="${att.status}" /></td>
                         <td><c:out value="${att.source}" /></td>
                         <td><c:out value="${att.period}" /></td>
@@ -125,115 +102,5 @@
                 </c:forEach>
             </tbody>
         </table>
-
-        <!-- ========== DETAIL POP-UP ========== -->
-        <div id="overlay" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background-color:rgba(0,0,0,0.3);"></div>
-        <div id="popup" style="display:none; position:fixed; top:10%; left:50%; transform:translateX(-50%); background:#fff; padding:20px; border:1px solid #ccc; width:400px;">
-            <h3>Attendance Detail</h3>
-            <table border="0" cellspacing="4" cellpadding="4">
-                <tr><td><b>Employee Name:</b></td><td id="dName"></td></tr>
-                <tr><td><b>Employee ID:</b></td><td id="dId"></td></tr>
-                <tr><td><b>Department:</b></td><td id="dDept"></td></tr>
-                <tr><td><b>Date:</b></td><td id="dDate"></td></tr>
-                <tr><td><b>Check-in:</b></td><td id="dIn"></td></tr>
-                <tr><td><b>Check-out:</b></td><td id="dOut"></td></tr>
-                <tr><td><b>Status:</b></td><td id="dStatus"></td></tr>
-                <tr><td><b>Source:</b></td><td id="dSource"></td></tr>
-                <tr><td><b>Period:</b></td><td id="dPeriod"></td></tr>
-                <tr><td><b>Locked:</b></td><td id="dLocked"></td></tr>
-                <tr><td><b>Notes / Reason:</b></td><td id="dNotes"></td></tr>
-                <tr><td><b>Attachments:</b></td><td id="dAttach"></td></tr>
-                <tr><td><b>Locked By:</b></td><td id="dLockedBy"></td></tr>
-                <tr><td><b>Locked At:</b></td><td id="dLockedAt"></td></tr>
-                <tr><td><b>Audit Trail:</b></td><td id="dAudit"></td></tr>
-            </table>
-            <br>
-            <button onclick="closePopup()">Close</button>
-        </div>
-
-        <!-- ========== JAVASCRIPT ========== -->
-        <script>
-            let editMode = false;
-            let deleteMode = false;
-
-            function resetFilters() {
-                document.getElementById("filterForm").reset();
-            }
-
-            function previewImport() {
-                alert("Redirect to import module (demo)");
-            }
-
-            function exportData(fmt) {
-                alert("Exporting as " + fmt.toUpperCase());
-            }
-
-            function enableEdit() {
-                editMode = true;
-                document.getElementById("editBtn").style.display = "none";
-                document.getElementById("submitBtn").style.display = "inline-block";
-                document.querySelectorAll(".edit-col").forEach(td => td.style.display = "table-cell");
-            }
-
-            function submitChanges() {
-                editMode = false;
-                document.getElementById("editBtn").style.display = "inline-block";
-                document.getElementById("submitBtn").style.display = "none";
-                document.querySelectorAll(".edit-col").forEach(td => td.style.display = "none");
-                alert("Changes submitted (demo)");
-            }
-
-            function toggleDeleteMode() {
-                deleteMode = !deleteMode;
-                document.getElementById("bulkDeleteBtn").style.display = deleteMode ? "inline-block" : "none";
-                alert(deleteMode ? "Delete mode ON" : "Delete mode OFF");
-            }
-
-            function selectAll(cb) {
-                document.querySelectorAll("input[name='rowSelect']").forEach(ch => ch.checked = cb.checked);
-            }
-
-            function bulkDelete() {
-                const selected = [...document.querySelectorAll("input[name='rowSelect']:checked")];
-                if (selected.length === 0) {
-                    alert("No rows selected!");
-                    return;
-                }
-                alert("Deleted " + selected.length + " record(s) (demo)");
-            }
-
-            // OPEN POPUP DETAIL
-            function openDetail(record) {
-                if (editMode || deleteMode)
-                    return;
-                document.getElementById("overlay").style.display = "block";
-                document.getElementById("popup").style.display = "block";
-
-                document.getElementById("dName").innerText = record.employeeName;
-                document.getElementById("dId").innerText = record.employeeId;
-                document.getElementById("dDept").innerText = record.department;
-                document.getElementById("dDate").innerText = record.date;
-                document.getElementById("dIn").innerText = record.checkIn;
-                document.getElementById("dOut").innerText = record.checkOut;
-                document.getElementById("dStatus").innerText = record.status;
-                document.getElementById("dSource").innerText = record.source;
-                document.getElementById("dPeriod").innerText = record.period;
-                document.getElementById("dLocked").innerText = record.locked ? "Yes" : "No";
-                document.getElementById("dNotes").innerText = record.notes || "-";
-                document.getElementById("dAttach").innerText = record.attachments || "-";
-                document.getElementById("dLockedBy").innerText = record.lockedBy || "-";
-                document.getElementById("dLockedAt").innerText = record.lockedAt || "-";
-                document.getElementById("dAudit").innerText = record.auditTrail || "-";
-            }
-
-            function closePopup() {
-                document.getElementById("popup").style.display = "none";
-                document.getElementById("overlay").style.display = "none";
-            }
-
-            function toggleLock() {
-                alert("Lock / Unlock period (demo)");
-            }
-        </script>
     </body>
 </html>

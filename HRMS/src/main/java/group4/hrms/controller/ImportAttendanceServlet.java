@@ -19,10 +19,14 @@ import group4.hrms.dto.AttendanceLogDto;
 import group4.hrms.model.AttendanceLog;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
+
+import jakarta.servlet.ServletException;
+
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 import jakarta.servlet.http.Part;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -42,6 +46,11 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 public class ImportAttendanceServlet extends HttpServlet {
 
     private final AttendanceLogDao attendanceLogDAO = new AttendanceLogDao();
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.getRequestDispatcher("/WEB-INF/views/attendance/import-attendance.jsp").forward(req, resp);
+    }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -112,11 +121,7 @@ public class ImportAttendanceServlet extends HttpServlet {
         } catch (SQLException ex) {
             Logger.getLogger(ImportAttendanceServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }
 
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        req.getRequestDispatcher("/WEB-INF/views/attendance/import-attendance.jsp").forward(req, resp);
     }
 
     // ----------- Hàm đọc file Excel và trả về List<AttendanceLogDto> -----------
@@ -402,7 +407,7 @@ public class ImportAttendanceServlet extends HttpServlet {
             if (dto.getPeriod() != null) {
                 periodIdOpt = periodDao.findIdByName(dto.getPeriod());
             }
-            
+
             Long periodId = periodIdOpt.orElse(null);
             System.out.println(periodId);
             // Check-in
@@ -442,4 +447,5 @@ public class ImportAttendanceServlet extends HttpServlet {
             }
         }
     }
+
 }

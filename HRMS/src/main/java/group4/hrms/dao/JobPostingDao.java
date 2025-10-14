@@ -1,13 +1,17 @@
 package group4.hrms.dao;
 
-import group4.hrms.model.JobPosting;
-import group4.hrms.util.DatabaseUtil;
-
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import group4.hrms.model.JobPosting;
+import group4.hrms.util.DatabaseUtil;
 
 /**
  * DAO class để xử lý các thao tác với bảng job_postings
@@ -231,7 +235,7 @@ public class JobPostingDao extends BaseDao<JobPosting, Long> {
                 }
             }
             
-            return Optional.empty();
+            return Optional.empty(); 
             
         } catch (SQLException e) {
             logger.error("Error finding job posting by request ID {}: {}", requestId, e.getMessage(), e);

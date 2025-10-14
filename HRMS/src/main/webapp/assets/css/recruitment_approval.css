@@ -1,0 +1,35 @@
+.approval-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.approval-table th, .approval-table td {
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.approval-table th {
+    background-color: #f5f5f5;
+    font-weight: 600;
+}
+
+.btn {
+    padding: 5px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    color: #fff;
+}
+
+.btn-success {
+    background-color: #28a745;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+}
+
+.btn-sm {
+    font-size: 13px;
+}
