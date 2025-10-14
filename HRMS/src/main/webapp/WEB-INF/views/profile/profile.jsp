@@ -3,138 +3,346 @@
 <!DOCTYPE html>
 <html lang="en">
 
-    <head>
-        <meta charset="UTF-8">
-        <title>Profile</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-profile.css">
-    </head>
+<head>
+    <meta charset="UTF-8">
+    <title>Update Profile - HRMS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f5f5f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .profile-container {
+            max-width: 95%;
+            margin: 20px auto;
+            background: white;
+            padding: 30px 50px;
+            min-height: calc(100vh - 40px);
+        }
+        .profile-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .profile-header h2 {
+            color: #333;
+            font-weight: 600;
+            font-size: 1.5rem;
+            margin: 0;
+        }
+        .profile-description {
+            background-color: #f8f9fa;
+            padding: 12px 15px;
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 25px;
+            font-style: italic;
+        }
+        .form-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            min-height: 40px;
+        }
+        .form-label {
+            width: 200px;
+            font-weight: 500;
+            color: #333;
+            margin: 0;
+            padding-right: 20px;
+            text-align: left;
+            flex-shrink: 0;
+        }
+        .form-input-wrapper {
+            flex: 1;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .form-control, .form-select {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 0.95rem;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #80bdff;
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+        }
+        .readonly-field {
+            background-color: #e9ecef;
+            cursor: not-allowed;
+        }
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        .form-check-inline {
+            margin: 0;
+        }
+        .btn-update {
+            padding: 10px 40px;
+            font-size: 1rem;
+            font-weight: 500;
+            margin-top: 20px;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 15px;
+            color: #007bff;
+            text-decoration: none;
+            font-size: 0.95rem;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .text-danger {
+            color: #dc3545;
+        }
+        .half-width {
+            flex: 0 0 calc(50% - 100px);
+        }
+        .label-inline {
+            width: 100px;
+            text-align: right;
+            padding-right: 15px;
+            font-weight: 500;
+            color: #333;
+        }
+    </style>
+</head>
 
-    <body>
-        <div class="page-wrap">
+<body>
+    <div class="profile-container">
+        <!-- Back to Dashboard Link -->
+        <a href="${pageContext.request.contextPath}/dashboard" class="back-link">
+            <i class="fa-solid fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
 
-            <div class="profile-shell">
-                <!-- LEFT: User info card (keep unchanged) -->
-                <div class="left-card">
-                    <div class="name-row">
-                        <h5 class="left-name">${user.fullName}</h5>
-                        <span class="badge-admin"><i class="fa-solid fa-user-shield me-1"></i>Admin</span>
-                    </div>
-                    <div class="left-email">${user.email}</div>
+        <!-- Profile Header -->
+        <div class="profile-header">
+            <h2>Update Profile</h2>
+        </div>
 
-                    <div class="left-actions mb-3">
-                        <a class="text-primary" href="${pageContext.request.contextPath}/salary-history">
-                            <i class="fa-solid fa-receipt"></i> View Salary History
-                        </a>
-                    </div>
+        <!-- Description -->
+        <div class="profile-description">
+            This information is important and confidential. It is used by the company for official records, 
+            certificates, and administrative purposes. Please ensure all information is accurate and up-to-date.
+        </div>
 
-                    <a href="${pageContext.request.contextPath}/dashboard" class="btn btn-outline-primary w-100">
-                        <i class="fa-solid fa-arrow-left-long me-1"></i> Back to Dashboard
-                    </a>
-                </div>
+        <!-- Success/Error Messages -->
+        <c:if test="${not empty sessionScope.successMessage}">
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fa-solid fa-circle-check me-2"></i>${sessionScope.successMessage}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <c:remove var="successMessage" scope="session"/>
+        </c:if>
+        
+        <c:if test="${not empty error}">
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fa-solid fa-circle-exclamation me-2"></i>${error}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </c:if>
 
-                <!-- RIGHT: Profile form with additional fields -->
-                <div class="profile-card">
-                    <div class="hrms-logo">
-                        <i class="fa-solid fa-users-gear hrms-logo-icon"></i>
-                        <div class="hrms-logo-text">HRMS</div>
-                    </div>
-                    <div class="profile-header-title">Personal Profile</div>
+        <!-- Profile Form -->
+        <form method="post" action="${pageContext.request.contextPath}/user-profile">
+            <!-- CSRF Token -->
+            <input type="hidden" name="_csrf_token" value="${csrfToken}">
 
-                    <form method="post" action="${pageContext.request.contextPath}/user-profile">
-
-                        <!-- Citizen ID (CCCD) -->
-                        <div class="mb-3">
-                            <label class="form-label">Citizen ID (CCCD)</label>
-                            <input type="text" class="form-control" value="${user.cccd}" placeholder="Enter your Citizen ID" >
-                        </div>
-                        <!-- Full Name -->
-                        <div class="mb-3">
-                            <label class="form-label">Full Name</label>
-                            <input type="text" class="form-control" value="${user.fullName}" >
-                        </div>
-                        <!-- Gender -->
-                        <div class="mb-3">
-                            <label class="form-label">Gender</label>
-                            <select class="form-select" disabled>
-                                <option value="">Select gender</option>
-                                <option value="male" ${user.gender == 'male' ? 'selected' : ''}>Male</option>
-                                <option value="female" ${user.gender == 'female' ? 'selected' : ''}>Female</option>
-                                <option value="others" ${user.gender == 'others' ? 'selected' : ''}>Others</option>
-                            </select>
-                        </div>
-                        <!-- Date Joined -->
-                        <div class="mb-3">
-                            <label class="form-label">Date Joined</label>
-                            <input type="date" class="form-control" value="${user.dateJoined}" readonly>
-                        </div>
-                        <!-- Start Work Date -->
-                        <div class="mb-3">
-                            <label class="form-label">Start Work Date</label>
-                            <input type="date" class="form-control" value="${user.startWorkDate}" readonly>
-                        </div>
-                        <!-- Email -->
-                        <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            <input type="email" class="form-control" value="${user.email}" >
-                        </div>
-                        <!-- Phone Number -->
-                        <div class="mb-3">
-                            <label class="form-label">Phone Number</label>
-                            <input type="text" class="form-control" value="${user.phone}" >
-                        </div>
-                        <!-- Department -->
-                        <div class="mb-3">
-                            <label class="form-label">Department</label>
-                            <input type="text" class="form-control" value="${user.department}" readonly>
-                        </div>
-                        <!-- Position -->
-                        <div class="mb-3">
-                            <label class="form-label">Position</label>
-                            <input type="text" class="form-control" value="${user.position}" readonly>
-                        </div>
-                        <!-- Bank Information -->
-                        <div class="mb-3">
-                            <label class="form-label">Bank Information</label>
-                            <input type="text" class="form-control" value="${user.bankInfo}">
-                        </div>
-                        <!-- Hometown -->
-                        <div class="mb-3">
-                            <label class="form-label">Hometown</label>
-                            <input type="text" class="form-control" value="${user.hometown}" >
-                        </div>
-                        <!-- Address Line 1 -->
-                        <div class="mb-3">
-                            <label class="form-label">Address Line 1</label>
-                            <input type="text" class="form-control" value="${user.addressLine1}" >
-                        </div>
-                        <!-- Address Line 2 -->
-                        <div class="mb-3">
-                            <label class="form-label">Address Line 2</label>
-                            <input type="text" class="form-control" value="${user.addressLine2}" >
-                        </div>
-                        <!-- City -->
-                        <div class="mb-3">
-                            <label class="form-label">City</label>
-                            <input type="text" class="form-control" value="${user.city}" >
-                        </div>
-                        <!-- Country -->
-                        <div class="mb-3">
-                            <label class="form-label">Country</label>
-                            <input type="text" class="form-control" value="${user.country}">
-                        </div>
-                        <!-- Update button centered -->
-                        <div class="text-center mt-4">
-                            <button type="button" class="btn btn-success px-4">
-                                <i class="fa-solid fa-pen-to-square me-1"></i> Update Profile
-                            </button>
-                        </div>
-                    </form>
+            <!-- Employee Code (readonly) -->
+            <div class="form-row">
+                <label class="form-label">Employee Code:</label>
+                <div class="form-input-wrapper">
+                    <input type="text" class="form-control readonly-field" value="${profile.employeeCode}" readonly>
                 </div>
             </div>
 
-        </div>
-    </body>
+            <!-- Full Name -->
+            <div class="form-row">
+                <label class="form-label">Full Name: <span class="text-danger">*</span></label>
+                <div class="form-input-wrapper">
+                    <input type="text" name="fullName" class="form-control" value="${profile.fullName}" required>
+                </div>
+            </div>
+
+            <!-- Phone -->
+            <div class="form-row">
+                <label class="form-label">Phone Number:</label>
+                <div class="form-input-wrapper">
+                    <input type="text" name="phone" class="form-control" value="${profile.phone}" placeholder="10-11 digits">
+                </div>
+            </div>
+
+            <!-- Date of Birth & Hometown -->
+            <div class="form-row">
+                <label class="form-label">Date of Birth:</label>
+                <div class="form-input-wrapper">
+                    <input type="date" name="dob" class="form-control half-width" value="${profile.dob}">
+                    <div class="label-inline">Hometown:</div>
+                    <input type="text" name="hometown" class="form-control half-width" value="${profile.hometown}">
+                </div>
+            </div>
+
+            <!-- Gender -->
+            <div class="form-row">
+                <label class="form-label">Gender:</label>
+                <div class="form-input-wrapper">
+                    <div class="radio-group">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="gender" id="genderMale" value="male" ${profile.gender == 'male' ? 'checked' : ''}>
+                            <label class="form-check-label" for="genderMale">Male</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="gender" id="genderFemale" value="female" ${profile.gender == 'female' ? 'checked' : ''}>
+                            <label class="form-check-label" for="genderFemale">Female</label>
+                        </div>
+                            <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="gender" id="genderFemale" value="female" ${profile.gender == 'female' ? 'checked' : ''}>
+                            <label class="form-check-label" for="genderFemale">Others</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Citizen ID (CCCD) -->
+            <div class="form-row">
+                <label class="form-label">Citizen ID (CCCD):</label>
+                <div class="form-input-wrapper">
+                    <input type="text" name="cccd" class="form-control" value="${profile.cccd}" placeholder="9 or 12 digits">
+                </div>
+            </div>
+
+            <!-- CCCD Issued Date -->
+            <div class="form-row">
+                <label class="form-label">CCCD Issued Date:</label>
+                <div class="form-input-wrapper">
+                    <input type="date" name="cccdIssuedDate" class="form-control" value="${profile.cccdIssuedDate}">
+                </div>
+            </div>
+
+            <!-- CCCD Issued Place -->
+            <div class="form-row">
+                <label class="form-label">CCCD Issued Place:</label>
+                <div class="form-input-wrapper">
+                    <input type="text" name="cccdIssuedPlace" class="form-control" value="${profile.cccdIssuedPlace}">
+                </div>
+            </div>
+
+            <!-- Country -->
+            <div class="form-row">
+                <label class="form-label">Country:</label>
+                <div class="form-input-wrapper">
+                    <input type="text" name="country" class="form-control" value="${profile.country}">
+                </div>
+            </div>
+
+            <!-- Email Company (readonly) -->
+            <div class="form-row">
+                <label class="form-label">Company Email: <span class="text-danger">*</span></label>
+                <div class="form-input-wrapper">
+                    <input type="email" name="emailCompany" class="form-control readonly-field" value="${profile.emailCompany}" readonly>
+                </div>
+            </div>
+
+            <!-- Department (readonly) -->
+            <div class="form-row">
+                <label class="form-label">Department:</label>
+                <div class="form-input-wrapper">
+                    <input type="text" class="form-control readonly-field" value="${profile.departmentName}" readonly>
+                </div>
+            </div>
+
+            <!-- Position (readonly) -->
+            <div class="form-row">
+                <label class="form-label">Position:</label>
+                <div class="form-input-wrapper">
+                    <input type="text" class="form-control readonly-field" value="${profile.positionName}" readonly>
+                </div>
+            </div>
+
+            <!-- Status (readonly) -->
+            <div class="form-row">
+                <label class="form-label">Status:</label>
+                <div class="form-input-wrapper">
+                    <input type="text" class="form-control readonly-field" value="${profile.status}" readonly>
+                </div>
+            </div>
+
+            <!-- Date Joined (readonly) -->
+            <div class="form-row">
+                <label class="form-label">Date Joined:</label>
+                <div class="form-input-wrapper">
+                    <input type="date" class="form-control readonly-field" value="${profile.dateJoined}" readonly>
+                </div>
+            </div>
+
+            <!-- Start Work Date (readonly) -->
+            <div class="form-row">
+                <label class="form-label">Start Work Date:</label>
+                <div class="form-input-wrapper">
+                    <input type="date" class="form-control readonly-field" value="${profile.startWorkDate}" readonly>
+                </div>
+            </div>
+
+            <!-- Address Line 1 -->
+            <div class="form-row">
+                <label class="form-label">Address Line 1:</label>
+                <div class="form-input-wrapper">
+                    <input type="text" name="addressLine1" class="form-control" value="${profile.addressLine1}">
+                </div>
+            </div>
+
+            <!-- Address Line 2 -->
+            <div class="form-row">
+                <label class="form-label">Address Line 2:</label>
+                <div class="form-input-wrapper">
+                    <input type="text" name="addressLine2" class="form-control" value="${profile.addressLine2}">
+                </div>
+            </div>
+
+            <!-- City -->
+            <div class="form-row">
+                <label class="form-label">City:</label>
+                <div class="form-input-wrapper">
+                    <input type="text" name="city" class="form-control" value="${profile.city}">
+                </div>
+            </div>
+
+            <!-- State -->
+            <div class="form-row">
+                <label class="form-label">State/Province:</label>
+                <div class="form-input-wrapper">
+                    <input type="text" name="state" class="form-control" value="${profile.state}">
+                </div>
+            </div>
+
+            <!-- Postal Code -->
+            <div class="form-row">
+                <label class="form-label">Postal Code:</label>
+                <div class="form-input-wrapper">
+                    <input type="text" name="postalCode" class="form-control" value="${profile.postalCode}">
+                </div>
+            </div>
+
+            <!-- Update button centered -->
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-primary btn-update">
+                    <i class="fa-solid fa-floppy-disk me-2"></i>Save
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
 
 </html>
