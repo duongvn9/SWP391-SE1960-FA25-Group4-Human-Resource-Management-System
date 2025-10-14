@@ -16,6 +16,13 @@
         <jakartaee>10.0.0</jakartaee>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>jakarta.platform</groupId>
@@ -83,18 +90,11 @@
             <version>2.16.1</version>
         </dependency>
 
-        <!-- Google OAuth2 Client -->
+        <!-- Gson for JSON processing -->
         <dependency>
-            <groupId>com.google.auth</groupId>
-            <artifactId>google-auth-library-oauth2-http</artifactId>
-            <version>1.19.0</version>
-        </dependency>
-        
-        <!-- HTTP Client for OAuth -->
-        <dependency>
-            <groupId>org.apache.httpcomponents.client5</groupId>
-            <artifactId>httpclient5</artifactId>
-            <version>5.2.1</version>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.10.1</version>
         </dependency>
 
         <!-- Apache POI for Excel processing -->
@@ -152,6 +152,20 @@
             <artifactId>h2</artifactId>
             <version>2.2.224</version>
             <scope>test</scope>
+        </dependency>
+
+        <!-- Lunar Calendar Library for Vietnamese holidays -->
+        <dependency>
+            <groupId>com.github.6tail</groupId>
+            <artifactId>lunar-java</artifactId>
+            <version>master-SNAPSHOT</version>
+        </dependency>
+
+        <!-- Apache HttpClient for Google OAuth -->
+        <dependency>
+            <groupId>org.apache.httpcomponents.client5</groupId>
+            <artifactId>httpclient5</artifactId>
+            <version>5.2.1</version>
         </dependency>
 
         <!-- Jakarta EL Implementation -->
