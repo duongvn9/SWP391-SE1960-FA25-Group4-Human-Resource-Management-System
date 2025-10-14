@@ -1,56 +1,37 @@
 <%@ page contentType="text/html; charset=UTF-8" %>
 
     <style>
-        /* Vars cục bộ cho header */
         :root {
             --header-h: 64px;
-            /* chiều cao header */
+            --header-gap: 12px;
         }
 
-        /* đẩy nội dung xuống bằng đúng chiều cao header */
         .main-content {
-            padding-top: var(--header-h);
+            padding-top: calc(var(--header-h) + var(--header-gap));
         }
 
-        /* Header fixed, luôn dính trên cùng */
         .top-navbar {
             position: fixed;
             top: 0;
             left: var(--sidebar-width, 260px);
-            /* canh theo sidebar */
             right: 0;
             height: var(--header-h);
             z-index: 1060;
-
             background: #fff;
             padding: 1rem 1.25rem;
             box-shadow: 0 2px 10px rgba(0, 0, 0, .08);
             display: flex;
             align-items: center;
-            gap: .75rem;
         }
 
-        /* Khi sidebar thu gọn (desktop) */
         body.sidebar-collapsed .top-navbar {
             left: 70px;
         }
 
-        /* Mobile: header sát mép trái, sidebar off-canvas */
         @media (max-width:768px) {
             .top-navbar {
                 left: 0;
             }
-
-            .main-content {
-                padding-top: var(--header-h);
-            }
-        }
-
-        /* Trang trí */
-        .page-title {
-            margin: 0;
-            font-weight: 600;
-            font-size: 1.1rem;
         }
 
         .toggle-sidebar {
@@ -64,6 +45,7 @@
             justify-content: center;
         }
 
+        /* đẩy dropdown sang phải vì đã bỏ tiêu đề */
         .nav-right {
             margin-left: auto;
             display: flex;
@@ -107,9 +89,7 @@
             <i class="fas fa-bars"></i>
         </button>
 
-        <h1 class="page-title">
-            <i class="fa-solid fa-table-columns me-2"></i> Dashboard
-        </h1>
+        <!-- (đÃ BỎ tiêu đề Dashboard ở giữa) -->
 
         <div class="nav-right">
             <div class="dropdown">
@@ -137,4 +117,19 @@
                 </ul>
             </div>
         </div>
-    </header>   
+    </header>
+
+    <script>
+        // đo chiều cao header thực tế để đệm nội dung
+        (function () {
+            function setHeaderHeight() {
+                var header = document.querySelector('.top-navbar');
+                if (!header) return;
+                document.documentElement.style.setProperty('--header-h', header.offsetHeight + 'px');
+            }
+            document.addEventListener('DOMContentLoaded', setHeaderHeight);
+            var t; window.addEventListener('resize', function () {
+                clearTimeout(t); t = setTimeout(setHeaderHeight, 100);
+            });
+        })();
+    </script>

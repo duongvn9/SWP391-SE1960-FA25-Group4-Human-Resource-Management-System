@@ -231,6 +231,14 @@ public class UserDao {
     }
 
     /**
+     * Lấy danh sách nhân viên trong phòng ban (chỉ active users)
+     * Alias method cho OT Request feature
+     */
+    public List<User> getDepartmentEmployees(Long departmentId) {
+        return findByDepartmentId(departmentId);
+    }
+
+    /**
      * Tạo user mới
      */
     public Optional<User> create(User user) {
