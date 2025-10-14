@@ -234,6 +234,7 @@ public class RequestDao extends BaseDao<Request, Long> {
         throw new RuntimeException("Failed to create request");
     }
 
+    @Override
     public Request update(Request request) {
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(UPDATE)) {

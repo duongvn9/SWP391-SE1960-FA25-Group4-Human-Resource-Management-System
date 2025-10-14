@@ -4,13 +4,7 @@
 <html lang="vi">
     <head>
         <meta charset="UTF-8">
-        <title>Attendance Management</title>
-        <script>
-            function selectAll(source) {
-                const checkboxes = document.querySelectorAll('#attendanceTable tbody input[type="checkbox"]');
-                checkboxes.forEach(cb => cb.checked = source.checked);
-            }
-        </script>
+        <title>Attendance Management</title>  
     </head>
     <body>
         <h2>Attendance Period Management</h2>
@@ -63,7 +57,20 @@
             </select>
 
             <button type="submit">Filter</button>
+            <button type="submit">Reset</button>
+
         </form>
+
+        <div id="actions">
+            <button onclick="importAttendance()">Import dữ liệu chấm công mới</button>
+            <button onclick="exportData('csv')">Export CSV</button>
+            <button onclick="exportData('xls')">Export XLS</button>
+            <button onclick="exportData('pdf')">Export PDF</button>
+            <button id="editBtn" onclick="enableEdit()">Edit</button>
+            <button id="submitBtn" onclick="submitChanges()">Submit</button>
+            <button id="deleteBtn" onclick="toggleDeleteMode()">Delete</button>
+            <span id="sliderStatus">Unlocked</span>
+        </div>
 
         <!-- ========== MAIN TABLE ========== -->
         <table id="attendanceTable" border="1" cellspacing="0" cellpadding="6">
@@ -102,5 +109,7 @@
                 </c:forEach>
             </tbody>
         </table>
+
+        <script src="${pageContext.request.contextPath}/assets/js/attendance-record-HR.js"></script>
     </body>
 </html>

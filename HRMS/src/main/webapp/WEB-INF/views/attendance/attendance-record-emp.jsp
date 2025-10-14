@@ -4,7 +4,7 @@
 <html>
     <head>
         <meta charset="UTF-8">
-        <title>My Attendance</title>
+        <title>My Attendance</title>  
     </head>
     <body>
         <h2>My Attendance Records</h2>
@@ -43,13 +43,16 @@
             <button type="submit">Filter</button>
             <button type="button" id="resetBtn">Reset</button>
         </form>
+        <br/><br/> 
+        
+        <form id="exportForm" action="${pageContext.request.contextPath}/attendance/record/emp" method="post">
+            <input type="hidden" name="exportType" id="exportType">
+        </form>
 
-        <br/><br/>
-
-        <!-- 🔹 Export Buttons -->
         <button type="button" id="exportXLSBtn">Export XLS</button>
         <button type="button" id="exportCSVBtn">Export CSV</button>
         <button type="button" id="exportPDFBtn">Export PDF</button>
+
         <br/><br/>
 
         <table id="attendanceTable" border="1" cellpadding="6">
@@ -77,7 +80,7 @@
                     </tr>
                 </c:forEach>
             </tbody>
-
+            <script src="${pageContext.request.contextPath}/assets/js/attendance-record-emp.js"></script>
         </table>
     </body>
 </html>
