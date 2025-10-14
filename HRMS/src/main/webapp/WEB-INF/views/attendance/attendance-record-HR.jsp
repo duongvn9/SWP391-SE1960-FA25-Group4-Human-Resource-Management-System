@@ -61,7 +61,7 @@
         </form>
 
         <div id="actions">
-            <button onclick="importAttendance()">Import dữ liệu chấm công mới</button>
+            <button type="button" onclick="importAttendance()">Upload</button>
             <button type="button" id="exportXLSBtn">Export XLS</button>
             <button type="button" id="exportCSVBtn">Export CSV</button>
             <button type="button" id="exportPDFBtn">Export PDF</button>

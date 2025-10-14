@@ -3,6 +3,10 @@ function selectAll(source) {
     checkboxes.forEach(cb => cb.checked = source.checked);
 }
 
+function importAttendance() {
+    window.location.href = "http://localhost:9999/HRMS/attendance/import";
+}
+
 document.getElementById("exportXLSBtn").addEventListener("click", function () {
     document.getElementById("exportType").value = "xls";
     document.getElementById("exportForm").submit();
