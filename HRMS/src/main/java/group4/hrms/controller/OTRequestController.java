@@ -1,18 +1,15 @@
 package group4.hrms.controller;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.logging.Logger;
 
 import group4.hrms.dao.HolidayDao;
 import group4.hrms.dao.RequestDao;
 import group4.hrms.dao.RequestTypeDao;
 import group4.hrms.dao.UserDao;
-import group4.hrms.dto.AccountDto;
-import group4.hrms.dto.OTBalance;
-import group4.hrms.dto.UserDto;
-import group4.hrms.model.Request;
+import group4.hrms.model.Account;
 import group4.hrms.model.User;
+import group4.hrms.dto.OTBalance;
 import group4.hrms.service.OTRequestService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -26,9 +23,8 @@ import jakarta.servlet.http.HttpSession;
  *
  * <p>Handles HTTP requests for:
  * <ul>
- *   <li>GET /request/ot?action=create - Display OT request creation form</li>
- *   <li>GET /request/ot?action=list - Display list of user's OT requests</li>
- *   <li>POST /request/ot?action=create - Submit new OT request</li>
+ *   <li>GET /requests/ot/create - Display OT request creation form</li>
+ *   <li>POST /requests/ot/create - Submit new OT request</li>
  * </ul>
  *
  * <p>The controller integrates with OTRequestService for business logic
@@ -38,7 +34,7 @@ import jakarta.servlet.http.HttpSession;
  * @version 1.0
  * @see group4.hrms.service.OTRequestService
  */
-@WebServlet("/request/ot")
+@WebServlet("/requests/ot/create")
 public class OTRequestController extends HttpServlet {
     private static final Logger logger = Logger.getLogger(OTRequestController.class.getName());
 
@@ -46,28 +42,14 @@ public class OTRequestController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         logger.info("OTRequestController.doGet() called. Request URI: " + request.getRequestURI());
-        String action = request.getParameter("action");
-        logger.info("Action parameter: " + action);
-
-        if ("create".equals(action)) {
-            showCreateForm(request, response);
-        } else if ("list".equals(action)) {
-            showOTList(request, response);
-        } else {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND);
-        }
+        logger.info("=== OT REQUEST CREATE ACTION START ===");
+        showCreateForm(request, response);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String action = request.getParameter("action");
-
-        if ("create".equals(action)) {
-            handleCreateOT(request, response);
-        } else {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND);
-        }
+        handleCreateOT(request, response);
     }
 
     /**
@@ -88,18 +70,37 @@ public class OTRequestController extends HttpServlet {
      */
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // TEMPORARY: Skip authentication check for development
-        // TODO: Uncomment this when login is implemented
-        /*
+        // Check authentication
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("account") == null) {
-            logger.warning("User not authenticated. Redirecting to login.");
+        logger.info("Session exists: " + (session != null));
+
+        if (session == null) {
+            logger.warning("Session is null. Redirecting to login.");
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
-        */
 
-        logger.info("Loading OT request form (authentication check disabled for development)...");
+        Object accountObj = session.getAttribute("account");
+        Object userObj = session.getAttribute("user");
+        logger.info("Account in session: " + (accountObj != null));
+        logger.info("User in session: " + (userObj != null));
+
+        if (accountObj == null) {
+            logger.warning("Account not found in session. Redirecting to login.");
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+
+        Account account = (Account) accountObj;
+        User user = (User) userObj;
+
+        if (user == null) {
+            logger.warning("User not found in session. Redirecting to login.");
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+
+        logger.info("Loading OT request form for user: " + user.getId() + " (account: " + account.getId() + ")");
 
         try {
             logger.info("Initializing OTRequestService...");
@@ -113,17 +114,9 @@ public class OTRequestController extends HttpServlet {
                 new UserDao()
             );
 
-            // TEMPORARY: Use dummy user ID for development
-            // TODO: Get real user from session when login is implemented
-            /*
-            UserDto user = (UserDto) session.getAttribute("user");
-            Long userId = user.getId();
-            */
-            Long userId = 1L; // Mock user ID
-
-            logger.info("Loading OT balance for user " + userId);
+            logger.info("Loading OT balance for user " + user.getId());
             // Load OT balance for the user (Requirement 8)
-            OTBalance otBalance = service.getOTBalance(userId);
+            OTBalance otBalance = service.getOTBalance(user.getId());
             logger.info("Loaded OT balance: Week=" + otBalance.getCurrentWeekHours() + "h, Month="
                 + otBalance.getMonthlyHours() + "h, Annual=" + otBalance.getAnnualHours() + "h");
 
@@ -165,19 +158,24 @@ public class OTRequestController extends HttpServlet {
                    .forward(request, response);
 
         } catch (Exception e) {
-            logger.severe("Error loading OT request form: " + e.getMessage());
+            logger.severe(String.format("Unexpected error loading OT request form: userId=%d, error=%s",
+                         user.getId(), e.getMessage()));
             e.printStackTrace();
 
-            // Send detailed error response
-            response.setContentType("text/html;charset=UTF-8");
-            response.getWriter().println("<html><body>");
-            response.getWriter().println("<h1>Error Loading OT Request Form</h1>");
-            response.getWriter().println("<p>Error: " + e.getMessage() + "</p>");
-            response.getWriter().println("<pre>");
-            e.printStackTrace(response.getWriter());
-            response.getWriter().println("</pre>");
-            response.getWriter().println("<p><a href='" + request.getContextPath() + "/dashboard'>Back to Dashboard</a></p>");
-            response.getWriter().println("</body></html>");
+            // Set error message and forward to error page or dashboard
+            request.setAttribute("error", "System error occurred while loading the form. Please try again later.");
+            request.setAttribute("errorDetails", e.getMessage());
+
+            // Try to forward to dashboard instead of sending HTML directly
+            try {
+                request.getRequestDispatcher("/dashboard").forward(request, response);
+            } catch (Exception forwardError) {
+                // If forward fails, send simple error response
+                if (!response.isCommitted()) {
+                    response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                        "System error occurred. Please contact support.");
+                }
+            }
         }
     }
 
@@ -203,31 +201,22 @@ public class OTRequestController extends HttpServlet {
      */
     private void handleCreateOT(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // TEMPORARY: Skip authentication check for development
-        // TODO: Uncomment this when login is implemented
-        /*
+        // Check authentication
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("account") == null) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
-        */
+
+        group4.hrms.model.Account account = (group4.hrms.model.Account) session.getAttribute("account");
+        group4.hrms.model.User user = (group4.hrms.model.User) session.getAttribute("user");
+
+        if (account == null || user == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
 
         try {
-            // TEMPORARY: Use dummy data for development
-            // TODO: Get real account and user from session when login is implemented
-            /*
-            AccountDto account = (AccountDto) session.getAttribute("account");
-            UserDto user = (UserDto) session.getAttribute("user");
-            */
-
-            // Dummy data for testing
-            AccountDto account = new AccountDto();
-            account.setId(1L);
-
-            UserDto user = new UserDto();
-            user.setId(1L);
-            user.setDepartmentId(1L);
 
             // Extract form parameters
             String otDate = request.getParameter("otDate");
@@ -269,14 +258,26 @@ public class OTRequestController extends HttpServlet {
 
         } catch (IllegalArgumentException e) {
             // Handle validation errors: catch IllegalArgumentException and set error message
-            logger.warning("Validation error: " + e.getMessage());
+            logger.warning(String.format("OT validation error: userId=%d, accountId=%d, error=%s",
+                          user.getId(), account.getId(), e.getMessage()));
             request.setAttribute("error", e.getMessage());
+            request.setAttribute("errorType", "VALIDATION_ERROR");
+
+        } catch (java.sql.SQLException e) {
+            // Handle database errors
+            logger.severe(String.format("Database error creating OT request: userId=%d, accountId=%d, error=%s",
+                         user.getId(), account.getId(), e.getMessage()));
+            e.printStackTrace();
+            request.setAttribute("error", "Database error occurred. Please try again later. If the problem persists, contact IT support.");
+            request.setAttribute("errorType", "DATABASE_ERROR");
 
         } catch (Exception e) {
             // Handle system errors: catch Exception, log error, set generic error message
-            logger.severe("Error creating OT request: " + e.getMessage());
+            logger.severe(String.format("Unexpected error creating OT request: userId=%d, accountId=%d, error=%s",
+                         user.getId(), account.getId(), e.getMessage()));
             e.printStackTrace();
             request.setAttribute("error", "System error. Please try again later.");
+            request.setAttribute("errorType", "SYSTEM_ERROR");
         }
 
         try {
@@ -289,8 +290,7 @@ public class OTRequestController extends HttpServlet {
                 new UserDao()
             );
 
-            Long userId = 1L; // Mock user ID
-            OTBalance otBalance = service.getOTBalance(userId);
+            OTBalance otBalance = service.getOTBalance(user.getId());
             request.setAttribute("otBalance", otBalance);
 
         } catch (Exception e) {
@@ -300,83 +300,5 @@ public class OTRequestController extends HttpServlet {
         // Forward back to ot-form.jsp with success/error message
         request.getRequestDispatcher("/WEB-INF/views/requests/ot-form.jsp")
                .forward(request, response);
-    }
-
-    /**
-     * Displays the list of OT requests for the current user.
-     *
-     * <p>Loads all OT requests (PENDING, APPROVED, REJECTED) for the user
-     * and sets them as request attribute.
-     *
-     * <p>Forwards to: /WEB-INF/views/requests/ot-list.jsp
-     *
-     * @param request the HTTP request
-     * @param response the HTTP response
-     * @throws ServletException if servlet error occurs
-     * @throws IOException if I/O error occurs
-     */
-    private void showOTList(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        // TEMPORARY: Skip authentication check for development
-        // TODO: Uncomment this when login is implemented
-        /*
-        HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("account") == null) {
-            logger.warning("User not authenticated. Redirecting to login.");
-            response.sendRedirect(request.getContextPath() + "/login");
-            return;
-        }
-        */
-
-        logger.info("Loading OT request list (authentication check disabled for development)...");
-
-        try {
-            logger.info("Initializing OTRequestService...");
-
-            // Initialize OTRequestService with required DAOs
-            OTRequestService service = new OTRequestService(
-                new RequestDao(),
-                new RequestTypeDao(),
-                new HolidayDao(),
-                new group4.hrms.dao.HolidayCalendarDao(),
-                new UserDao()
-            );
-
-            // TEMPORARY: Use dummy user ID for development
-            // TODO: Get real user from session when login is implemented
-            /*
-            UserDto user = (UserDto) session.getAttribute("user");
-            Long userId = user.getId();
-            */
-            Long userId = 1L; // Mock user ID
-
-            logger.info("Loading OT requests for user " + userId);
-            // Load OT requests for the user
-            List<Request> otRequests = service.getUserOTRequests(userId);
-            logger.info("Loaded " + (otRequests != null ? otRequests.size() : 0) + " OT requests");
-
-            // Set OT requests as request attribute
-            request.setAttribute("otRequests", otRequests);
-
-            logger.info("Forwarding to ot-list.jsp...");
-            // Forward to ot-list.jsp
-            request.getRequestDispatcher("/WEB-INF/views/requests/ot-list.jsp")
-                   .forward(request, response);
-
-        } catch (Exception e) {
-            logger.severe("Error loading OT request list: " + e.getMessage());
-            e.printStackTrace();
-
-            // Send detailed error response
-            response.setContentType("text/html;charset=UTF-8");
-            response.getWriter().println("<html><body>");
-            response.getWriter().println("<h1>Error Loading OT Request List</h1>");
-            response.getWriter().println("<p>Error: " + e.getMessage() + "</p>");
-            response.getWriter().println("<pre>");
-            e.printStackTrace(response.getWriter());
-            response.getWriter().println("</pre>");
-            response.getWriter().println("<p><a href='" + request.getContextPath() + "/dashboard'>Back to Dashboard</a></p>");
-            response.getWriter().println("</body></html>");
-        }
     }
 }

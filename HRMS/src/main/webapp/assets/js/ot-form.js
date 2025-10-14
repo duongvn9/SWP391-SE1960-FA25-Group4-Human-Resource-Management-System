@@ -230,11 +230,36 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Check daily limit (max 10 hours total: 8h regular + 2h OT)
-        if (hours > 2) {
-            otHoursDisplay.classList.add('error');
-            otHoursText.textContent = hours + ' hours (Exceeds 2 hours OT/day limit)';
-            return;
+        // Check daily limit based on OT type
+        const dateStr = otDateInput.value;
+        const otType = dateStr ? determineOTType(dateStr) : null;
+
+        if (otType) {
+            let maxHours;
+            let limitMessage;
+
+            if (otType.type === 'WEEKDAY') {
+                // Weekday: max 2 hours OT (8h regular + 2h OT = 10h total)
+                maxHours = 2;
+                limitMessage = 'Weekday OT limit: 2 hours (8h regular + 2h OT = 10h total)';
+            } else {
+                // Weekend/Holiday: max 10 hours OT (no regular work)
+                maxHours = 10;
+                limitMessage = 'Weekend/Holiday OT limit: 10 hours';
+            }
+
+            console.log('updateOTHours validation:', {
+                otType: otType.type,
+                hours: hours,
+                maxHours: maxHours,
+                exceeds: hours > maxHours
+            });
+
+            if (hours > maxHours) {
+                otHoursDisplay.classList.add('error');
+                otHoursText.textContent = hours + ' hours (Exceeds ' + maxHours + 'h limit for ' + otType.label + ')';
+                return;
+            }
         }
 
         otHoursDisplay.classList.remove('error');
@@ -310,16 +335,34 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        if (hours > 2) {
-            e.preventDefault();
-            alert('OT hours cannot exceed 2 hours per day');
-            endTimeInput.focus();
-            isValid = false;
-            return;
+        // Check daily limit based on OT type
+        const dateStr = otDateInput.value;
+        const otType = dateStr ? determineOTType(dateStr) : null;
+
+        if (otType) {
+            let maxHours;
+            let limitMessage;
+
+            if (otType.type === 'WEEKDAY') {
+                // Weekday: max 2 hours OT
+                maxHours = 2;
+                limitMessage = 'Weekday OT cannot exceed 2 hours per day';
+            } else {
+                // Weekend/Holiday: max 10 hours OT
+                maxHours = 10;
+                limitMessage = 'Weekend/Holiday OT cannot exceed 10 hours per day';
+            }
+
+            if (hours > maxHours) {
+                e.preventDefault();
+                alert(limitMessage + '\nYou entered: ' + hours + ' hours');
+                endTimeInput.focus();
+                isValid = false;
+                return;
+            }
         }
 
         // Check date not in past
-        const dateStr = otDateInput.value;
         if (dateStr) {
             const selectedDate = new Date(dateStr);
             const today = new Date();

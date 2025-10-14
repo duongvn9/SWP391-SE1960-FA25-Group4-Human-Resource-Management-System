@@ -171,9 +171,8 @@
                                 </c:if>
 
                                 <!-- Form -->
-                                <form method="post" action="${pageContext.request.contextPath}/request/leave"
+                                <form method="post" action="${pageContext.request.contextPath}/requests/leave/create"
                                     id="leaveRequestForm" novalidate>
-                                    <input type="hidden" name="action" value="create">
 
                                     <!-- Leave Type -->
                                     <div class="mb-3">
@@ -298,7 +297,7 @@
 
                                     <!-- Actions -->
                                     <div class="mt-4 d-grid gap-2 d-md-flex justify-content-md-end">
-                                        <a href="${pageContext.request.contextPath}/request/leave?action=list"
+                                        <a href="${pageContext.request.contextPath}/requests"
                                             class="btn btn-leave-secondary">
                                             <i class="fas fa-times me-1"></i> Cancel
                                         </a>
