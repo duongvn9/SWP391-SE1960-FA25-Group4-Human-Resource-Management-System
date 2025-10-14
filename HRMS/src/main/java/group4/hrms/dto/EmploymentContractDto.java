@@ -2,8 +2,11 @@ package group4.hrms.dto;
 
 import group4.hrms.model.EmploymentContract;
 import java.math.BigDecimal;
+import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 /**
  * DTO cho EmploymentContract entity
@@ -34,6 +37,16 @@ public class EmploymentContractDto {
     private boolean isIndefinite;
     private boolean hasSignedFile;
     
+    // Formatted fields for display
+    private String formattedStartDate;
+    private String formattedEndDate;
+    private String formattedSalary;
+    private String contractTypeDisplay;
+    private String statusDisplay;
+    private String statusColor;
+    private String formattedCreatedAt;
+    private String formattedUpdatedAt;
+    
     // Constructors
     public EmploymentContractDto() {}
     
@@ -59,6 +72,105 @@ public class EmploymentContractDto {
             this.isExpired = contract.isExpired();
             this.isIndefinite = contract.isIndefinite();
             this.hasSignedFile = contract.hasSignedFile();
+            
+            // Format fields for display
+            this.formattedStartDate = formatDate(contract.getStartDate());
+            this.formattedEndDate = formatDate(contract.getEndDate());
+            this.formattedSalary = formatCurrency(contract.getBaseSalary(), contract.getCurrency());
+            this.contractTypeDisplay = formatContractType(contract.getContractType());
+            this.formattedCreatedAt = formatDateTime(contract.getCreatedAt());
+            this.formattedUpdatedAt = formatDateTime(contract.getUpdatedAt());
+            
+            // Format status with color
+            formatStatus(contract.getStatus());
+        }
+    }
+    
+    /**
+     * Format LocalDate to dd/MM/yyyy
+     */
+    private String formatDate(LocalDate date) {
+        if (date == null) {
+            return "N/A";
+        }
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        return date.format(formatter);
+    }
+    
+    /**
+     * Format LocalDateTime to dd/MM/yyyy HH:mm:ss
+     */
+    private String formatDateTime(LocalDateTime dateTime) {
+        if (dateTime == null) {
+            return "N/A";
+        }
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+        return dateTime.format(formatter);
+    }
+    
+    /**
+     * Format currency with thousand separator
+     */
+    private String formatCurrency(BigDecimal amount, String currency) {
+        if (amount == null) {
+            return "N/A";
+        }
+        
+        NumberFormat formatter = NumberFormat.getInstance(new Locale("vi", "VN"));
+        formatter.setMinimumFractionDigits(2);
+        formatter.setMaximumFractionDigits(2);
+        
+        String formatted = formatter.format(amount);
+        String currencyCode = (currency != null && !currency.trim().isEmpty()) ? currency : "VND";
+        return formatted + " " + currencyCode;
+    }
+    
+    /**
+     * Format contract type to Vietnamese display text
+     */
+    private String formatContractType(String type) {
+        if (type == null || type.trim().isEmpty()) {
+            return "N/A";
+        }
+        
+        switch (type.toLowerCase()) {
+            case "indefinite":
+                return "Hợp đồng không xác định thời hạn";
+            case "fixed_term":
+                return "Hợp đồng xác định thời hạn";
+            case "probation":
+                return "Hợp đồng thử việc";
+            default:
+                return type;
+        }
+    }
+    
+    /**
+     * Format status with display text and color
+     */
+    private void formatStatus(String status) {
+        if (status == null || status.trim().isEmpty()) {
+            this.statusDisplay = "N/A";
+            this.statusColor = "secondary";
+            return;
+        }
+        
+        switch (status.toLowerCase()) {
+            case "active":
+                this.statusDisplay = "Đang hoạt động";
+                this.statusColor = "success";
+                break;
+            case "expired":
+                this.statusDisplay = "Đã hết hạn";
+                this.statusColor = "secondary";
+                break;
+            case "terminated":
+                this.statusDisplay = "Đã chấm dứt";
+                this.statusColor = "danger";
+                break;
+            default:
+                this.statusDisplay = status;
+                this.statusColor = "secondary";
         }
     }
     
@@ -230,6 +342,71 @@ public class EmploymentContractDto {
     
     public boolean isProbation() {
         return "probation".equalsIgnoreCase(this.contractType);
+    }
+    
+    // Getters and Setters for formatted fields
+    public String getFormattedStartDate() {
+        return formattedStartDate;
+    }
+    
+    public void setFormattedStartDate(String formattedStartDate) {
+        this.formattedStartDate = formattedStartDate;
+    }
+    
+    public String getFormattedEndDate() {
+        return formattedEndDate;
+    }
+    
+    public void setFormattedEndDate(String formattedEndDate) {
+        this.formattedEndDate = formattedEndDate;
+    }
+    
+    public String getFormattedSalary() {
+        return formattedSalary;
+    }
+    
+    public void setFormattedSalary(String formattedSalary) {
+        this.formattedSalary = formattedSalary;
+    }
+    
+    public String getContractTypeDisplay() {
+        return contractTypeDisplay;
+    }
+    
+    public void setContractTypeDisplay(String contractTypeDisplay) {
+        this.contractTypeDisplay = contractTypeDisplay;
+    }
+    
+    public String getStatusDisplay() {
+        return statusDisplay;
+    }
+    
+    public void setStatusDisplay(String statusDisplay) {
+        this.statusDisplay = statusDisplay;
+    }
+    
+    public String getStatusColor() {
+        return statusColor;
+    }
+    
+    public void setStatusColor(String statusColor) {
+        this.statusColor = statusColor;
+    }
+    
+    public String getFormattedCreatedAt() {
+        return formattedCreatedAt;
+    }
+    
+    public void setFormattedCreatedAt(String formattedCreatedAt) {
+        this.formattedCreatedAt = formattedCreatedAt;
+    }
+    
+    public String getFormattedUpdatedAt() {
+        return formattedUpdatedAt;
+    }
+    
+    public void setFormattedUpdatedAt(String formattedUpdatedAt) {
+        this.formattedUpdatedAt = formattedUpdatedAt;
     }
     
     /**
