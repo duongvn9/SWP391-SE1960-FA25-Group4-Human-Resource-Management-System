@@ -2,6 +2,7 @@ package group4.hrms.model;
 
 import group4.hrms.dto.LeaveRequestDetail;
 import group4.hrms.dto.OTRequestDetail;
+import group4.hrms.dto.RecruitmentDetailsDto;
 import java.time.LocalDateTime;
 
 /**
@@ -25,7 +26,7 @@ public class Request {
     // Transient fields for parsed details (not stored in database)
     private transient LeaveRequestDetail leaveDetail;
     private transient OTRequestDetail otDetail;
-
+    private transient RecruitmentDetailsDto recruitmentDetail; 
     // Deprecated fields - kept for backward compatibility but should not be used
     @Deprecated
     private Long userId; // Use createdByUserId instead
@@ -375,4 +376,21 @@ public class Request {
                 ", createdAt=" + createdAt +
                 '}';
     }
+            /**
+            * Lấy đối tượng RecruitmentDetailsDto đã được parse từ chuỗi JSON.
+            */
+            public RecruitmentDetailsDto getRecruitmentDetail() {
+            if (recruitmentDetail == null && detailJson != null && !detailJson.trim().isEmpty()) {
+                recruitmentDetail = RecruitmentDetailsDto.fromJson(detailJson);
+            }
+            return recruitmentDetail;
+}
+     /**
+     * Gán đối tượng RecruitmentDetailsDto và tự động chuyển đổi nó sang JSON.
+     */
+    public void setRecruitmentDetail(RecruitmentDetailsDto detail) {
+        this.recruitmentDetail = detail;
+        this.detailJson = (detail != null) ? detail.toJson() : null;
+}
+
 }

@@ -33,6 +33,7 @@ public class RequestDto {
     private LocalDateTime approvedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private RecruitmentDetailsDto recruitmentDetails;
     
     // Constructors
     public RequestDto() {}
@@ -54,6 +55,10 @@ public class RequestDto {
         this.approvedAt = request.getApprovedAt();
         this.createdAt = request.getCreatedAt();
         this.updatedAt = request.getUpdatedAt();
+         if (request.getRequestTypeId() != null && request.getRequestTypeId() == 2L) {
+             // Gọi hàm getRecruitmentDetail() trong Model Request.java
+            this.recruitmentDetails = request.getRecruitmentDetail(); 
+        }
         
         // Set display values
         this.statusDisplay = getStatusDisplayText(this.status);
@@ -309,7 +314,9 @@ public class RequestDto {
         }
         return "";
     }
-    
+    public RecruitmentDetailsDto getRecruitmentDetails() {
+        return recruitmentDetails;
+    }
     // Helper methods
     private String getStatusDisplayText(String status) {
         if (status == null) return "";
