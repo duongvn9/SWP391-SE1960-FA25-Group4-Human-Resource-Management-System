@@ -21,82 +21,82 @@ public class UserDao {
 
     // SQL queries
     private static final String SELECT_ALL = """
-        SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
-               u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
-               u.start_work_date, u.created_at, u.updated_at,
-               d.name as department_name, p.name as position_name
-        FROM users u
-        LEFT JOIN departments d ON u.department_id = d.id
-        LEFT JOIN positions p ON u.position_id = p.id
-        ORDER BY u.created_at DESC
-        """;
+            SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
+                   u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                   u.start_work_date, u.created_at, u.updated_at,
+                   d.name as department_name, p.name as position_name
+            FROM users u
+            LEFT JOIN departments d ON u.department_id = d.id
+            LEFT JOIN positions p ON u.position_id = p.id
+            ORDER BY u.created_at DESC
+            """;
 
     private static final String SELECT_BY_ID = """
-        SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
-               u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
-               u.start_work_date, u.created_at, u.updated_at,
-               d.name as department_name, p.name as position_name
-        FROM users u
-        LEFT JOIN departments d ON u.department_id = d.id
-        LEFT JOIN positions p ON u.position_id = p.id
-        WHERE u.id = ?
-        """;
+            SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
+                   u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                   u.start_work_date, u.created_at, u.updated_at,
+                   d.name as department_name, p.name as position_name
+            FROM users u
+            LEFT JOIN departments d ON u.department_id = d.id
+            LEFT JOIN positions p ON u.position_id = p.id
+            WHERE u.id = ?
+            """;
 
     private static final String SELECT_BY_EMPLOYEE_CODE = """
-        SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
-               u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
-               u.start_work_date, u.created_at, u.updated_at,
-               d.name as department_name, p.name as position_name
-        FROM users u
-        LEFT JOIN departments d ON u.department_id = d.id
-        LEFT JOIN positions p ON u.position_id = p.id
-        WHERE u.employee_code = ?
-        """;
+            SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
+                   u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                   u.start_work_date, u.created_at, u.updated_at,
+                   d.name as department_name, p.name as position_name
+            FROM users u
+            LEFT JOIN departments d ON u.department_id = d.id
+            LEFT JOIN positions p ON u.position_id = p.id
+            WHERE u.employee_code = ?
+            """;
 
     private static final String SELECT_BY_EMAIL = """
-        SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
-               u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
-               u.start_work_date, u.created_at, u.updated_at,
-               d.name as department_name, p.name as position_name
-        FROM users u
-        LEFT JOIN departments d ON u.department_id = d.id
-        LEFT JOIN positions p ON u.position_id = p.id
-        WHERE u.email_company = ?
-        """;
+            SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
+                   u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                   u.start_work_date, u.created_at, u.updated_at,
+                   d.name as department_name, p.name as position_name
+            FROM users u
+            LEFT JOIN departments d ON u.department_id = d.id
+            LEFT JOIN positions p ON u.position_id = p.id
+            WHERE u.email_company = ?
+            """;
 
     private static final String SELECT_BY_DEPARTMENT = """
-        SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
-               u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
-               u.start_work_date, u.created_at, u.updated_at,
-               d.name as department_name, p.name as position_name
-        FROM users u
-        LEFT JOIN departments d ON u.department_id = d.id
-        LEFT JOIN positions p ON u.position_id = p.id
-        WHERE u.department_id = ? AND u.status = 'active'
-        ORDER BY u.full_name
-        """;
+            SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
+                   u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                   u.start_work_date, u.created_at, u.updated_at,
+                   d.name as department_name, p.name as position_name
+            FROM users u
+            LEFT JOIN departments d ON u.department_id = d.id
+            LEFT JOIN positions p ON u.position_id = p.id
+            WHERE u.department_id = ? AND u.status = 'active'
+            ORDER BY u.full_name
+            """;
 
     private static final String INSERT_USER = """
-        INSERT INTO users (employee_code, full_name, cccd, email_company, phone,
-                          department_id, position_id, status, date_joined, start_work_date)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """;
+            INSERT INTO users (employee_code, full_name, cccd, email_company, phone,
+                              department_id, position_id, status, date_joined, start_work_date)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """;
 
     private static final String UPDATE_USER = """
-        UPDATE users SET
-            employee_code = ?, full_name = ?, cccd = ?, email_company = ?, phone = ?,
-            department_id = ?, position_id = ?, status = ?, date_joined = ?, start_work_date = ?,
-            updated_at = NOW()
-        WHERE id = ?
-        """;
+            UPDATE users SET
+                employee_code = ?, full_name = ?, cccd = ?, email_company = ?, phone = ?,
+                department_id = ?, position_id = ?, status = ?, date_joined = ?, start_work_date = ?,
+                updated_at = NOW()
+            WHERE id = ?
+            """;
 
     private static final String UPDATE_STATUS = """
-        UPDATE users SET status = ?, updated_at = GETUTCDATE() WHERE id = ?
-        """;
+            UPDATE users SET status = ?, updated_at = GETUTCDATE() WHERE id = ?
+            """;
 
     private static final String DELETE_USER = """
-        DELETE FROM users WHERE id = ?
-        """;
+            DELETE FROM users WHERE id = ?
+            """;
 
     /**
      * Lấy tất cả users
@@ -105,8 +105,8 @@ public class UserDao {
         List<User> users = new ArrayList<>();
 
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(SELECT_ALL);
-             ResultSet rs = ps.executeQuery()) {
+                PreparedStatement ps = conn.prepareStatement(SELECT_ALL);
+                ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 users.add(mapResultSetToUser(rs));
@@ -129,7 +129,7 @@ public class UserDao {
         }
 
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(SELECT_BY_ID)) {
+                PreparedStatement ps = conn.prepareStatement(SELECT_BY_ID)) {
 
             ps.setLong(1, id);
 
@@ -156,7 +156,7 @@ public class UserDao {
         }
 
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(SELECT_BY_EMPLOYEE_CODE)) {
+                PreparedStatement ps = conn.prepareStatement(SELECT_BY_EMPLOYEE_CODE)) {
 
             ps.setString(1, employeeCode.trim());
 
@@ -183,7 +183,7 @@ public class UserDao {
         }
 
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(SELECT_BY_EMAIL)) {
+                PreparedStatement ps = conn.prepareStatement(SELECT_BY_EMAIL)) {
 
             ps.setString(1, email.trim().toLowerCase());
 
@@ -212,7 +212,7 @@ public class UserDao {
         }
 
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(SELECT_BY_DEPARTMENT)) {
+                PreparedStatement ps = conn.prepareStatement(SELECT_BY_DEPARTMENT)) {
 
             ps.setLong(1, departmentId);
 
@@ -248,7 +248,7 @@ public class UserDao {
         }
 
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(INSERT_USER, Statement.RETURN_GENERATED_KEYS)) {
+                PreparedStatement ps = conn.prepareStatement(INSERT_USER, Statement.RETURN_GENERATED_KEYS)) {
 
             ps.setString(1, user.getEmployeeCode());
             ps.setString(2, user.getFullName().trim());
@@ -260,6 +260,8 @@ public class UserDao {
             ps.setString(8, user.getStatus() != null ? user.getStatus() : "active");
             setDateOrNull(ps, 9, user.getDateJoined());
             setDateOrNull(ps, 10, user.getStartWorkDate());
+            // Removed base_salary and salary_currency parameters since they don't exist in
+            // database
 
             int affectedRows = ps.executeUpdate();
 
@@ -289,7 +291,7 @@ public class UserDao {
         }
 
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(UPDATE_USER)) {
+                PreparedStatement ps = conn.prepareStatement(UPDATE_USER)) {
 
             ps.setString(1, user.getEmployeeCode());
             ps.setString(2, user.getFullName().trim());
@@ -301,7 +303,9 @@ public class UserDao {
             ps.setString(8, user.getStatus());
             setDateOrNull(ps, 9, user.getDateJoined());
             setDateOrNull(ps, 10, user.getStartWorkDate());
-            ps.setLong(11, user.getId());
+            // Removed base_salary and salary_currency parameters since they don't exist in
+            // database
+            ps.setLong(11, user.getId()); // Updated parameter index
 
             int affectedRows = ps.executeUpdate();
 
@@ -325,7 +329,7 @@ public class UserDao {
         }
 
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(UPDATE_STATUS)) {
+                PreparedStatement ps = conn.prepareStatement(UPDATE_STATUS)) {
 
             ps.setString(1, status);
             ps.setLong(2, id);
@@ -352,7 +356,7 @@ public class UserDao {
         }
 
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(DELETE_USER)) {
+                PreparedStatement ps = conn.prepareStatement(DELETE_USER)) {
 
             ps.setLong(1, id);
 
@@ -434,6 +438,15 @@ public class UserDao {
         if (startWorkDate != null) {
             user.setStartWorkDate(startWorkDate.toLocalDate());
         }
+
+        // Note: base_salary and salary_currency columns don't exist in current database
+        // schema
+        // These lines are commented out until the database schema is updated
+        // BigDecimal baseSalary = rs.getBigDecimal("base_salary");
+        // if (baseSalary != null) {
+        // user.setBaseSalary(baseSalary);
+        // }
+        // user.setSalaryCurrency(rs.getString("salary_currency"));
 
         Timestamp createdAt = rs.getTimestamp("created_at");
         if (createdAt != null) {
