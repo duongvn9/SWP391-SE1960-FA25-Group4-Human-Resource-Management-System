@@ -231,9 +231,8 @@
                                 </c:if>
 
                                 <!-- Form -->
-                                <form method="post" action="${pageContext.request.contextPath}/request/ot"
+                                <form method="post" action="${pageContext.request.contextPath}/requests/ot/create"
                                     id="otRequestForm" novalidate>
-                                    <input type="hidden" name="action" value="create">
 
                                     <!-- Employee Selection -->
                                     <div class="mb-4">
@@ -367,10 +366,10 @@
                                             <i class="fas fa-calculator"></i>
                                             <span id="otHoursText">Enter start and end time</span>
                                         </div>
-                                        <small class="text-muted">
-                                            <i class="fas fa-exclamation-triangle"></i>
-                                            Maximum 2 hours OT per day (total work hours including regular cannot exceed
-                                            10h/day)
+                                        <small class="text-muted" id="otLimitMessage">
+                                            <i class="fas fa-info-circle"></i>
+                                            <strong>Weekday:</strong> Max 2 hours OT (8h regular + 2h OT = 10h total) |
+                                            <strong>Weekend/Holiday:</strong> Max 10 hours OT
                                         </small>
                                     </div>
 
@@ -408,7 +407,7 @@
 
                                     <!-- Actions -->
                                     <div class="mt-4 d-grid gap-2 d-md-flex justify-content-md-end">
-                                        <a href="${pageContext.request.contextPath}/request/ot?action=list"
+                                        <a href="${pageContext.request.contextPath}/requests"
                                             class="btn btn-ot-secondary">
                                             <i class="fas fa-times me-1"></i> Cancel
                                         </a>

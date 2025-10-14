@@ -76,7 +76,8 @@ public class OTRequestService {
                                String otDate, String startTime, String endTime,
       String reason, Boolean employeeConsent) throws SQLException {
 
-        logger.info("Creating OT request for user " + userId + " on date " + otDate);
+        logger.info(String.format("Creating OT request: userId=%d, date=%s, time=%s-%s, hours=%.1f",
+                   userId, otDate, startTime, endTime, calculateOTHours(startTime, endTime)));
 
         try {
             // Validate employee consent
@@ -92,7 +93,20 @@ public class OTRequestService {
             String otType = determineOTType(otDate);
             Double payMultiplier = getPayMultiplier(otType);
 
-            // Validate daily and weekly limits
+            // NEW VALIDATIONS - Check for conflicts and limits
+            // Check for OT overlap (same day, overlapping time)
+            checkOTOverlap(userId, otDate, startTime, endTime);
+
+            // Check for pending OT requests (warning only)
+            checkPendingOTRequests(userId, otDate);
+
+            // Validate OT balance (weekly/monthly/annual limits)
+            validateOTBalance(userId, otDate, otHours);
+
+            // Check conflict with approved leave requests
+            checkConflictWithLeave(userId, otDate);
+
+            // EXISTING VALIDATIONS - Daily and weekly limits
             validateDailyLimit(userId, otDate, otHours);
             validateWeeklyLimit(userId, otDate, otHours);
 
@@ -134,11 +148,17 @@ public class OTRequestService {
             // Save to database
             Request savedRequest = requestDao.save(otRequest);
 
-            logger.info("Created OT request with ID " + savedRequest.getId());
+            logger.info(String.format("Successfully created OT request: id=%d, userId=%d, date=%s, hours=%.1f, type=%s, status=%s",
+                       savedRequest.getId(), userId, otDate, otHours, otType, savedRequest.getStatus()));
             return savedRequest.getId();
 
+        } catch (IllegalArgumentException e) {
+            logger.warning(String.format("OT validation failed: userId=%d, date=%s, error=%s",
+                          userId, otDate, e.getMessage()));
+            throw e;
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error creating OT request", e);
+            logger.log(Level.SEVERE, String.format("Unexpected error creating OT request: userId=%d, date=%s",
+                      userId, otDate), e);
             throw e;
         }
     }
@@ -168,7 +188,20 @@ public class OTRequestService {
             String otType = determineOTType(otDate);
             Double payMultiplier = getPayMultiplier(otType);
 
-            // Validate daily and weekly limits for the employee
+            // NEW VALIDATIONS - Check for conflicts and limits
+            // Check for OT overlap (same day, overlapping time)
+            checkOTOverlap(employeeUserId, otDate, startTime, endTime);
+
+            // Check for pending OT requests (warning only)
+            checkPendingOTRequests(employeeUserId, otDate);
+
+            // Validate OT balance (weekly/monthly/annual limits)
+            validateOTBalance(employeeUserId, otDate, otHours);
+
+            // Check conflict with approved leave requests
+            checkConflictWithLeave(employeeUserId, otDate);
+
+            // EXISTING VALIDATIONS - Daily and weekly limits
             validateDailyLimit(employeeUserId, otDate, otHours);
             validateWeeklyLimit(employeeUserId, otDate, otHours);
 
@@ -245,6 +278,8 @@ public class OTRequestService {
 
 
     public OTBalance getOTBalance(Long userId) {
+        logger.fine(String.format("Getting OT balance: userId=%d", userId));
+
         try {
             LocalDate now = LocalDate.now();
 
@@ -257,12 +292,16 @@ public class OTRequestService {
             // Calculate current year hours
             int annualHours = calculateOTHoursInYear(userId, now.getYear());
 
+            logger.info(String.format("OT balance retrieved: userId=%d, weekly=%d/%d, monthly=%d/%d, annual=%d/%d",
+                       userId, currentWeekHours, WEEKLY_LIMIT, monthlyHours, MONTHLY_LIMIT,
+                       annualHours, ANNUAL_LIMIT));
+
             return new OTBalance(currentWeekHours, WEEKLY_LIMIT,
                                monthlyHours, MONTHLY_LIMIT,
                                annualHours, ANNUAL_LIMIT);
 
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error getting OT balance for user: " + userId, e);
+            logger.log(Level.SEVERE, String.format("Error getting OT balance: userId=%d", userId), e);
             throw new RuntimeException("Error getting OT balance", e);
         }
     }
@@ -289,6 +328,15 @@ public class OTRequestService {
 
 
     private void validateDailyLimit(Long userId, String otDate, Double otHours) throws SQLException {
+        logger.fine(String.format("Validating daily limit: userId=%d, date=%s, requestedHours=%.1f",
+                   userId, otDate, otHours));
+
+        // Determine OT type to apply different limits
+        String otType = determineOTType(otDate);
+        boolean isWeekdayOT = OT_TYPE_WEEKDAY.equals(otType);
+        boolean isWeekendOT = OT_TYPE_WEEKEND.equals(otType);
+        boolean isHolidayOT = OT_TYPE_HOLIDAY.equals(otType) || OT_TYPE_COMPENSATORY.equals(otType);
+
         // Get approved OT hours for the same date
         List<Request> otRequests = getUserOTRequests(userId);
 
@@ -304,19 +352,63 @@ public class OTRequestService {
             }
         }
 
-        // Calculate total hours: regular (8h) + approved OT + requested OT
-        double totalDailyHours = REGULAR_DAILY_HOURS + approvedOTHours + otHours;
+        if (isWeekdayOT) {
+            // WEEKDAY: Regular work (8h) + OT max 2h = 10h total
+            double totalDailyHours = REGULAR_DAILY_HOURS + approvedOTHours + otHours;
+            double maxOTHours = 2.0; // Maximum 2 hours OT on weekdays
 
-        if (totalDailyHours > DAILY_LIMIT) {
-            throw new IllegalArgumentException(
-                String.format("Tổng giờ trong ngày không được vượt quá %d giờ (hiện tại: %.1f giờ)",
-                    DAILY_LIMIT, totalDailyHours)
-            );
+            logger.fine(String.format("Weekday OT validation: userId=%d, date=%s, regular=%d, approved=%.1f, requested=%.1f, total=%.1f, limit=%d",
+                       userId, otDate, REGULAR_DAILY_HOURS, approvedOTHours, otHours, totalDailyHours, DAILY_LIMIT));
+
+            // Check total daily hours (regular + OT)
+            if (totalDailyHours > DAILY_LIMIT) {
+                logger.warning(String.format("Daily limit exceeded: userId=%d, date=%s, total=%.1f, limit=%d",
+                              userId, otDate, totalDailyHours, DAILY_LIMIT));
+                throw new IllegalArgumentException(
+                    String.format("Tổng giờ trong ngày không được vượt quá %d giờ (hiện tại: %.1f giờ). " +
+                        "Giờ làm thường: %dh, OT đã duyệt: %.1fh, OT yêu cầu: %.1fh",
+                        DAILY_LIMIT, totalDailyHours, REGULAR_DAILY_HOURS, approvedOTHours, otHours)
+                );
+            }
+
+            // Check OT hours limit (max 2h on weekdays)
+            double totalOTHours = approvedOTHours + otHours;
+            if (totalOTHours > maxOTHours) {
+                logger.warning(String.format("Weekday OT limit exceeded: userId=%d, date=%s, totalOT=%.1f, maxOT=%.1f",
+                              userId, otDate, totalOTHours, maxOTHours));
+                throw new IllegalArgumentException(
+                    String.format("Ngày thường chỉ được OT tối đa %.0f giờ (đã duyệt: %.1fh, yêu cầu: %.1fh, tổng: %.1fh)",
+                        maxOTHours, approvedOTHours, otHours, totalOTHours)
+                );
+            }
+
+        } else if (isWeekendOT || isHolidayOT) {
+            // WEEKEND/HOLIDAY: No regular work, can OT more hours
+            double maxOTHours = 10.0; // Maximum 10 hours OT on weekends/holidays
+            double totalOTHours = approvedOTHours + otHours;
+
+            logger.fine(String.format("Weekend/Holiday OT validation: userId=%d, date=%s, type=%s, approved=%.1f, requested=%.1f, total=%.1f, limit=%.1f",
+                       userId, otDate, otType, approvedOTHours, otHours, totalOTHours, maxOTHours));
+
+            // Check OT hours limit (no regular work hours on weekends/holidays)
+            if (totalOTHours > maxOTHours) {
+                logger.warning(String.format("Weekend/Holiday OT limit exceeded: userId=%d, date=%s, totalOT=%.1f, maxOT=%.1f",
+                              userId, otDate, totalOTHours, maxOTHours));
+                throw new IllegalArgumentException(
+                    String.format("Cuối tuần/Ngày lễ chỉ được OT tối đa %.0f giờ (đã duyệt: %.1fh, yêu cầu: %.1fh, tổng: %.1fh)",
+                        maxOTHours, approvedOTHours, otHours, totalOTHours)
+                );
+            }
         }
+
+        logger.fine(String.format("Daily limit validation passed: userId=%d, date=%s, type=%s", userId, otDate, otType));
     }
 
 
     private void validateWeeklyLimit(Long userId, String otDate, Double otHours) throws SQLException {
+        logger.fine(String.format("Validating weekly limit: userId=%d, date=%s, requestedHours=%.1f",
+                   userId, otDate, otHours));
+
         LocalDate date = LocalDate.parse(otDate);
 
         // Get week start (Monday) and end (Sunday)
@@ -327,6 +419,7 @@ public class OTRequestService {
         List<Request> otRequests = getUserOTRequests(userId);
 
         double approvedWeeklyOTHours = 0.0;
+        int weekdayOTCount = 0;
         for (Request request : otRequests) {
             if (!"APPROVED".equals(request.getStatus())) {
                 continue;
@@ -337,20 +430,38 @@ public class OTRequestService {
                 LocalDate requestDate = LocalDate.parse(detail.getOtDate());
                 if (!requestDate.isBefore(weekStart) && !requestDate.isAfter(weekEnd)) {
                     approvedWeeklyOTHours += detail.getOtHours();
+                    // Count weekday OT hours only
+                    if (OT_TYPE_WEEKDAY.equals(detail.getOtType())) {
+                        weekdayOTCount++;
+                    }
                 }
             }
         }
 
-        // Calculate total weekly hours: regular (40h) + approved OT + requested OT
-        double totalWeeklyHours = REGULAR_WEEKLY_HOURS + approvedWeeklyOTHours + otHours;
+        // Determine if current request is weekday OT
+        String currentOTType = determineOTType(otDate);
+        boolean isCurrentWeekdayOT = OT_TYPE_WEEKDAY.equals(currentOTType);
+
+        // Calculate total weekly hours
+        // Only add regular hours if there are weekday OT requests
+        double regularHours = (weekdayOTCount > 0 || isCurrentWeekdayOT) ? REGULAR_WEEKLY_HOURS : 0;
+        double totalWeeklyHours = regularHours + approvedWeeklyOTHours + otHours;
+
+        logger.fine(String.format("Weekly hours calculation: userId=%d, week=%s to %s, regular=%d, approved=%.1f, requested=%.1f, total=%.1f, limit=%d, currentType=%s",
+                   userId, weekStart, weekEnd, (int)regularHours, approvedWeeklyOTHours, otHours, totalWeeklyHours, WEEKLY_LIMIT, currentOTType));
 
         if (totalWeeklyHours > WEEKLY_LIMIT) {
+            logger.warning(String.format("Weekly limit exceeded: userId=%d, week=%s to %s, total=%.1f, limit=%d",
+                          userId, weekStart, weekEnd, totalWeeklyHours, WEEKLY_LIMIT));
             throw new IllegalArgumentException(
                 String.format("Tổng giờ trong tuần không được vượt quá %d giờ (hiện tại: %.1f giờ). " +
-                    "Giờ thường: %dh, OT đã duyệt: %.1fh, OT yêu cầu: %.1fh",
-                    WEEKLY_LIMIT, totalWeeklyHours, REGULAR_WEEKLY_HOURS, approvedWeeklyOTHours, otHours)
+                    "Giờ thường: %.0fh, OT đã duyệt: %.1fh, OT yêu cầu: %.1fh",
+                    WEEKLY_LIMIT, totalWeeklyHours, regularHours, approvedWeeklyOTHours, otHours)
             );
         }
+
+        logger.fine(String.format("Weekly limit validation passed: userId=%d, week=%s to %s",
+                   userId, weekStart, weekEnd));
     }
 
 
@@ -528,10 +639,15 @@ public class OTRequestService {
 
 
     private int calculateApprovedOTHours(Long userId, LocalDate startDate, LocalDate endDate) {
+        logger.fine(String.format("Calculating approved OT hours: userId=%d, startDate=%s, endDate=%s",
+                   userId, startDate, endDate));
+
         try {
             List<Request> otRequests = getUserOTRequests(userId);
 
             double totalHours = 0.0;
+            int approvedCount = 0;
+
             for (Request request : otRequests) {
                 // Only count approved requests
                 if (!"APPROVED".equals(request.getStatus())) {
@@ -550,14 +666,253 @@ public class OTRequestService {
                 // Check if OT date is in range
                 if (!otDate.isBefore(startDate) && !otDate.isAfter(endDate)) {
                     totalHours += detail.getOtHours();
+                    approvedCount++;
                 }
             }
 
-            return (int) Math.ceil(totalHours);
+            int result = (int) Math.ceil(totalHours);
+            logger.info(String.format("Calculated approved OT hours: userId=%d, dateRange=%s to %s, hours=%d, requests=%d",
+                       userId, startDate, endDate, result, approvedCount));
+            return result;
 
         } catch (Exception e) {
-            logger.log(Level.WARNING, "Error calculating approved OT hours", e);
+            logger.log(Level.SEVERE, String.format("Error calculating approved OT hours: userId=%d, startDate=%s, endDate=%s",
+                      userId, startDate, endDate), e);
             return 0;
+        }
+    }
+
+
+    /**
+     * Check if OT request overlaps with existing OT requests on the same date
+     * Time ranges overlap if: start1 < end2 AND start2 < end1
+     *
+     * @param userId User ID
+     * @param otDate OT date (yyyy-MM-dd format)
+     * @param startTime Start time (HH:mm format)
+     * @param endTime End time (HH:mm format)
+     * @throws IllegalArgumentException if overlap detected
+     */
+    private void checkOTOverlap(Long userId, String otDate, String startTime, String endTime) {
+        logger.fine(String.format("Checking OT overlap: userId=%d, date=%s, time=%s-%s",
+                   userId, otDate, startTime, endTime));
+
+        try {
+            // Get all OT requests for the same date
+            List<Request> otRequests = getUserOTRequests(userId);
+
+            LocalTime newStart = LocalTime.parse(startTime);
+            LocalTime newEnd = LocalTime.parse(endTime);
+
+            for (Request request : otRequests) {
+                // Only check APPROVED and PENDING requests
+                if (!"APPROVED".equals(request.getStatus()) && !"PENDING".equals(request.getStatus())) {
+                    continue;
+                }
+
+                OTRequestDetail detail = request.getOtDetail();
+                if (detail == null || !otDate.equals(detail.getOtDate())) {
+                    continue;
+                }
+
+                // Parse existing OT time range
+                LocalTime existingStart = LocalTime.parse(detail.getStartTime());
+                LocalTime existingEnd = LocalTime.parse(detail.getEndTime());
+
+                // Check if time ranges overlap: start1 < end2 AND start2 < end1
+                if (newStart.isBefore(existingEnd) && existingStart.isBefore(newEnd)) {
+                    logger.warning(String.format("OT overlap detected: userId=%d, date=%s, existingTime=%s-%s, requestedTime=%s-%s, status=%s",
+                                  userId, otDate, detail.getStartTime(), detail.getEndTime(),
+                                  startTime, endTime, request.getStatus()));
+                    throw new IllegalArgumentException(
+                        String.format("Trùng lịch OT! Bạn đã có OT từ %s đến %s vào ngày %s (Trạng thái: %s). " +
+                            "Vui lòng chọn khung giờ khác.",
+                            detail.getStartTime(), detail.getEndTime(), otDate, request.getStatus())
+                    );
+                }
+            }
+
+            logger.fine(String.format("No OT overlap found: userId=%d, date=%s", userId, otDate));
+
+        } catch (IllegalArgumentException e) {
+            throw e; // Re-throw validation errors
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, String.format("Error checking OT overlap: userId=%d, date=%s",
+                      userId, otDate), e);
+            throw new RuntimeException("Error checking OT overlap", e);
+        }
+    }
+
+
+    /**
+     * Check for pending OT requests on the same date
+     * This is a warning only - does not block request creation
+     *
+     * @param userId User ID
+     * @param otDate OT date (yyyy-MM-dd format)
+     */
+    private void checkPendingOTRequests(Long userId, String otDate) {
+        try {
+            // Get all OT requests for the same date
+            List<Request> otRequests = getUserOTRequests(userId);
+
+            for (Request request : otRequests) {
+                // Only check PENDING requests
+                if (!"PENDING".equals(request.getStatus())) {
+                    continue;
+                }
+
+                OTRequestDetail detail = request.getOtDetail();
+                if (detail == null || !otDate.equals(detail.getOtDate())) {
+                    continue;
+                }
+
+                // Log warning if pending request found
+                logger.log(Level.WARNING,
+                    String.format("User %d has pending OT request on %s (ID: %d, Time: %s-%s). " +
+                        "Creating another OT request for the same date.",
+                        userId, otDate, request.getId(), detail.getStartTime(), detail.getEndTime())
+                );
+            }
+
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error checking pending OT requests for user: " + userId, e);
+            // Don't throw exception - this is warning only
+        }
+    }
+
+
+    /**
+     * Validate OT balance against weekly, monthly, and annual limits
+     * Checks if requested OT would exceed any limit
+     *
+     * @param userId User ID
+     * @param otDate OT date (yyyy-MM-dd format)
+     * @param otHours Requested OT hours
+     * @throws IllegalArgumentException if any limit would be exceeded
+     */
+    private void validateOTBalance(Long userId, String otDate, Double otHours) {
+        logger.fine(String.format("Validating OT balance: userId=%d, date=%s, requestedHours=%.1f",
+                   userId, otDate, otHours));
+
+        try {
+            LocalDate date = LocalDate.parse(otDate);
+
+            // Calculate current weekly OT hours
+            int currentWeekHours = calculateOTHoursInWeek(userId, date);
+            logger.fine(String.format("Weekly balance: userId=%d, current=%d, requested=%.1f, limit=%d",
+                       userId, currentWeekHours, otHours, WEEKLY_LIMIT));
+
+            if (currentWeekHours + otHours > WEEKLY_LIMIT) {
+                logger.warning(String.format("Weekly OT limit exceeded: userId=%d, current=%d, requested=%.1f, limit=%d",
+                              userId, currentWeekHours, otHours, WEEKLY_LIMIT));
+                throw new IllegalArgumentException(
+                    String.format("Vượt quá giới hạn OT tuần! Hiện tại: %d giờ, Yêu cầu: %.1f giờ, " +
+                        "Giới hạn: %d giờ. Còn lại: %d giờ.",
+                        currentWeekHours, otHours, WEEKLY_LIMIT, WEEKLY_LIMIT - currentWeekHours)
+                );
+            }
+
+            // Calculate current monthly OT hours
+            int monthlyHours = calculateOTHoursInMonth(userId, date.getYear(), date.getMonthValue());
+            logger.fine(String.format("Monthly balance: userId=%d, current=%d, requested=%.1f, limit=%d",
+                       userId, monthlyHours, otHours, MONTHLY_LIMIT));
+
+            if (monthlyHours + otHours > MONTHLY_LIMIT) {
+                logger.warning(String.format("Monthly OT limit exceeded: userId=%d, current=%d, requested=%.1f, limit=%d",
+                              userId, monthlyHours, otHours, MONTHLY_LIMIT));
+                throw new IllegalArgumentException(
+                    String.format("Vượt quá giới hạn OT tháng! Hiện tại: %d giờ, Yêu cầu: %.1f giờ, " +
+                        "Giới hạn: %d giờ. Còn lại: %d giờ.",
+                        monthlyHours, otHours, MONTHLY_LIMIT, MONTHLY_LIMIT - monthlyHours)
+                );
+            }
+
+            // Calculate current annual OT hours
+            int annualHours = calculateOTHoursInYear(userId, date.getYear());
+            logger.fine(String.format("Annual balance: userId=%d, current=%d, requested=%.1f, limit=%d",
+                       userId, annualHours, otHours, ANNUAL_LIMIT));
+
+            if (annualHours + otHours > ANNUAL_LIMIT) {
+                logger.warning(String.format("Annual OT limit exceeded: userId=%d, current=%d, requested=%.1f, limit=%d",
+                              userId, annualHours, otHours, ANNUAL_LIMIT));
+                throw new IllegalArgumentException(
+                    String.format("Vượt quá giới hạn OT năm! Hiện tại: %d giờ, Yêu cầu: %.1f giờ, " +
+                        "Giới hạn: %d giờ. Còn lại: %d giờ.",
+                        annualHours, otHours, ANNUAL_LIMIT, ANNUAL_LIMIT - annualHours)
+                );
+            }
+
+            logger.info(String.format("OT balance validation passed: userId=%d, date=%s, weekly=%d/%d, monthly=%d/%d, annual=%d/%d",
+                       userId, otDate, currentWeekHours, WEEKLY_LIMIT, monthlyHours, MONTHLY_LIMIT,
+                       annualHours, ANNUAL_LIMIT));
+
+        } catch (IllegalArgumentException e) {
+            throw e; // Re-throw validation errors
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, String.format("Error validating OT balance: userId=%d, date=%s",
+                      userId, otDate), e);
+            throw new RuntimeException("Error validating OT balance", e);
+        }
+    }
+
+
+    /**
+     * Check if OT request conflicts with approved leave requests
+     * OT cannot be created on dates when employee has approved leave
+     *
+     * @param userId User ID
+     * @param otDate OT date (yyyy-MM-dd format)
+     * @throws IllegalArgumentException if conflict detected
+     */
+    private void checkConflictWithLeave(Long userId, String otDate) {
+        try {
+            LocalDate date = LocalDate.parse(otDate);
+            LocalDateTime startDateTime = date.atStartOfDay();
+            LocalDateTime endDateTime = date.atTime(23, 59, 59);
+
+            // Query APPROVED leave requests that overlap with OT date
+            List<Request> leaveRequests = requestDao.findOTRequestsByUserIdAndDateRange(
+                userId, startDateTime, endDateTime
+            );
+
+            // Check if any leave requests found
+            // Note: findOTRequestsByUserIdAndDateRange is misnamed - it actually finds leave requests
+            // We need to filter for leave requests, not OT requests
+            List<Request> allRequests = requestDao.findByUserId(userId);
+
+            for (Request request : allRequests) {
+                // Only check APPROVED leave requests
+                if (!"APPROVED".equals(request.getStatus())) {
+                    continue;
+                }
+
+                // Get leave detail
+                group4.hrms.dto.LeaveRequestDetail leaveDetail = request.getLeaveDetail();
+                if (leaveDetail == null) {
+                    continue; // Not a leave request
+                }
+
+                // Parse leave date range
+                LocalDate leaveStart = LocalDate.parse(leaveDetail.getStartDate());
+                LocalDate leaveEnd = LocalDate.parse(leaveDetail.getEndDate());
+
+                // Check if OT date falls within leave period
+                if (!date.isBefore(leaveStart) && !date.isAfter(leaveEnd)) {
+                    throw new IllegalArgumentException(
+                        String.format("Không thể tạo OT vào ngày %s! Bạn đã có đơn nghỉ phép được duyệt " +
+                            "(%s) từ %s đến %s.",
+                            otDate, leaveDetail.getLeaveTypeName(),
+                            leaveDetail.getStartDate(), leaveDetail.getEndDate())
+                    );
+                }
+            }
+
+        } catch (IllegalArgumentException e) {
+            throw e; // Re-throw validation errors
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Error checking conflict with leave for user: " + userId, e);
+            throw new RuntimeException("Error checking conflict with leave", e);
         }
     }
 

@@ -244,19 +244,19 @@
                     </a>
                     <ul class="sidebar-submenu" id="requests-submenu">
                         <li>
-                            <a href="${pageContext.request.contextPath}/request/leave?action=create"
+                            <a href="${pageContext.request.contextPath}/requests/leave/create"
                                 class="nav-link ${param.currentPage == 'leave-request' ? 'active' : ''}">
                                 <i class="fas fa-calendar-times"></i><span>Leave Request</span>
                             </a>
                         </li>
                         <li>
-                            <a href="${pageContext.request.contextPath}/request/ot?action=create"
+                            <a href="${pageContext.request.contextPath}/requests/ot/create"
                                 class="nav-link ${param.currentPage == 'ot-request' ? 'active' : ''}">
                                 <i class="fas fa-business-time"></i><span>OT Request</span>
                             </a>
                         </li>
                         <li>
-                            <a href="${pageContext.request.contextPath}/requests/appeal"
+                            <a href="${pageContext.request.contextPath}/requests/appeal/create"
                                 class="nav-link ${param.currentPage == 'appeal-request' ? 'active' : ''}">
                                 <i class="fas fa-exclamation-circle"></i><span>Attendance Appeal</span>
                             </a>

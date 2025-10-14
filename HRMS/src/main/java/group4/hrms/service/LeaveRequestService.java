@@ -44,15 +44,19 @@ public class LeaveRequestService {
     public Long createLeaveRequest(Long accountId, Long userId, Long departmentId,
             String leaveTypeCode, LocalDateTime startDate, LocalDateTime endDate, String reason) throws SQLException {
 
-        logger.info("Creating leave request for user " + userId + " with leave type " + leaveTypeCode);
+        logger.info(String.format("Creating leave request: userId=%d, leaveType=%s, startDate=%s, endDate=%s",
+                   userId, leaveTypeCode, startDate, endDate));
 
         try {
             // 1. Get leave type from database
             Optional<LeaveType> leaveTypeOpt = leaveTypeDao.findByCode(leaveTypeCode);
             if (!leaveTypeOpt.isPresent()) {
+                logger.warning(String.format("Invalid leave type requested: userId=%d, leaveTypeCode=%s",
+                              userId, leaveTypeCode));
                 throw new IllegalArgumentException("Invalid leave type: " + leaveTypeCode);
             }
             LeaveType leaveType = leaveTypeOpt.get();
+            logger.fine(String.format("Found leave type: %s (%s)", leaveType.getName(), leaveType.getCode()));
 
             // 2. Get LEAVE_REQUEST type from request_types (ensure it exists)
             RequestTypeInitializer initializer = new RequestTypeInitializer(requestTypeDao);
@@ -122,11 +126,21 @@ public class LeaveRequestService {
             // 7. Save to database
             Request savedRequest = requestDao.save(leaveRequest);
 
-            logger.info("Created leave request with ID " + savedRequest.getId());
+            logger.info(String.format("Successfully created leave request: id=%d, userId=%d, leaveType=%s, days=%d, status=%s",
+                       savedRequest.getId(), userId, leaveTypeCode, dayCount, savedRequest.getStatus()));
             return savedRequest.getId();
 
+        } catch (LeaveValidationException e) {
+            logger.warning(String.format("Leave validation failed: userId=%d, leaveType=%s, error=%s",
+                          userId, leaveTypeCode, e.getMessage()));
+            throw e;
+        } catch (IllegalArgumentException e) {
+            logger.warning(String.format("Invalid leave request parameters: userId=%d, leaveType=%s, error=%s",
+                          userId, leaveTypeCode, e.getMessage()));
+            throw e;
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error creating leave request", e);
+            logger.log(Level.SEVERE, String.format("Unexpected error creating leave request: userId=%d, leaveType=%s",
+                      userId, leaveTypeCode), e);
             throw e;
         }
     }
@@ -145,16 +159,22 @@ public class LeaveRequestService {
      */
     private void validateLeaveBalance(Long userId, String leaveTypeCode,
                                       int requestedDays, int year) {
+        logger.fine(String.format("Validating leave balance: userId=%d, leaveType=%s, requestedDays=%d, year=%d",
+                   userId, leaveTypeCode, requestedDays, year));
+
         try {
             // Get leave type
             LeaveType leaveType = getLeaveTypeByCode(leaveTypeCode);
             if (leaveType == null) {
+                logger.warning(String.format("Leave type not found during balance validation: userId=%d, leaveType=%s",
+                              userId, leaveTypeCode));
                 throw new IllegalArgumentException("Invalid leave type: " + leaveTypeCode);
             }
 
             // Skip validation if leave type has no limit (unlimited)
             if (leaveType.getDefaultDays() == null || leaveType.getDefaultDays() <= 0) {
-                logger.info("Leave type " + leaveTypeCode + " has no limit, skipping balance validation");
+                logger.info(String.format("Leave type has no limit, skipping balance validation: userId=%d, leaveType=%s",
+                           userId, leaveTypeCode));
                 return;
             }
 
@@ -174,8 +194,13 @@ public class LeaveRequestService {
             // Calculate remaining days
             int remainingDays = totalAllowed - usedDays;
 
+            logger.fine(String.format("Balance calculation: userId=%d, leaveType=%s, total=%d, used=%d, remaining=%d, requested=%d",
+                       userId, leaveTypeCode, totalAllowed, usedDays, remainingDays, requestedDays));
+
             // Validate if requested days exceed remaining days
             if (requestedDays > remainingDays) {
+                logger.warning(String.format("Insufficient leave balance: userId=%d, leaveType=%s, requested=%d, remaining=%d, used=%d, total=%d",
+                              userId, leaveTypeCode, requestedDays, remainingDays, usedDays, totalAllowed));
                 ValidationErrorMessage errorMsg = ValidationErrorMessage.balanceExceededError(
                     leaveType.getName(),
                     remainingDays,
@@ -186,14 +211,15 @@ public class LeaveRequestService {
                 throw new LeaveValidationException(errorMsg);
             }
 
-            logger.info("Leave balance validation passed for user " + userId + " leave type " + leaveTypeCode + ": " +
-                       "requested=" + requestedDays + ", remaining=" + remainingDays + ", used=" + usedDays + ", total=" + totalAllowed);
+            logger.info(String.format("Leave balance validation passed: userId=%d, leaveType=%s, requested=%d, remaining=%d",
+                       userId, leaveTypeCode, requestedDays, remainingDays));
 
         } catch (IllegalArgumentException e) {
-            // Re-throw validation exceptions
+            // Re-throw validation exceptions (includes LeaveValidationException)
             throw e;
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error validating leave balance", e);
+            logger.log(Level.SEVERE, String.format("Error validating leave balance: userId=%d, leaveType=%s, year=%d",
+                      userId, leaveTypeCode, year), e);
             throw new RuntimeException("Error validating leave balance", e);
         }
     }
@@ -210,6 +236,9 @@ public class LeaveRequestService {
      */
     private void checkLeaveOverlap(Long userId, LocalDateTime startDate,
                                    LocalDateTime endDate, Long excludeRequestId) {
+        logger.fine(String.format("Checking leave overlap: userId=%d, startDate=%s, endDate=%s, excludeId=%s",
+                   userId, startDate, endDate, excludeRequestId));
+
         try {
             // Query all PENDING and APPROVED requests in the date range
             List<String> statuses = new java.util.ArrayList<>();
@@ -232,6 +261,9 @@ public class LeaveRequestService {
                     String existingEndDate = existingDetail.getEndDate();
                     String existingLeaveType = existingDetail.getLeaveTypeName();
 
+                    logger.warning(String.format("Leave overlap detected: userId=%d, existingRequestId=%d, existingType=%s, existingDates=%s to %s, status=%s",
+                                  userId, existingRequest.getId(), existingLeaveType, existingStartDate, existingEndDate, existingRequest.getStatus()));
+
                     ValidationErrorMessage errorMsg = ValidationErrorMessage.overlapError(
                         existingLeaveType,
                         existingRequest.getStatus(),
@@ -240,6 +272,9 @@ public class LeaveRequestService {
                     );
                     throw new LeaveValidationException(errorMsg);
                 } else {
+                    logger.warning(String.format("Leave overlap detected (no detail): userId=%d, existingRequestId=%d, status=%s",
+                                  userId, existingRequest.getId(), existingRequest.getStatus()));
+
                     // Fallback if detail is not available
                     ValidationErrorMessage errorMsg = ValidationErrorMessage.overlapError(
                         existingRequest.getTitle(),
@@ -251,11 +286,15 @@ public class LeaveRequestService {
                 }
             }
 
+            logger.fine(String.format("No leave overlap found: userId=%d, dateRange=%s to %s",
+                       userId, startDate, endDate));
+
         } catch (IllegalArgumentException e) {
-            // Re-throw validation exceptions
+            // Re-throw validation exceptions (includes LeaveValidationException)
             throw e;
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error checking leave overlap", e);
+            logger.log(Level.SEVERE, String.format("Error checking leave overlap: userId=%d, startDate=%s, endDate=%s",
+                      userId, startDate, endDate), e);
             throw new RuntimeException("Error checking leave overlap", e);
         }
     }
@@ -306,6 +345,9 @@ public class LeaveRequestService {
      */
     private void checkConflictWithOT(Long userId, LocalDateTime startDate,
                                      LocalDateTime endDate) {
+        logger.fine(String.format("Checking OT conflict: userId=%d, startDate=%s, endDate=%s",
+                   userId, startDate, endDate));
+
         try {
             // Query APPROVED OT requests in the date range
             List<Request> otRequests = requestDao.findOTRequestsByUserIdAndDateRange(
@@ -325,6 +367,9 @@ public class LeaveRequestService {
                     String startTime = otDetail.getStartTime();
                     String endTime = otDetail.getEndTime();
 
+                    logger.warning(String.format("OT conflict detected: userId=%d, otRequestId=%d, otDate=%s, hours=%.1f, time=%s-%s",
+                                  userId, otRequest.getId(), otDate, otHours, startTime, endTime));
+
                     ValidationErrorMessage errorMsg = ValidationErrorMessage.otConflictError(
                         otDate,
                         otHours,
@@ -333,6 +378,9 @@ public class LeaveRequestService {
                     );
                     throw new LeaveValidationException(errorMsg);
                 } else {
+                    logger.warning(String.format("OT conflict detected (no detail): userId=%d, otRequestId=%d",
+                                  userId, otRequest.getId()));
+
                     // Fallback if detail is not available
                     ValidationErrorMessage errorMsg = ValidationErrorMessage.genericError(
                         "Không thể xin nghỉ phép trong ngày đã có đơn OT được duyệt"
@@ -341,13 +389,15 @@ public class LeaveRequestService {
                 }
             }
 
-            logger.info("No OT conflict detected for user " + userId + " in date range " + startDate + " to " + endDate);
+            logger.fine(String.format("No OT conflict found: userId=%d, dateRange=%s to %s",
+                       userId, startDate, endDate));
 
         } catch (IllegalArgumentException e) {
-            // Re-throw validation exceptions
+            // Re-throw validation exceptions (includes LeaveValidationException)
             throw e;
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error checking conflict with OT", e);
+            logger.log(Level.SEVERE, String.format("Error checking OT conflict: userId=%d, startDate=%s, endDate=%s",
+                      userId, startDate, endDate), e);
             throw new RuntimeException("Error checking conflict with OT", e);
         }
     }
@@ -604,11 +654,21 @@ public class LeaveRequestService {
         try {
             List<LeaveType> leaveTypes = leaveTypeDao.findActiveLeaveTypes();
 
+            // Optimize: Create rules directly from LeaveType objects instead of calling getLeaveTypeRules()
+            // which would make additional database calls
             for (LeaveType leaveType : leaveTypes) {
-                LeaveTypeRules rules = getLeaveTypeRules(leaveType.getCode());
-                if (rules != null) {
-                    rulesList.add(rules);
-                }
+                LeaveTypeRules rules = new LeaveTypeRules();
+                rules.code = leaveType.getCode();
+                rules.name = leaveType.getName();
+                rules.defaultDays = leaveType.getDefaultDays() != null ? leaveType.getDefaultDays() : 0;
+                rules.maxDays = leaveType.getMaxDays() != null ? leaveType.getMaxDays() : 365;
+                rules.paid = leaveType.isPaid();
+                rules.requiresApproval = leaveType.isRequiresApproval();
+                rules.requiresCertificate = leaveType.isRequiresCertificate();
+                rules.minAdvanceNotice = leaveType.getMinAdvanceNotice() != null ? leaveType.getMinAdvanceNotice() : 0;
+                rules.canCarryForward = leaveType.isCanCarryForward();
+                rules.maxCarryForward = leaveType.getMaxCarryForward() != null ? leaveType.getMaxCarryForward() : 0;
+                rulesList.add(rules);
             }
 
         } catch (SQLException e) {
@@ -716,11 +776,16 @@ public class LeaveRequestService {
      * Tính chính xác số ngày đã sử dụng từ các đơn APPROVED trong năm
      */
     private int calculateUsedDays(Long userId, String leaveTypeCode, int year) {
+        logger.fine(String.format("Calculating used days: userId=%d, leaveType=%s, year=%d",
+                   userId, leaveTypeCode, year));
+
         try {
             // Get all requests for user
             List<Request> requests = requestDao.findByUserId(userId);
 
             int totalUsedDays = 0;
+            int approvedCount = 0;
+
             for (Request request : requests) {
                 // Only count APPROVED requests
                 if (!"APPROVED".equals(request.getStatus())) {
@@ -741,27 +806,33 @@ public class LeaveRequestService {
                         LocalDateTime startDate = LocalDateTime.parse(startDateStr);
                         if (startDate.getYear() == year) {
                             totalUsedDays += detail.getDayCount();
+                            approvedCount++;
                         }
                     } catch (Exception e) {
+                        logger.warning(String.format("Failed to parse startDate for request %d: %s. Falling back to createdAt",
+                                      request.getId(), startDateStr));
                         // If parsing fails, fallback to createdAt
                         if (request.getCreatedAt() != null &&
                             request.getCreatedAt().getYear() == year) {
                             totalUsedDays += detail.getDayCount();
+                            approvedCount++;
                         }
                     }
                 } else if (request.getCreatedAt() != null &&
                            request.getCreatedAt().getYear() == year) {
                     // Fallback to createdAt if startDate is not available
                     totalUsedDays += detail.getDayCount();
+                    approvedCount++;
                 }
             }
 
-            logger.info("Calculated used days for user " + userId + " leave type " + leaveTypeCode +
-                       " year " + year + ": " + totalUsedDays + " days");
+            logger.info(String.format("Calculated used days: userId=%d, leaveType=%s, year=%d, usedDays=%d, approvedRequests=%d",
+                       userId, leaveTypeCode, year, totalUsedDays, approvedCount));
             return totalUsedDays;
 
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error calculating used days", e);
+            logger.log(Level.SEVERE, String.format("Error calculating used days: userId=%d, leaveType=%s, year=%d",
+                      userId, leaveTypeCode, year), e);
             return 0;
         }
     }
@@ -773,11 +844,16 @@ public class LeaveRequestService {
      * Tính số ngày đang chờ duyệt từ các đơn PENDING trong năm
      */
     private int calculatePendingDays(Long userId, String leaveTypeCode, int year) {
+        logger.fine(String.format("Calculating pending days: userId=%d, leaveType=%s, year=%d",
+                   userId, leaveTypeCode, year));
+
         try {
             // Get all requests for user
             List<Request> requests = requestDao.findByUserId(userId);
 
             int totalPendingDays = 0;
+            int pendingCount = 0;
+
             for (Request request : requests) {
                 // Only count PENDING requests
                 if (!"PENDING".equals(request.getStatus())) {
@@ -797,27 +873,33 @@ public class LeaveRequestService {
                         LocalDateTime startDate = LocalDateTime.parse(startDateStr);
                         if (startDate.getYear() == year) {
                             totalPendingDays += detail.getDayCount();
+                            pendingCount++;
                         }
                     } catch (Exception e) {
+                        logger.warning(String.format("Failed to parse startDate for request %d: %s. Falling back to createdAt",
+                                      request.getId(), startDateStr));
                         // If parsing fails, fallback to createdAt
                         if (request.getCreatedAt() != null &&
                             request.getCreatedAt().getYear() == year) {
                             totalPendingDays += detail.getDayCount();
+                            pendingCount++;
                         }
                     }
                 } else if (request.getCreatedAt() != null &&
                            request.getCreatedAt().getYear() == year) {
                     // Fallback to createdAt if startDate is not available
                     totalPendingDays += detail.getDayCount();
+                    pendingCount++;
                 }
             }
 
-            logger.info("Calculated pending days for user " + userId + " leave type " + leaveTypeCode +
-                       " year " + year + ": " + totalPendingDays + " days");
+            logger.info(String.format("Calculated pending days: userId=%d, leaveType=%s, year=%d, pendingDays=%d, pendingRequests=%d",
+                       userId, leaveTypeCode, year, totalPendingDays, pendingCount));
             return totalPendingDays;
 
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error calculating pending days", e);
+            logger.log(Level.SEVERE, String.format("Error calculating pending days: userId=%d, leaveType=%s, year=%d",
+                      userId, leaveTypeCode, year), e);
             return 0;
         }
     }
@@ -826,20 +908,32 @@ public class LeaveRequestService {
      * Get all leave balances for user
      */
     public java.util.List<group4.hrms.dto.LeaveBalance> getAllLeaveBalances(Long userId, int year) {
+        logger.fine(String.format("Getting all leave balances: userId=%d, year=%d", userId, year));
         java.util.List<group4.hrms.dto.LeaveBalance> balances = new java.util.ArrayList<>();
 
         try {
             List<LeaveType> leaveTypes = leaveTypeDao.findActiveLeaveTypes();
+            logger.fine(String.format("Found %d active leave types for userId=%d", leaveTypes.size(), userId));
 
             for (LeaveType leaveType : leaveTypes) {
-                group4.hrms.dto.LeaveBalance balance = getLeaveBalance(userId, leaveType.getCode(), year);
-                if (balance != null) {
-                    balances.add(balance);
+                try {
+                    group4.hrms.dto.LeaveBalance balance = getLeaveBalance(userId, leaveType.getCode(), year);
+                    if (balance != null) {
+                        balances.add(balance);
+                    }
+                } catch (Exception e) {
+                    logger.log(Level.WARNING, String.format("Error getting balance for leaveType=%s, userId=%d. Skipping.",
+                              leaveType.getCode(), userId), e);
+                    // Continue with other leave types
                 }
             }
 
+            logger.info(String.format("Retrieved %d leave balances for userId=%d, year=%d",
+                       balances.size(), userId, year));
+
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error getting all leave balances", e);
+            logger.log(Level.SEVERE, String.format("Error getting all leave balances: userId=%d, year=%d",
+                      userId, year), e);
         }
 
         return balances;
