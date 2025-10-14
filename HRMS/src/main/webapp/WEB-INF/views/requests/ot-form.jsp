@@ -28,9 +28,14 @@
                     <!-- Content Area -->
                     <div class="content-area">
                         <!-- Page Title -->
-                        <div class="page-head">
-                            <h2 class="page-title"><i class="fas fa-clock me-2"></i>Create OT Request</h2>
-                            <p class="page-subtitle">Submit a new overtime request for approval</p>
+                        <div class="page-head d-flex justify-content-between align-items-center">
+                            <div>
+                                <h2 class="page-title"><i class="fas fa-clock me-2"></i>Create OT Request</h2>
+                                <p class="page-subtitle">Submit a new overtime request for approval</p>
+                            </div>
+                            <a href="${pageContext.request.contextPath}/requests" class="btn btn-outline-secondary">
+                                <i class="fas fa-list me-1"></i> View All Requests
+                            </a>
                         </div>
 
                         <!-- OT Balance Summary -->
@@ -38,10 +43,14 @@
                             <div class="row mb-4">
                                 <div class="col-12">
                                     <div class="card">
-                                        <div class="card-header bg-primary text-white">
+                                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
+                                            style="cursor: pointer;" onclick="toggleOTBalance()">
                                             <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Your OT Balance</h5>
+                                            <button class="btn btn-sm btn-light" type="button" id="otBalanceToggle">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
                                         </div>
-                                        <div class="card-body">
+                                        <div class="card-body" id="otBalanceContent">
                                             <div class="row g-3">
                                                 <!-- Weekly Balance -->
                                                 <div class="col-md-4">
@@ -450,3 +459,22 @@
             </body>
 
             </html>
+
+            <!-- Toggle OT Balance -->
+            <script>
+                function toggleOTBalance() {
+                    const content = document.getElementById('otBalanceContent');
+                    const toggle = document.getElementById('otBalanceToggle');
+                    const icon = toggle.querySelector('i');
+
+                    if (content.style.display === 'none') {
+                        content.style.display = 'block';
+                        icon.classList.remove('fa-eye-slash');
+                        icon.classList.add('fa-eye');
+                    } else {
+                        content.style.display = 'none';
+                        icon.classList.remove('fa-eye');
+                        icon.classList.add('fa-eye-slash');
+                    }
+                }
+            </script>
