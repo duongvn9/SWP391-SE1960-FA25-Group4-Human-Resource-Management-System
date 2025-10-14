@@ -50,7 +50,7 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
 //            }
 
             // 🔹 Lấy thông tin người dùng hiện tại (tạm thời hardcode, sau này lấy từ session)
-            Long userId = 14L; 
+            Long userId = 45L; 
 
             String employeeKeyword = req.getParameter("employeeKeyword"); // có thể null đối với employee view
             String department = req.getParameter("department");
@@ -108,7 +108,7 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
 //            Long userId = (Long) req.getSession().getAttribute("userId");    
-            Long userId = 14l;
+            Long userId = 45l;
             List<AttendanceLogDto> attendanceList = dao.findByUserId(userId);
             System.out.println(tDAO.findAll());
             req.setAttribute("attendanceList", attendanceList);
