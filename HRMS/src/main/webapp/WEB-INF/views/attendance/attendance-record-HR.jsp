@@ -57,20 +57,23 @@
             </select>
 
             <button type="submit">Filter</button>
-            <button type="submit">Reset</button>
-
+            <button type="submit" name="action" value="reset" id="resetBtn">Reset</button>
         </form>
 
         <div id="actions">
             <button onclick="importAttendance()">Import dữ liệu chấm công mới</button>
-            <button onclick="exportData('csv')">Export CSV</button>
-            <button onclick="exportData('xls')">Export XLS</button>
-            <button onclick="exportData('pdf')">Export PDF</button>
+            <button type="button" id="exportXLSBtn">Export XLS</button>
+            <button type="button" id="exportCSVBtn">Export CSV</button>
+            <button type="button" id="exportPDFBtn">Export PDF</button>
             <button id="editBtn" onclick="enableEdit()">Edit</button>
             <button id="submitBtn" onclick="submitChanges()">Submit</button>
             <button id="deleteBtn" onclick="toggleDeleteMode()">Delete</button>
             <span id="sliderStatus">Unlocked</span>
         </div>
+
+        <form id="exportForm" action="${pageContext.request.contextPath}/attendance/record/HR" method="post">
+            <input type="hidden" name="exportType" id="exportType">
+        </form>
 
         <!-- ========== MAIN TABLE ========== -->
         <table id="attendanceTable" border="1" cellspacing="0" cellpadding="6">
@@ -93,7 +96,7 @@
                 <c:forEach var="att" items="${attendanceList}">
                     <tr>
                         <td><input type="checkbox" /></td>
-                        <td>${att.employeeId}</td>
+                        <td>${att.userId}</td>
                         <td>${att.employeeName}</td>
                         <td>${att.department}</td>
                         <td><c:out value="${att.date}" /></td>

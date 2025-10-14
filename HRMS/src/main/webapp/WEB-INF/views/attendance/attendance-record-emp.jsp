@@ -9,7 +9,6 @@
     <body>
         <h2>My Attendance Records</h2>
 
-        <!-- 🔍 Filter Section -->
         <form id="filterForm" method="post" action="${pageContext.request.contextPath}/attendance/record/emp">
             <label for="startDate">From:</label>
             <input type="date" id="startDate" name="startDate" value="${param.startDate}">
@@ -41,7 +40,7 @@
             </select>
 
             <button type="submit">Filter</button>
-            <button type="button" id="resetBtn">Reset</button>
+            <button type="submit" name="action" value="reset" id="resetBtn">Reset</button>
         </form>
         <br/><br/> 
         
@@ -52,7 +51,6 @@
         <button type="button" id="exportXLSBtn">Export XLS</button>
         <button type="button" id="exportCSVBtn">Export CSV</button>
         <button type="button" id="exportPDFBtn">Export PDF</button>
-
         <br/><br/>
 
         <table id="attendanceTable" border="1" cellpadding="6">

@@ -6,6 +6,7 @@ import group4.hrms.dao.TimesheetPeriodDao;
 import group4.hrms.dto.AttendanceLogDto;
 import group4.hrms.model.Department;
 import group4.hrms.model.TimesheetPeriod;
+import group4.hrms.service.ExportService;
 import java.io.IOException;
 
 import jakarta.servlet.ServletException;
@@ -47,8 +48,25 @@ public class AttendanceRecordHRServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
-            Long userId = null;
+            String action = req.getParameter("action");
+            if ("reset".equals(action)) {
+                req.setAttribute("attendanceList", attendanceLogDao.findAllForOverview());
+                req.setAttribute("periodList", tDAO.findAll());
+                req.setAttribute("departmentList", dDAO.findAll());
+                req.setAttribute("employeeKeyword", "");
+                req.setAttribute("department", "");
+                req.setAttribute("startDate", "");
+                req.setAttribute("endDate", "");
+                req.setAttribute("status", "");
+                req.setAttribute("source", "");
+                req.setAttribute("periodId", "");
 
+                req.getRequestDispatcher("/WEB-INF/views/attendance/attendance-record-HR.jsp").forward(req, resp);
+                return;
+            }
+
+            Long userId = null;
+            String exportType = req.getParameter("exportType");
             String employeeKeyword = req.getParameter("employee");
             String departmentIdStr = req.getParameter("department");
             String startDateStr = req.getParameter("startDate");
@@ -72,6 +90,11 @@ public class AttendanceRecordHRServlet extends HttpServlet {
                 } catch (NumberFormatException e) {
                     periodId = null;
                 }
+            }
+
+            if (exportType != null) {
+                ExportService.handleExport(resp, exportType, userId);
+                return;
             }
 
             List<AttendanceLogDto> attendanceList = attendanceLogDao.findByFilter(
@@ -102,5 +125,4 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             Logger.getLogger(AttendanceRecordHRServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
 }

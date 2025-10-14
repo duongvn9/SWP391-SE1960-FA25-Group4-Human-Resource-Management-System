@@ -157,7 +157,7 @@ public class ImportAttendanceServlet extends HttpServlet {
                 }
                 AttendanceLogDto dto = new AttendanceLogDto();
 
-                dto.setEmployeeId(parseLong(row.getCell(0)));
+                dto.setUserId(parseLong(row.getCell(0)));
                 dto.setEmployeeName(parseString(row.getCell(1)));
                 dto.setDepartment(parseString(row.getCell(2)));
                 LocalDate date = parseDate(row.getCell(3));
@@ -413,7 +413,7 @@ public class ImportAttendanceServlet extends HttpServlet {
             // Check-in
             if (dto.getCheckIn() != null && dto.getDate() != null) {
                 AttendanceLog checkInLog = new AttendanceLog();
-                checkInLog.setUserId(dto.getEmployeeId());
+                checkInLog.setUserId(dto.getUserId());
                 checkInLog.setCheckType("IN");
                 checkInLog.setCheckedAt(LocalDateTime.of(dto.getDate(), dto.getCheckIn()));
                 checkInLog.setSource(dto.getSource());
@@ -425,7 +425,7 @@ public class ImportAttendanceServlet extends HttpServlet {
             // Check-out
             if (dto.getCheckOut() != null && dto.getDate() != null) {
                 AttendanceLog checkOutLog = new AttendanceLog();
-                checkOutLog.setUserId(dto.getEmployeeId());
+                checkOutLog.setUserId(dto.getUserId());
                 checkOutLog.setCheckType("OUT");
                 checkOutLog.setCheckedAt(LocalDateTime.of(dto.getDate(), dto.getCheckOut()));
                 checkOutLog.setSource(dto.getSource());

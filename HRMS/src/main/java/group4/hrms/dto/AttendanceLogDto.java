@@ -8,7 +8,7 @@ import java.time.LocalTime;
  */
 public class AttendanceLogDto {
 
-    private Long employeeId;
+    private Long userId;
     private String employeeName;
     private String department;
     private LocalDate date;
@@ -22,12 +22,12 @@ public class AttendanceLogDto {
     }
 
     // -------- Getter & Setter --------
-    public Long getEmployeeId() {
-        return employeeId;
+    public Long getUserId() {
+        return userId;
     }
 
-    public void setEmployeeId(Long employeeId) {
-        this.employeeId = employeeId;
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
     public String getEmployeeName() {
@@ -110,7 +110,7 @@ public class AttendanceLogDto {
     @Override
     public String toString() {
         return "AttendanceLogDto{"
-                + "employeeId=" + employeeId
+                + "employeeId=" + userId
                 + ", employeeName='" + employeeName + '\''
                 + ", department='" + department + '\''
                 + ", date=" + date

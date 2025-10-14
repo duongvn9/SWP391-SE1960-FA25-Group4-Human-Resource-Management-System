@@ -173,7 +173,6 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                     }
                 }
 
-                // Thay vì log WorkDate, dùng checkedAt
                 logger.info("Created new attendance log for user {} on {}",
                         entity.getUserId(), entity.getCheckedAt());
                 return entity;
@@ -223,7 +222,7 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
 
             while (rs.next()) {
                 AttendanceLogDto dto = new AttendanceLogDto();
-                dto.setEmployeeId(rs.getLong("employee_id"));
+                dto.setUserId(rs.getLong("employee_id"));
                 dto.setEmployeeName(rs.getString("employee_name"));
                 dto.setDepartment(rs.getString("department_name"));
 
@@ -258,21 +257,32 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
 
         String sql = """
         SELECT
-          DATE(al.checked_at) AS work_date,
-          MIN(CASE WHEN al.check_type = 'IN'  THEN al.checked_at END) AS check_in,
-          MAX(CASE WHEN al.check_type = 'OUT' THEN al.checked_at END) AS check_out,
-          COALESCE(
-            MIN(CASE WHEN al.check_type = 'IN'  THEN al.note END),
-            MAX(CASE WHEN al.check_type = 'OUT' THEN al.note END),
-            'No Records'
-          ) AS status,
-          GROUP_CONCAT(DISTINCT al.source SEPARATOR ', ') AS source,
-          tp.name AS period_name
+            u.id AS user_id,
+            u.full_name AS employee_name,
+            d.name AS department_name,
+            DATE(al.checked_at) AS work_date,
+            MIN(CASE WHEN al.check_type = 'IN'  THEN al.checked_at END) AS check_in,
+            MAX(CASE WHEN al.check_type = 'OUT' THEN al.checked_at END) AS check_out,
+            COALESCE(
+                MIN(CASE WHEN al.check_type = 'IN'  THEN al.note END),
+                MAX(CASE WHEN al.check_type = 'OUT' THEN al.note END),
+                'No Records'
+            ) AS status,
+            GROUP_CONCAT(DISTINCT al.source SEPARATOR ', ') AS source,
+            tp.name AS period_name
         FROM attendance_logs al
+        JOIN users u ON al.user_id = u.id
+        LEFT JOIN departments d ON u.department_id = d.id
         LEFT JOIN timesheet_periods tp ON al.period_id = tp.id
         WHERE al.user_id = ?
-        GROUP BY DATE(al.checked_at), tp.name
-        ORDER BY DATE(al.checked_at) DESC;
+        GROUP BY 
+            u.id, 
+            u.full_name, 
+            d.name, 
+            DATE(al.checked_at), 
+            tp.name
+        ORDER BY 
+            DATE(al.checked_at) DESC LIMIT 100
     """;
 
         List<AttendanceLogDto> results = new ArrayList<>();
@@ -284,7 +294,9 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     AttendanceLogDto dto = new AttendanceLogDto();
-
+                    dto.setUserId(rs.getLong("user_id"));
+                    dto.setEmployeeName(rs.getString("employee_name"));
+                    dto.setDepartment(rs.getString("department_name"));
                     Date sqlDate = rs.getDate("work_date");
                     dto.setDate(sqlDate != null ? sqlDate.toLocalDate() : null);
 
@@ -406,7 +418,7 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                 while (rs.next()) {
                     AttendanceLogDto dto = new AttendanceLogDto();
 
-                    dto.setEmployeeId(rs.getLong("employee_id"));
+                    dto.setUserId(rs.getLong("employee_id"));
                     dto.setEmployeeName(rs.getString("employee_name"));
                     dto.setDepartment(rs.getString("department_name"));
 
