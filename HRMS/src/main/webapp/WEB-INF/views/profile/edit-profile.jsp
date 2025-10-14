@@ -169,6 +169,9 @@
             <form method="post" action="${pageContext.request.contextPath}/user-profile/update">
                 <!-- CSRF Token -->
                 <input type="hidden" name="_csrf_token" value="${csrfToken}">
+                
+                <!-- Hidden field for Company Email (not editable by user) -->
+                <input type="hidden" name="emailCompany" value="${profile.emailCompany}">
 
                 <!-- Full Name -->
                 <div class="form-row">

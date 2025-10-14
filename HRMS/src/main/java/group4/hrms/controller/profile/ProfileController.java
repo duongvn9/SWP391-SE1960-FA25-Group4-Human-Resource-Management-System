@@ -150,7 +150,7 @@ public class ProfileController extends HttpServlet {
                 req.setAttribute("error", String.join(", ", dto.getErrors()));
                 req.setAttribute("profile", currentProfile);
                 req.setAttribute("csrfToken", generateCsrfToken());
-                req.getRequestDispatcher("/WEB-INF/views/profile/profile.jsp").forward(req, resp);
+                req.getRequestDispatcher("/WEB-INF/views/profile/edit-profile.jsp").forward(req, resp);
                 return;
             }
             
@@ -161,7 +161,7 @@ public class ProfileController extends HttpServlet {
                     req.setAttribute("error", "CCCD already exists");
                     req.setAttribute("profile", currentProfile);
                     req.setAttribute("csrfToken", generateCsrfToken());
-                    req.getRequestDispatcher("/WEB-INF/views/profile/profile.jsp").forward(req, resp);
+                    req.getRequestDispatcher("/WEB-INF/views/profile/edit-profile.jsp").forward(req, resp);
                     return;
                 }
             }
@@ -171,7 +171,7 @@ public class ProfileController extends HttpServlet {
                 req.setAttribute("error", "Email already exists");
                 req.setAttribute("profile", currentProfile);
                 req.setAttribute("csrfToken", generateCsrfToken());
-                req.getRequestDispatcher("/WEB-INF/views/profile/profile.jsp").forward(req, resp);
+                req.getRequestDispatcher("/WEB-INF/views/profile/edit-profile.jsp").forward(req, resp);
                 return;
             }
             
@@ -198,13 +198,13 @@ public class ProfileController extends HttpServlet {
             if (success) {
                 logger.info("Profile updated successfully for user_id: {}", currentProfile.getUserId());
                 req.getSession().setAttribute("successMessage", "Profile updated successfully");
-                resp.sendRedirect(req.getContextPath() + "/user-profile"); // Redirect to view page
+                resp.sendRedirect(req.getContextPath() + "/user-profile/edit"); // Stay on edit page
             } else {
                 logger.error("Failed to update profile for user_id: {}", currentProfile.getUserId());
                 req.setAttribute("error", "Failed to update profile");
                 req.setAttribute("profile", currentProfile);
                 req.setAttribute("csrfToken", generateCsrfToken());
-                req.getRequestDispatcher("/WEB-INF/views/profile/profile.jsp").forward(req, resp);
+                req.getRequestDispatcher("/WEB-INF/views/profile/edit-profile.jsp").forward(req, resp);
             }
             
         } catch (Exception e) {
