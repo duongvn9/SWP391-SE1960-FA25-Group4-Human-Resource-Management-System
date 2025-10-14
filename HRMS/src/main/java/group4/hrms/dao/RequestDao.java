@@ -13,7 +13,12 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * DAO cho Request - Yêu cầu/Đơn từ
+ * Data Access Object for Request entity.
+ * Handles database operations for leave requests and OT requests.
+ * Supports JSON detail storage and parsing for LeaveRequestDetail and OTRequestDetail.
+ *
+ * @author HRMS Development Team
+ * @version 1.0
  */
 public class RequestDao extends BaseDao<Request, Long> {
 
@@ -133,21 +138,27 @@ public class RequestDao extends BaseDao<Request, Long> {
 
     @Override
     public Optional<Request> findById(Long id) {
+        logger.debug("Finding request by id: {}", id);
+
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(SELECT_BY_ID)) {
             stmt.setLong(1, id);
 
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    return Optional.of(mapResultSetToEntity(rs));
+                    Request request = mapResultSetToEntity(rs);
+                    logger.debug("Found request with id: {}", id);
+                    return Optional.of(request);
                 }
             }
 
         } catch (SQLException e) {
-            logger.error("Error finding request by id: {}", id, e);
+            logger.error("Database error finding request by id: {}. SQL State: {}, Error Code: {}",
+                        id, e.getSQLState(), e.getErrorCode(), e);
             throw new RuntimeException("Error finding request by id: " + id, e);
         }
 
+        logger.debug("No request found with id: {}", id);
         return Optional.empty();
     }
 
@@ -157,6 +168,7 @@ public class RequestDao extends BaseDao<Request, Long> {
     }
 
     public List<Request> findAll(int offset, int limit) {
+        logger.debug("Finding all requests with offset: {}, limit: {}", offset, limit);
         List<Request> requests = new ArrayList<>();
         String sql = SELECT_ALL + " ORDER BY created_at DESC LIMIT ? OFFSET ?";
 
@@ -172,8 +184,11 @@ public class RequestDao extends BaseDao<Request, Long> {
                 }
             }
 
+            logger.debug("Found {} requests", requests.size());
+
         } catch (SQLException e) {
-            logger.error("Error finding all requests", e);
+            logger.error("Database error finding all requests. Offset: {}, Limit: {}. SQL State: {}, Error Code: {}",
+                        offset, limit, e.getSQLState(), e.getErrorCode(), e);
             throw new RuntimeException("Error finding all requests", e);
         }
 
@@ -190,6 +205,9 @@ public class RequestDao extends BaseDao<Request, Long> {
     }
 
     private Request insert(Request request) {
+        logger.debug("Inserting new request: userId={}, typeId={}, status={}",
+                    request.getCreatedByUserId(), request.getRequestTypeId(), request.getStatus());
+
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(INSERT, Statement.RETURN_GENERATED_KEYS)) {
 
@@ -214,28 +232,40 @@ public class RequestDao extends BaseDao<Request, Long> {
             stmt.setTimestamp(8, Timestamp.valueOf(request.getCreatedAt()));
             stmt.setTimestamp(9, Timestamp.valueOf(request.getUpdatedAt()));
 
+            logger.debug("Executing insert with parameters: typeId={}, userId={}, accountId={}, status={}",
+                        request.getRequestTypeId(), request.getCreatedByUserId(),
+                        request.getCreatedByAccountId(), request.getStatus());
+
             int rowsAffected = stmt.executeUpdate();
 
             if (rowsAffected > 0) {
                 try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
                         request.setId(generatedKeys.getLong(1));
-                        logger.info("Request created successfully with id: {}", request.getId());
+                        logger.info("Request created successfully: id={}, userId={}, typeId={}, status={}",
+                                   request.getId(), request.getCreatedByUserId(),
+                                   request.getRequestTypeId(), request.getStatus());
                         return request;
                     }
                 }
             }
 
         } catch (SQLException e) {
-            logger.error("Error creating request", e);
+            logger.error("Database error creating request. UserId: {}, TypeId: {}, Status: {}. SQL State: {}, Error Code: {}",
+                        request.getCreatedByUserId(), request.getRequestTypeId(), request.getStatus(),
+                        e.getSQLState(), e.getErrorCode(), e);
             throw new RuntimeException("Error creating request", e);
         }
 
+        logger.error("Failed to create request - no rows affected or no generated key. UserId: {}, TypeId: {}",
+                    request.getCreatedByUserId(), request.getRequestTypeId());
         throw new RuntimeException("Failed to create request");
     }
 
     @Override
     public Request update(Request request) {
+        logger.debug("Updating request: id={}, status={}", request.getId(), request.getStatus());
+
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(UPDATE)) {
 
@@ -264,23 +294,31 @@ public class RequestDao extends BaseDao<Request, Long> {
             stmt.setTimestamp(7, Timestamp.valueOf(request.getUpdatedAt()));
             stmt.setLong(8, request.getId());
 
+            logger.debug("Executing update with parameters: id={}, typeId={}, status={}",
+                        request.getId(), request.getRequestTypeId(), request.getStatus());
+
             int rowsAffected = stmt.executeUpdate();
 
             if (rowsAffected > 0) {
-                logger.info("Request updated successfully: {}", request.getId());
+                logger.info("Request updated successfully: id={}, status={}",
+                           request.getId(), request.getStatus());
                 return request;
             }
 
         } catch (SQLException e) {
-            logger.error("Error updating request: {}", request.getId(), e);
+            logger.error("Database error updating request. Id: {}, Status: {}. SQL State: {}, Error Code: {}",
+                        request.getId(), request.getStatus(), e.getSQLState(), e.getErrorCode(), e);
             throw new RuntimeException("Error updating request: " + request.getId(), e);
         }
 
+        logger.error("Failed to update request - no rows affected. Id: {}", request.getId());
         throw new RuntimeException("Failed to update request: " + request.getId());
     }
 
     @Override
     public boolean deleteById(Long id) {
+        logger.debug("Deleting request by id: {}", id);
+
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(DELETE)) {
 
@@ -289,12 +327,15 @@ public class RequestDao extends BaseDao<Request, Long> {
             int rowsAffected = stmt.executeUpdate();
 
             if (rowsAffected > 0) {
-                logger.info("Request deleted successfully: {}", id);
+                logger.info("Request deleted successfully: id={}", id);
                 return true;
             }
 
+            logger.warn("No request found to delete with id: {}", id);
+
         } catch (SQLException e) {
-            logger.error("Error deleting request: {}", id, e);
+            logger.error("Database error deleting request. Id: {}. SQL State: {}, Error Code: {}",
+                        id, e.getSQLState(), e.getErrorCode(), e);
             throw new RuntimeException("Error deleting request: " + id, e);
         }
 
@@ -303,16 +344,21 @@ public class RequestDao extends BaseDao<Request, Long> {
 
     @Override
     public long count() {
+        logger.debug("Counting all requests");
+
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(COUNT_ALL);
              ResultSet rs = stmt.executeQuery()) {
 
             if (rs.next()) {
-                return rs.getLong(1);
+                long count = rs.getLong(1);
+                logger.debug("Total request count: {}", count);
+                return count;
             }
 
         } catch (SQLException e) {
-            logger.error("Error counting requests", e);
+            logger.error("Database error counting requests. SQL State: {}, Error Code: {}",
+                        e.getSQLState(), e.getErrorCode(), e);
             throw new RuntimeException("Error counting requests", e);
         }
 
@@ -320,9 +366,15 @@ public class RequestDao extends BaseDao<Request, Long> {
     }
 
     /**
-     * Tìm requests theo user ID
+     * Find all requests created by a specific user.
+     * Returns requests with parsed JSON details (LeaveRequestDetail or OTRequestDetail).
+     *
+     * @param userId the ID of the user who created the requests
+     * @return list of requests ordered by creation date (newest first)
+     * @throws RuntimeException if database error occurs
      */
     public List<Request> findByUserId(Long userId) {
+        logger.debug("Finding requests by userId: {}", userId);
         List<Request> requests = new ArrayList<>();
         String sql = SELECT_ALL + " WHERE created_by_user_id = ? ORDER BY created_at DESC";
 
@@ -337,8 +389,11 @@ public class RequestDao extends BaseDao<Request, Long> {
                 }
             }
 
+            logger.debug("Found {} requests for userId: {}", requests.size(), userId);
+
         } catch (SQLException e) {
-            logger.error("Error finding requests by user id: {}", userId, e);
+            logger.error("Database error finding requests by userId: {}. SQL State: {}, Error Code: {}",
+                        userId, e.getSQLState(), e.getErrorCode(), e);
             throw new RuntimeException("Error finding requests by user id: " + userId, e);
         }
 
@@ -346,10 +401,14 @@ public class RequestDao extends BaseDao<Request, Long> {
     }
 
     /**
-
-     * Tìm requests theo trạng thái
+     * Find all requests with a specific status.
+     *
+     * @param status the status to filter by (e.g., "PENDING", "APPROVED", "REJECTED")
+     * @return list of requests with the specified status, ordered by creation date (newest first)
+     * @throws RuntimeException if database error occurs
      */
     public List<Request> findByStatus(String status) {
+        logger.debug("Finding requests by status: {}", status);
         List<Request> requests = new ArrayList<>();
         String sql = SELECT_ALL + " WHERE status = ? ORDER BY created_at DESC";
 
@@ -364,8 +423,11 @@ public class RequestDao extends BaseDao<Request, Long> {
                 }
             }
 
+            logger.debug("Found {} requests with status: {}", requests.size(), status);
+
         } catch (SQLException e) {
-            logger.error("Error finding requests by status: {}", status, e);
+            logger.error("Database error finding requests by status: {}. SQL State: {}, Error Code: {}",
+                        status, e.getSQLState(), e.getErrorCode(), e);
             throw new RuntimeException("Error finding requests by status: " + status, e);
         }
 
@@ -373,9 +435,16 @@ public class RequestDao extends BaseDao<Request, Long> {
     }
 
     /**
-     * Tìm requests với thông tin chi tiết (join với user, request_type)
+     * Find all requests with detailed information (joined with user and request_type tables).
+     * Supports pagination for large result sets.
+     *
+     * @param offset the starting position for pagination
+     * @param limit the maximum number of records to return
+     * @return list of RequestDto objects with detailed information
+     * @throws RuntimeException if database error occurs
      */
     public List<RequestDto> findAllWithDetails(int offset, int limit) {
+        logger.debug("Finding all requests with details: offset={}, limit={}", offset, limit);
         List<RequestDto> requests = new ArrayList<>();
         String sql = SELECT_WITH_DETAILS + " ORDER BY r.created_at DESC LIMIT ? OFFSET ?";
 
@@ -391,8 +460,11 @@ public class RequestDao extends BaseDao<Request, Long> {
                 }
             }
 
+            logger.debug("Found {} requests with details", requests.size());
+
         } catch (SQLException e) {
-            logger.error("Error finding requests with details", e);
+            logger.error("Database error finding requests with details. Offset: {}, Limit: {}. SQL State: {}, Error Code: {}",
+                        offset, limit, e.getSQLState(), e.getErrorCode(), e);
             throw new RuntimeException("Error finding requests with details", e);
         }
 
@@ -400,9 +472,19 @@ public class RequestDao extends BaseDao<Request, Long> {
     }
 
     /**
-     * Tìm requests của user với thông tin chi tiết
+     * Find requests for a specific user with detailed information.
+     * Joins with user and request_type tables for complete information.
+     * Supports pagination for large result sets.
+     *
+     * @param userId the ID of the user who created the requests
+     * @param offset the starting position for pagination
+     * @param limit the maximum number of records to return
+     * @return list of RequestDto objects with detailed information
+     * @throws RuntimeException if database error occurs
      */
     public List<RequestDto> findByUserIdWithDetails(Long userId, int offset, int limit) {
+        logger.debug("Finding requests by userId with details: userId={}, offset={}, limit={}",
+                    userId, offset, limit);
         List<RequestDto> requests = new ArrayList<>();
         String sql = SELECT_WITH_DETAILS + " WHERE r.created_by_user_id = ? ORDER BY r.created_at DESC LIMIT ? OFFSET ?";
 
@@ -419,8 +501,11 @@ public class RequestDao extends BaseDao<Request, Long> {
                 }
             }
 
+            logger.debug("Found {} requests with details for userId: {}", requests.size(), userId);
+
         } catch (SQLException e) {
-            logger.error("Error finding requests by user id with details: {}", userId, e);
+            logger.error("Database error finding requests by userId with details. UserId: {}, Offset: {}, Limit: {}. SQL State: {}, Error Code: {}",
+                        userId, offset, limit, e.getSQLState(), e.getErrorCode(), e);
             throw new RuntimeException("Error finding requests by user id with details: " + userId, e);
         }
 
@@ -435,10 +520,24 @@ public class RequestDao extends BaseDao<Request, Long> {
         request.setRequestTypeId(rs.getLong("request_type_id"));
         request.setTitle(rs.getString("title"));
 
-        // Read detail column as JSON string
+        // Read detail column as JSON string and handle parsing errors gracefully
         String detailJson = rs.getString("detail");
         if (detailJson != null && !detailJson.trim().isEmpty()) {
-            request.setDetailJson(detailJson);
+            try {
+                request.setDetailJson(detailJson);
+                // Pre-parse JSON to validate it (will be cached in Request object)
+                // This triggers lazy loading and validates JSON format
+                if (detailJson.contains("leaveTypeCode")) {
+                    request.getLeaveDetail(); // Trigger parsing for leave requests
+                } else if (detailJson.contains("otDate")) {
+                    request.getOtDetail(); // Trigger parsing for OT requests
+                }
+            } catch (Exception e) {
+                logger.warn("JSON parsing error for request id={}: {}. Detail JSON: {}. Setting detail to null.",
+                           request.getId(), e.getMessage(),
+                           detailJson.length() > 100 ? detailJson.substring(0, 100) + "..." : detailJson);
+                request.setDetailJson(null);
+            }
         }
 
         request.setCreatedByAccountId(rs.getLong("created_by_account_id"));
@@ -465,7 +564,12 @@ public class RequestDao extends BaseDao<Request, Long> {
     }
 
     /**
-     * Map ResultSet to RequestDto (với thông tin join)
+     * Map ResultSet to RequestDto with joined information from related tables.
+     * Includes user information, request type details, and approver information.
+     *
+     * @param rs the ResultSet containing joined data
+     * @return RequestDto object with complete information
+     * @throws SQLException if error occurs reading from ResultSet
      */
     private RequestDto mapResultSetToDto(ResultSet rs) throws SQLException {
         RequestDto dto = new RequestDto(mapResultSetToEntity(rs));
@@ -485,19 +589,23 @@ public class RequestDao extends BaseDao<Request, Long> {
     }
 
     /**
-     * Tìm requests theo user ID và khoảng thời gian
-     * Dùng để kiểm tra overlap và pending requests
+     * Find leave requests by user ID within a specific date range.
+     * Used for overlap detection and pending request checks.
+     * Parses JSON detail to extract startDate and endDate for comparison.
      *
-     * @param userId User ID
-     * @param startDate Ngày bắt đầu
-     * @param endDate Ngày kết thúc
-     * @param statuses Danh sách status cần filter (PENDING, APPROVED, etc.)
-     * @param excludeRequestId Request ID cần loại trừ (để update không conflict với chính nó)
-     * @return List of requests trong khoảng thời gian
+     * @param userId the ID of the user who created the requests
+     * @param startDate the start date of the range to check
+     * @param endDate the end date of the range to check
+     * @param statuses list of statuses to filter by (e.g., "PENDING", "APPROVED")
+     * @param excludeRequestId optional request ID to exclude (for update scenarios to avoid self-conflict)
+     * @return list of requests that overlap with the specified date range
+     * @throws RuntimeException if database error occurs
      */
     public List<Request> findByUserIdAndDateRange(Long userId, LocalDateTime startDate,
                                                    LocalDateTime endDate, List<String> statuses,
                                                    Long excludeRequestId) {
+        logger.debug("Finding requests by userId and date range: userId={}, startDate={}, endDate={}, statuses={}, excludeId={}",
+                    userId, startDate, endDate, statuses, excludeRequestId);
         List<Request> requests = new ArrayList<>();
 
         // Build SQL with JSON extraction for date comparison
@@ -553,15 +661,20 @@ public class RequestDao extends BaseDao<Request, Long> {
             stmt.setString(paramIndex++, endDate.toLocalDate().toString());
             stmt.setString(paramIndex++, startDate.toLocalDate().toString());
 
+            logger.debug("Executing date range query with parameters: userId={}, statuses={}, excludeId={}, endDate={}, startDate={}",
+                        userId, statuses, excludeRequestId, endDate.toLocalDate(), startDate.toLocalDate());
+
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     requests.add(mapResultSetToEntity(rs));
                 }
             }
 
+            logger.debug("Found {} requests in date range for userId: {}", requests.size(), userId);
+
         } catch (SQLException e) {
-            logger.error("Error finding requests by user id and date range: userId={}, startDate={}, endDate={}",
-                        userId, startDate, endDate, e);
+            logger.error("Database error finding requests by userId and date range. UserId: {}, StartDate: {}, EndDate: {}, Statuses: {}, ExcludeId: {}. SQL State: {}, Error Code: {}",
+                        userId, startDate, endDate, statuses, excludeRequestId, e.getSQLState(), e.getErrorCode(), e);
             throw new RuntimeException("Error finding requests by user id and date range", e);
         }
 
@@ -569,16 +682,21 @@ public class RequestDao extends BaseDao<Request, Long> {
     }
 
     /**
-     * Tìm OT requests theo user ID và khoảng thời gian
-     * Dùng để kiểm tra conflict giữa leave request và OT request
+     * Find approved OT requests by user ID within a specific date range.
+     * Used for conflict detection between leave requests and OT requests.
+     * Parses JSON detail to extract otDate for comparison.
+     * Only returns requests with status = APPROVED.
      *
-     * @param userId User ID
-     * @param startDate Ngày bắt đầu
-     * @param endDate Ngày kết thúc
-     * @return List of OT requests trong khoảng thời gian với status = APPROVED
+     * @param userId the ID of the user who created the requests
+     * @param startDate the start date of the range to check
+     * @param endDate the end date of the range to check
+     * @return list of approved OT requests within the specified date range
+     * @throws RuntimeException if database error occurs
      */
     public List<Request> findOTRequestsByUserIdAndDateRange(Long userId, LocalDateTime startDate,
                                                              LocalDateTime endDate) {
+        logger.debug("Finding OT requests by userId and date range: userId={}, startDate={}, endDate={}",
+                    userId, startDate, endDate);
         List<Request> requests = new ArrayList<>();
 
         // Build SQL to find OT requests
@@ -605,15 +723,20 @@ public class RequestDao extends BaseDao<Request, Long> {
             stmt.setString(2, startDate.toLocalDate().toString());
             stmt.setString(3, endDate.toLocalDate().toString());
 
+            logger.debug("Executing OT query with parameters: userId={}, startDate={}, endDate={}",
+                        userId, startDate.toLocalDate(), endDate.toLocalDate());
+
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     requests.add(mapResultSetToEntity(rs));
                 }
             }
 
+            logger.debug("Found {} OT requests in date range for userId: {}", requests.size(), userId);
+
         } catch (SQLException e) {
-            logger.error("Error finding OT requests by user id and date range: userId={}, startDate={}, endDate={}",
-                        userId, startDate, endDate, e);
+            logger.error("Database error finding OT requests by userId and date range. UserId: {}, StartDate: {}, EndDate: {}. SQL State: {}, Error Code: {}",
+                        userId, startDate, endDate, e.getSQLState(), e.getErrorCode(), e);
             throw new RuntimeException("Error finding OT requests by user id and date range", e);
         }
 
@@ -688,6 +811,7 @@ public class RequestDao extends BaseDao<Request, Long> {
      * Tìm requests theo loại và trạng thái (ví dụ: Recruitment + PENDING)
      */
     public List<Request> findByTypeAndStatus(Long requestTypeId, String status) {
+        logger.debug("Finding requests by type and status: typeId={}, status={}", requestTypeId, status);
         List<Request> requests = new ArrayList<>();
         String sql = SELECT_ALL + " WHERE request_type_id = ? AND status = ? ORDER BY created_at DESC";
 
@@ -703,8 +827,11 @@ public class RequestDao extends BaseDao<Request, Long> {
                 }
             }
 
+            logger.debug("Found {} requests with typeId={}, status={}", requests.size(), requestTypeId, status);
+
         } catch (SQLException e) {
-            logger.error("Error finding requests by type and status: typeId={}, status={}", requestTypeId, status, e);
+            logger.error("Database error finding requests by type and status. TypeId: {}, Status: {}. SQL State: {}, Error Code: {}",
+                        requestTypeId, status, e.getSQLState(), e.getErrorCode(), e);
             throw new RuntimeException("Error finding requests by type and status", e);
         }
 

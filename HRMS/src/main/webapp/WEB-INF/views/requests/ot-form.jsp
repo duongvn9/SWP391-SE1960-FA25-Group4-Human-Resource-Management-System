@@ -28,9 +28,14 @@
                     <!-- Content Area -->
                     <div class="content-area">
                         <!-- Page Title -->
-                        <div class="page-head">
-                            <h2 class="page-title"><i class="fas fa-clock me-2"></i>Create OT Request</h2>
-                            <p class="page-subtitle">Submit a new overtime request for approval</p>
+                        <div class="page-head d-flex justify-content-between align-items-center">
+                            <div>
+                                <h2 class="page-title"><i class="fas fa-clock me-2"></i>Create OT Request</h2>
+                                <p class="page-subtitle">Submit a new overtime request for approval</p>
+                            </div>
+                            <a href="${pageContext.request.contextPath}/requests" class="btn btn-outline-secondary">
+                                <i class="fas fa-list me-1"></i> View All Requests
+                            </a>
                         </div>
 
                         <!-- OT Balance Summary -->
@@ -38,10 +43,14 @@
                             <div class="row mb-4">
                                 <div class="col-12">
                                     <div class="card">
-                                        <div class="card-header bg-primary text-white">
+                                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
+                                            style="cursor: pointer;" onclick="toggleOTBalance()">
                                             <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Your OT Balance</h5>
+                                            <button class="btn btn-sm btn-light" type="button" id="otBalanceToggle">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
                                         </div>
-                                        <div class="card-body">
+                                        <div class="card-body" id="otBalanceContent">
                                             <div class="row g-3">
                                                 <!-- Weekly Balance -->
                                                 <div class="col-md-4">
@@ -231,9 +240,8 @@
                                 </c:if>
 
                                 <!-- Form -->
-                                <form method="post" action="${pageContext.request.contextPath}/request/ot"
+                                <form method="post" action="${pageContext.request.contextPath}/requests/ot/create"
                                     id="otRequestForm" novalidate>
-                                    <input type="hidden" name="action" value="create">
 
                                     <!-- Employee Selection -->
                                     <div class="mb-4">
@@ -367,10 +375,10 @@
                                             <i class="fas fa-calculator"></i>
                                             <span id="otHoursText">Enter start and end time</span>
                                         </div>
-                                        <small class="text-muted">
-                                            <i class="fas fa-exclamation-triangle"></i>
-                                            Maximum 2 hours OT per day (total work hours including regular cannot exceed
-                                            10h/day)
+                                        <small class="text-muted" id="otLimitMessage">
+                                            <i class="fas fa-info-circle"></i>
+                                            <strong>Weekday:</strong> Max 2 hours OT (8h regular + 2h OT = 10h total) |
+                                            <strong>Weekend/Holiday:</strong> Max 10 hours OT
                                         </small>
                                     </div>
 
@@ -408,7 +416,7 @@
 
                                     <!-- Actions -->
                                     <div class="mt-4 d-grid gap-2 d-md-flex justify-content-md-end">
-                                        <a href="${pageContext.request.contextPath}/request/ot?action=list"
+                                        <a href="${pageContext.request.contextPath}/requests"
                                             class="btn btn-ot-secondary">
                                             <i class="fas fa-times me-1"></i> Cancel
                                         </a>
@@ -451,3 +459,22 @@
             </body>
 
             </html>
+
+            <!-- Toggle OT Balance -->
+            <script>
+                function toggleOTBalance() {
+                    const content = document.getElementById('otBalanceContent');
+                    const toggle = document.getElementById('otBalanceToggle');
+                    const icon = toggle.querySelector('i');
+
+                    if (content.style.display === 'none') {
+                        content.style.display = 'block';
+                        icon.classList.remove('fa-eye-slash');
+                        icon.classList.add('fa-eye');
+                    } else {
+                        content.style.display = 'none';
+                        icon.classList.remove('fa-eye');
+                        icon.classList.add('fa-eye-slash');
+                    }
+                }
+            </script>
