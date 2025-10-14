@@ -11,9 +11,9 @@ import org.slf4j.LoggerFactory;
  * Utility class để quản lý HTTP Session
  */
 public class SessionUtil {
-
+    
     private static final Logger logger = LoggerFactory.getLogger(SessionUtil.class);
-
+    
     // Session attribute keys
     public static final String ACCOUNT_ID_KEY = "accountId";
     public static final String USER_ID_KEY = "userId";
@@ -23,84 +23,34 @@ public class SessionUtil {
     public static final String USER_ROLES_KEY = "userRoles";
     public static final String IS_ADMIN_KEY = "isAdmin";
     public static final String LAST_LOGIN_TIME_KEY = "lastLoginTime";
-
+    
     /**
      * Private constructor
      */
     private SessionUtil() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
     }
-
+    
     /**
      * Tạo session cho user sau khi đăng nhập thành công
      */
     public static void createUserSession(HttpServletRequest request, Account account, User user) {
-        logger.info("=== START: Creating session for user: {} (Account ID: {}, User ID: {}) ===",
-            account.getUsername(), account.getId(), user.getId());
-
-        try {
-            // Get or create session
-            HttpSession session = request.getSession(true);
-            logger.info("Session ID: {}", session.getId());
-            logger.debug("Session is new: {}", session.isNew());
-
-            // Configure session timeout
-            int timeout = ConfigUtil.getSessionTimeout();
-            session.setMaxInactiveInterval(timeout);
-            logger.debug("Session timeout set to: {} seconds", timeout);
-
-            // Set user information with detailed logging
-            logger.debug("Setting ACCOUNT_ID_KEY...");
-            session.setAttribute(ACCOUNT_ID_KEY, account.getId());
-            logger.info("✓ Set ACCOUNT_ID_KEY = {}", account.getId());
-
-            logger.debug("Setting USER_ID_KEY...");
-            session.setAttribute(USER_ID_KEY, user.getId());
-            logger.info("✓ Set USER_ID_KEY = {}", user.getId());
-
-            logger.debug("Setting USERNAME_KEY...");
-            session.setAttribute(USERNAME_KEY, account.getUsername());
-            logger.info("✓ Set USERNAME_KEY = {}", account.getUsername());
-
-            logger.debug("Setting USER_FULL_NAME_KEY...");
-            session.setAttribute(USER_FULL_NAME_KEY, user.getFullName());
-            logger.info("✓ Set USER_FULL_NAME_KEY = {}", user.getFullName());
-
-            logger.debug("Setting USER_EMAIL_KEY...");
-            session.setAttribute(USER_EMAIL_KEY, account.getEmailLogin());
-            logger.info("✓ Set USER_EMAIL_KEY = {}", account.getEmailLogin());
-
-            logger.debug("Setting LAST_LOGIN_TIME_KEY...");
-            long loginTime = System.currentTimeMillis();
-            session.setAttribute(LAST_LOGIN_TIME_KEY, loginTime);
-            logger.info("✓ Set LAST_LOGIN_TIME_KEY = {}", loginTime);
-
-            // Verify session attributes were set correctly
-            logger.debug("Verifying session attributes...");
-            Long verifyAccountId = (Long) session.getAttribute(ACCOUNT_ID_KEY);
-            Long verifyUserId = (Long) session.getAttribute(USER_ID_KEY);
-            String verifyUsername = (String) session.getAttribute(USERNAME_KEY);
-
-            if (verifyAccountId == null || verifyUserId == null || verifyUsername == null) {
-                logger.error("VERIFICATION FAILED! Some attributes are null after setting:");
-                logger.error("  accountId: {}", verifyAccountId);
-                logger.error("  userId: {}", verifyUserId);
-                logger.error("  username: {}", verifyUsername);
-                throw new RuntimeException("Session attributes verification failed");
-            }
-
-            logger.info("✓ Session attributes verified successfully");
-            logger.info("=== SUCCESS: Session created for user: {} (Session ID: {}) ===",
-                account.getUsername(), session.getId());
-
-        } catch (Exception e) {
-            logger.error("=== FAILED: Error creating session for user: {} ===", account.getUsername(), e);
-            logger.error("Exception type: {}", e.getClass().getName());
-            logger.error("Exception message: {}", e.getMessage());
-            throw new RuntimeException("Failed to create user session: " + e.getMessage(), e);
-        }
+        HttpSession session = request.getSession(true);
+        
+        // Configure session
+        session.setMaxInactiveInterval(ConfigUtil.getSessionTimeout());
+        
+        // Set user information
+        session.setAttribute(ACCOUNT_ID_KEY, account.getId());
+        session.setAttribute(USER_ID_KEY, user.getId());
+        session.setAttribute(USERNAME_KEY, account.getUsername());
+        session.setAttribute(USER_FULL_NAME_KEY, user.getFullName());
+        session.setAttribute(USER_EMAIL_KEY, account.getEmailLogin());
+        session.setAttribute(LAST_LOGIN_TIME_KEY, System.currentTimeMillis());
+        
+        logger.info("Created session for user: {} (ID: {})", account.getUsername(), account.getId());
     }
-
+    
     /**
      * Kiểm tra user có đăng nhập không
      */
@@ -108,7 +58,7 @@ public class SessionUtil {
         HttpSession session = request.getSession(false);
         return session != null && session.getAttribute(ACCOUNT_ID_KEY) != null;
     }
-
+    
     /**
      * Lấy Account ID từ session
      */
@@ -119,7 +69,7 @@ public class SessionUtil {
         }
         return null;
     }
-
+    
     /**
      * Lấy User ID từ session
      */
@@ -130,7 +80,7 @@ public class SessionUtil {
         }
         return null;
     }
-
+    
     /**
      * Lấy username từ session
      */
@@ -141,7 +91,7 @@ public class SessionUtil {
         }
         return null;
     }
-
+    
     /**
      * Lấy full name từ session
      */
@@ -152,7 +102,7 @@ public class SessionUtil {
         }
         return null;
     }
-
+    
     /**
      * Kiểm tra user có phải admin không
      */
@@ -164,7 +114,7 @@ public class SessionUtil {
         }
         return false;
     }
-
+    
     /**
      * Set admin flag trong session
      */
@@ -174,7 +124,7 @@ public class SessionUtil {
             session.setAttribute(IS_ADMIN_KEY, isAdmin);
         }
     }
-
+    
     /**
      * Set user roles trong session
      */
@@ -184,7 +134,7 @@ public class SessionUtil {
             session.setAttribute(USER_ROLES_KEY, roles);
         }
     }
-
+    
     /**
      * Lấy user roles từ session
      */
@@ -195,7 +145,7 @@ public class SessionUtil {
         }
         return null;
     }
-
+    
     /**
      * Hủy session (logout)
      */
@@ -207,7 +157,7 @@ public class SessionUtil {
             logger.info("Destroyed session for user: {}", username);
         }
     }
-
+    
     /**
      * Kiểm tra session còn hiệu lực không
      */
@@ -216,7 +166,7 @@ public class SessionUtil {
         if (session == null) {
             return false;
         }
-
+        
         try {
             // Thử truy cập attribute để trigger exception nếu session invalid
             session.getAttribute(ACCOUNT_ID_KEY);
@@ -226,7 +176,7 @@ public class SessionUtil {
             return false;
         }
     }
-
+    
     /**
      * Refresh session timeout
      */
