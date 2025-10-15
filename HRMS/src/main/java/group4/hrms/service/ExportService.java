@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 
 public class ExportService {
 
-    public static void handleExport(HttpServletResponse resp, String exportType, Long userId) throws SQLException {
+    public static void AttendanceRecordExport(HttpServletResponse resp, String exportType, Long userId) throws SQLException {
         AttendanceLogDao dao = new AttendanceLogDao();
 
         List<AttendanceLogDto> attendanceList;

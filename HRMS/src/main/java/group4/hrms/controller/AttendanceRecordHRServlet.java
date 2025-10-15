@@ -112,7 +112,7 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             }
 
             if (exportType != null) {
-                ExportService.handleExport(resp, exportType, userId);
+                ExportService.AttendanceRecordExport(resp, exportType, userId);
                 return;
             }
 

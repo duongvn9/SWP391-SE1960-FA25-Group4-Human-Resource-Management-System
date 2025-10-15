@@ -122,7 +122,6 @@ public class ImportAttendanceServlet extends HttpServlet {
 
     }
 
-    // ----------- Hàm đọc file Excel và trả về List<AttendanceLogDto> -----------
     public List<AttendanceLogDto> readExcelFile(InputStream inputStream) throws IOException {
         List<AttendanceLogDto> list = new ArrayList<>();
 
@@ -140,7 +139,7 @@ public class ImportAttendanceServlet extends HttpServlet {
 
                 // Kiểm tra nếu toàn bộ row trống, bỏ qua
                 boolean isEmpty = true;
-                for (int c = 0; c <= 8; c++) { // 9 cột từ 0 đến 8
+                for (int c = 0; c <= 8; c++) { 
                     Cell cell = row.getCell(c);
                     if (cell != null && cell.getCellType() != CellType.BLANK) {
                         String val = cell.toString().trim();
@@ -182,7 +181,6 @@ public class ImportAttendanceServlet extends HttpServlet {
         return list;
     }
 
-    // ----------- Các hàm xử lý linh hoạt kiểu dữ liệu -----------
     private String parseString(Cell cell) {
         if (cell == null) {
             return null;
@@ -389,7 +387,6 @@ public class ImportAttendanceServlet extends HttpServlet {
         return null;
     }
 
-    // ----------- Chuyển từ DTO sang Entity (AttendanceLog) ----------- 
     private List<AttendanceLog> convertDtoToEntity(
             List<AttendanceLogDto> dtos) throws SQLException {
         TimesheetPeriodDao periodDao = new TimesheetPeriodDao();
@@ -400,7 +397,6 @@ public class ImportAttendanceServlet extends HttpServlet {
                 continue;
             }
 
-            // Tra periodId bằng DAO
             Optional<Long> periodIdOpt = Optional.empty();
 
             if (dto.getPeriod() != null) {
@@ -409,7 +405,6 @@ public class ImportAttendanceServlet extends HttpServlet {
 
             Long periodId = periodIdOpt.orElse(null);
             System.out.println(periodId);
-            // Check-in
             if (dto.getCheckIn() != null && dto.getDate() != null) {
                 AttendanceLog checkInLog = new AttendanceLog();
                 checkInLog.setUserId(dto.getUserId());
@@ -421,7 +416,6 @@ public class ImportAttendanceServlet extends HttpServlet {
                 entities.add(checkInLog);
             }
 
-            // Check-out
             if (dto.getCheckOut() != null && dto.getDate() != null) {
                 AttendanceLog checkOutLog = new AttendanceLog();
                 checkOutLog.setUserId(dto.getUserId());
@@ -437,7 +431,6 @@ public class ImportAttendanceServlet extends HttpServlet {
         return entities;
     }
 
-    // ----------- Hàm lưu danh sách AttendanceLog vào DB -----------
     private void saveAttendanceLogs(List<AttendanceLog> logs) {
         for (AttendanceLog log : logs) {
             try {

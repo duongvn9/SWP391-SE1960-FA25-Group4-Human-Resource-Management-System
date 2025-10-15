@@ -33,7 +33,7 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
             String exportType = req.getParameter("exportType");
 
             if (exportType != null) {
-                ExportService.handleExport(resp, exportType, userId);
+                ExportService.AttendanceRecordExport(resp, exportType, userId);
                 return;
             }
 
