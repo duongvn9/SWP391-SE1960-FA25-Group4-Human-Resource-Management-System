@@ -5,6 +5,7 @@
     <head>
         <meta charset="UTF-8">
         <title>Attendance Management</title>  
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/attendance-record-HR.css">
     </head>
     <body>
         <h2>Attendance Period Management</h2>

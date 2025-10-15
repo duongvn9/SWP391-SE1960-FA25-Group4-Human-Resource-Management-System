@@ -2,16 +2,30 @@ package group4.hrms.controller;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
-import java.nio.file.*;
+import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.CellValue;
 import org.apache.poi.ss.usermodel.DateUtil;
+import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import group4.hrms.dao.AttendanceLogDao;
 import group4.hrms.dao.TimesheetPeriodDao;
@@ -19,27 +33,11 @@ import group4.hrms.dto.AttendanceLogDto;
 import group4.hrms.model.AttendanceLog;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
-
-import jakarta.servlet.ServletException;
-
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import jakarta.servlet.http.Part;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.ZoneId;
-import java.util.Optional;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.CellValue;
-import org.apache.poi.ss.usermodel.FormulaEvaluator;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 @WebServlet("/attendance/import")
 @MultipartConfig
@@ -383,8 +381,9 @@ public class ImportAttendanceServlet extends HttpServlet {
                         return parseTime(cell);
                     }
                 }
+                default -> throw new IllegalArgumentException("Unexpected value: " + cell.getCellType());
             }
-        } catch (Exception ignored) {
+        } catch (IllegalArgumentException ignored) {
         }
 
         return null;
@@ -447,5 +446,4 @@ public class ImportAttendanceServlet extends HttpServlet {
             }
         }
     }
-
 }

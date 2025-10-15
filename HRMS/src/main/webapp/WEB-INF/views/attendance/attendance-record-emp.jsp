@@ -5,6 +5,7 @@
     <head>
         <meta charset="UTF-8">
         <title>My Attendance</title>  
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/attendance-record-emp.css">
     </head>
     <body>
         <h2>My Attendance Records</h2>

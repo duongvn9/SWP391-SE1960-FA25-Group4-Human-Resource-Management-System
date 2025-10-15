@@ -91,7 +91,7 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             String endDateStr = req.getParameter("endDate");
             String status = req.getParameter("status");
             String source = req.getParameter("source");
-            String periodIdStr = req.getParameter("periodSelect");
+            String periodIdStr = req.getParameter("periodId");
 
             LocalDate startDate = null;
             LocalDate endDate = null;
@@ -138,8 +138,8 @@ public class AttendanceRecordHRServlet extends HttpServlet {
                     status,
                     source,
                     periodId,
-                    offset,
                     recordsPerPage,
+                    offset,
                     true
             );
 
@@ -158,7 +158,6 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             req.setAttribute("attendanceList", attendanceList);
             req.setAttribute("periodList", tDAO.findAll());
             req.setAttribute("departmentList", dDAO.findAll());
-
             req.setAttribute("employeeKeyword", employeeKeyword);
             req.setAttribute("department", departmentIdStr);
             req.setAttribute("startDate", startDateStr);

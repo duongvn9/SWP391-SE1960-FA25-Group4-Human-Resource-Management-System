@@ -109,8 +109,8 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
                     status,
                     source,
                     periodId,
-                    offset,
                     recordsPerPage,
+                    offset,
                     true
             );
 
