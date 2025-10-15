@@ -113,6 +113,27 @@
             </tbody>
         </table>
 
+        <div class="pagination" style="margin-top: 10px;">
+            <c:if test="${currentPage > 1}">
+                <a href="?page=${currentPage - 1}">Previous</a>
+            </c:if>
+
+            <c:forEach var="i" begin="1" end="${totalPages}">
+                <c:choose>
+                    <c:when test="${i == currentPage}">
+                        <span><b>${i}</b></span>
+                    </c:when>
+                    <c:otherwise>
+                        <a href="?page=${i}">${i}</a>
+                    </c:otherwise>
+                </c:choose>
+            </c:forEach>
+
+            <c:if test="${currentPage < totalPages}">
+                <a href="?page=${currentPage + 1}">Next</a>
+            </c:if>
+        </div>
+
         <script src="${pageContext.request.contextPath}/assets/js/attendance-record-HR.js"></script>
     </body>
 </html>

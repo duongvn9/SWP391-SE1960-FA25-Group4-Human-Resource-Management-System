@@ -20,9 +20,9 @@ public class ExportService {
 
         List<AttendanceLogDto> attendanceList;
         if (userId == null) {
-            attendanceList = dao.findAllForOverview();
+            attendanceList = dao.findAllForOverview(0, 0, false);
         } else {
-            attendanceList = dao.findByUserId(userId);
+            attendanceList = dao.findByUserId(userId, 0, 0, false);
         }
 
         switch (exportType) {

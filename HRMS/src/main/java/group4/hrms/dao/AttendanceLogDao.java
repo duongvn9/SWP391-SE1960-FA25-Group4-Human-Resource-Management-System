@@ -185,8 +185,8 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
     }
 
     //Tìm toàn hộ bản ghi theo định dạng frontend
-    public List<AttendanceLogDto> findAllForOverview() throws SQLException {
-        String sql = """
+    public List<AttendanceLogDto> findAllForOverview(int offset, int limit, boolean paged) throws SQLException {
+        StringBuilder sql = new StringBuilder("""
             SELECT
               u.id AS employee_id,
               u.employee_code AS employee_code,
@@ -213,90 +213,29 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
               d.name,
               tp.name,
               DATE(al.checked_at)
-            ORDER BY DATE(al.checked_at) DESC, u.full_name;
-        """;
+            ORDER BY DATE(al.checked_at) DESC, u.full_name
+        """);
+
+        if (paged) {
+            sql.append(" LIMIT ? OFFSET ?");
+        }
 
         List<AttendanceLogDto> results = new ArrayList<>();
 
-        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
 
-            while (rs.next()) {
-                AttendanceLogDto dto = new AttendanceLogDto();
-                dto.setUserId(rs.getLong("employee_id"));
-                dto.setEmployeeName(rs.getString("employee_name"));
-                dto.setDepartment(rs.getString("department_name"));
-
-                // Lấy LocalDate từ sql Date
-                Date sqlDate = rs.getDate("work_date");
-                dto.setDate(sqlDate != null ? sqlDate.toLocalDate() : null);
-
-                // Lấy LocalTime từ Timestamp
-                Timestamp inTs = rs.getTimestamp("check_in");
-                Timestamp outTs = rs.getTimestamp("check_out");
-                dto.setCheckIn(inTs != null ? inTs.toLocalDateTime().toLocalTime() : null);
-                dto.setCheckOut(outTs != null ? outTs.toLocalDateTime().toLocalTime() : null);
-
-                dto.setStatus(rs.getString("status"));
-                dto.setSource(rs.getString("source"));
-                dto.setPeriod(rs.getString("period_name"));
-
-                results.add(dto);
+            if (paged) {
+                stmt.setInt(1, limit);
+                stmt.setInt(2, offset);
             }
-
-        } catch (SQLException e) {
-        }
-
-        return results;
-    }
-
-    //Tìm attendance logs theo user ID
-    public List<AttendanceLogDto> findByUserId(Long userId) throws SQLException {
-        if (userId == null) {
-            return Collections.emptyList();
-        }
-
-        String sql = """
-        SELECT
-            u.id AS user_id,
-            u.full_name AS employee_name,
-            d.name AS department_name,
-            DATE(al.checked_at) AS work_date,
-            MIN(CASE WHEN al.check_type = 'IN'  THEN al.checked_at END) AS check_in,
-            MAX(CASE WHEN al.check_type = 'OUT' THEN al.checked_at END) AS check_out,
-            COALESCE(
-                MIN(CASE WHEN al.check_type = 'IN'  THEN al.note END),
-                MAX(CASE WHEN al.check_type = 'OUT' THEN al.note END),
-                'No Records'
-            ) AS status,
-            GROUP_CONCAT(DISTINCT al.source SEPARATOR ', ') AS source,
-            tp.name AS period_name
-        FROM attendance_logs al
-        JOIN users u ON al.user_id = u.id
-        LEFT JOIN departments d ON u.department_id = d.id
-        LEFT JOIN timesheet_periods tp ON al.period_id = tp.id
-        WHERE al.user_id = ?
-        GROUP BY 
-            u.id, 
-            u.full_name, 
-            d.name, 
-            DATE(al.checked_at), 
-            tp.name
-        ORDER BY 
-            DATE(al.checked_at) DESC LIMIT 100
-    """;
-
-        List<AttendanceLogDto> results = new ArrayList<>();
-
-        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setLong(1, userId);
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     AttendanceLogDto dto = new AttendanceLogDto();
-                    dto.setUserId(rs.getLong("user_id"));
+                    dto.setUserId(rs.getLong("employee_id"));
                     dto.setEmployeeName(rs.getString("employee_name"));
                     dto.setDepartment(rs.getString("department_name"));
+
                     Date sqlDate = rs.getDate("work_date");
                     dto.setDate(sqlDate != null ? sqlDate.toLocalDate() : null);
 
@@ -312,11 +251,118 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                     results.add(dto);
                 }
             }
-        } catch (SQLException e) {
-            throw e;
+        }
+        return results;
+    }
+
+    //Đếm số bản ghi để phân trang
+    public int countAllForOverview() throws SQLException {
+        String sql = """
+            SELECT COUNT(*) AS total
+            FROM (
+                SELECT DATE(al.checked_at), u.id
+                FROM attendance_logs al
+                JOIN users u ON al.user_id = u.id
+                LEFT JOIN departments d ON u.department_id = d.id
+                LEFT JOIN timesheet_periods tp ON al.period_id = tp.id
+                GROUP BY u.id, u.employee_code, u.full_name, d.name, tp.name, DATE(al.checked_at)
+            ) AS subquery;
+        """;
+
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
+
+            if (rs.next()) {
+                return rs.getInt("total");
+            }
+        }
+
+        return 0;
+    }
+
+    //Tìm attendance logs theo user ID
+    public List<AttendanceLogDto> findByUserId(Long userId, int limit, int offset, boolean paged) throws SQLException {
+        if (userId == null) {
+            return Collections.emptyList();
+        }
+
+        StringBuilder sql = new StringBuilder("""
+            SELECT
+                u.id AS user_id,
+                u.full_name AS employee_name,
+                d.name AS department_name,
+                DATE(al.checked_at) AS work_date,
+                MIN(CASE WHEN al.check_type = 'IN'  THEN al.checked_at END) AS check_in,
+                MAX(CASE WHEN al.check_type = 'OUT' THEN al.checked_at END) AS check_out,
+                COALESCE(
+                    MIN(CASE WHEN al.check_type = 'IN'  THEN al.note END),
+                    MAX(CASE WHEN al.check_type = 'OUT' THEN al.note END),
+                    'No Records'
+                ) AS status,
+                GROUP_CONCAT(DISTINCT al.source SEPARATOR ', ') AS source,
+                tp.name AS period_name
+            FROM attendance_logs al
+            JOIN users u ON al.user_id = u.id
+            LEFT JOIN departments d ON u.department_id = d.id
+            LEFT JOIN timesheet_periods tp ON al.period_id = tp.id
+            WHERE al.user_id = ?
+            GROUP BY u.id, u.full_name, d.name, DATE(al.checked_at), tp.name
+            ORDER BY DATE(al.checked_at) DESC
+            """);
+
+        if (paged) {
+            sql.append(" LIMIT ? OFFSET ?");
+        }
+
+        List<AttendanceLogDto> results = new ArrayList<>();
+
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+
+            stmt.setLong(1, userId);
+
+            if (paged) {
+                stmt.setInt(2, limit);
+                stmt.setInt(3, offset);
+            }
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    AttendanceLogDto dto = new AttendanceLogDto();
+                    dto.setUserId(rs.getLong("user_id"));
+                    dto.setEmployeeName(rs.getString("employee_name"));
+                    dto.setDepartment(rs.getString("department_name"));
+
+                    Date sqlDate = rs.getDate("work_date");
+                    dto.setDate(sqlDate != null ? sqlDate.toLocalDate() : null);
+
+                    Timestamp inTs = rs.getTimestamp("check_in");
+                    Timestamp outTs = rs.getTimestamp("check_out");
+                    dto.setCheckIn(inTs != null ? inTs.toLocalDateTime().toLocalTime() : null);
+                    dto.setCheckOut(outTs != null ? outTs.toLocalDateTime().toLocalTime() : null);
+
+                    dto.setStatus(rs.getString("status"));
+                    dto.setSource(rs.getString("source"));
+                    dto.setPeriod(rs.getString("period_name"));
+
+                    results.add(dto);
+                }
+            }
         }
 
         return results;
+    }
+
+    //Đếm số bản ghi để phân trang
+    public int countByUserId(Long userId) throws SQLException {
+        String sql = "SELECT COUNT(DISTINCT DATE(checked_at)) AS total FROM attendance_logs WHERE user_id = ?";
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setLong(1, userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("total");
+                }
+            }
+        }
+        return 0;
     }
 
     public List<AttendanceLogDto> findByFilter(
@@ -327,46 +373,47 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
             LocalDate endDate,
             String status,
             String source,
-            Long periodId) throws SQLException {
+            Long periodId,
+            int limit,
+            int offset,
+            boolean paged
+    ) throws SQLException {
 
         StringBuilder sql = new StringBuilder("""
-        SELECT
-            u.id AS employee_id,
-            u.full_name AS employee_name,
-            d.name AS department_name,
-            DATE(al.checked_at) AS work_date,
-            MIN(CASE WHEN al.check_type = 'IN'  THEN al.checked_at END) AS check_in,
-            MAX(CASE WHEN al.check_type = 'OUT' THEN al.checked_at END) AS check_out,
-            COALESCE(
-                MIN(CASE WHEN al.check_type = 'IN'  THEN al.note END),
-                MAX(CASE WHEN al.check_type = 'OUT' THEN al.note END),
-                'No Records'
-            ) AS status,
-            GROUP_CONCAT(DISTINCT al.source SEPARATOR ', ') AS source,
-            tp.name AS period_name
-        FROM attendance_logs al
-        LEFT JOIN timesheet_periods tp ON al.period_id = tp.id
-        LEFT JOIN users u ON al.user_id = u.id
-        LEFT JOIN departments d ON u.department_id = d.id
-        WHERE 1=1
-    """);
+            SELECT
+                u.id AS employee_id,
+                u.full_name AS employee_name,
+                d.name AS department_name,
+                DATE(al.checked_at) AS work_date,
+                MIN(CASE WHEN al.check_type = 'IN'  THEN al.checked_at END) AS check_in,
+                MAX(CASE WHEN al.check_type = 'OUT' THEN al.checked_at END) AS check_out,
+                COALESCE(
+                    MIN(CASE WHEN al.check_type = 'IN'  THEN al.note END),
+                    MAX(CASE WHEN al.check_type = 'OUT' THEN al.note END),
+                    'No Records'
+                ) AS status,
+                GROUP_CONCAT(DISTINCT al.source SEPARATOR ', ') AS source,
+                tp.name AS period_name
+            FROM attendance_logs al
+            LEFT JOIN timesheet_periods tp ON al.period_id = tp.id
+            LEFT JOIN users u ON al.user_id = u.id
+            LEFT JOIN departments d ON u.department_id = d.id
+            WHERE 1=1
+        """);
 
         List<Object> params = new ArrayList<>();
 
-        // 🔹 Lọc theo userId (dành cho employee view)
         if (userId != null) {
             sql.append(" AND al.user_id = ?");
             params.add(userId);
         }
 
-        // 🔹 Lọc theo employee name / id (dành cho HR view)
         if (employeeKeyword != null && !employeeKeyword.isEmpty()) {
             sql.append(" AND (u.full_name LIKE ? OR CAST(u.id AS CHAR) LIKE ?)");
             params.add("%" + employeeKeyword + "%");
             params.add("%" + employeeKeyword + "%");
         }
 
-        // 🔹 Lọc theo department (dành cho HR view)
         if (department != null && !department.isEmpty()) {
             sql.append(" AND d.name = ?");
             params.add(department);
@@ -393,11 +440,16 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
             params.add(periodId);
         }
 
-        // 🔹 Nhóm theo user + ngày + kỳ chấm công
         sql.append("""
-        GROUP BY u.id, u.full_name, d.name, DATE(al.checked_at), tp.name
-        ORDER BY DATE(al.checked_at) DESC
-    """);
+            GROUP BY u.id, u.full_name, d.name, DATE(al.checked_at), tp.name
+            ORDER BY DATE(al.checked_at) DESC
+        """);
+
+        if (paged) {
+            sql.append(" LIMIT ? OFFSET ?");
+            params.add(limit);
+            params.add(offset);
+        }
 
         List<AttendanceLogDto> results = new ArrayList<>();
 
@@ -411,6 +463,8 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                     stmt.setDate(i + 1, d);
                 } else if (param instanceof String s) {
                     stmt.setString(i + 1, s);
+                } else if (param instanceof Integer in) {
+                    stmt.setInt(i + 1, in);
                 }
             }
 
@@ -438,7 +492,100 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                 }
             }
         }
-
         return results;
+    }
+
+    //Đếm số bản ghi để phân trang
+    public int countByFilter(
+            Long userId,
+            String employeeKeyword,
+            String department,
+            LocalDate startDate,
+            LocalDate endDate,
+            String status,
+            String source,
+            Long periodId
+    ) throws SQLException {
+
+        StringBuilder sql = new StringBuilder("""
+        SELECT COUNT(*) AS total
+        FROM (
+            SELECT DATE(al.checked_at)
+            FROM attendance_logs al
+            LEFT JOIN timesheet_periods tp ON al.period_id = tp.id
+            LEFT JOIN users u ON al.user_id = u.id
+            LEFT JOIN departments d ON u.department_id = d.id
+            WHERE 1=1
+    """);
+
+        List<Object> params = new ArrayList<>();
+
+        if (userId != null) {
+            sql.append(" AND al.user_id = ?");
+            params.add(userId);
+        }
+
+        if (employeeKeyword != null && !employeeKeyword.isEmpty()) {
+            sql.append(" AND (u.full_name LIKE ? OR CAST(u.id AS CHAR) LIKE ?)");
+            params.add("%" + employeeKeyword + "%");
+            params.add("%" + employeeKeyword + "%");
+        }
+
+        if (department != null && !department.isEmpty()) {
+            sql.append(" AND d.name = ?");
+            params.add(department);
+        }
+
+        if (startDate != null) {
+            sql.append(" AND DATE(al.checked_at) >= ?");
+            params.add(Date.valueOf(startDate));
+        }
+
+        if (endDate != null) {
+            sql.append(" AND DATE(al.checked_at) <= ?");
+            params.add(Date.valueOf(endDate));
+        }
+
+        if (status != null && !status.isEmpty()) {
+            sql.append(" AND al.note = ?");
+            params.add(status);
+        }
+
+        if (source != null && !source.isEmpty()) {
+            sql.append(" AND al.source = ?");
+            params.add(source);
+        }
+
+        if (periodId != null) {
+            sql.append(" AND al.period_id = ?");
+            params.add(periodId);
+        }
+
+        sql.append("""
+        GROUP BY u.id, u.full_name, d.name, DATE(al.checked_at), tp.name
+    ) AS subquery;
+    """);
+
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+
+            for (int i = 0; i < params.size(); i++) {
+                Object param = params.get(i);
+                if (param instanceof Long l) {
+                    stmt.setLong(i + 1, l);
+                } else if (param instanceof Date d) {
+                    stmt.setDate(i + 1, d);
+                } else if (param instanceof String s) {
+                    stmt.setString(i + 1, s);
+                }
+            }
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("total");
+                }
+            }
+        }
+
+        return 0;
     }
 }

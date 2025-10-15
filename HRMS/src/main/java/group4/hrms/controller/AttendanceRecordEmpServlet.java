@@ -17,7 +17,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.ArrayList;
 
 @WebServlet("/attendance/record/emp")
 public class AttendanceRecordEmpServlet extends HttpServlet {
@@ -38,10 +37,30 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
                 return;
             }
 
+            // ===== PHÂN TRANG =====
+            int recordsPerPage = 10;
+            int currentPage = 1;
+
+            String pageParam = req.getParameter("page");
+            if (pageParam != null && !pageParam.isEmpty()) {
+                try {
+                    currentPage = Integer.parseInt(pageParam);
+                } catch (NumberFormatException e) {
+                    currentPage = 1;
+                }
+            }
+
+            int offset = (currentPage - 1) * recordsPerPage;
+
             if ("reset".equals(action)) {
-                List<AttendanceLogDto> attendanceList = dao.findByUserId(userId);
+                List<AttendanceLogDto> attendanceList = dao.findByUserId(userId, offset, recordsPerPage, true);
+                int totalRecords = dao.countByUserId(userId);
+                int totalPages = (int) Math.ceil(totalRecords * 1.0 / recordsPerPage);
+
                 req.setAttribute("attendanceList", attendanceList);
                 req.setAttribute("periodList", tDAO.findAll());
+                req.setAttribute("currentPage", currentPage);
+                req.setAttribute("totalPages", totalPages);
 
                 req.setAttribute("employeeKeyword", "");
                 req.setAttribute("department", "");
@@ -51,7 +70,7 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
                 req.setAttribute("source", "");
                 req.setAttribute("periodId", "");
 
-                resp.sendRedirect(req.getContextPath() + "/attendance/record/emp");
+                req.getRequestDispatcher("/WEB-INF/views/attendance/attendance-record-emp.jsp").forward(req, resp);
                 return;
             }
 
@@ -89,8 +108,24 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
                     endDate,
                     status,
                     source,
+                    periodId,
+                    offset,
+                    recordsPerPage,
+                    true
+            );
+
+            // Đếm tổng record (để tính số trang)
+            int totalRecords = dao.countByFilter(
+                    userId,
+                    employeeKeyword,
+                    department,
+                    startDate,
+                    endDate,
+                    status,
+                    source,
                     periodId
             );
+            int totalPages = (int) Math.ceil(totalRecords * 1.0 / recordsPerPage);
 
             req.setAttribute("attendanceList", attendanceList);
             req.setAttribute("periodList", tDAO.findAll());
@@ -102,6 +137,9 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
             req.setAttribute("source", source);
             req.setAttribute("periodId", periodIdStr);
 
+            req.setAttribute("currentPage", currentPage);
+            req.setAttribute("totalPages", totalPages);
+
             req.getRequestDispatcher("/WEB-INF/views/attendance/attendance-record-emp.jsp").forward(req, resp);
 
         } catch (SQLException ex) {
@@ -112,18 +150,36 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
-//            Long userId = (Long) req.getSession().getAttribute("userId");    
-            Long userId = 45l;
-            List<AttendanceLogDto> attendanceList = dao.findByUserId(userId);
+            Long userId = 45L; // sau này thay bằng session
+
+            // ===== PHÂN TRANG CƠ BẢN =====
+            int recordsPerPage = 10;
+            int currentPage = 1;
+
+            String pageParam = req.getParameter("page");
+            if (pageParam != null && !pageParam.isEmpty()) {
+                try {
+                    currentPage = Integer.parseInt(pageParam);
+                } catch (NumberFormatException e) {
+                    currentPage = 1;
+                }
+            }
+
+            int offset = (currentPage - 1) * recordsPerPage;
+
+            List<AttendanceLogDto> attendanceList = dao.findByUserId(userId, recordsPerPage, offset, true);
+            int totalRecords = dao.countByUserId(userId);
+            int totalPages = (int) Math.ceil((double) totalRecords / recordsPerPage);
+            System.out.println(attendanceList);
             req.setAttribute("attendanceList", attendanceList);
             req.setAttribute("periodList", tDAO.findAll());
+            req.setAttribute("currentPage", currentPage);
+            req.setAttribute("totalPages", totalPages);
+
             req.getRequestDispatcher("/WEB-INF/views/attendance/attendance-record-emp.jsp").forward(req, resp);
+
         } catch (SQLException ex) {
             Logger.getLogger(AttendanceRecordEmpServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
-        ArrayList<String> attendanceList = new ArrayList<>();
-        req.setAttribute("attendanceList", attendanceList);
-        req.getRequestDispatcher("/WEB-INF/views/attendance/attendance-record-emp.jsp").forward(req, resp);
-
     }
 }
