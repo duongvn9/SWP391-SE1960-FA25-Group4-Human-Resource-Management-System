@@ -14,11 +14,11 @@ import java.io.IOException;
  * Filter để kiểm tra authentication cho các trang protected
  */
 @WebFilter(urlPatterns = {
-    "/dashboard/*", 
-    "/profile/*", 
-    "/requests/*", 
-    "/recruitment/*", 
-    "/attendance/*", 
+    "/dashboard/*",
+    "/profile/*",
+    "/request/*",
+    "/recruitment/*",
+    "/attendance/*",
     "/payroll/*",
     "/admin/*"
 })
@@ -40,7 +40,7 @@ public class AuthenticationFilter implements Filter {
 
         String requestURI = httpRequest.getRequestURI();
         String contextPath = httpRequest.getContextPath();
-        
+
         logger.debug("Checking authentication for: {}", requestURI);
 
         // Skip authentication for login-related URLs
@@ -52,7 +52,7 @@ public class AuthenticationFilter implements Filter {
         // Check if user is logged in
         if (!SessionUtil.isUserLoggedIn(httpRequest)) {
             logger.debug("User not logged in, redirecting to login page");
-            
+
             // Store original URL for redirect after login
             String originalUrl = requestURI;
             if (httpRequest.getQueryString() != null) {
@@ -91,7 +91,7 @@ public class AuthenticationFilter implements Filter {
     private boolean isLoginRelatedUrl(String requestURI, String contextPath) {
         String[] loginUrls = {
             "/login",
-            "/auth/login", 
+            "/auth/login",
             "/login-google",
             "/auth/logout",
             "/",
@@ -101,7 +101,7 @@ public class AuthenticationFilter implements Filter {
         };
 
         for (String url : loginUrls) {
-            if (requestURI.equals(contextPath + url) || 
+            if (requestURI.equals(contextPath + url) ||
                 requestURI.startsWith(contextPath + url)) {
                 return true;
             }
