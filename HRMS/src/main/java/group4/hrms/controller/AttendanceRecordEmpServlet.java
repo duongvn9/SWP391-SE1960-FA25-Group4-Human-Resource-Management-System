@@ -27,7 +27,7 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
-            Long userId = 45L; // sau này thay bằng session
+            Long userId = 51L; // sau này thay bằng session
 
             String action = req.getParameter("action");
             String exportType = req.getParameter("exportType");
@@ -53,7 +53,7 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
             int offset = (currentPage - 1) * recordsPerPage;
 
             if ("reset".equals(action)) {
-                List<AttendanceLogDto> attendanceList = dao.findByUserId(userId, offset, recordsPerPage, true);
+                List<AttendanceLogDto> attendanceList = dao.findByUserId(userId, recordsPerPage, offset, true);
                 int totalRecords = dao.countByUserId(userId);
                 int totalPages = (int) Math.ceil(totalRecords * 1.0 / recordsPerPage);
 
@@ -68,7 +68,7 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
                 req.setAttribute("endDate", "");
                 req.setAttribute("status", "");
                 req.setAttribute("source", "");
-                req.setAttribute("periodId", "");
+                req.setAttribute("periodSelect", "");
 
                 req.getRequestDispatcher("/WEB-INF/views/attendance/attendance-record-emp.jsp").forward(req, resp);
                 return;
@@ -80,7 +80,7 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
             String endDateStr = req.getParameter("endDate");
             String status = req.getParameter("status");
             String source = req.getParameter("source");
-            String periodIdStr = req.getParameter("periodId");
+            String periodIdStr = req.getParameter("periodSelect");
 
             LocalDate startDate = null;
             LocalDate endDate = null;
@@ -135,7 +135,7 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
             req.setAttribute("endDate", endDateStr);
             req.setAttribute("status", status);
             req.setAttribute("source", source);
-            req.setAttribute("periodId", periodIdStr);
+            req.setAttribute("periodSelect", periodIdStr);
 
             req.setAttribute("currentPage", currentPage);
             req.setAttribute("totalPages", totalPages);
@@ -150,7 +150,7 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
-            Long userId = 45L; // sau này thay bằng session
+            Long userId = 51L; // sau này thay bằng session
 
             // ===== PHÂN TRANG CƠ BẢN =====
             int recordsPerPage = 10;
@@ -168,6 +168,7 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
             int offset = (currentPage - 1) * recordsPerPage;
 
             List<AttendanceLogDto> attendanceList = dao.findByUserId(userId, recordsPerPage, offset, true);
+            System.out.println(attendanceList);
             int totalRecords = dao.countByUserId(userId);
             int totalPages = (int) Math.ceil((double) totalRecords / recordsPerPage);
             System.out.println(attendanceList);

@@ -49,7 +49,6 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             req.setAttribute("attendanceList", attendanceList);
             req.setAttribute("currentPage", currentPage);
             req.setAttribute("totalPages", totalPages);
-
             req.setAttribute("periodList", tDAO.findAll());
             req.setAttribute("departmentList", dDAO.findAll());
 
@@ -64,46 +63,27 @@ public class AttendanceRecordHRServlet extends HttpServlet {
         try {
             String action = req.getParameter("action");
 
-            if ("reset".equals(action)) {
-                req.setAttribute("attendanceList", attendanceLogDao.findAllForOverview(0, 10, true));
-                req.setAttribute("periodList", tDAO.findAll());
-                req.setAttribute("departmentList", dDAO.findAll());
-
-                req.setAttribute("employeeKeyword", "");
-                req.setAttribute("department", "");
-                req.setAttribute("startDate", "");
-                req.setAttribute("endDate", "");
-                req.setAttribute("status", "");
-                req.setAttribute("source", "");
-                req.setAttribute("periodId", "");
-                req.setAttribute("currentPage", 1);
-                req.setAttribute("totalPages", 1);
-
-                req.getRequestDispatcher("/WEB-INF/views/attendance/attendance-record-HR.jsp").forward(req, resp);
-                return;
-            }
-
-            Long userId = null;
+            Long userId = null; 
             String exportType = req.getParameter("exportType");
-            String employeeKeyword = req.getParameter("employee");
-            String departmentIdStr = req.getParameter("department");
-            String startDateStr = req.getParameter("startDate");
-            String endDateStr = req.getParameter("endDate");
-            String status = req.getParameter("status");
-            String source = req.getParameter("source");
-            String periodIdStr = req.getParameter("periodId");
+            String employeeKeyword = req.getParameter("employee") != null ? req.getParameter("employee") : "";
+            String departmentIdStr = req.getParameter("department") != null ? req.getParameter("department") : "";
+            String startDateStr = req.getParameter("startDate") != null ? req.getParameter("startDate") : "";
+            String endDateStr = req.getParameter("endDate") != null ? req.getParameter("endDate") : "";
+            String status = req.getParameter("status") != null ? req.getParameter("status") : "";
+            String source = req.getParameter("source") != null ? req.getParameter("source") : "";
+            String periodIdStr = req.getParameter("periodId") != null ? req.getParameter("periodId") : "";
 
             LocalDate startDate = null;
             LocalDate endDate = null;
             Long periodId = null;
 
-            if (startDateStr != null && !startDateStr.isEmpty()) {
+            if (!startDateStr.isEmpty()) {
                 startDate = LocalDate.parse(startDateStr);
             }
-            if (endDateStr != null && !endDateStr.isEmpty()) {
+            if (!endDateStr.isEmpty()) {
                 endDate = LocalDate.parse(endDateStr);
             }
-            if (periodIdStr != null && !periodIdStr.isEmpty()) {
+            if (!periodIdStr.isEmpty()) {
                 try {
                     periodId = Long.valueOf(periodIdStr);
                 } catch (NumberFormatException e) {
@@ -111,12 +91,25 @@ public class AttendanceRecordHRServlet extends HttpServlet {
                 }
             }
 
-            if (exportType != null) {
+            if (exportType != null && !exportType.isEmpty()) {
                 ExportService.AttendanceRecordExport(resp, exportType, userId);
                 return;
             }
 
-            // ===== PHÂN TRANG =====
+            if ("reset".equals(action)) {
+                employeeKeyword = "";
+                departmentIdStr = "";
+                startDateStr = "";
+                endDateStr = "";
+                status = "";
+                source = "";
+                periodIdStr = "";
+                startDate = null;
+                endDate = null;
+                periodId = null;
+            }
+
+            // ===== Phân trang =====
             int recordsPerPage = 10;
             int currentPage = 1;
             String pageParam = req.getParameter("page");
@@ -169,9 +162,9 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             req.setAttribute("totalPages", totalPages);
 
             req.getRequestDispatcher("/WEB-INF/views/attendance/attendance-record-HR.jsp").forward(req, resp);
-
         } catch (SQLException ex) {
             Logger.getLogger(AttendanceRecordHRServlet.class.getName()).log(Level.SEVERE, null, ex);
+            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Database error");
         }
     }
 }

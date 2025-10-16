@@ -27,7 +27,6 @@
             <label for="source">Source:</label>
             <select id="source" name="source">
                 <option value="">All</option>
-                <option value="Google" ${param.source == 'Google' ? 'selected' : ''}>Google sheet</option>
                 <option value="Manual" ${param.source == 'Manual' ? 'selected' : ''}>Manual</option>
                 <option value="Import" ${param.source == 'Import' ? 'selected' : ''}>Import</option>
             </select>

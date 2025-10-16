@@ -13,52 +13,50 @@
         <!-- ========== FILTER SECTION ========== -->
         <form id="filterForm" method="post" action="${pageContext.request.contextPath}/attendance/record/HR">
             <label>From:</label>
-            <input type="date" name="startDate" value="${param.startDate}" />
+            <input type="date" name="startDate" value="${startDate}" />
 
             <label>To:</label>
-            <input type="date" name="endDate" value="${param.endDate}" />
+            <input type="date" name="endDate" value="${endDate}" />
 
             <label>Department:</label>
             <select name="department">
                 <option value="">--All--</option>
                 <c:forEach var="dept" items="${departmentList}">
-                    <option value="${dept.name}" 
-                            <c:if test="${param.department eq dept.name}">selected</c:if>>
+                    <option value="${dept.name}" <c:if test="${department eq dept.name}">selected</c:if>>
                         ${dept.name}
                     </option>
                 </c:forEach>
             </select>
 
             <label>Employee:</label>
-            <input type="text" name="employee" placeholder="Name or ID" value="${param.employee}" />
+            <input type="text" name="employee" value="${employeeKeyword}" placeholder="Name or ID" />
 
             <label>Status:</label>
-            <select id="status" name="status">
+            <select name="status">
                 <option value="">All</option>
-                <option value="On time" <c:if test="${param.status eq 'On time'}">selected</c:if>>On time</option>
-                <option value="Late" <c:if test="${param.status eq 'Late'}">selected</c:if>>Late</option>
+                <option value="On time" <c:if test="${status eq 'On time'}">selected</c:if>>On time</option>
+                <option value="Late" <c:if test="${status eq 'Late'}">selected</c:if>>Late</option>
                 </select>
 
                 <label>Source:</label>
-                <select id="source" name="source">
+                <select name="source">
                     <option value="">All</option>
-                    <option value="Google" <c:if test="${param.source eq 'Google'}">selected</c:if>>Google sheet</option>
-                <option value="Manual" <c:if test="${param.source eq 'Manual'}">selected</c:if>>Manual</option>
-                <option value="Import" <c:if test="${param.source eq 'Import'}">selected</c:if>>Import</option>
+                    <option value="Manual" <c:if test="${source eq 'Manual'}">selected</c:if>>Manual</option>
+                <option value="Import" <c:if test="${source eq 'Import'}">selected</c:if>>Import</option>
                 </select>
 
                 <label>Period:</label>
-                <select id="periodSelect" name="periodId">
+                <select name="periodId">
                     <option value="">-- All Periods --</option>
                 <c:forEach var="p" items="${periodList}">
-                    <option value="${p.id}" <c:if test="${param.periodId eq p.id.toString()}">selected</c:if>>
+                    <option value="${p.id}" <c:if test="${periodId eq p.id.toString()}">selected</c:if>>
                         ${p.name}
                     </option>
                 </c:forEach>
             </select>
 
             <button type="submit">Filter</button>
-            <button type="submit" name="action" value="reset" id="resetBtn">Reset</button>
+            <button type="submit" name="action" value="reset">Reset</button>
         </form>
 
         <div id="actions">
@@ -114,24 +112,49 @@
             </tbody>
         </table>
 
+        <!-- Pagination -->
         <div class="pagination" style="margin-top: 10px;">
             <c:if test="${currentPage > 1}">
-                <a href="?page=${currentPage - 1}">Previous</a>
+                <c:url var="prevUrl" value="">
+                    <c:param name="page" value="${currentPage - 1}" />
+                    <c:param name="employee" value="${employeeKeyword}" />
+                    <c:param name="department" value="${department}" />
+                    <c:param name="status" value="${status}" />
+                    <c:param name="source" value="${source}" />
+                    <c:param name="periodId" value="${periodId}" />
+                </c:url>
+                <a href="${prevUrl}">Previous</a>
             </c:if>
 
             <c:forEach var="i" begin="1" end="${totalPages}">
+                <c:url var="pageUrl" value="">
+                    <c:param name="page" value="${i}" />
+                    <c:param name="employee" value="${employeeKeyword}" />
+                    <c:param name="department" value="${department}" />
+                    <c:param name="status" value="${status}" />
+                    <c:param name="source" value="${source}" />
+                    <c:param name="periodId" value="${periodId}" />
+                </c:url>
                 <c:choose>
                     <c:when test="${i == currentPage}">
                         <span><b>${i}</b></span>
                     </c:when>
                     <c:otherwise>
-                        <a href="?page=${i}">${i}</a>
+                        <a href="${pageUrl}">${i}</a>
                     </c:otherwise>
                 </c:choose>
             </c:forEach>
 
             <c:if test="${currentPage < totalPages}">
-                <a href="?page=${currentPage + 1}">Next</a>
+                <c:url var="nextUrl" value="">
+                    <c:param name="page" value="${currentPage + 1}" />
+                    <c:param name="employee" value="${employeeKeyword}" />
+                    <c:param name="department" value="${department}" />
+                    <c:param name="status" value="${status}" />
+                    <c:param name="source" value="${source}" />
+                    <c:param name="periodId" value="${periodId}" />
+                </c:url>
+                <a href="${nextUrl}">Next</a>
             </c:if>
         </div>
 

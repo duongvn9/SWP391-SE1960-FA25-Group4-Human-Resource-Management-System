@@ -1,4 +1,3 @@
-// ==== Tab switching ====
 function showTab(tabId) {
     // Ẩn tất cả tab
     document.querySelectorAll(".tab-content").forEach(tab => {

@@ -12,7 +12,6 @@
         <!-- Tabs -->
         <div>
             <button class="tab-btn" id="upload-btn">Upload File</button>
-            <button class="tab-btn" id="google-btn">Google Sheets</button>
             <button class="tab-btn" id="manual-btn">Manual Entry</button>
         </div>
 
@@ -62,7 +61,7 @@
                         <tbody>
                             <c:forEach var="log" items="${previewLogs}">
                                 <tr>
-                                    <td>${log.employeeId}</td>
+                                    <td>${log.userId}</td>
                                     <td>${log.employeeName}</td>
                                     <td>${log.department}</td>
                                     <td>${log.date}</td>
@@ -78,16 +77,6 @@
                 </c:if>
 
             </form>
-        </div>
-
-        <!-- Google Sheets Tab -->
-        <div id="google" class="tab-content">
-            <h3>Import from Google Sheets</h3>
-            <button onclick="alert('Google OAuth...')">Connect Google Account</button><br/><br/>
-            <label>Sheet URL:</label>
-            <input type="text" placeholder="Enter Google Sheet URL" size="50"/><br/><br/>
-            <button onclick="alert('Loading sheet data...')">Load Sheet</button>
-            <button onclick="alert('Import done')">Import</button>
         </div>
 
         <!-- Manual Entry Tab -->
