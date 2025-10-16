@@ -83,6 +83,9 @@ public class OTRequestService {
             // Validate employee consent
             validateEmployeeConsent(employeeConsent);
 
+            // Validate time increment (must be 00, 15, 30, or 45 minutes)
+            validateTimeIncrement(startTime, endTime);
+
             // Calculate OT hours
             Double otHours = calculateOTHours(startTime, endTime);
 
@@ -92,6 +95,9 @@ public class OTRequestService {
             // Determine OT type and pay multiplier
             String otType = determineOTType(otDate);
             Double payMultiplier = getPayMultiplier(otType);
+
+            // Validate weekday OT time restrictions (19:00-22:00, max 2h)
+            validateWeekdayOTTime(otDate, startTime, endTime, otHours);
 
             // NEW VALIDATIONS - Check for conflicts and limits
             // Check for OT overlap (same day, overlapping time)
@@ -103,8 +109,8 @@ public class OTRequestService {
             // Validate OT balance (weekly/monthly/annual limits)
             validateOTBalance(userId, otDate, otHours);
 
-            // Check conflict with approved leave requests
-            checkConflictWithLeave(userId, otDate);
+            // Check conflict with approved leave requests (including half-day leave)
+            checkConflictWithLeave(userId, otDate, startTime, endTime);
 
             // EXISTING VALIDATIONS - Daily and weekly limits
             validateDailyLimit(userId, otDate, otHours);
@@ -178,6 +184,9 @@ public class OTRequestService {
             }
             User employee = employeeOpt.get();
 
+            // Validate time increment (must be 00, 15, 30, or 45 minutes)
+            validateTimeIncrement(startTime, endTime);
+
             // Calculate OT hours
             Double otHours = calculateOTHours(startTime, endTime);
 
@@ -187,6 +196,9 @@ public class OTRequestService {
             // Determine OT type and pay multiplier
             String otType = determineOTType(otDate);
             Double payMultiplier = getPayMultiplier(otType);
+
+            // Validate weekday OT time restrictions (19:00-22:00, max 2h)
+            validateWeekdayOTTime(otDate, startTime, endTime, otHours);
 
             // NEW VALIDATIONS - Check for conflicts and limits
             // Check for OT overlap (same day, overlapping time)
@@ -198,8 +210,8 @@ public class OTRequestService {
             // Validate OT balance (weekly/monthly/annual limits)
             validateOTBalance(employeeUserId, otDate, otHours);
 
-            // Check conflict with approved leave requests
-            checkConflictWithLeave(employeeUserId, otDate);
+            // Check conflict with approved leave requests (including half-day leave)
+            checkConflictWithLeave(employeeUserId, otDate, startTime, endTime);
 
             // EXISTING VALIDATIONS - Daily and weekly limits
             validateDailyLimit(employeeUserId, otDate, otHours);
@@ -307,22 +319,86 @@ public class OTRequestService {
     }
 
 
+    /**
+     * Validate that time uses valid increments (00, 15, 30, 45 minutes)
+     * This prevents odd times like 10:07 or 14:23
+     */
+    private void validateTimeIncrement(String startTime, String endTime) {
+        LocalTime start = LocalTime.parse(startTime);
+        LocalTime end = LocalTime.parse(endTime);
+
+        int startMinute = start.getMinute();
+        int endMinute = end.getMinute();
+
+        // Valid minutes: 0, 15, 30, 45
+        if (startMinute % 15 != 0) {
+            throw new IllegalArgumentException(
+                String.format("Start time must use 15-minute increments (00, 15, 30, 45). Invalid time: %s", startTime)
+            );
+        }
+
+        if (endMinute % 15 != 0) {
+            throw new IllegalArgumentException(
+                String.format("End time must use 15-minute increments (00, 15, 30, 45). Invalid time: %s", endTime)
+            );
+        }
+    }
+
     private void validateTimeRange(String startTime, String endTime) {
         LocalTime start = LocalTime.parse(startTime);
         LocalTime end = LocalTime.parse(endTime);
 
-        // Check if start time is before 06:00 or end time is after 22:00
-        if (start.isBefore(DAY_SHIFT_START) || end.isAfter(DAY_SHIFT_END)) {
-            throw new IllegalArgumentException(
-                "Chỉ được làm OT trong khung giờ 06:00-22:00 (ca ngày)"
-            );
-        }
-
         // Check if end time is after start time
         if (!end.isAfter(start)) {
             throw new IllegalArgumentException(
-                "Giờ kết thúc phải sau giờ bắt đầu"
+                "End time must be after start time"
             );
+        }
+
+        // General time range: 06:00-22:00
+        if (start.isBefore(DAY_SHIFT_START) || end.isAfter(DAY_SHIFT_END)) {
+            throw new IllegalArgumentException(
+                "OT hours must be within 06:00-22:00 time range"
+            );
+        }
+    }
+
+    /**
+     * Validate weekday OT time restrictions
+     * Weekday OT: 19:00-22:00, max 2 hours
+     */
+    private void validateWeekdayOTTime(String otDate, String startTime, String endTime, Double otHours) {
+        LocalDate date = LocalDate.parse(otDate);
+        java.time.DayOfWeek dayOfWeek = date.getDayOfWeek();
+
+        // Check if it's a weekday (Monday-Friday)
+        boolean isWeekday = dayOfWeek.getValue() >= 1 && dayOfWeek.getValue() <= 5;
+
+        if (isWeekday) {
+            LocalTime start = LocalTime.parse(startTime);
+            LocalTime end = LocalTime.parse(endTime);
+            LocalTime weekdayOTStart = LocalTime.of(19, 0); // 19:00
+            LocalTime weekdayOTEnd = LocalTime.of(22, 0);   // 22:00
+
+            // Weekday OT must be between 19:00-22:00
+            if (start.isBefore(weekdayOTStart)) {
+                throw new IllegalArgumentException(
+                    "Weekday OT can only start from 19:00 onwards. Your start time: " + startTime
+                );
+            }
+
+            if (end.isAfter(weekdayOTEnd)) {
+                throw new IllegalArgumentException(
+                    "Weekday OT must end by 22:00. Your end time: " + endTime
+                );
+            }
+
+            // Weekday OT maximum 2 hours
+            if (otHours > 2.0) {
+                throw new IllegalArgumentException(
+                    String.format("Weekday OT is limited to 2 hours maximum. You requested: %.1f hours", otHours)
+                );
+            }
         }
     }
 
@@ -861,24 +937,24 @@ public class OTRequestService {
      * Check if OT request conflicts with approved leave requests
      * OT cannot be created on dates when employee has approved leave
      *
+     * Half-day leave rules (Requirements: 5.8, 5.9, 5.10, 4.6):
+     * - Morning half-day (8:00-12:00): Allow OT in afternoon/evening
+     * - Afternoon half-day (13:00-17:00): Allow OT after 17:00
+     * - Full-day leave: Block all OT
+     *
      * @param userId User ID
      * @param otDate OT date (yyyy-MM-dd format)
+     * @param startTime OT start time (HH:mm format)
+     * @param endTime OT end time (HH:mm format)
      * @throws IllegalArgumentException if conflict detected
      */
-    private void checkConflictWithLeave(Long userId, String otDate) {
+    private void checkConflictWithLeave(Long userId, String otDate, String startTime, String endTime) {
         try {
             LocalDate date = LocalDate.parse(otDate);
-            LocalDateTime startDateTime = date.atStartOfDay();
-            LocalDateTime endDateTime = date.atTime(23, 59, 59);
+            LocalTime otStart = LocalTime.parse(startTime);
+            LocalTime otEnd = LocalTime.parse(endTime);
 
-            // Query APPROVED leave requests that overlap with OT date
-            List<Request> leaveRequests = requestDao.findOTRequestsByUserIdAndDateRange(
-                userId, startDateTime, endDateTime
-            );
-
-            // Check if any leave requests found
-            // Note: findOTRequestsByUserIdAndDateRange is misnamed - it actually finds leave requests
-            // We need to filter for leave requests, not OT requests
+            // Get all requests for user
             List<Request> allRequests = requestDao.findByUserId(userId);
 
             for (Request request : allRequests) {
@@ -894,11 +970,66 @@ public class OTRequestService {
                 }
 
                 // Parse leave date range
-                LocalDate leaveStart = LocalDate.parse(leaveDetail.getStartDate());
-                LocalDate leaveEnd = LocalDate.parse(leaveDetail.getEndDate());
+                LocalDate leaveStart = LocalDate.parse(leaveDetail.getStartDate().substring(0, 10));
+                LocalDate leaveEnd = LocalDate.parse(leaveDetail.getEndDate().substring(0, 10));
 
                 // Check if OT date falls within leave period
-                if (!date.isBefore(leaveStart) && !date.isAfter(leaveEnd)) {
+                if (date.isBefore(leaveStart) || date.isAfter(leaveEnd)) {
+                    continue; // OT date is outside leave period
+                }
+
+                // Check if it's a half-day leave
+                Boolean isHalfDay = leaveDetail.getIsHalfDay();
+                String halfDayPeriod = leaveDetail.getHalfDayPeriod();
+
+                if (isHalfDay != null && isHalfDay && halfDayPeriod != null) {
+                    // Half-day leave conflict checking
+                    if ("AM".equals(halfDayPeriod)) {
+                        // Morning half-day (8:00-12:00)
+                        // Block OT if it overlaps with morning period
+                        LocalTime morningStart = LocalTime.of(8, 0);
+                        LocalTime morningEnd = LocalTime.of(12, 0);
+
+                        // Check if OT overlaps with morning period: start1 < end2 AND start2 < end1
+                        if (otStart.isBefore(morningEnd) && morningStart.isBefore(otEnd)) {
+                            logger.warning(String.format("OT conflicts with morning half-day leave: userId=%d, date=%s, otTime=%s-%s, leaveType=%s",
+                                          userId, otDate, startTime, endTime, leaveDetail.getLeaveTypeName()));
+                            throw new IllegalArgumentException(
+                                String.format("Không thể tạo OT trong khung giờ %s-%s vào ngày %s! " +
+                                    "Bạn đã có đơn nghỉ phép buổi sáng (8:00-12:00) được duyệt (%s). " +
+                                    "Bạn chỉ có thể tạo OT sau 12:00.",
+                                    startTime, endTime, otDate, leaveDetail.getLeaveTypeName())
+                            );
+                        }
+                        // OT is allowed if it's after 12:00 (afternoon/evening)
+                        logger.fine(String.format("OT allowed after morning half-day leave: userId=%d, date=%s, otTime=%s-%s",
+                                   userId, otDate, startTime, endTime));
+
+                    } else if ("PM".equals(halfDayPeriod)) {
+                        // Afternoon half-day (13:00-17:00)
+                        // Block OT if it overlaps with afternoon period
+                        LocalTime afternoonStart = LocalTime.of(13, 0);
+                        LocalTime afternoonEnd = LocalTime.of(17, 0);
+
+                        // Check if OT overlaps with afternoon period: start1 < end2 AND start2 < end1
+                        if (otStart.isBefore(afternoonEnd) && afternoonStart.isBefore(otEnd)) {
+                            logger.warning(String.format("OT conflicts with afternoon half-day leave: userId=%d, date=%s, otTime=%s-%s, leaveType=%s",
+                                          userId, otDate, startTime, endTime, leaveDetail.getLeaveTypeName()));
+                            throw new IllegalArgumentException(
+                                String.format("Không thể tạo OT trong khung giờ %s-%s vào ngày %s! " +
+                                    "Bạn đã có đơn nghỉ phép buổi chiều (13:00-17:00) được duyệt (%s). " +
+                                    "Bạn chỉ có thể tạo OT sau 17:00.",
+                                    startTime, endTime, otDate, leaveDetail.getLeaveTypeName())
+                            );
+                        }
+                        // OT is allowed if it's after 17:00
+                        logger.fine(String.format("OT allowed after afternoon half-day leave: userId=%d, date=%s, otTime=%s-%s",
+                                   userId, otDate, startTime, endTime));
+                    }
+                } else {
+                    // Full-day leave - block all OT
+                    logger.warning(String.format("OT conflicts with full-day leave: userId=%d, date=%s, leaveType=%s, leaveDates=%s to %s",
+                                  userId, otDate, leaveDetail.getLeaveTypeName(), leaveDetail.getStartDate(), leaveDetail.getEndDate()));
                     throw new IllegalArgumentException(
                         String.format("Không thể tạo OT vào ngày %s! Bạn đã có đơn nghỉ phép được duyệt " +
                             "(%s) từ %s đến %s.",
@@ -908,10 +1039,14 @@ public class OTRequestService {
                 }
             }
 
+            logger.fine(String.format("No leave conflict found for OT: userId=%d, date=%s, time=%s-%s",
+                       userId, otDate, startTime, endTime));
+
         } catch (IllegalArgumentException e) {
             throw e; // Re-throw validation errors
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error checking conflict with leave for user: " + userId, e);
+            logger.log(Level.SEVERE, String.format("Error checking conflict with leave: userId=%d, date=%s",
+                      userId, otDate), e);
             throw new RuntimeException("Error checking conflict with leave", e);
         }
     }

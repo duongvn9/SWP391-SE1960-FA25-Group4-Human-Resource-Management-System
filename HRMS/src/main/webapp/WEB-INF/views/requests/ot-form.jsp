@@ -1,6 +1,25 @@
 <%@ page contentType="text/html; charset=UTF-8" %>
     <%@ taglib uri="jakarta.tags.core" prefix="c" %>
         <%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
+            <%
+                // Retrieve form data from session (if exists from previous error)
+                String savedOtDate = (String) session.getAttribute("formData_otDate");
+                String savedStartTime = (String) session.getAttribute("formData_startTime");
+                String savedEndTime = (String) session.getAttribute("formData_endTime");
+                String savedReason = (String) session.getAttribute("formData_reason");
+
+                // Clear form data from session after retrieving
+                session.removeAttribute("formData_otDate");
+                session.removeAttribute("formData_startTime");
+                session.removeAttribute("formData_endTime");
+                session.removeAttribute("formData_reason");
+
+                // Make available to JSTL
+                pageContext.setAttribute("savedOtDate", savedOtDate);
+                pageContext.setAttribute("savedStartTime", savedStartTime);
+                pageContext.setAttribute("savedEndTime", savedEndTime);
+                pageContext.setAttribute("savedReason", savedReason);
+            %>
             <!DOCTYPE html>
             <html lang="en">
 
@@ -297,7 +316,8 @@
                                                 <i class="fas fa-calendar-day"></i> OT Date
                                                 <span class="text-danger">*</span>
                                             </label>
-                                            <input type="date" class="form-control" id="otDate" name="otDate" required>
+                                            <input type="date" class="form-control" id="otDate" name="otDate"
+                                                value="${not empty savedOtDate ? savedOtDate : ''}" required>
                                             <div class="form-text">Select the date you want to work overtime</div>
                                         </div>
 
@@ -340,28 +360,95 @@
 
                                     <!-- Time Range -->
                                     <div class="row g-3">
+                                        <!-- Start Time -->
                                         <div class="col-md-6">
-                                            <label for="startTime" class="form-label">
+                                            <label class="form-label">
                                                 <i class="fas fa-clock"></i> Start Time
                                                 <span class="text-danger">*</span>
                                             </label>
-                                            <input type="time" class="form-control" id="startTime" name="startTime"
-                                                required>
+                                            <div class="row g-2">
+                                                <div class="col-6">
+                                                    <select class="form-select" id="startHour" required>
+                                                        <option value="">Hour</option>
+                                                        <option value="06">06</option>
+                                                        <option value="07">07</option>
+                                                        <option value="08">08</option>
+                                                        <option value="09">09</option>
+                                                        <option value="10">10</option>
+                                                        <option value="11">11</option>
+                                                        <option value="12">12</option>
+                                                        <option value="13">13</option>
+                                                        <option value="14">14</option>
+                                                        <option value="15">15</option>
+                                                        <option value="16">16</option>
+                                                        <option value="17">17</option>
+                                                        <option value="18">18</option>
+                                                        <option value="19">19</option>
+                                                        <option value="20">20</option>
+                                                        <option value="21">21</option>
+                                                        <option value="22">22</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-6">
+                                                    <select class="form-select" id="startMinute" required>
+                                                        <option value="">Minute</option>
+                                                        <option value="00">00</option>
+                                                        <option value="15">15</option>
+                                                        <option value="30">30</option>
+                                                        <option value="45">45</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <input type="hidden" id="startTime" name="startTime" required>
                                             <div class="form-text">
                                                 <i class="fas fa-info-circle"></i>
-                                                Time range: 06:00 - 22:00 (day shift only)
+                                                Time: 06:00 - 22:00. <strong>Weekday OT: 19:00-22:00 (max 2h)</strong>
                                             </div>
                                         </div>
+
+                                        <!-- End Time -->
                                         <div class="col-md-6">
-                                            <label for="endTime" class="form-label">
+                                            <label class="form-label">
                                                 <i class="fas fa-clock"></i> End Time
                                                 <span class="text-danger">*</span>
                                             </label>
-                                            <input type="time" class="form-control" id="endTime" name="endTime"
-                                                required>
+                                            <div class="row g-2">
+                                                <div class="col-6">
+                                                    <select class="form-select" id="endHour" required>
+                                                        <option value="">Hour</option>
+                                                        <option value="06">06</option>
+                                                        <option value="07">07</option>
+                                                        <option value="08">08</option>
+                                                        <option value="09">09</option>
+                                                        <option value="10">10</option>
+                                                        <option value="11">11</option>
+                                                        <option value="12">12</option>
+                                                        <option value="13">13</option>
+                                                        <option value="14">14</option>
+                                                        <option value="15">15</option>
+                                                        <option value="16">16</option>
+                                                        <option value="17">17</option>
+                                                        <option value="18">18</option>
+                                                        <option value="19">19</option>
+                                                        <option value="20">20</option>
+                                                        <option value="21">21</option>
+                                                        <option value="22">22</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-6">
+                                                    <select class="form-select" id="endMinute" required>
+                                                        <option value="">Minute</option>
+                                                        <option value="00">00</option>
+                                                        <option value="15">15</option>
+                                                        <option value="30">30</option>
+                                                        <option value="45">45</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <input type="hidden" id="endTime" name="endTime" required>
                                             <div class="form-text">
                                                 <i class="fas fa-info-circle"></i>
-                                                Time range: 06:00 - 22:00 (day shift only)
+                                                Time: 06:00 - 22:00. <strong>Weekday OT: 19:00-22:00 (max 2h)</strong>
                                             </div>
                                         </div>
                                     </div>
@@ -391,9 +478,32 @@
                                         <textarea class="form-control" id="reason" name="reason" rows="5"
                                             maxlength="1000"
                                             placeholder="Please provide the reason for overtime work..."
-                                            required></textarea>
+                                            required>${not empty savedReason ? savedReason : ''}</textarea>
                                         <div class="char-counter">
                                             <span id="charCount">0</span>/1000 characters
+                                        </div>
+                                    </div>
+
+                                    <!-- File Upload (Optional) -->
+                                    <div class="mt-3">
+                                        <label for="attachment" class="form-label">
+                                            <i class="fas fa-paperclip"></i> Supporting Document
+                                            <span class="text-muted">(Optional)</span>
+                                        </label>
+                                        <div class="file-upload-wrapper">
+                                            <input type="file" class="form-control" id="attachment" name="attachment"
+                                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                                            <div class="form-text">
+                                                <i class="fas fa-info-circle"></i>
+                                                Accepted formats: PDF, DOC, DOCX, JPG, PNG (Max 5MB)
+                                            </div>
+                                            <div id="fileInfo" class="file-info d-none mt-2">
+                                                <i class="fas fa-file"></i>
+                                                <span id="fileName"></span>
+                                                <button type="button" class="btn-remove-file" id="removeFile">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -453,6 +563,67 @@
 }
     </script>
 
+    <script>
+        // Time dropdown handler
+        document.addEventListener('DOMContentLoaded', function() {
+            const startHour = document.getElementById('startHour');
+            const startMinute = document.getElementById('startMinute');
+            const startTime = document.getElementById('startTime');
+            const endHour = document.getElementById('endHour');
+            const endMinute = document.getElementById('endMinute');
+            const endTime = document.getElementById('endTime');
+
+            // Function to update hidden time input
+            function updateStartTime() {
+                if (startHour.value && startMinute.value) {
+                    startTime.value = startHour.value + ':' + startMinute.value;
+                    // Trigger change event for OT hours calculation
+                    startTime.dispatchEvent(new Event('change'));
+                } else {
+                    startTime.value = '';
+                }
+            }
+
+            function updateEndTime() {
+                if (endHour.value && endMinute.value) {
+                    endTime.value = endHour.value + ':' + endMinute.value;
+                    // Trigger change event for OT hours calculation
+                    endTime.dispatchEvent(new Event('change'));
+                } else {
+                    endTime.value = '';
+                }
+            }
+
+            // Add event listeners
+            startHour.addEventListener('change', updateStartTime);
+            startMinute.addEventListener('change', updateStartTime);
+            endHour.addEventListener('change', updateEndTime);
+            endMinute.addEventListener('change', updateEndTime);
+
+            // Restore saved values if exists
+            const savedStartTime = '${savedStartTime}';
+            const savedEndTime = '${savedEndTime}';
+
+            if (savedStartTime) {
+                const parts = savedStartTime.split(':');
+                if (parts.length >= 2) {
+                    startHour.value = parts[0];
+                    startMinute.value = parts[1];
+                    updateStartTime();
+                }
+            }
+
+            if (savedEndTime) {
+                const parts = savedEndTime.split(':');
+                if (parts.length >= 2) {
+                    endHour.value = parts[0];
+                    endMinute.value = parts[1];
+                    updateEndTime();
+                }
+            }
+        });
+    </script>
+
                 <!-- Form JavaScript -->
                 <script src="${pageContext.request.contextPath}/assets/js/ot-form.js"></script>
 
@@ -476,5 +647,47 @@
                         icon.classList.remove('fa-eye');
                         icon.classList.add('fa-eye-slash');
                     }
+                }
+
+                // File upload handler
+                const attachmentInput = document.getElementById('attachment');
+                const fileInfo = document.getElementById('fileInfo');
+                const fileName = document.getElementById('fileName');
+                const removeFileBtn = document.getElementById('removeFile');
+
+                if (attachmentInput) {
+                    attachmentInput.addEventListener('change', function(e) {
+                        const file = e.target.files[0];
+                        if (file) {
+                            // Check file size (5MB max)
+                            if (file.size > 5 * 1024 * 1024) {
+                                alert('File size must not exceed 5MB');
+                                this.value = '';
+                                return;
+                            }
+
+                            // Show file info
+                            fileName.textContent = file.name;
+                            fileInfo.classList.remove('d-none');
+                        }
+                    });
+                }
+
+                if (removeFileBtn) {
+                    removeFileBtn.addEventListener('click', function() {
+                        attachmentInput.value = '';
+                        fileInfo.classList.add('d-none');
+                        fileName.textContent = '';
+                    });
+                }
+
+                // Character counter for reason
+                const reasonTextarea = document.getElementById('reason');
+                const charCount = document.getElementById('charCount');
+
+                if (reasonTextarea && charCount) {
+                    reasonTextarea.addEventListener('input', function() {
+                        charCount.textContent = this.value.length;
+                    });
                 }
             </script>

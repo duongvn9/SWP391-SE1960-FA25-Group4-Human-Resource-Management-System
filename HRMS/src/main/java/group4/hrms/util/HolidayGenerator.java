@@ -104,11 +104,9 @@ public class HolidayGenerator {
         addHolidayWithCompensatory(holidays, calendar,
             LocalDate.of(year, 5, 1), "Ngày Quốc tế Lao động");
 
-        // National Day (Sep 2-3, 2 days)
+        // National Day (Sep 2)
         addHolidayWithCompensatory(holidays, calendar,
             LocalDate.of(year, 9, 2), "Quốc khánh (Ngày 1)");
-        addHolidayWithCompensatory(holidays, calendar,
-            LocalDate.of(year, 9, 3), "Quốc khánh (Ngày 2)");
 
         return holidays;
     }
@@ -176,6 +174,8 @@ public class HolidayGenerator {
         holiday.setCalendarId(calendar.getId());
         holiday.setDateHoliday(date);
         holiday.setName(name);
+        holiday.setIsSubstitute(false);  // Original holiday
+        holiday.setOriginalHolidayDate(null);  // No original date for original holidays
         holidays.add(holiday);
 
         // Check if auto_compensatory is enabled
@@ -211,6 +211,8 @@ public class HolidayGenerator {
             compensatory.setDateHoliday(finalCompensatoryDate);
             compensatory.setName("Nghỉ bù " + name + " (rơi vào " +
                 (dayOfWeek == DayOfWeek.SATURDAY ? "T7" : "CN") + ")");
+            compensatory.setIsSubstitute(true);  // Mark as substitute day
+            compensatory.setOriginalHolidayDate(date);  // Link to original holiday
             holidays.add(compensatory);
 
             String availabilityNote = alreadyExists ? " (next available day)" : "";

@@ -54,6 +54,45 @@ SET @sql = IF(@col_exists = 0,
     'SELECT ''updated_at exists'' AS msg');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
+-- ==================== ADD COLUMNS TO holidays TABLE ====================
+-- Support for BR-OT-02: Distinguish original holidays (300% OT) vs substitute days (200% OT)
+
+SET @tablename = 'holidays';
+
+-- Add is_substitute (TRUE if this is a compensatory/substitute day)
+SET @col_exists = (SELECT COUNT(*) FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = @dbname AND TABLE_NAME = @tablename AND COLUMN_NAME = 'is_substitute');
+SET @sql = IF(@col_exists = 0,
+    'ALTER TABLE holidays ADD COLUMN is_substitute BOOLEAN DEFAULT FALSE COMMENT ''TRUE if this is a compensatory/substitute day (200% OT)'' AFTER name',
+    'SELECT ''is_substitute exists'' AS msg');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- Add original_holiday_date (link to original holiday if this is a substitute)
+SET @col_exists = (SELECT COUNT(*) FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = @dbname AND TABLE_NAME = @tablename AND COLUMN_NAME = 'original_holiday_date');
+SET @sql = IF(@col_exists = 0,
+    'ALTER TABLE holidays ADD COLUMN original_holiday_date DATE NULL COMMENT ''Original holiday date if this is a substitute day'' AFTER is_substitute',
+    'SELECT ''original_holiday_date exists'' AS msg');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- Add indexes for better query performance
+SET @index_exists = (SELECT COUNT(*) FROM information_schema.STATISTICS
+    WHERE TABLE_SCHEMA = @dbname AND TABLE_NAME = 'holidays' AND INDEX_NAME = 'idx_holidays_is_substitute');
+SET @sql = IF(@index_exists = 0,
+    'CREATE INDEX idx_holidays_is_substitute ON holidays(is_substitute)',
+    'SELECT ''idx_holidays_is_substitute exists'' AS msg');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @index_exists = (SELECT COUNT(*) FROM information_schema.STATISTICS
+    WHERE TABLE_SCHEMA = @dbname AND TABLE_NAME = 'holidays' AND INDEX_NAME = 'idx_holidays_original_date');
+SET @sql = IF(@index_exists = 0,
+    'CREATE INDEX idx_holidays_original_date ON holidays(original_holiday_date)',
+    'SELECT ''idx_holidays_original_date exists'' AS msg');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- Update existing holidays to mark as original (not substitute)
+UPDATE holidays SET is_substitute = FALSE WHERE is_substitute IS NULL;
+
 -- ==================== VERIFICATION ====================
 
 SELECT '✓ Setup completed!' AS status;
@@ -83,6 +122,43 @@ SELECT
     END as calendar_status
 FROM holiday_calendar;
 
+-- ==================== BUSINESS RULES REFERENCE ====================
+
+SELECT '=== OT MULTIPLIERS (BR-OT-01, BR-OT-02) ===' as info;
+
+SELECT
+    'WEEKDAY' as ot_type,
+    '150%' as multiplier,
+    'Monday - Friday (regular working days)' as applies_to,
+    'OTRequestDetail.otType = "WEEKDAY"' as code_value
+UNION ALL
+SELECT
+    'WEEKEND' as ot_type,
+    '200%' as multiplier,
+    'Saturday, Sunday (weekly rest days)' as applies_to,
+    'OTRequestDetail.otType = "WEEKEND"' as code_value
+UNION ALL
+SELECT
+    'HOLIDAY' as ot_type,
+    '300%' as multiplier,
+    'Original public holidays (Tet, National Day, etc.)' as applies_to,
+    'OTRequestDetail.otType = "HOLIDAY"' as code_value
+UNION ALL
+SELECT
+    'COMPENSATORY' as ot_type,
+    '200%' as multiplier,
+    'Substitute days (when holiday falls on weekend)' as applies_to,
+    'OTRequestDetail.otType = "COMPENSATORY"' as code_value;
+
+SELECT '=== IMPORTANT: BR-OT-02 ===' as info;
+
+SELECT
+    'Substitute Day ≠ Public Holiday' as rule,
+    'When holiday falls on weekend, substitute day is granted on next working day' as explanation,
+    'Substitute day OT = 200% (weekly rest day rate), NOT 300% (holiday rate)' as key_point,
+    'holidays.is_substitute = TRUE for substitute days' as database_field,
+    'Holiday.getOTMultiplier() returns 2.0 for substitute, 3.0 for original' as code_method;
+
 -- ==================== NEXT STEPS ====================
 
 SELECT
@@ -90,7 +166,9 @@ SELECT
     '1. Call Java: generator.generateHolidaysForYear(2025);' as step_1,
     '2. Calendar will AUTO-CREATE if not exists' as step_2,
     '3. Holidays will AUTO-GENERATE using lunar library' as step_3,
-    '4. NO manual updates needed!' as step_4;
+    '4. Substitute days AUTO-MARKED with is_substitute=TRUE' as step_4,
+    '5. Use OTCalculationService.determineOTType(date) to get OT type' as step_5,
+    '6. NO manual updates needed!' as step_6;
 
 -- ==================== HOW IT WORKS ====================
 --
