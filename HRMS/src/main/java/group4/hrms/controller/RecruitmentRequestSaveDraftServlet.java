@@ -1,26 +1,24 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
 package group4.hrms.controller;
 
 import group4.hrms.dao.RequestDao;
 import group4.hrms.model.Request;
+import group4.hrms.dto.RecruitmentDetailsDto; // <<< Cần thư viện Gson/Jackson
 import group4.hrms.util.FileUploadUtil;
-import java.io.IOException;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import java.io.IOException;
 import java.time.LocalDateTime;
 
 /**
- *
- * @author ADMIN
+ * Servlet xử lý lưu bản nháp Recruitment Request (chỉ cho MANAGER)
  */
-@WebServlet(name = "RecruitmentRequestSaveDraftServlet", urlPatterns = {"/recruitment/save-draft"})
+@WebServlet(name = "RecruitmentRequestSaveDraftServlet", urlPatterns = {"/requests/recruitment/save-draft"})
+@MultipartConfig // Bắt buộc nếu form có enctype="multipart/form-data"
 public class RecruitmentRequestSaveDraftServlet extends HttpServlet {
 
     private final RequestDao requestDao = new RequestDao();
@@ -30,38 +28,51 @@ public class RecruitmentRequestSaveDraftServlet extends HttpServlet {
             throws ServletException, IOException {
 
         HttpSession session = req.getSession(false);
-        if (session == null || session.getAttribute("userId") == null) {
-            res.sendRedirect(req.getContextPath() + "/login");
-            return;
-        }
+        // Lấy ID Account và User ID từ Session (GIẢ ĐỊNH CHÚNG ĐƯỢC LƯU NHƯ THẾ NÀY)
+        Long accountId = (Long) session.getAttribute("accountId"); 
+        Long userId = (Long) session.getAttribute("userId"); 
 
-        // Kiểm tra role
-        String role = (String) session.getAttribute("userRole");
-        if (role == null || !role.equalsIgnoreCase("MANAGER")) {
+        if (accountId == null || userId == null || session.getAttribute("userRole") == null || 
+            !session.getAttribute("userRole").toString().equalsIgnoreCase("MANAGER")) {
             res.sendRedirect(req.getContextPath() + "/access-denied.jsp");
             return;
         }
 
-        Long userId = (Long) session.getAttribute("userId");
+        try {
+            // 1. UPLOAD FILE
+            String attachmentPath = FileUploadUtil.uploadFile(req, "attachment", "uploads/recruitments");
+            
+            // 2. TẠO VÀ GÁN DỮ LIỆU VÀO OBJECT CHI TIẾT (RecruitmentDetailsDto)
+            RecruitmentDetailsDto details = new RecruitmentDetailsDto();
+            details.setPositionName(req.getParameter("positionName"));
+            details.setQuantity(Integer.parseInt(req.getParameter("quantity")));
+            details.setJobSummary(req.getParameter("jobSummary")); // Dùng cho trường Description
+            details.setAttachmentPath(attachmentPath); 
+            // Gán các trường JSON khác: positionCode, jobLevel, type, recruitmentReason, budgetSalaryRange...
+            details.setPositionCode(req.getParameter("positionCode")); 
+            details.setJobLevel(Integer.parseInt(req.getParameter("jobLevel"))); 
 
-        Request request = new Request();
-        request.setUserId(userId);
-        request.setRequestTypeId(2L);
-        request.setTitle(req.getParameter("jobTitle"));
-        request.setDescription(req.getParameter("description"));
-        request.setStatus("DRAFT");
-        request.setPriority("NORMAL");
-        request.setCreatedAt(LocalDateTime.now());
-        request.setUpdatedAt(LocalDateTime.now());
+            // 3. TẠO REQUEST CHÍNH (Sử dụng trường Active)
+            Request request = new Request();
+            request.setCreatedByAccountId(accountId); 
+            request.setCreatedByUserId(userId); 
+            request.setRequestTypeId(2L); // Recruitment Request
+            request.setTitle(req.getParameter("jobTitle"));
+            
+            // LƯU CHI TIẾT VÀO JSON
+            request.setRecruitmentDetail(details); 
+            
+            request.setStatus("DRAFT");
+            request.setCreatedAt(LocalDateTime.now());
+            request.setUpdatedAt(LocalDateTime.now());
+            
+            requestDao.save(request);
 
-        String attachmentPath = FileUploadUtil.uploadFile(req, "attachment", "uploads/recruitments");
-        if (attachmentPath != null && !attachmentPath.isEmpty()) {
-            request.setAttachmentPath(attachmentPath);
+            res.sendRedirect(req.getContextPath() + "/recruitment/drafts?success=draft-saved");
+
+        } catch (Exception e) {
+            System.err.println("Error saving draft: " + e.getMessage());
+            res.sendRedirect(req.getContextPath() + "/recruitment/drafts?error=draft-failed");
         }
-
-        requestDao.save(request);
-
-        res.sendRedirect(req.getContextPath() + "/recruitment/drafts?success=draft-saved");
     }
-
 }
