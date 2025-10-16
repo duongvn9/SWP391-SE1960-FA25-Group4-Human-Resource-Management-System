@@ -144,6 +144,14 @@ public class ProfileController extends HttpServlet {
                 currentProfile.getUserId(), username);
             logger.debug("Update data: {}", dto);
             
+            // Alt Flow 1: Check if there are any changes
+            if (!hasChanges(currentProfile, dto)) {
+                logger.info("No changes detected for user_id: {}", currentProfile.getUserId());
+                req.getSession().setAttribute("successMessage", "No information has been changed.");
+                resp.sendRedirect(req.getContextPath() + "/user-profile/edit");
+                return;
+            }
+            
             // Validate DTO
             if (!dto.validate()) {
                 logger.warn("Validation failed: {}", dto.getErrors());
@@ -276,5 +284,46 @@ public class ProfileController extends HttpServlet {
         }
         
         return dto;
+    }
+    
+    /**
+     * Check if there are any changes between current profile and DTO
+     * Alt Flow 1: Detect no changes
+     */
+    private boolean hasChanges(UserProfile current, UserProfileDto dto) {
+        // Compare all editable fields
+        if (!equals(current.getFullName(), dto.getFullName())) return true;
+        if (!equals(current.getPhone(), dto.getPhone())) return true;
+        if (!equals(current.getGender(), dto.getGender())) return true;
+        if (!equals(current.getHometown(), dto.getHometown())) return true;
+        if (!equals(current.getCccd(), dto.getCccd())) return true;
+        if (!equals(current.getCccdIssuedPlace(), dto.getCccdIssuedPlace())) return true;
+        if (!equals(current.getAddressLine1(), dto.getAddressLine1())) return true;
+        if (!equals(current.getAddressLine2(), dto.getAddressLine2())) return true;
+        if (!equals(current.getCity(), dto.getCity())) return true;
+        if (!equals(current.getState(), dto.getState())) return true;
+        if (!equals(current.getPostalCode(), dto.getPostalCode())) return true;
+        if (!equals(current.getCountry(), dto.getCountry())) return true;
+        
+        // Compare dates
+        if (!equals(current.getDob(), dto.getDob())) return true;
+        if (!equals(current.getCccdIssuedDate(), dto.getCccdIssuedDate())) return true;
+        
+        return false;
+    }
+    
+    /**
+     * Helper method to compare two objects (handles null)
+     */
+    private boolean equals(Object obj1, Object obj2) {
+        if (obj1 == null && obj2 == null) return true;
+        if (obj1 == null || obj2 == null) return false;
+        
+        // Trim strings before comparison
+        if (obj1 instanceof String && obj2 instanceof String) {
+            return ((String) obj1).trim().equals(((String) obj2).trim());
+        }
+        
+        return obj1.equals(obj2);
     }
 }

@@ -309,16 +309,51 @@
                 </div>
             </div>
 
-            <!-- Update button centered -->
+            <!-- Update and Cancel buttons centered -->
             <div class="text-center mt-4">
                 <button type="submit" class="btn btn-primary btn-update">
                     <i class="fa-solid fa-floppy-disk me-2"></i>Save
+                </button>
+                <button type="button" class="btn btn-secondary btn-update ms-3" onclick="confirmCancel()">
+                    <i class="fa-solid fa-xmark me-2"></i>Cancel
                 </button>
             </div>
         </form>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Alt Flow 2: Cancel with confirmation
+        function confirmCancel() {
+            if (confirm('Are you sure you want to cancel changes?')) {
+                window.location.href = '${pageContext.request.contextPath}/user-profile';
+            }
+        }
+        
+        // Track form changes to warn user
+        let formChanged = false;
+        const form = document.querySelector('form');
+        const inputs = form.querySelectorAll('input:not([readonly]), textarea:not([readonly])');
+        
+        inputs.forEach(input => {
+            input.addEventListener('change', () => {
+                formChanged = true;
+            });
+        });
+        
+        // Warn before leaving page if form has changes
+        window.addEventListener('beforeunload', (e) => {
+            if (formChanged) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
+        
+        // Don't warn when submitting form
+        form.addEventListener('submit', () => {
+            formChanged = false;
+        });
+    </script>
 </body>
 
 </html>

@@ -177,69 +177,114 @@ public class UserProfileDto {
     }
     
     /**
-     * Validate all fields
+     * Validate all fields according to requirements
      */
     public boolean validate() {
         errors.clear();
         
-        // Validate full name
+        // 1. Validate Full Name (Required, max 50 chars, no special chars or numbers)
         if (fullName == null || fullName.trim().isEmpty()) {
             errors.add("Full name is required");
-        } else if (fullName.trim().length() < 2) {
-            errors.add("Full name must be at least 2 characters");
-        } else if (fullName.length() > 255) {
-            errors.add("Full name must not exceed 255 characters");
+        } else if (fullName.trim().length() > 50) {
+            errors.add("Full name must not exceed 50 characters");
+        } else if (!fullName.matches("^[a-zA-Z\\s]+$")) {
+            errors.add("Full name must not contain special characters or numbers");
         }
         
-        // Validate email
+        // 2. Validate Phone Number (Required, 10-11 digits)
+        if (phone == null || phone.trim().isEmpty()) {
+            errors.add("Phone number is required");
+        } else if (!phone.matches("^[0-9]{10,11}$")) {
+            errors.add("Phone number must be 10-11 digits");
+        }
+        
+        // 3. Validate Date of Birth (Required, must be <= current date and >= 01/01/1900)
+        if (dob == null) {
+            errors.add("Date of birth is required");
+        } else {
+            LocalDate minDate = LocalDate.of(1900, 1, 1);
+            LocalDate today = LocalDate.now();
+            if (dob.isAfter(today)) {
+                errors.add("Date of birth must not be in the future");
+            } else if (dob.isBefore(minDate)) {
+                errors.add("Date of birth must be after 01/01/1900");
+            }
+        }
+        
+        // 4. Validate Gender (Required)
+        if (gender == null || gender.trim().isEmpty()) {
+            errors.add("Gender is required");
+        } else if (!gender.equals("male") && !gender.equals("female") && !gender.equals("other")) {
+            errors.add("Invalid gender value");
+        }
+        
+        // 5. Validate Hometown (Optional, max 50 chars)
+        if (hometown != null && hometown.length() > 50) {
+            errors.add("Hometown must not exceed 50 characters");
+        }
+        
+        // 6. Validate CCCD (Required, 12 digits)
+        if (cccd == null || cccd.trim().isEmpty()) {
+            errors.add("Citizen ID (CCCD) is required");
+        } else if (!cccd.matches("^[0-9]{12}$")) {
+            errors.add("Citizen ID (CCCD) must be exactly 12 digits");
+        }
+        
+        // 7. Validate CCCD Issued Date (Required, must be <= current date)
+        if (cccdIssuedDate == null) {
+            errors.add("CCCD issued date is required");
+        } else if (cccdIssuedDate.isAfter(LocalDate.now())) {
+            errors.add("CCCD issued date must not be in the future");
+        }
+        
+        // 8. Validate CCCD Issued Place (Required, max 100 chars)
+        if (cccdIssuedPlace == null || cccdIssuedPlace.trim().isEmpty()) {
+            errors.add("CCCD issued place is required");
+        } else if (cccdIssuedPlace.length() > 100) {
+            errors.add("CCCD issued place must not exceed 100 characters");
+        }
+        
+        // 9. Validate Country (Required)
+        if (country == null || country.trim().isEmpty()) {
+            errors.add("Country is required");
+        }
+        
+        // 10. Validate Address Line 1 (Required, max 100 chars)
+        if (addressLine1 == null || addressLine1.trim().isEmpty()) {
+            errors.add("Address line 1 is required");
+        } else if (addressLine1.length() > 100) {
+            errors.add("Address line 1 must not exceed 100 characters");
+        }
+        
+        // 11. Validate Address Line 2 (Optional, max 100 chars)
+        if (addressLine2 != null && addressLine2.length() > 100) {
+            errors.add("Address line 2 must not exceed 100 characters");
+        }
+        
+        // 12. Validate City (Required, max 50 chars)
+        if (city == null || city.trim().isEmpty()) {
+            errors.add("City is required");
+        } else if (city.length() > 50) {
+            errors.add("City must not exceed 50 characters");
+        }
+        
+        // 13. Validate State (Optional, max 50 chars)
+        if (state != null && state.length() > 50) {
+            errors.add("State must not exceed 50 characters");
+        }
+        
+        // 14. Validate Postal Code (Optional, 5-10 digits)
+        if (postalCode != null && !postalCode.trim().isEmpty()) {
+            if (!postalCode.matches("^[0-9]{5,10}$")) {
+                errors.add("Postal code must be 5-10 digits");
+            }
+        }
+        
+        // 15. Validate Email (Required for system, but not editable by user)
         if (emailCompany == null || emailCompany.trim().isEmpty()) {
             errors.add("Email is required");
         } else if (!isValidEmail(emailCompany)) {
             errors.add("Invalid email format");
-        }
-        
-        // Validate CCCD (optional)
-        if (cccd != null && !cccd.trim().isEmpty()) {
-            if (!cccd.matches("\\d+")) {
-                errors.add("CCCD must contain only numbers");
-            } else if (cccd.length() != 9 && cccd.length() != 12) {
-                errors.add("CCCD must be 9 or 12 digits");
-            }
-        }
-        
-        // Validate phone (optional)
-        if (phone != null && !phone.trim().isEmpty()) {
-            if (!phone.matches("\\d+")) {
-                errors.add("Phone must contain only numbers");
-            } else if (phone.length() < 10) {
-                errors.add("Phone must be at least 10 digits");
-            } else if (phone.length() > 11) {
-                errors.add("Phone must not exceed 11 digits");
-            }
-        }
-        
-        // Validate gender (optional)
-        if (gender != null && !gender.trim().isEmpty()) {
-            if (!gender.equals("male") && !gender.equals("female") && !gender.equals("others")) {
-                errors.add("Invalid gender value");
-            }
-        }
-        
-        // Validate address fields length
-        if (addressLine1 != null && addressLine1.length() > 255) {
-            errors.add("Address line 1 must not exceed 255 characters");
-        }
-        if (addressLine2 != null && addressLine2.length() > 255) {
-            errors.add("Address line 2 must not exceed 255 characters");
-        }
-        if (city != null && city.length() > 100) {
-            errors.add("City must not exceed 100 characters");
-        }
-        if (country != null && country.length() > 100) {
-            errors.add("Country must not exceed 100 characters");
-        }
-        if (hometown != null && hometown.length() > 255) {
-            errors.add("Hometown must not exceed 255 characters");
         }
         
         return errors.isEmpty();
