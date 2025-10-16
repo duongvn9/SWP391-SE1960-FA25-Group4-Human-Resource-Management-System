@@ -210,13 +210,6 @@ public class RoleController extends HttpServlet {
             
             Role role = roleOpt.get();
             
-            // Cannot edit system roles
-            if (role.isSystemRole()) {
-                req.getSession().setAttribute("errorMessage", "Cannot edit system role");
-                resp.sendRedirect(req.getContextPath() + "/admin/roles");
-                return;
-            }
-            
             // Generate CSRF token
             String csrfToken = generateCsrfToken();
             req.getSession().setAttribute("_csrf_token", csrfToken);
@@ -380,11 +373,6 @@ public class RoleController extends HttpServlet {
             }
             
             Role role = roleOpt.get();
-            if (role.isSystemRole()) {
-                req.getSession().setAttribute("errorMessage", "Cannot delete system role");
-                resp.sendRedirect(req.getContextPath() + "/admin/roles");
-                return;
-            }
             
             logger.info("Deleting role ID {}: {}", id, role.getCode());
             

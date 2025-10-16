@@ -187,26 +187,14 @@
                                     </td>
                                     <td>
                                         <div class="action-buttons">
-                                            <c:choose>
-                                                <c:when test="${role.isSystem}">
-                                                    <button class="btn btn-sm btn-secondary" disabled>
-                                                        <i class="fa-solid fa-pen"></i> Edit
-                                                    </button>
-                                                    <button class="btn btn-sm btn-secondary" disabled>
-                                                        <i class="fa-solid fa-trash"></i> Delete
-                                                    </button>
-                                                </c:when>
-                                                <c:otherwise>
-                                                    <a href="${pageContext.request.contextPath}/admin/roles/edit?id=${role.id}" 
-                                                       class="btn btn-sm btn-primary">
-                                                        <i class="fa-solid fa-pen"></i> Edit
-                                                    </a>
-                                                    <button type="button" class="btn btn-sm btn-danger" 
-                                                            onclick="confirmDelete(${role.id}, '${role.name}')">
-                                                        <i class="fa-solid fa-trash"></i> Delete
-                                                    </button>
-                                                </c:otherwise>
-                                            </c:choose>
+                                            <a href="${pageContext.request.contextPath}/admin/roles/edit?id=${role.id}" 
+                                               class="btn btn-sm btn-primary">
+                                                <i class="fa-solid fa-pen"></i> Edit
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-danger" 
+                                                    onclick="confirmDelete(${role.id}, '${role.name}')">
+                                                <i class="fa-solid fa-trash"></i> Delete
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
