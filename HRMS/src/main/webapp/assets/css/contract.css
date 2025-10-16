@@ -45,7 +45,7 @@ body {
 
 /* Contract Page Wrapper */
 .contract-page-wrap {
-    max-width: 800px;
+    max-width: 1200px;
     margin: 3rem auto;
     padding: 0 2rem;
     flex: 1;
@@ -138,7 +138,7 @@ body {
 
 /* Contract Header Title */
 .contract-header-title {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     font-weight: 700;
     color: white;
     letter-spacing: 0.5px;
@@ -332,7 +332,7 @@ textarea[readonly] {
 
 /* Container for No Contract State */
 .container {
-    max-width: 800px;
+    max-width: 1200px;
     padding: 0 2rem;
 }
 

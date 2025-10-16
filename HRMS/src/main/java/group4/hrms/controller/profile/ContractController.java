@@ -153,7 +153,7 @@ public class ContractController extends HttpServlet {
     }
     
     /**
-     * Format contract type to Vietnamese
+     * Format contract type to English
      */
     private String formatContractType(String type) {
         if (type == null) {
@@ -161,15 +161,15 @@ public class ContractController extends HttpServlet {
         }
         
         return switch (type.toLowerCase()) {
-            case "indefinite" -> "Hợp đồng không xác định thời hạn";
-            case "fixed_term" -> "Hợp đồng xác định thời hạn";
-            case "probation" -> "Hợp đồng thử việc";
+            case "indefinite" -> "Indefinite Contract";
+            case "fixed_term" -> "Fixed-term Contract";
+            case "probation" -> "Probation Contract";
             default -> type;
         };
     }
     
     /**
-     * Get status display text in Vietnamese
+     * Get status display text in English
      */
     private String getStatusText(String status) {
         if (status == null) {
@@ -177,9 +177,9 @@ public class ContractController extends HttpServlet {
         }
         
         return switch (status.toLowerCase()) {
-            case "active" -> "Đang hoạt động";
-            case "expired" -> "Đã hết hạn";
-            case "terminated" -> "Đã chấm dứt";
+            case "active" -> "Active";
+            case "expired" -> "Expired";
+            case "terminated" -> "Terminated";
             default -> status;
         };
     }

@@ -47,79 +47,102 @@
             <c:choose>
                 <c:when test="${not empty contract}">
                     <div class="contract-card mx-auto mt-5 mb-5">
-                        <!-- Logo & Title Centered -->
+                        <!-- Title Centered -->
                         <div class="text-center mb-4">
-                            <i class="fa-solid fa-file-contract contract-logo-icon"></i>
                             <div class="contract-header-title mt-2">Employment Contract</div>
                         </div>
                         <form>
-                            <div class="mb-3">
-                                <label class="form-label">Contract ID</label>
-                                <input type="text" class="form-control" value="<c:out value='${contract.id}'/>" readonly>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">User ID</label>
-                                <input type="text" class="form-control" value="<c:out value='${contract.userId}'/>" readonly>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Contract Number</label>
-                                <input type="text" class="form-control" value="<c:out value='${contract.contractNo}'/>" readonly>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Contract Type</label>
-                                <input type="text" class="form-control" value="<c:out value='${contract.contractTypeDisplay}'/>" readonly>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Start Date</label>
-                                <input type="text" class="form-control" value="<c:out value='${contract.formattedStartDate}'/>" readonly>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">End Date</label>
-                                <input type="text" class="form-control" value="<c:out value='${contract.formattedEndDate}'/>" readonly>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Base Salary</label>
-                                <input type="text" class="form-control" value="<c:out value='${contract.formattedSalary}'/>" readonly>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Currency</label>
-                                <input type="text" class="form-control" value="<c:out value='${contract.currency}'/>" readonly>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Status</label>
-                                <div class="mt-2">
-                                    <span class="status-badge status-${contract.statusColor}">
-                                        <c:out value="${contract.statusDisplay}"/>
-                                    </span>
+                            <!-- Row 1: ID & User ID -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">ID</label>
+                                    <input type="text" class="form-control" value="<c:out value='${contract.id}'/>" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">User ID</label>
+                                    <input type="text" class="form-control" value="<c:out value='${contract.userId}'/>" readonly>
                                 </div>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">File Path</label>
-                                <input type="text" class="form-control" value="<c:out value='${contract.filePath}'/>" readonly>
+                            
+                            <!-- Row 2: Contract No & Contract Type -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Contract No</label>
+                                    <input type="text" class="form-control" value="<c:out value='${contract.contractNo}'/>" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Contract Type</label>
+                                    <input type="text" class="form-control" value="<c:out value='${contract.contractTypeDisplay}'/>" readonly>
+                                </div>
                             </div>
+                            
+                            <!-- Row 3: Start Date & End Date -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Start Date</label>
+                                    <input type="text" class="form-control" value="<c:out value='${contract.formattedStartDate}'/>" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">End Date</label>
+                                    <input type="text" class="form-control" value="<c:out value='${contract.formattedEndDate}'/>" readonly>
+                                </div>
+                            </div>
+                            
+                            <!-- Row 4: Base Salary & Currency -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Base Salary</label>
+                                    <input type="text" class="form-control" value="<c:out value='${contract.formattedSalary}'/>" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Currency</label>
+                                    <input type="text" class="form-control" value="<c:out value='${contract.currency}'/>" readonly>
+                                </div>
+                            </div>
+                            
+                            <!-- Row 5: Status & File Path -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Status</label>
+                                    <div class="mt-2">
+                                        <span class="status-badge status-${contract.statusColor}">
+                                            <c:out value="${contract.statusDisplay}"/>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">File Path</label>
+                                    <input type="text" class="form-control" value="<c:out value='${contract.filePath}'/>" readonly>
+                                </div>
+                            </div>
+                            
+                            <!-- Note - Full Width -->
                             <div class="mb-3">
                                 <label class="form-label">Note</label>
                                 <textarea class="form-control" rows="2" readonly><c:out value="${contract.note}"/></textarea>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">Created By (Account ID)</label>
-                                <input type="text" class="form-control" value="<c:out value='${contract.createdByAccountId}'/>" readonly>
+                            
+                            <!-- Row 6: Created By & Created At -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Created By Account ID</label>
+                                    <input type="text" class="form-control" value="<c:out value='${contract.createdByAccountId}'/>" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Created At</label>
+                                    <input type="text" class="form-control" value="<c:out value='${contract.formattedCreatedAt}'/>" readonly>
+                                </div>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">Created At</label>
-                                <input type="text" class="form-control" value="<c:out value='${contract.formattedCreatedAt}'/>" readonly>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Updated At</label>
-                                <input type="text" class="form-control" value="<c:out value='${contract.formattedUpdatedAt}'/>" readonly>
+                            
+                            <!-- Row 7: Updated At (single field) -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Updated At</label>
+                                    <input type="text" class="form-control" value="<c:out value='${contract.formattedUpdatedAt}'/>" readonly>
+                                </div>
                             </div>
                         </form>
-                        <!-- Back to Dashboard button at bottom -->
-                        <div class="text-center mt-5">
-                            <a href="${pageContext.request.contextPath}/dashboard" class="btn btn-outline-primary px-4">
-                                <i class="fa-solid fa-arrow-left-long me-1"></i> Back to Dashboard
-                            </a>
-                        </div>
+                        
                     </div>
                 </c:when>
                 <c:otherwise>
@@ -127,11 +150,6 @@
                         <div class="alert alert-info text-center" role="alert">
                             <i class="fas fa-info-circle me-2"></i>
                             <c:out value="${message != null ? message : 'Không tìm thấy hợp đồng hiện tại'}"/>
-                        </div>
-                        <div class="text-center mt-4">
-                            <a href="${pageContext.request.contextPath}/dashboard" class="btn btn-outline-primary px-4">
-                                <i class="fa-solid fa-arrow-left-long me-1"></i> Back to Dashboard
-                            </a>
                         </div>
                     </div>
                 </c:otherwise>
