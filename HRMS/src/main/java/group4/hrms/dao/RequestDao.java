@@ -634,8 +634,9 @@ public class RequestDao extends BaseDao<Request, Long> {
 
         // Date range filter using JSON extraction
         // Check if request date range overlaps with given date range
-        sql.append("AND JSON_UNQUOTE(JSON_EXTRACT(detail, '$.startDate')) <= ? ");
-        sql.append("AND JSON_UNQUOTE(JSON_EXTRACT(detail, '$.endDate')) >= ? ");
+        // Use DATE() function to extract date part only (handles both 'YYYY-MM-DD' and 'YYYY-MM-DDTHH:MM:SS' formats)
+        sql.append("AND DATE(JSON_UNQUOTE(JSON_EXTRACT(detail, '$.startDate'))) <= ? ");
+        sql.append("AND DATE(JSON_UNQUOTE(JSON_EXTRACT(detail, '$.endDate'))) >= ? ");
         sql.append("ORDER BY created_at DESC");
 
         try (Connection conn = DatabaseUtil.getConnection();
@@ -661,16 +662,21 @@ public class RequestDao extends BaseDao<Request, Long> {
             stmt.setString(paramIndex++, endDate.toLocalDate().toString());
             stmt.setString(paramIndex++, startDate.toLocalDate().toString());
 
-            logger.debug("Executing date range query with parameters: userId={}, statuses={}, excludeId={}, endDate={}, startDate={}",
+            logger.info("=== EXECUTING OVERLAP QUERY ===");
+            logger.info("SQL: " + sql.toString());
+            logger.info("Parameters: userId={}, statuses={}, excludeId={}, endDate={}, startDate={}",
                         userId, statuses, excludeRequestId, endDate.toLocalDate(), startDate.toLocalDate());
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    requests.add(mapResultSetToEntity(rs));
+                    Request req = mapResultSetToEntity(rs);
+                    requests.add(req);
+                    logger.info("Found overlapping request: id={}, status={}, detail={}",
+                               req.getId(), req.getStatus(), req.getDetailJson());
                 }
             }
 
-            logger.debug("Found {} requests in date range for userId: {}", requests.size(), userId);
+            logger.info("=== QUERY RESULT: Found {} requests ===", requests.size());
 
         } catch (SQLException e) {
             logger.error("Database error finding requests by userId and date range. UserId: {}, StartDate: {}, EndDate: {}, Statuses: {}, ExcludeId: {}. SQL State: {}, Error Code: {}",
@@ -852,5 +858,144 @@ public class RequestDao extends BaseDao<Request, Long> {
      */
     public List<Request> findPendingForHRM() {
         return findByTypeAndStatus(2L, "HR_APPROVED");
+    }
+
+    // ==================== Performance Optimized Methods ====================
+
+    /**
+     * Count approved leave days by user, leave type and year (optimized)
+     * Uses SQL aggregation instead of loading all requests into memory
+     *
+     * @param userId User ID
+     * @param leaveTypeCode Leave type code
+     * @param year Year to count
+     * @return Total days used
+     */
+    public double countApprovedLeaveDaysByUserAndTypeAndYear(Long userId, String leaveTypeCode, int year) {
+        logger.debug("Counting approved leave days: userId={}, leaveType={}, year={}", userId, leaveTypeCode, year);
+
+        String sql =
+            "SELECT COALESCE(SUM(CAST(JSON_UNQUOTE(JSON_EXTRACT(detail, '$.durationDays')) AS DECIMAL(10,2))), 0) as total_days " +
+            "FROM requests " +
+            "WHERE created_by_user_id = ? " +
+            "AND status = 'APPROVED' " +
+            "AND JSON_UNQUOTE(JSON_EXTRACT(detail, '$.leaveTypeCode')) = ? " +
+            "AND YEAR(STR_TO_DATE(JSON_UNQUOTE(JSON_EXTRACT(detail, '$.startDate')), '%Y-%m-%dT%H:%i:%s')) = ?";
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, userId);
+            stmt.setString(2, leaveTypeCode);
+            stmt.setInt(3, year);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    double totalDays = rs.getDouble("total_days");
+                    logger.debug("Counted {} approved leave days for userId={}, leaveType={}, year={}",
+                                totalDays, userId, leaveTypeCode, year);
+                    return totalDays;
+                }
+            }
+
+        } catch (SQLException e) {
+            logger.error("Database error counting approved leave days. UserId: {}, LeaveType: {}, Year: {}. SQL State: {}, Error Code: {}",
+                        userId, leaveTypeCode, year, e.getSQLState(), e.getErrorCode(), e);
+            // Return 0 on error to be safe
+            return 0;
+        }
+
+        return 0;
+    }
+
+    /**
+     * Count pending leave days by user, leave type and year (optimized)
+     * Uses SQL aggregation instead of loading all requests into memory
+     *
+     * @param userId User ID
+     * @param leaveTypeCode Leave type code
+     * @param year Year to count
+     * @return Total pending days
+     */
+    public double countPendingLeaveDaysByUserAndTypeAndYear(Long userId, String leaveTypeCode, int year) {
+        logger.debug("Counting pending leave days: userId={}, leaveType={}, year={}", userId, leaveTypeCode, year);
+
+        String sql =
+            "SELECT COALESCE(SUM(CAST(JSON_UNQUOTE(JSON_EXTRACT(detail, '$.durationDays')) AS DECIMAL(10,2))), 0) as total_days " +
+            "FROM requests " +
+            "WHERE created_by_user_id = ? " +
+            "AND status = 'PENDING' " +
+            "AND JSON_UNQUOTE(JSON_EXTRACT(detail, '$.leaveTypeCode')) = ? " +
+            "AND YEAR(STR_TO_DATE(JSON_UNQUOTE(JSON_EXTRACT(detail, '$.startDate')), '%Y-%m-%dT%H:%i:%s')) = ?";
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, userId);
+            stmt.setString(2, leaveTypeCode);
+            stmt.setInt(3, year);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    double totalDays = rs.getDouble("total_days");
+                    logger.debug("Counted {} pending leave days for userId={}, leaveType={}, year={}",
+                                totalDays, userId, leaveTypeCode, year);
+                    return totalDays;
+                }
+            }
+
+        } catch (SQLException e) {
+            logger.error("Database error counting pending leave days. UserId: {}, LeaveType: {}, Year: {}. SQL State: {}, Error Code: {}",
+                        userId, leaveTypeCode, year, e.getSQLState(), e.getErrorCode(), e);
+            // Return 0 on error to be safe
+            return 0;
+        }
+
+        return 0;
+    }
+
+    /**
+     * Check if user has any approved leave on specific date (optimized)
+     * Uses SQL query instead of loading all requests
+     *
+     * @param userId User ID
+     * @param date Date to check
+     * @return true if user has approved leave on this date
+     */
+    public boolean hasApprovedLeaveOnDate(Long userId, java.time.LocalDate date) {
+        logger.debug("Checking approved leave on date: userId={}, date={}", userId, date);
+
+        String sql =
+            "SELECT COUNT(*) as count " +
+            "FROM requests " +
+            "WHERE created_by_user_id = ? " +
+            "AND status = 'APPROVED' " +
+            "AND STR_TO_DATE(JSON_UNQUOTE(JSON_EXTRACT(detail, '$.startDate')), '%Y-%m-%dT%H:%i:%s') <= ? " +
+            "AND STR_TO_DATE(JSON_UNQUOTE(JSON_EXTRACT(detail, '$.endDate')), '%Y-%m-%dT%H:%i:%s') >= ?";
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, userId);
+            stmt.setString(2, date.toString());
+            stmt.setString(3, date.toString());
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    int count = rs.getInt("count");
+                    boolean hasLeave = count > 0;
+                    logger.debug("User {} {} approved leave on {}", userId, hasLeave ? "has" : "does not have", date);
+                    return hasLeave;
+                }
+            }
+
+        } catch (SQLException e) {
+            logger.error("Database error checking approved leave. UserId: {}, Date: {}. SQL State: {}, Error Code: {}",
+                        userId, date, e.getSQLState(), e.getErrorCode(), e);
+            // Return false on error to be safe
+            return false;
+        }
+
+        return false;
     }
 }

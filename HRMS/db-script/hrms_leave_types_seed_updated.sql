@@ -186,19 +186,18 @@ DEALLOCATE PREPARE stmt;
 -- 3. INSERT LEAVE TYPES - 6 loại theo Business Rules
 -- ====================================================================
 
-INSERT INTO
-    leave_types (
-        code,
-        name,
-        description,
-        default_days,
-        max_days,
-        is_paid,
-        requires_approval,
-        requires_certificate,
-        min_advance_notice,
-        is_active
-    )
+INSERT INTO leave_types (
+    code,
+    name,
+    description,
+    default_days,
+    max_days,
+    is_paid,
+    requires_approval,
+    requires_certificate,
+    min_advance_notice,
+    is_active
+)
 VALUES
     -- ============= 1. ANNUAL LEAVE (BR-LV-03) =============
     (
@@ -213,76 +212,71 @@ VALUES
         3,
         1
     ),
-
--- ============= 2. PERSONAL LEAVE (BR-LV-04) =============
-(
-    'PERSONAL',
-    'Personal Leave',
-    'Personal leave (paid): 3 days (marriage); 1 day (child marriage); 3 days (death of parent/spouse/child)',
-    3.00,
-    3.00,
-    1,
-    1,
-    1,
-    1,
-    1
-),
-
--- ============= 3. MATERNITY LEAVE (BR-LV-05) =============
-(
-    'MATERNITY',
-    'Maternity Leave',
-    'Maternity 6 months (Social Insurance). Records and coordinates SI claims per BR-LV-07',
-    180.00,
-    180.00,
-    1,
-    1,
-    1,
-    30,
-    1
-),
-
--- ============= 4. SICK LEAVE (BR-LV-06) =============
-(
-    'SICK',
-    'Sick Leave',
-    'Sick leave (SI): 30/40/60 days by SI seniority. Child-care sickness: 20 days (<3y), 15 days (3-<7y)',
-    30.00,
-    60.00,
-    1,
-    0,
-    1,
-    0,
-    1
-),
-
--- ============= 5. EMERGENCY LEAVE =============
-(
-    'EMERGENCY',
-    'Emergency Leave',
-    'Emergency leave for urgent family matters, accidents, or unforeseen circumstances. No advance notice required.',
-    3.00,
-    5.00,
-    1,
-    1,
-    0,
-    0,
-    1
-),
-
--- ============= 6. UNPAID LEAVE =============
-(
-    'UNPAID',
-    'Unpaid Leave',
-    'Personal leave without pay for extended absences, sabbatical, or personal matters.',
-    0.00,
-    90.00,
-    0,
-    1,
-    0,
-    14,
-    1
-)
+    -- ============= 2. PERSONAL LEAVE (BR-LV-04) =============
+    (
+        'PERSONAL',
+        'Personal Leave',
+        'Personal leave (paid): 3 days (marriage); 1 day (child marriage); 3 days (death of parent/spouse/child)',
+        3.00,
+        3.00,
+        1,
+        1,
+        1,
+        1,
+        1
+    ),
+    -- ============= 3. MATERNITY LEAVE (BR-LV-05) =============
+    (
+        'MATERNITY',
+        'Maternity Leave',
+        'Maternity 6 months (Social Insurance). Records and coordinates SI claims per BR-LV-07',
+        180.00,
+        180.00,
+        1,
+        1,
+        1,
+        30,
+        1
+    ),
+    -- ============= 4. SICK LEAVE (BR-LV-06) =============
+    (
+        'SICK',
+        'Sick Leave',
+        'Sick leave (SI): 30/40/60 days by SI seniority. Child-care sickness: 20 days (<3y), 15 days (3-<7y)',
+        30.00,
+        60.00,
+        1,
+        0,
+        1,
+        0,
+        1
+    ),
+    -- ============= 5. EMERGENCY LEAVE =============
+    (
+        'EMERGENCY',
+        'Emergency Leave',
+        'Emergency leave for urgent family matters, accidents, or unforeseen circumstances. No advance notice required.',
+        3.00,
+        5.00,
+        1,
+        1,
+        0,
+        0,
+        1
+    ),
+    -- ============= 6. UNPAID LEAVE =============
+    (
+        'UNPAID',
+        'Unpaid Leave',
+        'Personal leave without pay for extended absences, sabbatical, or personal matters.',
+        0.00,
+        90.00,
+        0,
+        1,
+        0,
+        14,
+        1
+    )
 ON DUPLICATE KEY UPDATE
     name = VALUES(name),
     description = VALUES(description),
@@ -323,8 +317,12 @@ ORDER BY code;
 
 SELECT '=== BUSINESS RULES MAPPING ===' as INFO;
 
-SELECT code, name, CONCAT(
-        'BR-LV-', CASE code
+SELECT
+    code,
+    name,
+    CONCAT(
+        'BR-LV-',
+        CASE code
             WHEN 'ANNUAL' THEN '03 (Annual leave after 12 months)'
             WHEN 'PERSONAL' THEN '04 (Personal leave paid)'
             WHEN 'MATERNITY' THEN '05 (Maternity 6 months)'
@@ -335,8 +333,7 @@ SELECT code, name, CONCAT(
         END
     ) as business_rule_ref
 FROM leave_types
-WHERE
-    is_active = 1
+WHERE is_active = 1
 ORDER BY code;
 
 SELECT '=== DATABASE SCHEMA INFO ===' as INFO;

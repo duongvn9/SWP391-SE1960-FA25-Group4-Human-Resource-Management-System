@@ -9,7 +9,7 @@ import java.time.format.DateTimeFormatter;
  * DTO cho AttendanceLog với thông tin bổ sung
  */
 public class AttendanceLogDto {
-    
+
     private Long id;
     private Long userId;
     private String userName;                // Username nhân viên
@@ -33,10 +33,14 @@ public class AttendanceLogDto {
     private String checkOutLocation;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    
+
+    // Half-day leave information
+    private String halfDayLeaveInfo;        // Display text for half-day leave
+    private Boolean hasHalfDayLeave;        // Flag indicating half-day leave exists
+
     // Constructors
     public AttendanceLogDto() {}
-    
+
     public AttendanceLogDto(AttendanceLog attendanceLog) {
         this.id = attendanceLog.getId();
         this.userId = attendanceLog.getUserId();
@@ -55,18 +59,18 @@ public class AttendanceLogDto {
         this.checkOutLocation = attendanceLog.getCheckOutLocation();
         this.createdAt = attendanceLog.getCreatedAt();
         this.updatedAt = attendanceLog.getUpdatedAt();
-        
+
         // Set display values
         this.statusDisplay = getStatusDisplayText(this.status);
         this.checkInTypeDisplay = getCheckTypeDisplayText(this.checkInType);
         this.checkOutTypeDisplay = getCheckTypeDisplayText(this.checkOutType);
     }
-    
+
     // Factory methods
     public static AttendanceLogDto fromEntity(AttendanceLog attendanceLog) {
         return new AttendanceLogDto(attendanceLog);
     }
-    
+
     public AttendanceLog toEntity() {
         AttendanceLog attendanceLog = new AttendanceLog();
         attendanceLog.setId(this.id);
@@ -88,216 +92,232 @@ public class AttendanceLogDto {
         attendanceLog.setUpdatedAt(this.updatedAt);
         return attendanceLog;
     }
-    
+
     // Getters và Setters
     public Long getId() {
         return id;
     }
-    
+
     public void setId(Long id) {
         this.id = id;
     }
-    
+
     public Long getUserId() {
         return userId;
     }
-    
+
     public void setUserId(Long userId) {
         this.userId = userId;
     }
-    
+
     public String getUserName() {
         return userName;
     }
-    
+
     public void setUserName(String userName) {
         this.userName = userName;
     }
-    
+
     public String getUserFullName() {
         return userFullName;
     }
-    
+
     public void setUserFullName(String userFullName) {
         this.userFullName = userFullName;
     }
-    
+
     public String getDepartmentName() {
         return departmentName;
     }
-    
+
     public void setDepartmentName(String departmentName) {
         this.departmentName = departmentName;
     }
-    
+
     public LocalDate getWorkDate() {
         return workDate;
     }
-    
+
     public void setWorkDate(LocalDate workDate) {
         this.workDate = workDate;
     }
-    
+
     public LocalDateTime getCheckInTime() {
         return checkInTime;
     }
-    
+
     public void setCheckInTime(LocalDateTime checkInTime) {
         this.checkInTime = checkInTime;
     }
-    
+
     public LocalDateTime getCheckOutTime() {
         return checkOutTime;
     }
-    
+
     public void setCheckOutTime(LocalDateTime checkOutTime) {
         this.checkOutTime = checkOutTime;
     }
-    
+
     public String getCheckInType() {
         return checkInType;
     }
-    
+
     public void setCheckInType(String checkInType) {
         this.checkInType = checkInType;
         this.checkInTypeDisplay = getCheckTypeDisplayText(checkInType);
     }
-    
+
     public String getCheckInTypeDisplay() {
         return checkInTypeDisplay;
     }
-    
+
     public void setCheckInTypeDisplay(String checkInTypeDisplay) {
         this.checkInTypeDisplay = checkInTypeDisplay;
     }
-    
+
     public String getCheckOutType() {
         return checkOutType;
     }
-    
+
     public void setCheckOutType(String checkOutType) {
         this.checkOutType = checkOutType;
         this.checkOutTypeDisplay = getCheckTypeDisplayText(checkOutType);
     }
-    
+
     public String getCheckOutTypeDisplay() {
         return checkOutTypeDisplay;
     }
-    
+
     public void setCheckOutTypeDisplay(String checkOutTypeDisplay) {
         this.checkOutTypeDisplay = checkOutTypeDisplay;
     }
-    
+
     public Double getWorkingHours() {
         return workingHours;
     }
-    
+
     public void setWorkingHours(Double workingHours) {
         this.workingHours = workingHours;
     }
-    
+
     public Double getOvertimeHours() {
         return overtimeHours;
     }
-    
+
     public void setOvertimeHours(Double overtimeHours) {
         this.overtimeHours = overtimeHours;
     }
-    
+
     public String getStatus() {
         return status;
     }
-    
+
     public void setStatus(String status) {
         this.status = status;
         this.statusDisplay = getStatusDisplayText(status);
     }
-    
+
     public String getStatusDisplay() {
         return statusDisplay;
     }
-    
+
     public void setStatusDisplay(String statusDisplay) {
         this.statusDisplay = statusDisplay;
     }
-    
+
     public String getNotes() {
         return notes;
     }
-    
+
     public void setNotes(String notes) {
         this.notes = notes;
     }
-    
+
     public String getCheckInIp() {
         return checkInIp;
     }
-    
+
     public void setCheckInIp(String checkInIp) {
         this.checkInIp = checkInIp;
     }
-    
+
     public String getCheckOutIp() {
         return checkOutIp;
     }
-    
+
     public void setCheckOutIp(String checkOutIp) {
         this.checkOutIp = checkOutIp;
     }
-    
+
     public String getCheckInLocation() {
         return checkInLocation;
     }
-    
+
     public void setCheckInLocation(String checkInLocation) {
         this.checkInLocation = checkInLocation;
     }
-    
+
     public String getCheckOutLocation() {
         return checkOutLocation;
     }
-    
+
     public void setCheckOutLocation(String checkOutLocation) {
         this.checkOutLocation = checkOutLocation;
     }
-    
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
-    
+
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
-    
+
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
-    
+
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
-    
+
+    public String getHalfDayLeaveInfo() {
+        return halfDayLeaveInfo;
+    }
+
+    public void setHalfDayLeaveInfo(String halfDayLeaveInfo) {
+        this.halfDayLeaveInfo = halfDayLeaveInfo;
+    }
+
+    public Boolean getHasHalfDayLeave() {
+        return hasHalfDayLeave;
+    }
+
+    public void setHasHalfDayLeave(Boolean hasHalfDayLeave) {
+        this.hasHalfDayLeave = hasHalfDayLeave;
+    }
+
     // Business methods
     public boolean isPresent() {
         return "PRESENT".equals(this.status);
     }
-    
+
     public boolean isAbsent() {
         return "ABSENT".equals(this.status);
     }
-    
+
     public boolean hasOvertime() {
         return overtimeHours != null && overtimeHours > 0;
     }
-    
+
     public boolean isCheckedIn() {
         return checkInTime != null;
     }
-    
+
     public boolean isCheckedOut() {
         return checkOutTime != null;
     }
-    
+
     // Formatted display methods
     public String getWorkDateFormatted() {
         if (workDate != null) {
@@ -306,7 +326,7 @@ public class AttendanceLogDto {
         }
         return "";
     }
-    
+
     public String getCheckInTimeFormatted() {
         if (checkInTime != null) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
@@ -314,7 +334,7 @@ public class AttendanceLogDto {
         }
         return "";
     }
-    
+
     public String getCheckOutTimeFormatted() {
         if (checkOutTime != null) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
@@ -322,25 +342,25 @@ public class AttendanceLogDto {
         }
         return "";
     }
-    
+
     public String getWorkingHoursFormatted() {
         if (workingHours != null) {
             return String.format("%.2f giờ", workingHours);
         }
         return "0 giờ";
     }
-    
+
     public String getOvertimeHoursFormatted() {
         if (overtimeHours != null && overtimeHours > 0) {
             return String.format("%.2f giờ", overtimeHours);
         }
         return "";
     }
-    
+
     // Helper methods
     private String getStatusDisplayText(String status) {
         if (status == null) return "";
-        
+
         switch (status) {
             case "PRESENT":
                 return "Có mặt";
@@ -354,10 +374,10 @@ public class AttendanceLogDto {
                 return status;
         }
     }
-    
+
     private String getCheckTypeDisplayText(String checkType) {
         if (checkType == null) return "";
-        
+
         switch (checkType) {
             case "NORMAL":
                 return "Bình thường";
