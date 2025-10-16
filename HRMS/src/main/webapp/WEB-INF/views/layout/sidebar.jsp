@@ -285,8 +285,8 @@
                             </a>
                         </li>
                         <li>
-                            <a href="${pageContext.request.contextPath}/role"
-                                class="nav-link ${param.currentPage == 'role' ? 'active' : ''}">
+                            <a href="${pageContext.request.contextPath}/admin/roles"
+                                class="nav-link ${param.currentPage == 'roles' ? 'active' : ''}">
                                 <i class="fas fa-user-shield"></i><span>Role</span>
                             </a>
                         </li>
