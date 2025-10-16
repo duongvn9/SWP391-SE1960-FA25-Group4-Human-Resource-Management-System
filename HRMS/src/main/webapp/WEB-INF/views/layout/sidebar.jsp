@@ -264,6 +264,35 @@
                     </ul>
                 </li>
 
+                <!-- Dropdown: Structure Management -->
+                <li class="nav-item">
+                    <a href="#" class="nav-link sidebar-dropdown-toggle" data-target="structure-submenu"
+                        aria-expanded="false" data-tooltip="Structure Management">
+                        <i class="fas fa-sitemap"></i><span>Structure Management</span>
+                        <i class="fas fa-chevron-right dropdown-arrow"></i>
+                    </a>
+                    <ul class="sidebar-submenu" id="structure-submenu">
+                        <li>
+                            <a href="${pageContext.request.contextPath}/position"
+                                class="nav-link ${param.currentPage == 'position' ? 'active' : ''}">
+                                <i class="fas fa-user-tie"></i><span>Position</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="${pageContext.request.contextPath}/department"
+                                class="nav-link ${param.currentPage == 'department' ? 'active' : ''}">
+                                <i class="fas fa-building"></i><span>Department</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="${pageContext.request.contextPath}/role"
+                                class="nav-link ${param.currentPage == 'role' ? 'active' : ''}">
+                                <i class="fas fa-user-shield"></i><span>Role</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
                 <!-- Admin Only -->
                 <c:if test="${sessionScope.userRole == 'ADMIN' || sessionScope.userRole == 'Admin'}">
                     <li class="nav-item">
