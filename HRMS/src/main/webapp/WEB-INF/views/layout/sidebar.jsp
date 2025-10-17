@@ -285,8 +285,8 @@
                             </a>
                         </li>
                         <li>
-                            <a href="${pageContext.request.contextPath}/admin/roles"
-                                class="nav-link ${param.currentPage == 'roles' ? 'active' : ''}">
+                            <a href="${pageContext.request.contextPath}/role"
+                                class="nav-link ${param.currentPage == 'role' ? 'active' : ''}">
                                 <i class="fas fa-user-shield"></i><span>Role</span>
                             </a>
                         </li>
@@ -306,13 +306,6 @@
                         <a href="${pageContext.request.contextPath}/reports"
                             class="nav-link ${param.currentPage == 'reports' ? 'active' : ''}" data-tooltip="Reports">
                             <i class="fas fa-chart-bar"></i><span>Reports</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="${pageContext.request.contextPath}/system/settings"
-                            class="nav-link ${param.currentPage == 'settings' ? 'active' : ''}"
-                            data-tooltip="System Settings">
-                            <i class="fas fa-cogs"></i><span>System Settings</span>
                         </a>
                     </li>
                 </c:if>
