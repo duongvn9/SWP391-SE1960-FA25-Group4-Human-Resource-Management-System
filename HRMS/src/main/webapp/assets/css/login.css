@@ -1,38 +1,88 @@
-/* Login Page Specific Styles */
+/* Login Page - Neumorphism Design */
 
-/* CSS Variables for Login */
+/* CSS Variables */
 :root {
+  /* Colors */
   --primary: #6366f1;
   --primary-dark: #4f46e5;
+  --primary-light: #818cf8;
   --success: #10b981;
   --danger: #ef4444;
-  --surface: #ffffff;
-  --surface-variant: #f8fafc;
-  --on-surface: #1e293b;
-  --on-surface-variant: #64748b;
-  --outline: #e2e8f0;
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1),
-    0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1),
-    0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --warning: #f59e0b;
+  
+  /* Neumorphism Colors */
+  --neu-bg: #e0e5ec;
+  --neu-shadow-dark: #a3b1c6;
+  --neu-shadow-light: #ffffff;
+  --neu-surface: #e0e5ec;
+  
+  /* Text Colors */
+  --text-primary: #2d3748;
+  --text-secondary: #64748b;
+  --text-light: #94a3b8;
+  
+  /* Transitions */
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Login Body - Full Screen Background */
+/* Neumorphism Body Background */
 body.login-page {
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--neu-bg);
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  padding: 1.5rem;
   line-height: 1.6;
-  color: var(--on-surface);
+  color: var(--text-primary);
+  position: relative;
+  overflow-x: hidden;
 }
 
-/* Reset input styles để đảm bảo border-radius đồng nhất */
+/* Subtle pattern overlay */
+body.login-page::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(circle at 20% 30%, rgba(99, 102, 241, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* Floating orbs for depth */
+body.login-page::after {
+  content: "";
+  position: absolute;
+  top: -100px;
+  right: -100px;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(60px);
+  animation: orbFloat 20s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes orbFloat {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(-50px, 50px) scale(1.1);
+  }
+  66% {
+    transform: translate(30px, -30px) scale(0.9);
+  }
+}
+
+/* Reset input styles */
 input[type="text"],
 input[type="password"],
 input[type="email"],
@@ -42,107 +92,160 @@ button,
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
-  border-radius: 8px !important;
-  -webkit-border-radius: 8px !important;
-  -moz-border-radius: 8px !important;
-}
-
-/* Force consistent border-radius on all interactive elements */
-.login-card * {
-  border-radius: inherit;
-}
-
-.form-control,
-.btn-login,
-.btn-google {
-  border-radius: 8px !important;
+  border-radius: 12px !important;
+  -webkit-border-radius: 12px !important;
+  -moz-border-radius: 12px !important;
 }
 
 /* Login Container */
 .login-container {
-  max-width: 420px;
+  max-width: 440px;
   width: 100%;
+  position: relative;
+  z-index: 1;
 }
 
 .login-card {
-  background: var(--surface);
-  border-radius: 16px;
-  box-shadow: var(--shadow-xl);
-  padding: 3rem 2.5rem;
+  background: var(--neu-bg);
+  border-radius: 30px;
+  box-shadow: 
+    20px 20px 60px var(--neu-shadow-dark),
+    -20px -20px 60px var(--neu-shadow-light);
+  padding: 3rem 2.5rem 2.5rem;
   text-align: center;
-  border: 1px solid var(--outline);
+  position: relative;
+  opacity: 0;
+  transform: translateY(30px) scale(0.95);
+  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.login-card.animate-in {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
 
 /* Login Header */
 .login-header {
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
 }
 
 .login-header .logo {
-  width: 72px;
-  height: 72px;
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  border-radius: 16px;
+  width: 90px;
+  height: 90px;
+  background: var(--neu-bg);
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 1.5rem;
-  font-size: 1.75rem;
-  color: white;
-  box-shadow: var(--shadow-lg);
+  margin: 0 auto 1.75rem;
+  font-size: 2.5rem;
+  color: var(--primary);
+  box-shadow: 
+    12px 12px 24px var(--neu-shadow-dark),
+    -12px -12px 24px var(--neu-shadow-light),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.1);
+  animation: logoFloat 4s ease-in-out infinite;
+  position: relative;
+}
+
+.login-header .logo::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary-light), var(--primary));
+  opacity: 0.1;
+}
+
+@keyframes logoFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
 }
 
 .login-header h1 {
   font-size: 1.875rem;
   font-weight: 700;
-  color: var(--on-surface);
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.03em;
 }
 
 .login-header p {
-  color: var(--on-surface-variant);
-  font-size: 0.95rem;
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
   margin: 0;
+  font-weight: 500;
 }
 
 /* Form Styles */
 .form-group {
   margin-bottom: 1.5rem;
   text-align: left;
+  position: relative;
+}
+
+.form-group.focused .form-label {
+  color: var(--primary);
 }
 
 .form-label {
-  font-weight: 500;
-  color: var(--on-surface);
-  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.625rem;
   font-size: 0.875rem;
-  letter-spacing: 0.025em;
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: var(--transition);
+  text-transform: capitalize;
+}
+
+.label-icon {
+  font-size: 0.875rem;
+  color: var(--primary);
+  opacity: 0.8;
 }
 
 .form-control {
   width: 100%;
-  border-radius: 8px !important;
-  border: 1.5px solid var(--outline);
-  padding: 0.875rem 1rem;
-  font-size: 0.95rem;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  background: var(--surface);
+  border-radius: 15px !important;
+  border: none;
+  padding: 1rem 1rem 1rem 3.25rem;
+  font-size: 0.9375rem;
+  transition: var(--transition);
+  background: var(--neu-bg);
   box-sizing: border-box;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1.5;
+  box-shadow: 
+    inset 6px 6px 12px var(--neu-shadow-dark),
+    inset -6px -6px 12px var(--neu-shadow-light);
+}
+
+.form-control:hover {
+  box-shadow: 
+    inset 7px 7px 14px var(--neu-shadow-dark),
+    inset -7px -7px 14px var(--neu-shadow-light);
 }
 
 .form-control:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
   outline: none;
+  box-shadow: 
+    inset 8px 8px 16px var(--neu-shadow-dark),
+    inset -8px -8px 16px var(--neu-shadow-light),
+    0 0 0 2px rgba(99, 102, 241, 0.15);
 }
 
 .form-control::placeholder {
-  color: var(--on-surface-variant);
-  opacity: 0.7;
+  color: var(--text-light);
+  opacity: 1;
+  font-weight: 400;
 }
 
 /* Input Groups */
@@ -150,199 +253,579 @@ button,
   position: relative;
 }
 
-.input-group .form-control {
-  padding-left: 3rem;
-  border-radius: 8px !important;
-}
-
-.input-group-icon {
+.input-icon {
   position: absolute;
-  left: 1rem;
+  left: 1.125rem;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--on-surface-variant);
+  color: var(--text-light);
   z-index: 2;
-  font-size: 1rem;
+  font-size: 1.125rem;
   pointer-events: none;
+  transition: var(--transition);
+}
+
+.form-group.focused .input-icon {
+  color: var(--primary);
+}
+
+.form-control:focus ~ .input-icon {
+  color: var(--primary);
 }
 
 .password-input-group {
   position: relative;
 }
 
+.password-input-group .form-control {
+  padding-right: 3.5rem;
+}
+
 .password-toggle-btn {
   position: absolute;
-  right: 1rem;
+  right: 0.875rem;
   top: 50%;
   transform: translateY(-50%);
-  background: none;
+  background: var(--neu-bg);
   border: none;
-  color: var(--on-surface-variant);
+  color: var(--text-light);
   cursor: pointer;
-  z-index: 2;
-  padding: 0.25rem;
-  font-size: 1rem;
-  transition: all 0.2s ease;
-  border-radius: 4px;
+  z-index: 10;
+  padding: 0;
+  font-size: 1.125rem;
+  transition: all 0.25s ease;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  box-shadow: 
+    6px 6px 12px var(--neu-shadow-dark),
+    -6px -6px 12px var(--neu-shadow-light);
 }
 
 .password-toggle-btn:hover {
   color: var(--primary);
-  background: rgba(99, 102, 241, 0.08);
+  box-shadow: 
+    8px 8px 16px var(--neu-shadow-dark),
+    -8px -8px 16px var(--neu-shadow-light);
 }
 
-.password-toggle-btn:focus {
-  outline: none;
-  color: var(--primary);
+.password-toggle-btn:active {
+  transform: translateY(-50%) scale(0.95);
+  box-shadow: 
+    inset 4px 4px 8px var(--neu-shadow-dark),
+    inset -4px -4px 8px var(--neu-shadow-light);
 }
 
-/* Buttons */
-.btn-login {
-  background: var(--primary);
-  border: none;
-  border-radius: 8px !important;
-  padding: 0.875rem 1.5rem;
-  font-size: 0.95rem;
-  font-weight: 600;
-  width: 100%;
-  color: white;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: var(--shadow);
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
+/* Fix focus issue - always show button */
+.password-field:focus ~ .password-toggle-btn {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
-.btn-login:hover {
-  background: var(--primary-dark);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-lg);
-}
-
-.btn-login:active {
-  transform: translateY(0);
-  box-shadow: var(--shadow);
-}
-
-/* Alert Styles */
-.alert {
-  border-radius: 10px;
-  border: none;
-  padding: 1rem;
+/* Form Options - Remember Me & Forgot Password */
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 1.5rem;
+  font-size: 0.875rem;
 }
 
-/* Divider */
-.divider {
-  margin: 2rem 0;
-  text-align: center;
+.remember-me {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.custom-checkbox {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  background: var(--neu-bg);
+  box-shadow: 
+    inset 3px 3px 6px var(--neu-shadow-dark),
+    inset -3px -3px 6px var(--neu-shadow-light);
+}
+
+.custom-checkbox:hover {
+  box-shadow: 
+    inset 4px 4px 8px var(--neu-shadow-dark),
+    inset -4px -4px 8px var(--neu-shadow-light);
+}
+
+.custom-checkbox:checked {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  box-shadow: 
+    4px 4px 8px var(--neu-shadow-dark),
+    -4px -4px 8px var(--neu-shadow-light);
+}
+
+.custom-checkbox:checked::after {
+  content: "✓";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.remember-me label {
+  color: var(--text-secondary);
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+  line-height: 1.5;
+}
+
+.forgot-password-link {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
   position: relative;
 }
 
-.divider::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: var(--outline);
+.forgot-password-link:hover {
+  color: var(--primary-dark);
+  text-shadow: 0 0 8px rgba(99, 102, 241, 0.3);
 }
 
-.divider span {
-  background: var(--surface);
-  padding: 0 1rem;
-  color: var(--on-surface-variant);
-  font-size: 0.875rem;
+/* Neumorphism Button */
+.btn-login {
+  background: var(--neu-bg);
+  border: none;
+  border-radius: 15px !important;
+  padding: 1.1rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  width: 100%;
+  color: var(--primary);
+  transition: all 0.3s ease;
+  box-shadow: 
+    10px 10px 20px var(--neu-shadow-dark),
+    -10px -10px 20px var(--neu-shadow-light);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+}
+
+.btn-login::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: 15px;
+  z-index: 0;
+}
+
+.btn-login .btn-text,
+.btn-login .btn-loader {
   position: relative;
   z-index: 1;
 }
 
-/* Google Button */
-.btn-google {
-  background: #f5f5f5;
-  border: 1px solid #dadce0;
-  border-radius: 8px !important;
-  padding: 0.75rem 1.5rem;
-  font-size: 0.875rem;
+.btn-login:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    12px 12px 24px var(--neu-shadow-dark),
+    -12px -12px 24px var(--neu-shadow-light);
+}
+
+.btn-login:hover::before {
+  opacity: 1;
+}
+
+.btn-login:hover .btn-text {
+  color: white;
+}
+
+.btn-login:active {
+  transform: translateY(0);
+  box-shadow: 
+    inset 6px 6px 12px var(--neu-shadow-dark),
+    inset -6px -6px 12px var(--neu-shadow-light);
+}
+
+.btn-login.loading {
+  opacity: 0.85;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.btn-login.loading::before {
+  opacity: 1;
+}
+
+.btn-text,
+.btn-loader {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
+  transition: color 0.3s ease;
+}
+
+.btn-login.loading .btn-loader {
+  color: white;
+}
+
+/* Neumorphism Alert Styles */
+.alert {
+  border-radius: 15px;
+  border: none;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
   font-weight: 500;
+  font-size: 0.9rem;
+  animation: slideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  line-height: 1.5;
+  background: var(--neu-bg);
+  box-shadow: 
+    inset 4px 4px 8px var(--neu-shadow-dark),
+    inset -4px -4px 8px var(--neu-shadow-light);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-15px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.alert i {
+  font-size: 1.125rem;
+  margin-top: 2px;
+}
+
+.alert-danger {
+  color: #dc2626;
+}
+
+.alert-danger i {
+  color: var(--danger);
+}
+
+.alert-warning {
+  color: #d97706;
+}
+
+.alert-warning i {
+  color: var(--warning);
+}
+
+/* Neumorphism Divider */
+.divider {
+  margin: 2rem 0 1.75rem;
+  text-align: center;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 2px;
+  background: var(--neu-bg);
+  box-shadow: 
+    inset 2px 2px 4px var(--neu-shadow-dark),
+    inset -2px -2px 4px var(--neu-shadow-light);
+  border-radius: 2px;
+}
+
+.divider span {
+  background: transparent;
+  padding: 0;
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  position: relative;
+  z-index: 1;
+  text-transform: lowercase;
+  letter-spacing: 0.02em;
+}
+
+/* Neumorphism Google Button */
+.btn-google {
+  background: var(--neu-bg);
+  border: none;
+  border-radius: 15px !important;
+  padding: 0.95rem 1.5rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
   width: 100%;
-  color: #3c4043;
+  color: var(--text-primary);
   text-decoration: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  transition: all 0.15s ease;
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
-  font-family: "Roboto", sans-serif;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
+  transition: all 0.3s ease;
+  box-shadow: 
+    8px 8px 16px var(--neu-shadow-dark),
+    -8px -8px 16px var(--neu-shadow-light);
+  position: relative;
+  overflow: hidden;
 }
 
 .btn-google:hover {
-  background: #f8f9fa;
-  border-color: #dadce0;
-  color: #3c4043;
+  color: var(--text-primary);
   text-decoration: none;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  box-shadow: 
+    10px 10px 20px var(--neu-shadow-dark),
+    -10px -10px 20px var(--neu-shadow-light);
+  transform: translateY(-2px);
 }
 
 .btn-google:active {
-  background: #f1f3f4;
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+  transform: translateY(0);
+  box-shadow: 
+    inset 5px 5px 10px var(--neu-shadow-dark),
+    inset -5px -5px 10px var(--neu-shadow-light);
 }
 
 .google-icon {
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   display: inline-block;
+  flex-shrink: 0;
 }
 
-/* Back Home Button */
+/* Login Footer */
+.login-footer {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  position: relative;
+}
+
+.login-footer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 2px;
+  background: var(--neu-bg);
+  box-shadow: 
+    inset 1px 1px 2px var(--neu-shadow-dark),
+    inset -1px -1px 2px var(--neu-shadow-light);
+  border-radius: 2px;
+}
+
+.help-text {
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.help-text i {
+  color: var(--primary);
+  font-size: 0.875rem;
+}
+
+/* Neumorphism Back Home Button */
 .back-home {
   position: absolute;
   top: 2rem;
   left: 2rem;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--text-primary);
   text-decoration: none;
-  font-size: 0.95rem;
-  font-weight: 500;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  padding: 0.75rem 1.25rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  background: var(--neu-bg);
+  padding: 0.75rem 1.5rem;
   border-radius: 50px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  transition: var(--transition);
   z-index: 10;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+  box-shadow: 
+    6px 6px 12px var(--neu-shadow-dark),
+    -6px -6px 12px var(--neu-shadow-light);
 }
 
 .back-home:hover {
-  color: white;
-  background: rgba(255, 255, 255, 0.25);
-  transform: translateX(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  color: var(--primary);
+  transform: translateX(-4px);
+  box-shadow: 
+    8px 8px 16px var(--neu-shadow-dark),
+    -8px -8px 16px var(--neu-shadow-light);
 }
 
-/* Responsive */
+.back-home:active {
+  box-shadow: 
+    inset 4px 4px 8px var(--neu-shadow-dark),
+    inset -4px -4px 8px var(--neu-shadow-light);
+}
+
+.back-home i {
+  transition: var(--transition);
+}
+
+.back-home:hover i {
+  transform: translateX(-2px);
+}
+
+/* Responsive Neumorphism */
 @media (max-width: 576px) {
-  .login-container {
+  body.login-page {
     padding: 1rem;
   }
 
+  .login-container {
+    max-width: 100%;
+  }
+
   .login-card {
-    padding: 2rem 1.5rem;
+    padding: 2.5rem 1.75rem;
+    border-radius: 25px;
+    box-shadow: 
+      15px 15px 40px var(--neu-shadow-dark),
+      -15px -15px 40px var(--neu-shadow-light);
+  }
+
+  .login-header .logo {
+    width: 75px;
+    height: 75px;
+    font-size: 2rem;
+  }
+
+  .login-header h1 {
+    font-size: 1.625rem;
   }
 
   .back-home {
     position: static;
-    display: block;
-    text-align: center;
-    margin-bottom: 2rem;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .form-options {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .password-toggle-btn {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+@media (max-width: 400px) {
+  .login-card {
+    padding: 2rem 1.5rem;
+  }
+
+  .login-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .login-header .logo {
+    width: 70px;
+    height: 70px;
+    font-size: 1.75rem;
+  }
+
+  .form-control {
+    font-size: 0.875rem;
+    padding: 0.875rem 1rem 0.875rem 2.75rem;
+  }
+
+  .btn-login {
+    padding: 1rem 1.25rem;
+    font-size: 0.9375rem;
+  }
+}
+
+/* Neumorphism Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Neumorphism Focus for keyboard navigation */
+*:focus-visible {
+  outline: none;
+  box-shadow: 
+    0 0 0 3px var(--primary),
+    0 0 0 5px rgba(99, 102, 241, 0.2);
+}
+
+.form-control:focus-visible {
+  box-shadow: 
+    inset 8px 8px 16px var(--neu-shadow-dark),
+    inset -8px -8px 16px var(--neu-shadow-light),
+    0 0 0 3px rgba(99, 102, 241, 0.3);
+}
+
+/* Smooth transitions for all neumorphism elements */
+.login-card,
+.form-control,
+.btn-login,
+.btn-google,
+.password-toggle-btn,
+.custom-checkbox,
+.back-home {
+  will-change: transform, box-shadow;
+}
+
+/* Print styles */
+@media print {
+  body.login-page::before,
+  body.login-page::after {
+    display: none;
+  }
+  
+  .login-card {
+    box-shadow: none;
+    border: 1px solid #ccc;
   }
 }
