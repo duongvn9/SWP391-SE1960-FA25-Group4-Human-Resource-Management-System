@@ -162,6 +162,17 @@ public class ProfileController extends HttpServlet {
                 return;
             }
             
+            // Validate: Cannot clear existing data (cannot set to empty if already has value)
+            String clearFieldError = validateNoClearingData(currentProfile, dto);
+            if (clearFieldError != null) {
+                logger.warn("Attempt to clear existing data: {}", clearFieldError);
+                req.setAttribute("error", clearFieldError);
+                req.setAttribute("profile", currentProfile);
+                req.setAttribute("csrfToken", generateCsrfToken());
+                req.getRequestDispatcher("/WEB-INF/views/profile/edit-profile.jsp").forward(req, resp);
+                return;
+            }
+            
             // Check uniqueness constraints
             if (dto.getCccd() != null && !dto.getCccd().trim().isEmpty()) {
                 if (userProfileDao.isCccdExistsForOtherUser(dto.getCccd(), currentProfile.getUserId())) {
@@ -187,7 +198,8 @@ public class ProfileController extends HttpServlet {
             UserProfile updatedProfile = new UserProfile();
             updatedProfile.setFullName(dto.getFullName());
             updatedProfile.setDob(dto.getDob());
-            updatedProfile.setGender(dto.getGender());
+            // Normalize gender to lowercase before saving
+            updatedProfile.setGender(dto.getGender() != null ? dto.getGender().toLowerCase() : null);
             updatedProfile.setHometown(dto.getHometown());
             updatedProfile.setCccd(dto.getCccd());
             updatedProfile.setCccdIssuedDate(dto.getCccdIssuedDate());
@@ -325,5 +337,52 @@ public class ProfileController extends HttpServlet {
         }
         
         return obj1.equals(obj2);
+    }
+    
+    /**
+     * Validate that user is not clearing existing data
+     * Returns error message if trying to clear data, null if OK
+     */
+    private String validateNoClearingData(UserProfile current, UserProfileDto dto) {
+        // Check each field - if current has value, new value cannot be empty
+        if (hasValue(current.getFullName()) && !hasValue(dto.getFullName())) {
+            return "Cannot clear Full Name - this field cannot be empty";
+        }
+        if (hasValue(current.getPhone()) && !hasValue(dto.getPhone())) {
+            return "Cannot clear Phone Number - this field cannot be empty";
+        }
+        if (current.getDob() != null && dto.getDob() == null) {
+            return "Cannot clear Date of Birth - this field cannot be empty";
+        }
+        if (hasValue(current.getGender()) && !hasValue(dto.getGender())) {
+            return "Cannot clear Gender - this field cannot be empty";
+        }
+        if (hasValue(current.getCccd()) && !hasValue(dto.getCccd())) {
+            return "Cannot clear Citizen ID - this field cannot be empty";
+        }
+        if (current.getCccdIssuedDate() != null && dto.getCccdIssuedDate() == null) {
+            return "Cannot clear CCCD Issued Date - this field cannot be empty";
+        }
+        if (hasValue(current.getCccdIssuedPlace()) && !hasValue(dto.getCccdIssuedPlace())) {
+            return "Cannot clear CCCD Issued Place - this field cannot be empty";
+        }
+        if (hasValue(current.getCountry()) && !hasValue(dto.getCountry())) {
+            return "Cannot clear Country - this field cannot be empty";
+        }
+        if (hasValue(current.getAddressLine1()) && !hasValue(dto.getAddressLine1())) {
+            return "Cannot clear Address Line 1 - this field cannot be empty";
+        }
+        if (hasValue(current.getCity()) && !hasValue(dto.getCity())) {
+            return "Cannot clear City - this field cannot be empty";
+        }
+        
+        return null; // No errors
+    }
+    
+    /**
+     * Check if a string has value (not null and not empty after trim)
+     */
+    private boolean hasValue(String str) {
+        return str != null && !str.trim().isEmpty();
     }
 }

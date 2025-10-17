@@ -270,13 +270,16 @@
                     </ul>
                 </li>
 
-                <li class="nav-item">
-                    <a href="${pageContext.request.contextPath}/settings"
-                        class="nav-link ${param.currentPage == 'settings' ? 'active' : ''}"
-                        data-tooltip="Settings">
-                        <i class="fas fa-cog"></i><span>Settings</span>
-                    </a>
-                </li>
+                <!-- Settings - Admin Only (position_id = 6) -->
+                <c:if test="${sessionScope.user != null && sessionScope.user.positionId == 6}">
+                    <li class="nav-item">
+                        <a href="${pageContext.request.contextPath}/settings"
+                            class="nav-link ${param.currentPage == 'settings' ? 'active' : ''}"
+                            data-tooltip="Settings">
+                            <i class="fas fa-cog"></i><span>Settings</span>
+                        </a>
+                    </li>
+                </c:if>
 
                 <!-- Admin Only -->
                 <c:if test="${sessionScope.userRole == 'ADMIN' || sessionScope.userRole == 'Admin'}">
