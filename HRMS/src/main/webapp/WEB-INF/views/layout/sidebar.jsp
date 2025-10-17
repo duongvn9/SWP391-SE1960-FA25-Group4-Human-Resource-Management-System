@@ -244,6 +244,12 @@
                     </a>
                     <ul class="sidebar-submenu" id="requests-submenu">
                         <li>
+                            <a href="${pageContext.request.contextPath}/requests/list"
+                                class="nav-link ${param.currentPage == 'request-list' ? 'active' : ''}">
+                                <i class="fas fa-list"></i><span>My Requests</span>
+                            </a>
+                        </li>
+                        <li>
                             <a href="${pageContext.request.contextPath}/requests/leave/create"
                                 class="nav-link ${param.currentPage == 'leave-request' ? 'active' : ''}">
                                 <i class="fas fa-calendar-times"></i><span>Leave Request</span>
@@ -264,6 +270,35 @@
                     </ul>
                 </li>
 
+                <!-- Dropdown: Structure Management -->
+                <li class="nav-item">
+                    <a href="#" class="nav-link sidebar-dropdown-toggle" data-target="structure-submenu"
+                        aria-expanded="false" data-tooltip="Structure Management">
+                        <i class="fas fa-sitemap"></i><span>Structure Management</span>
+                        <i class="fas fa-chevron-right dropdown-arrow"></i>
+                    </a>
+                    <ul class="sidebar-submenu" id="structure-submenu">
+                        <li>
+                            <a href="${pageContext.request.contextPath}/position"
+                                class="nav-link ${param.currentPage == 'position' ? 'active' : ''}">
+                                <i class="fas fa-user-tie"></i><span>Position</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="${pageContext.request.contextPath}/department"
+                                class="nav-link ${param.currentPage == 'department' ? 'active' : ''}">
+                                <i class="fas fa-building"></i><span>Department</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="${pageContext.request.contextPath}/role"
+                                class="nav-link ${param.currentPage == 'role' ? 'active' : ''}">
+                                <i class="fas fa-user-shield"></i><span>Role</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
                 <!-- Admin Only -->
                 <c:if test="${sessionScope.userRole == 'ADMIN' || sessionScope.userRole == 'Admin'}">
                     <li class="nav-item">
@@ -277,13 +312,6 @@
                         <a href="${pageContext.request.contextPath}/reports"
                             class="nav-link ${param.currentPage == 'reports' ? 'active' : ''}" data-tooltip="Reports">
                             <i class="fas fa-chart-bar"></i><span>Reports</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="${pageContext.request.contextPath}/system/settings"
-                            class="nav-link ${param.currentPage == 'settings' ? 'active' : ''}"
-                            data-tooltip="System Settings">
-                            <i class="fas fa-cogs"></i><span>System Settings</span>
                         </a>
                     </li>
                 </c:if>

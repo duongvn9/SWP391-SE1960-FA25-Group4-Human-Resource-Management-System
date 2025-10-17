@@ -28,6 +28,22 @@ public class HolidayDao extends BaseDao<Holiday, Long> {
         holiday.setCalendarId(rs.getLong("calendar_id"));
         holiday.setDateHoliday(getLocalDate(rs, "date_holiday"));
         holiday.setName(rs.getString("name"));
+
+        // Handle is_substitute field (may not exist in old schema)
+        try {
+            Boolean isSubstitute = (Boolean) rs.getObject("is_substitute");
+            holiday.setIsSubstitute(isSubstitute != null ? isSubstitute : false);
+        } catch (SQLException e) {
+            holiday.setIsSubstitute(false);  // Default to false if column doesn't exist
+        }
+
+        // Handle original_holiday_date field (may not exist in old schema)
+        try {
+            holiday.setOriginalHolidayDate(getLocalDate(rs, "original_holiday_date"));
+        } catch (SQLException e) {
+            holiday.setOriginalHolidayDate(null);  // Default to null if column doesn't exist
+        }
+
         holiday.setCreatedAt(getLocalDateTime(rs, "created_at"));
 
         return holiday;
@@ -45,12 +61,12 @@ public class HolidayDao extends BaseDao<Holiday, Long> {
 
     @Override
     protected String createInsertSql() {
-        return "INSERT INTO holidays (calendar_id, date_holiday, name, created_at) VALUES (?, ?, ?, ?)";
+        return "INSERT INTO holidays (calendar_id, date_holiday, name, is_substitute, original_holiday_date, created_at) VALUES (?, ?, ?, ?, ?, ?)";
     }
 
     @Override
     protected String createUpdateSql() {
-        return "UPDATE holidays SET calendar_id = ?, date_holiday = ?, name = ? WHERE id = ?";
+        return "UPDATE holidays SET calendar_id = ?, date_holiday = ?, name = ?, is_substitute = ?, original_holiday_date = ? WHERE id = ?";
     }
 
     @Override
@@ -58,7 +74,9 @@ public class HolidayDao extends BaseDao<Holiday, Long> {
         stmt.setLong(1, holiday.getCalendarId());
         setDate(stmt, 2, holiday.getDateHoliday());
         stmt.setString(3, holiday.getName());
-        setTimestamp(stmt, 4, holiday.getCreatedAt() != null ? holiday.getCreatedAt() : LocalDateTime.now());
+        stmt.setBoolean(4, holiday.getIsSubstitute() != null ? holiday.getIsSubstitute() : false);
+        setDate(stmt, 5, holiday.getOriginalHolidayDate());
+        setTimestamp(stmt, 6, holiday.getCreatedAt() != null ? holiday.getCreatedAt() : LocalDateTime.now());
     }
 
     @Override
@@ -66,7 +84,9 @@ public class HolidayDao extends BaseDao<Holiday, Long> {
         stmt.setLong(1, holiday.getCalendarId());
         setDate(stmt, 2, holiday.getDateHoliday());
         stmt.setString(3, holiday.getName());
-        stmt.setLong(4, holiday.getId());
+        stmt.setBoolean(4, holiday.getIsSubstitute() != null ? holiday.getIsSubstitute() : false);
+        setDate(stmt, 5, holiday.getOriginalHolidayDate());
+        stmt.setLong(6, holiday.getId());
     }
 
     // Business methods
@@ -274,6 +294,45 @@ public class HolidayDao extends BaseDao<Holiday, Long> {
 
         } catch (SQLException e) {
             logger.error("Error getting holidays in range {} to {}: {}", start, end, e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    /**
+     * Tìm holiday theo ngày cụ thể (không cần calendarId)
+     * Tự động lấy calendar của năm tương ứng
+     *
+     * @param date Ngày cần tìm
+     * @return Holiday object nếu tìm thấy, null nếu không
+     */
+    public Holiday findByDate(LocalDate date) throws SQLException {
+        if (date == null) {
+            return null;
+        }
+
+        String sql = """
+            SELECT h.* FROM holidays h
+            INNER JOIN holiday_calendar hc ON h.calendar_id = hc.id
+            WHERE hc.year = ? AND h.date_holiday = ?
+            LIMIT 1
+            """;
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, date.getYear());
+            setDate(stmt, 2, date);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToEntity(rs);
+                }
+            }
+
+            return null;
+
+        } catch (SQLException e) {
+            logger.error("Error finding holiday by date {}: {}", date, e.getMessage(), e);
             throw e;
         }
     }

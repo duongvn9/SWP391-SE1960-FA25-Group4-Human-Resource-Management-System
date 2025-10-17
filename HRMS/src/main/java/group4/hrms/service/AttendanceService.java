@@ -3,17 +3,20 @@ package group4.hrms.service;
 import group4.hrms.dao.AttendanceLogDao;
 import group4.hrms.dto.AttendanceLogDto;
 import group4.hrms.model.AttendanceLog;
+
 import group4.hrms.util.ExcelUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
@@ -21,6 +24,10 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+/**
+ * Service for handling attendance tracking logic including half-day leave
+ * support
+ */
 public class AttendanceService {
 
     public static List<AttendanceLogDto> readAttendanceExcelFile(InputStream inputStream) throws IOException {

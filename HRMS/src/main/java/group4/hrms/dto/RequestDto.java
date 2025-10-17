@@ -20,6 +20,12 @@ public class RequestDto {
     private String requestTypeCode;         // Mã loại request
     private String title;
     private String description;
+    private String detailJson;              // JSON detail from Request
+
+    // Parsed detail objects (transient - not serialized)
+    private transient LeaveRequestDetail leaveDetail;
+    private transient OTRequestDetail otDetail;
+
     private String status;
     private String statusDisplay;           // Hiển thị trạng thái tiếng Việt
     private String priority;
@@ -34,7 +40,6 @@ public class RequestDto {
     private LocalDateTime approvedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private RecruitmentDetailsDto recruitmentDetails;
 
     // Constructors
     public RequestDto() {
@@ -46,6 +51,23 @@ public class RequestDto {
         this.requestTypeId = request.getRequestTypeId();
         this.title = request.getTitle();
         this.description = request.getDescription();
+        this.detailJson = request.getDetailJson();
+
+        // Parse detail JSON based on request type
+        if (this.detailJson != null && !this.detailJson.trim().isEmpty()) {
+            try {
+                // Try to parse as LeaveRequestDetail first
+                this.leaveDetail = request.getLeaveDetail();
+            } catch (Exception e) {
+                // If fails, try OTRequestDetail
+                try {
+                    this.otDetail = request.getOtDetail();
+                } catch (Exception ex) {
+                    // Ignore parsing errors - detail will be null
+                }
+            }
+        }
+
         this.status = request.getStatus();
         this.priority = request.getPriority();
         this.startDate = request.getStartDate();
@@ -57,12 +79,6 @@ public class RequestDto {
         this.approvedAt = request.getApprovedAt();
         this.createdAt = request.getCreatedAt();
         this.updatedAt = request.getUpdatedAt();
-
-        if (request.getRequestTypeId() != null && request.getRequestTypeId() == 2L) {
-            // Gọi hàm getRecruitmentDetail() trong Model Request.java
-            this.recruitmentDetails = request.getRecruitmentDetail();
-        }
-
         // Set display values
         this.statusDisplay = getStatusDisplayText(this.status);
         this.priorityDisplay = getPriorityDisplayText(this.priority);
@@ -165,6 +181,61 @@ public class RequestDto {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getDetailJson() {
+        return detailJson;
+    }
+
+    public void setDetailJson(String detailJson) {
+        this.detailJson = detailJson;
+        // Clear cached parsed objects when JSON changes
+        this.leaveDetail = null;
+        this.otDetail = null;
+    }
+
+    /**
+     * Get parsed LeaveRequestDetail from JSON Lazy-loads and caches the result
+     */
+    public LeaveRequestDetail getLeaveDetail() {
+        if (leaveDetail == null && detailJson != null && !detailJson.trim().isEmpty()) {
+            try {
+                leaveDetail = LeaveRequestDetail.fromJson(detailJson);
+            } catch (Exception e) {
+                // Return null if parsing fails
+                return null;
+            }
+        }
+        return leaveDetail;
+    }
+
+    /**
+     * Get parsed OTRequestDetail from JSON Lazy-loads and caches the result
+     */
+    public OTRequestDetail getOtDetail() {
+        if (otDetail == null && detailJson != null && !detailJson.trim().isEmpty()) {
+            try {
+                otDetail = OTRequestDetail.fromJson(detailJson);
+            } catch (Exception e) {
+                // Return null if parsing fails
+                return null;
+            }
+        }
+        return otDetail;
+    }
+
+    /**
+     * Check if this is a leave request
+     */
+    public boolean isLeaveRequest() {
+        return requestTypeCode != null && requestTypeCode.startsWith("LEAVE_");
+    }
+
+    /**
+     * Check if this is an OT request
+     */
+    public boolean isOTRequest() {
+        return requestTypeCode != null && requestTypeCode.startsWith("OT_");
     }
 
     public String getStatus() {
@@ -318,16 +389,11 @@ public class RequestDto {
         return "";
     }
 
-    public RecruitmentDetailsDto getRecruitmentDetails() {
-        return recruitmentDetails;
-    }
-
     // Helper methods
     private String getStatusDisplayText(String status) {
         if (status == null) {
             return "";
         }
-
         switch (status) {
             case "PENDING":
                 return "Chờ duyệt";
