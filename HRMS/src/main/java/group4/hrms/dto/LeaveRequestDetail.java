@@ -19,6 +19,11 @@ public class LeaveRequestDetail {
     private Boolean certificateRequired;
     private String managerNotes;
 
+    // Half-day leave support fields
+    private Boolean isHalfDay;           // true if half-day, false/null if full-day
+    private String halfDayPeriod;        // "AM" or "PM", null if full-day
+    private Double durationDays;         // 0.5 for half-day, 1.0+ for full-day
+
     // Gson instance for JSON serialization/deserialization
     private static final Gson gson = new GsonBuilder()
             .setPrettyPrinting()
@@ -99,6 +104,34 @@ public class LeaveRequestDetail {
         if (reason.length() > 1000) {
             throw new IllegalArgumentException("Reason cannot exceed 1000 characters");
         }
+
+        // Half-day specific validation
+        if (isHalfDay != null && isHalfDay) {
+            // Half-day period is required
+            if (halfDayPeriod == null || halfDayPeriod.trim().isEmpty()) {
+                throw new IllegalArgumentException("Half-day period (AM/PM) is required for half-day leave");
+            }
+
+            // Period must be AM or PM
+            if (!halfDayPeriod.equals("AM") && !halfDayPeriod.equals("PM")) {
+                throw new IllegalArgumentException("Half-day period must be 'AM' or 'PM'");
+            }
+
+            // Start date must equal end date for half-day
+            if (!startDate.equals(endDate)) {
+                throw new IllegalArgumentException("Half-day leave can only be requested for a single day");
+            }
+
+            // Duration must be 0.5 for half-day
+            if (durationDays != null && durationDays != 0.5) {
+                throw new IllegalArgumentException("Half-day leave duration must be 0.5 days");
+            }
+        }
+
+        // Validate durationDays if provided
+        if (durationDays != null && durationDays <= 0) {
+            throw new IllegalArgumentException("Duration days must be greater than 0");
+        }
     }
 
     // Getters and Setters
@@ -175,6 +208,39 @@ public class LeaveRequestDetail {
         this.managerNotes = managerNotes;
     }
 
+    public Boolean getIsHalfDay() {
+        return isHalfDay;
+    }
+
+    public void setIsHalfDay(Boolean isHalfDay) {
+        this.isHalfDay = isHalfDay;
+    }
+
+    public String getHalfDayPeriod() {
+        return halfDayPeriod;
+    }
+
+    public void setHalfDayPeriod(String halfDayPeriod) {
+        this.halfDayPeriod = halfDayPeriod;
+    }
+
+    public Double getDurationDays() {
+        return durationDays;
+    }
+
+    public void setDurationDays(Double durationDays) {
+        this.durationDays = durationDays;
+    }
+
+    /**
+     * Helper method to check if this is a half-day leave request
+     * Provides backward compatibility for existing requests without isHalfDay field
+     * @return true if half-day, false otherwise
+     */
+    public boolean isHalfDay() {
+        return isHalfDay != null && isHalfDay;
+    }
+
     @Override
     public String toString() {
         return "LeaveRequestDetail{" +
@@ -187,6 +253,9 @@ public class LeaveRequestDetail {
                 ", attachmentPath='" + attachmentPath + '\'' +
                 ", certificateRequired=" + certificateRequired +
                 ", managerNotes='" + managerNotes + '\'' +
+                ", isHalfDay=" + isHalfDay +
+                ", halfDayPeriod='" + halfDayPeriod + '\'' +
+                ", durationDays=" + durationDays +
                 '}';
     }
 }

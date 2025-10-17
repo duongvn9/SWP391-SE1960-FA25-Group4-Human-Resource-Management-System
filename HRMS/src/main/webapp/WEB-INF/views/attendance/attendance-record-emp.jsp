@@ -4,6 +4,57 @@
     <head>
         <meta charset="UTF-8">
         <title>My Attendance</title>
+        <style>
+            .half-day-badge {
+                background-color: #ffc107;
+                padding: 4px 10px;
+                border-radius: 4px;
+                font-size: 0.85em;
+                font-weight: 500;
+                display: inline-block;
+                color: #000;
+            }
+
+            .status-badge {
+                padding: 3px 8px;
+                border-radius: 3px;
+                font-size: 0.9em;
+                font-weight: 500;
+            }
+
+            .status-PRESENT {
+                background-color: #28a745;
+                color: white;
+            }
+
+            .status-ABSENT {
+                background-color: #dc3545;
+                color: white;
+            }
+
+            .status-LATE {
+                background-color: #ffc107;
+                color: #000;
+            }
+
+            .status-EARLY_LEAVE {
+                background-color: #fd7e14;
+                color: white;
+            }
+
+            .attendance-row {
+                cursor: pointer;
+            }
+
+            .attendance-row:hover {
+                background-color: #f5f5f5;
+            }
+
+            #attendancePopup {
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                border-radius: 8px;
+            }
+        </style>
     </head>
     <body>
         <h2>My Attendance Records</h2>
@@ -60,37 +111,53 @@
                     <th>Date</th>
                     <th>Check-in</th>
                     <th>Check-out</th>
+                    <th>Working Hours</th>
                     <th>Status</th>
-                    <th>Source</th>
-                    <th>Period</th>
-                    <th>Locked</th>
+                    <th>Half-Day Leave</th>
+                    <th>Notes</th>
                 </tr>
             </thead>
             <tbody>
             <c:forEach var="record" items="${attendanceList}">
                 <tr class="attendance-row"
-                    data-employee="${record.employeeId}"
+                    data-userid="${record.userId}"
                     data-notes="${record.notes}"
-                    data-attachments="${record.attachments}"
-                    data-lockedby="${record.lockedBy}"
-                    data-lockedat="${record.lockedAt}"
-                    data-audit="${record.auditTrail}">
+                    data-halfdayinfo="${record.halfDayLeaveInfo}">
 
                     <td>
                         <button type="button" class="selectAttendanceBtn">Select</button>
                     </td>
-                    <td>${record.date}</td>
-                    <td>${record.checkIn}</td>
-                    <td>${record.checkOut}</td>
-                    <td>${record.status}</td>
-                    <td>${record.source}</td>
-                    <td>${record.period}</td>
+                    <td>${record.workDateFormatted}</td>
+                    <td>${record.checkInTimeFormatted}</td>
+                    <td>${record.checkOutTimeFormatted}</td>
+                    <td>${record.workingHoursFormatted}</td>
                     <td>
-                <c:choose>
-                    <c:when test="${record.locked}">Yes</c:when>
-                    <c:otherwise>No</c:otherwise>
-                </c:choose>
-                </td>
+                        <span class="status-badge status-${record.status}">
+                            ${record.statusDisplay}
+                        </span>
+                    </td>
+                    <td>
+                        <c:choose>
+                            <c:when test="${record.hasHalfDayLeave}">
+                                <span class="half-day-badge" style="background-color: #ffc107; padding: 2px 8px; border-radius: 3px; font-size: 0.9em;">
+                                    ${record.halfDayLeaveInfo}
+                                </span>
+                            </c:when>
+                            <c:otherwise>
+                                <span style="color: #999;">-</span>
+                            </c:otherwise>
+                        </c:choose>
+                    </td>
+                    <td>
+                        <c:choose>
+                            <c:when test="${not empty record.notes}">
+                                ${record.notes}
+                            </c:when>
+                            <c:otherwise>
+                                <span style="color: #999;">-</span>
+                            </c:otherwise>
+                        </c:choose>
+                    </td>
                 </tr>
             </c:forEach>
 
@@ -107,18 +174,15 @@
 
 
     <!-- 📄 Pop-up Detail Modal -->
-    <div id="attendancePopup" style="display:none; border:1px solid #000; padding:15px; background:#fff; width:400px; position:absolute; top:20%; left:35%;">
+    <div id="attendancePopup" style="display:none; border:1px solid #000; padding:15px; background:#fff; width:450px; position:absolute; top:20%; left:35%; z-index: 1000;">
         <h3>Attendance Details</h3>
         <p><strong>Date:</strong> <span id="popupDate"></span></p>
         <p><strong>Check-in:</strong> <span id="popupIn"></span></p>
         <p><strong>Check-out:</strong> <span id="popupOut"></span></p>
+        <p><strong>Working Hours:</strong> <span id="popupWorkingHours"></span></p>
         <p><strong>Status:</strong> <span id="popupStatus"></span></p>
-        <p><strong>Source:</strong> <span id="popupSource"></span></p>
+        <p><strong>Half-Day Leave:</strong> <span id="popupHalfDayInfo"></span></p>
         <p><strong>Notes / Reason:</strong> <span id="popupNotes"></span></p>
-        <p><strong>Attachments:</strong> <span id="popupAttachments"></span></p>
-        <p><strong>Locked By:</strong> <span id="popupLockedBy"></span></p>
-        <p><strong>Locked At:</strong> <span id="popupLockedAt"></span></p>
-        <p><strong>Audit Trail:</strong> <span id="popupAudit"></span></p>
         <button id="closePopup">Close</button>
     </div>
 
@@ -133,13 +197,14 @@
                 document.getElementById('popupDate').textContent = row.cells[1].textContent;
                 document.getElementById('popupIn').textContent = row.cells[2].textContent;
                 document.getElementById('popupOut').textContent = row.cells[3].textContent;
-                document.getElementById('popupStatus').textContent = row.cells[4].textContent;
-                document.getElementById('popupSource').textContent = row.cells[5].textContent;
-                document.getElementById('popupNotes').textContent = row.getAttribute('data-notes');
-                document.getElementById('popupAttachments').textContent = row.getAttribute('data-attachments');
-                document.getElementById('popupLockedBy').textContent = row.getAttribute('data-lockedby');
-                document.getElementById('popupLockedAt').textContent = row.getAttribute('data-lockedat');
-                document.getElementById('popupAudit').textContent = row.getAttribute('data-audit');
+                document.getElementById('popupWorkingHours').textContent = row.cells[4].textContent;
+                document.getElementById('popupStatus').textContent = row.cells[5].textContent.trim();
+
+                const halfDayInfo = row.getAttribute('data-halfdayinfo');
+                document.getElementById('popupHalfDayInfo').textContent = halfDayInfo || '-';
+
+                const notes = row.getAttribute('data-notes');
+                document.getElementById('popupNotes').textContent = notes || '-';
 
                 popup.style.display = 'block';
             });
@@ -148,8 +213,8 @@
             const selectBtn = row.querySelector('.selectAttendanceBtn');
             selectBtn.addEventListener('click', (event) => {
                 event.stopPropagation(); // tránh click row mở popup
-                const attendanceId = row.getAttribute('data-employee'); // hoặc ID riêng nếu có
-                alert('Selected attendance ID: ' + attendanceId);
+                const userId = row.getAttribute('data-userid');
+                alert('Selected attendance for user ID: ' + userId);
                 // TODO: logic thêm record này vào form kháng nghị
             });
         });

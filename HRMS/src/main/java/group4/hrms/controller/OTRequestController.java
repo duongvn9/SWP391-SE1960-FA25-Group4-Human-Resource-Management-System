@@ -216,17 +216,15 @@ public class OTRequestController extends HttpServlet {
             return;
         }
 
+        // Extract form parameters (declare outside try for catch block access)
+        String otDate = request.getParameter("otDate");
+        String startTime = request.getParameter("startTime");
+        String endTime = request.getParameter("endTime");
+        String reason = request.getParameter("reason");
+        String employeeConsentStr = request.getParameter("employeeConsent");
+        Boolean employeeConsent = "on".equals(employeeConsentStr) || "true".equals(employeeConsentStr);
+
         try {
-
-            // Extract form parameters
-            String otDate = request.getParameter("otDate");
-            String startTime = request.getParameter("startTime");
-            String endTime = request.getParameter("endTime");
-            String reason = request.getParameter("reason");
-            String employeeConsentStr = request.getParameter("employeeConsent");
-
-            // Parse employee consent checkbox
-            Boolean employeeConsent = "on".equals(employeeConsentStr) || "true".equals(employeeConsentStr);
 
             logger.info("Creating OT request: date=" + otDate + ", start=" + startTime +
                 ", end=" + endTime + ", consent=" + employeeConsent);
@@ -260,6 +258,7 @@ public class OTRequestController extends HttpServlet {
             // Handle validation errors: catch IllegalArgumentException and set error message
             logger.warning(String.format("OT validation error: userId=%d, accountId=%d, error=%s",
                           user.getId(), account.getId(), e.getMessage()));
+            saveFormDataToSession(session, otDate, startTime, endTime, reason);
             request.setAttribute("error", e.getMessage());
             request.setAttribute("errorType", "VALIDATION_ERROR");
 
@@ -268,6 +267,7 @@ public class OTRequestController extends HttpServlet {
             logger.severe(String.format("Database error creating OT request: userId=%d, accountId=%d, error=%s",
                          user.getId(), account.getId(), e.getMessage()));
             e.printStackTrace();
+            saveFormDataToSession(session, otDate, startTime, endTime, reason);
             request.setAttribute("error", "Database error occurred. Please try again later. If the problem persists, contact IT support.");
             request.setAttribute("errorType", "DATABASE_ERROR");
 
@@ -276,6 +276,7 @@ public class OTRequestController extends HttpServlet {
             logger.severe(String.format("Unexpected error creating OT request: userId=%d, accountId=%d, error=%s",
                          user.getId(), account.getId(), e.getMessage()));
             e.printStackTrace();
+            saveFormDataToSession(session, otDate, startTime, endTime, reason);
             request.setAttribute("error", "System error. Please try again later.");
             request.setAttribute("errorType", "SYSTEM_ERROR");
         }
@@ -300,5 +301,16 @@ public class OTRequestController extends HttpServlet {
         // Forward back to ot-form.jsp with success/error message
         request.getRequestDispatcher("/WEB-INF/views/requests/ot-form.jsp")
                .forward(request, response);
+    }
+
+    /**
+     * Save form data to session to preserve user input when there's an error
+     */
+    private void saveFormDataToSession(HttpSession session, String otDate,
+                                      String startTime, String endTime, String reason) {
+        session.setAttribute("formData_otDate", otDate);
+        session.setAttribute("formData_startTime", startTime);
+        session.setAttribute("formData_endTime", endTime);
+        session.setAttribute("formData_reason", reason);
     }
 }

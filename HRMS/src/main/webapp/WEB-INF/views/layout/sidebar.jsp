@@ -244,6 +244,12 @@
                     </a>
                     <ul class="sidebar-submenu" id="requests-submenu">
                         <li>
+                            <a href="${pageContext.request.contextPath}/requests/list"
+                                class="nav-link ${param.currentPage == 'request-list' ? 'active' : ''}">
+                                <i class="fas fa-list"></i><span>My Requests</span>
+                            </a>
+                        </li>
+                        <li>
                             <a href="${pageContext.request.contextPath}/requests/leave/create"
                                 class="nav-link ${param.currentPage == 'leave-request' ? 'active' : ''}">
                                 <i class="fas fa-calendar-times"></i><span>Leave Request</span>
