@@ -1,0 +1,300 @@
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+    <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+        <!DOCTYPE html>
+        <html lang="en">
+
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Create New Account</title>
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+            <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+            <link
+                href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
+                rel="stylesheet" />
+            <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
+        </head>
+
+        <body>
+            <!-- Include Sidebar -->
+            <jsp:include page="../layout/sidebar.jsp">
+                <jsp:param name="currentPage" value="account-create" />
+            </jsp:include>
+
+            <!-- Main Content -->
+            <div class="main-content" id="main-content">
+                <!-- Include Header -->
+                <jsp:include page="../layout/dashboard-header.jsp" />
+
+                <!-- Page Content -->
+                <div class="content-area">
+                    <!-- Breadcrumb -->
+                    <nav aria-label="breadcrumb" class="mb-3">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a
+                                    href="${pageContext.request.contextPath}/dashboard">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a
+                                    href="${pageContext.request.contextPath}/employees/accounts">Account List</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">Create Account</li>
+                        </ol>
+                    </nav>
+
+                    <!-- Page Header -->
+                    <div class="mb-4">
+                        <h2 class="mb-0">
+                            <i class="fas fa-user-plus me-2"></i>Create New Account
+                        </h2>
+                    </div>
+
+                    <!-- Error/Success Messages -->
+                    <c:if test="${not empty sessionScope.errorMessage}">
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            ${sessionScope.errorMessage}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        <c:remove var="errorMessage" scope="session" />
+                    </c:if>
+
+                    <c:if test="${not empty sessionScope.successMessage}">
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>
+                            ${sessionScope.successMessage}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        <c:remove var="successMessage" scope="session" />
+                    </c:if>
+
+                    <!-- Create Account Form -->
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <form action="${pageContext.request.contextPath}/employees/accounts/create" method="post"
+                                id="createAccountForm">
+
+                                <!-- User Selection -->
+                                <div class="mb-3">
+                                    <label for="userId" class="form-label required">
+                                        <i class="fas fa-user me-1"></i>Select User
+                                    </label>
+                                    <select class="form-select" id="userId" name="userId" required>
+                                        <option value="">-- Search and select user --</option>
+                                        <c:forEach var="user" items="${users}">
+                                            <option value="${user.id}" data-employee-code="${user.employeeCode}"
+                                                data-email="${user.emailCompany}">
+                                                ${user.fullName} (${user.employeeCode})
+                                                <c:if test="${not empty user.emailCompany}">
+                                                    - ${user.emailCompany}
+                                                </c:if>
+                                            </option>
+                                        </c:forEach>
+                                    </select>
+                                    <small class="text-muted">Type to search by name, employee code, or email</small>
+                                </div>
+
+                                <!-- Username -->
+                                <div class="mb-3">
+                                    <label for="username" class="form-label required">
+                                        <i class="fas fa-user-circle me-1"></i>Username
+                                    </label>
+                                    <input type="text" class="form-control" id="username" name="username" required
+                                        minlength="3" maxlength="100" pattern="[a-zA-Z0-9._-]+"
+                                        placeholder="Enter username">
+                                    <small class="text-muted">3-100 characters</small>
+                                </div>
+
+                                <div class="row">
+                                    <!-- Company Email -->
+                                    <div class="col-md-6 mb-3">
+                                        <label for="emailCompany" class="form-label">
+                                            <i class="fas fa-building me-1"></i>Company Email
+                                        </label>
+                                        <input type="email" class="form-control" id="emailCompany" readonly
+                                            placeholder="Auto-filled from user">
+                                    </div>
+
+                                    <!-- Email Login -->
+                                    <div class="col-md-6 mb-3">
+                                        <label for="emailLogin" class="form-label">
+                                            <i class="fas fa-envelope me-1"></i>Email Login (Optional)
+                                        </label>
+                                        <input type="email" class="form-control" id="emailLogin" name="emailLogin"
+                                            maxlength="255" placeholder="Leave empty to use company email">
+                                        <small class="text-muted">If empty, company email will be used</small>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <!-- Password -->
+                                    <div class="col-md-6 mb-3">
+                                        <label for="password" class="form-label required">
+                                            <i class="fas fa-lock me-1"></i>Password
+                                        </label>
+                                        <input type="password" class="form-control" id="password" name="password"
+                                            required maxlength="100" placeholder="Enter password">
+                                    </div>
+
+                                    <!-- Confirm Password -->
+                                    <div class="col-md-6 mb-3">
+                                        <label for="confirmPassword" class="form-label required">
+                                            <i class="fas fa-lock me-1"></i>Confirm Password
+                                        </label>
+                                        <input type="password" class="form-control" id="confirmPassword"
+                                            name="confirmPassword" required maxlength="100"
+                                            placeholder="Re-enter password">
+                                        <div class="invalid-feedback">Passwords do not match</div>
+                                    </div>
+                                </div>
+
+                                <!-- Form Actions -->
+                                <div class="d-flex justify-content-end gap-2 mt-4">
+                                    <a href="${pageContext.request.contextPath}/employees/accounts"
+                                        class="btn btn-secondary">
+                                        <i class="fas fa-times me-2"></i>Cancel
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-2"></i>Create Account
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scripts -->
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+            <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+            <script>
+                $(document).ready(function () {
+                    // Initialize Select2 with search functionality
+                    $('#userId').select2({
+                        theme: 'bootstrap-5',
+                        placeholder: '-- Search and select user --',
+                        allowClear: true,
+                        width: '100%',
+                        templateResult: formatUser,
+                        templateSelection: formatUserSelection,
+                        matcher: customMatcher
+                    });
+
+                    // Custom format for dropdown options
+                    function formatUser(user) {
+                        if (!user.id) {
+                            return user.text;
+                        }
+
+                        const $user = $(user.element);
+                        const employeeCode = $user.data('employee-code');
+                        const email = $user.data('email');
+
+                        let html = '<div class="select2-user-option">';
+                        html += '<div class="fw-bold">' + user.text.split('(')[0].trim() + '</div>';
+                        html += '<div class="small text-muted">';
+                        if (employeeCode) {
+                            html += '<i class="fas fa-id-badge me-1"></i>' + employeeCode;
+                        }
+                        if (email) {
+                            html += ' <i class="fas fa-envelope ms-2 me-1"></i>' + email;
+                        }
+                        html += '</div>';
+                        html += '</div>';
+
+                        return $(html);
+                    }
+
+                    // Format for selected option
+                    function formatUserSelection(user) {
+                        if (!user.id) {
+                            return user.text;
+                        }
+                        return user.text.split('(')[0].trim() + ' (' + $(user.element).data('employee-code') + ')';
+                    }
+
+                    // Custom matcher for better search
+                    function customMatcher(params, data) {
+                        if ($.trim(params.term) === '') {
+                            return data;
+                        }
+
+                        if (typeof data.text === 'undefined') {
+                            return null;
+                        }
+
+                        const $option = $(data.element);
+                        const searchTerm = params.term.toLowerCase();
+                        const text = data.text.toLowerCase();
+                        const employeeCode = ($option.data('employee-code') || '').toString().toLowerCase();
+                        const email = ($option.data('email') || '').toString().toLowerCase();
+
+                        if (text.indexOf(searchTerm) > -1 ||
+                            employeeCode.indexOf(searchTerm) > -1 ||
+                            email.indexOf(searchTerm) > -1) {
+                            return data;
+                        }
+
+                        return null;
+                    }
+
+                    // Form validation
+                    const form = document.getElementById('createAccountForm');
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                        form.classList.add('was-validated');
+                    }, false);
+
+                    // Auto-fill username and email from user selection
+                    $('#userId').on('select2:select', function (e) {
+                        const selectedOption = e.params.data.element;
+                        const $option = $(selectedOption);
+
+                        if (selectedOption.value) {
+                            const employeeCode = $option.data('employee-code');
+                            const email = $option.data('email');
+
+                            if (employeeCode) {
+                                document.getElementById('username').value = employeeCode.toLowerCase();
+                            }
+
+                            if (email) {
+                                document.getElementById('emailCompany').value = email;
+                            }
+                        }
+                    });
+
+                    // Password validation
+                    const passwordInput = document.getElementById('password');
+                    const confirmPasswordInput = document.getElementById('confirmPassword');
+
+                    function validatePassword() {
+                        if (passwordInput.value !== confirmPasswordInput.value) {
+                            confirmPasswordInput.setCustomValidity('Passwords do not match');
+                        } else {
+                            confirmPasswordInput.setCustomValidity('');
+                        }
+                    }
+
+                    passwordInput.addEventListener('change', validatePassword);
+                    confirmPasswordInput.addEventListener('keyup', validatePassword);
+                });
+            </script>
+            <style>
+                .select2-user-option {
+                    padding: 5px 0;
+                }
+
+                .select2-container--bootstrap-5 .select2-selection {
+                    min-height: 38px;
+                }
+
+                .select2-container--bootstrap-5 .select2-dropdown {
+                    border-color: #dee2e6;
+                }
+            </style>
+        </body>
+
+        </html>

@@ -213,12 +213,27 @@
                     </a>
                 </li>
 
+                <!-- Dropdown: Employee Management -->
                 <li class="nav-item">
-                    <a href="${pageContext.request.contextPath}/identity/employees"
-                        class="nav-link ${param.currentPage == 'employees' ? 'active' : ''}"
-                        data-tooltip="Employee Management">
+                    <a href="#" class="nav-link sidebar-dropdown-toggle" data-target="employee-submenu"
+                        aria-expanded="false" data-tooltip="Employee Management">
                         <i class="fas fa-users"></i><span>Employee Management</span>
+                        <i class="fas fa-chevron-right dropdown-arrow"></i>
                     </a>
+                    <ul class="sidebar-submenu" id="employee-submenu">
+                        <li>
+                            <a href="${pageContext.request.contextPath}/employees/users"
+                                class="nav-link ${param.currentPage == 'user-list' ? 'active' : ''}">
+                                <i class="fas fa-user"></i><span>User List</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="${pageContext.request.contextPath}/employees/accounts"
+                                class="nav-link ${param.currentPage == 'account-list' ? 'active' : ''}">
+                                <i class="fas fa-user-shield"></i><span>Account List</span>
+                            </a>
+                        </li>
+                    </ul>
                 </li>
 
                 <li class="nav-item">
@@ -274,8 +289,7 @@
                 <c:if test="${sessionScope.user != null && sessionScope.user.positionId == 6}">
                     <li class="nav-item">
                         <a href="${pageContext.request.contextPath}/settings"
-                            class="nav-link ${param.currentPage == 'settings' ? 'active' : ''}"
-                            data-tooltip="Settings">
+                            class="nav-link ${param.currentPage == 'settings' ? 'active' : ''}" data-tooltip="Settings">
                             <i class="fas fa-cog"></i><span>Settings</span>
                         </a>
                     </li>
