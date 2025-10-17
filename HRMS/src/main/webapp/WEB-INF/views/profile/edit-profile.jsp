@@ -1,26 +1,29 @@
 <%@ page contentType="text/html; charset=UTF-8" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <!DOCTYPE html>
 <html lang="en">
-
     <head>
-        <meta charset="UTF-8">
-        <title>Update Profile - HRMS</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+        <jsp:include page="../layout/head.jsp">
+            <jsp:param name="pageTitle" value="Update Profile - HRMS" />
+            <jsp:param name="pageCss" value="dashboard.css" />
+        </jsp:include>
         <style>
-            body {
-                background-color: #f5f5f5;
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                margin: 0;
-                padding: 0;
+            .main-content {
+                margin-left: 260px;
+                padding: 2rem;
             }
             .profile-container {
-                max-width: 95%;
-                margin: 20px auto;
+                max-width: 100%;
                 background: white;
                 padding: 30px 50px;
-                min-height: calc(100vh - 40px);
+                border-radius: 8px;
+                box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            }
+            @media (max-width: 768px) {
+                .main-content {
+                    margin-left: 0;
+                }
             }
             .profile-header {
                 text-align: center;
@@ -132,13 +135,23 @@
     </head>
 
     <body>
-        <div class="profile-container">
-            <!-- Back to View Profile Link -->
-            <a href="${pageContext.request.contextPath}/user-profile" class="back-link">
-                <i class="fa-solid fa-arrow-left me-2"></i>Back to View Profile
-            </a>
+        <jsp:include page="../layout/sidebar.jsp">
+            <jsp:param name="currentPage" value="profile" />
+        </jsp:include>
 
-            <!-- Profile Header -->
+        <div class="main-content" id="main-content">
+            <!-- Header -->
+            <jsp:include page="../layout/dashboard-header.jsp" />
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <div class="profile-container">
+                    <!-- Back to View Profile Link -->
+                <a href="${pageContext.request.contextPath}/user-profile" class="back-link">
+                    <i class="fa-solid fa-arrow-left me-2"></i>Back to View Profile
+                </a>
+
+                <!-- Profile Header -->
             <div class="profile-header">
                 <h2>Update Profile</h2>
             </div>
@@ -175,82 +188,78 @@
 
                 <!-- Full Name -->
                 <div class="form-row">
-                    <label class="form-label">Full Name: <span class="text-danger">*</span></label>
+                    <label class="form-label">Full Name: </label>
                     <div class="form-input-wrapper">
                         <input type="text" name="fullName" class="form-control" value="${profile.fullName}" 
-                               required maxlength="50" pattern="^[a-zA-Z\s]+$" 
-                               title="Full name must not contain special characters or numbers">
+                               maxlength="100" pattern="^[a-zA-ZÀ-ỹ\s]+$"
+                               title="Full name can only contain letters and spaces (no numbers or special characters)">
                     </div>
                 </div>
 
                 <!-- Phone -->
                 <div class="form-row">
-                    <label class="form-label">Phone Number: <span class="text-danger">*</span></label>
+                    <label class="form-label">Phone Number: </label>
                     <div class="form-input-wrapper">
                         <input type="text" name="phone" class="form-control" value="${profile.phone}" 
-                               required pattern="^[0-9]{10,11}$" placeholder="10-11 digits"
+                               pattern="^[0-9]{10,11}$" placeholder="10-11 digits"
                                title="Phone number must be 10-11 digits">
                     </div>
                 </div>
 
                 <!-- Date of Birth & Hometown -->
                 <div class="form-row two-columns">
-                    <label class="form-label">Date of Birth: <span class="text-danger">*</span></label>
+                    <label class="form-label">Date of Birth: </label>
                     <input type="date" name="dob" class="form-control" value="${profile.dob}" 
-                           required min="1900-01-01" max="${java.time.LocalDate.now()}">
+                           min="1900-01-01" max="${java.time.LocalDate.now()}">
                     <label class="label-inline">Hometown:</label>
                     <input type="text" name="hometown" class="form-control" value="${profile.hometown}" maxlength="50">
                 </div>
 
                 <!-- Gender -->
                 <div class="form-row">
-                    <label class="form-label">Gender: <span class="text-danger">*</span></label>
+                    <label class="form-label">Gender: </label>
                     <div class="form-input-wrapper">
                         <div class="radio-group">
                             <div class="form-check form-check-inline">
                                 <input class="form-check-input" type="radio" name="gender" id="genderMale" value="male" 
-                                       ${profile.gender == 'male' ? 'checked' : ''} required>
+                                       ${fn:toLowerCase(profile.gender) == 'male' ? 'checked' : ''}>
                                 <label class="form-check-label" for="genderMale">Male</label>
                             </div>
                             <div class="form-check form-check-inline">
                                 <input class="form-check-input" type="radio" name="gender" id="genderFemale" value="female" 
-                                       ${profile.gender == 'female' ? 'checked' : ''} required>
+                                       ${fn:toLowerCase(profile.gender) == 'female' ? 'checked' : ''}>
                                 <label class="form-check-label" for="genderFemale">Female</label>
                             </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="gender" id="genderOther" value="other" 
-                                       ${profile.gender == 'other' ? 'checked' : ''} required>
-                                <label class="form-check-label" for="genderOther">Others</label>
-                            </div>    
+                         
                         </div>
                     </div>
                 </div>
 
                 <!-- Citizen ID (CCCD) -->
                 <div class="form-row">
-                    <label class="form-label">Citizen ID (CCCD): <span class="text-danger">*</span></label>
+                    <label class="form-label">Citizen ID (CCCD): </label>
                     <div class="form-input-wrapper">
                         <input type="text" name="cccd" class="form-control" value="${profile.cccd}" 
-                               required pattern="^[0-9]{12}$" placeholder="12 digits"
+                               pattern="^[0-9]{12}$" placeholder="12 digits"
                                title="CCCD must be exactly 12 digits">
                     </div>
                 </div>
 
                 <!-- CCCD Issued Date & Place -->
                 <div class="form-row two-columns">
-                    <label class="form-label">CCCD Issued Date: <span class="text-danger">*</span></label>
+                    <label class="form-label">CCCD Issued Date: </label>
                     <input type="date" name="cccdIssuedDate" class="form-control" value="${profile.cccdIssuedDate}" 
-                           required max="${java.time.LocalDate.now()}">
-                    <label class="label-inline">Issued Place: <span class="text-danger">*</span></label>
+                           max="${java.time.LocalDate.now()}">
+                    <label class="label-inline">Issued Place: </label>
                     <input type="text" name="cccdIssuedPlace" class="form-control" value="${profile.cccdIssuedPlace}" 
-                           required maxlength="100" placeholder="e.g., Cuc canh sat">
+                           maxlength="100" placeholder="e.g., Cuc canh sat">
                 </div>
 
                 <!-- Country -->
                 <div class="form-row">
-                    <label class="form-label">Country: <span class="text-danger">*</span></label>
+                    <label class="form-label">Country: </label>
                     <div class="form-input-wrapper">
-                        <select name="country" class="form-select" required>
+                        <select name="country" class="form-select">
                             <option value="">Select Country</option>
                             <option value="Vietnam" ${profile.country == 'Vietnam' ? 'selected' : ''}>Vietnam</option>
                             <option value="United States" ${profile.country == 'United States' ? 'selected' : ''}>United States</option>
@@ -264,10 +273,10 @@
 
                 <!-- Address Line 1 -->
                 <div class="form-row">
-                    <label class="form-label">Address Line 1: <span class="text-danger">*</span></label>
+                    <label class="form-label">Address Line 1: </label>
                     <div class="form-input-wrapper">
                         <input type="text" name="addressLine1" class="form-control" value="${profile.addressLine1}" 
-                               required maxlength="100" placeholder="e.g., Phu Thuong, Tay Ho, Ha Noi">
+                               maxlength="100" placeholder="e.g., Phu Thuong, Tay Ho, Ha Noi">
                     </div>
                 </div>
 
@@ -281,8 +290,8 @@
 
                 <!-- City & State -->
                 <div class="form-row two-columns">
-                    <label class="form-label">City: <span class="text-danger">*</span></label>
-                    <input type="text" name="city" class="form-control" value="${profile.city}" required maxlength="50">
+                    <label class="form-label">City: </label>
+                    <input type="text" name="city" class="form-control" value="${profile.city}" maxlength="50">
                     <label class="label-inline">State:</label>
                     <input type="text" name="state" class="form-control" value="${profile.state}" maxlength="50">
                 </div>
@@ -306,11 +315,16 @@
                         <i class="fa-solid fa-xmark me-2"></i>Cancel
                     </button>
                 </div>
-            </form>
+                </form>
+                </div>
+            </div>
         </div>
 
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-        <script>
+        <!-- Footer -->
+        <jsp:include page="../layout/dashboard-footer.jsp" />
+    </div>
+
+    <script>
             // Alt Flow 2: Cancel with confirmation
             function confirmCancel() {
                 if (confirm('Are you sure you want to cancel changes?')) {
@@ -341,52 +355,8 @@
             form.addEventListener('submit', (e) => {
                 formChanged = false;
                 
-                // Additional client-side validation
-                const fullName = document.querySelector('input[name="fullName"]').value;
-                const phone = document.querySelector('input[name="phone"]').value;
-                const cccd = document.querySelector('input[name="cccd"]').value;
-                const dob = document.querySelector('input[name="dob"]').value;
-                
-                // Validate full name (no special chars or numbers)
-                if (!/^[a-zA-Z\s]+$/.test(fullName)) {
-                    alert('Full name must not contain special characters or numbers');
-                    e.preventDefault();
-                    return false;
-                }
-                
-                // Validate phone (10-11 digits)
-                if (!/^[0-9]{10,11}$/.test(phone)) {
-                    alert('Phone number must be 10-11 digits');
-                    e.preventDefault();
-                    return false;
-                }
-                
-                // Validate CCCD (12 digits)
-                if (!/^[0-9]{12}$/.test(cccd)) {
-                    alert('Citizen ID (CCCD) must be exactly 12 digits');
-                    e.preventDefault();
-                    return false;
-                }
-                
-                // Validate date of birth
-                if (dob) {
-                    const dobDate = new Date(dob);
-                    const today = new Date();
-                    const minDate = new Date('1900-01-01');
-                    
-                    if (dobDate > today) {
-                        alert('Date of birth must not be in the future');
-                        e.preventDefault();
-                        return false;
-                    }
-                    
-                    if (dobDate < minDate) {
-                        alert('Date of birth must be after 01/01/1900');
-                        e.preventDefault();
-                        return false;
-                    }
-                }
-                
+                // No client-side validation - all validation done on server side
+                // Errors will be displayed in the form
                 return true;
             });
             

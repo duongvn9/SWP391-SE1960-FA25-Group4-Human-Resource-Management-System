@@ -182,26 +182,24 @@ public class UserProfileDto {
     public boolean validate() {
         errors.clear();
         
-        // 1. Validate Full Name (Required, max 50 chars, no special chars or numbers)
-        if (fullName == null || fullName.trim().isEmpty()) {
-            errors.add("Full name is required");
-        } else if (fullName.trim().length() > 50) {
-            errors.add("Full name must not exceed 50 characters");
-        } else if (!fullName.matches("^[a-zA-Z\\s]+$")) {
-            errors.add("Full name must not contain special characters or numbers");
+        // 1. Validate Full Name (Optional, max 100 chars, only letters and spaces - no numbers)
+        if (fullName != null && !fullName.trim().isEmpty()) {
+            if (fullName.trim().length() > 100) {
+                errors.add("Full name must not exceed 100 characters");
+            } else if (!fullName.matches("^[a-zA-ZÀ-ỹ\\s]+$")) {
+                errors.add("Full name can only contain letters and spaces (no numbers or special characters)");
+            }
         }
         
-        // 2. Validate Phone Number (Required, 10-11 digits)
-        if (phone == null || phone.trim().isEmpty()) {
-            errors.add("Phone number is required");
-        } else if (!phone.matches("^[0-9]{10,11}$")) {
-            errors.add("Phone number must be 10-11 digits");
+        // 2. Validate Phone Number (Optional, 10-11 digits if provided)
+        if (phone != null && !phone.trim().isEmpty()) {
+            if (!phone.matches("^[0-9]{10,11}$")) {
+                errors.add("Phone number must be 10-11 digits");
+            }
         }
         
-        // 3. Validate Date of Birth (Required, must be <= current date and >= 01/01/1900)
-        if (dob == null) {
-            errors.add("Date of birth is required");
-        } else {
+        // 3. Validate Date of Birth (Optional, must be <= current date and >= 01/01/1900 if provided)
+        if (dob != null) {
             LocalDate minDate = LocalDate.of(1900, 1, 1);
             LocalDate today = LocalDate.now();
             if (dob.isAfter(today)) {
@@ -211,11 +209,12 @@ public class UserProfileDto {
             }
         }
         
-        // 4. Validate Gender (Required)
-        if (gender == null || gender.trim().isEmpty()) {
-            errors.add("Gender is required");
-        } else if (!gender.equals("male") && !gender.equals("female") && !gender.equals("other")) {
-            errors.add("Invalid gender value");
+        // 4. Validate Gender (Optional, must be valid value if provided - case insensitive)
+        if (gender != null && !gender.trim().isEmpty()) {
+            String genderLower = gender.trim().toLowerCase();
+            if (!genderLower.equals("male") && !genderLower.equals("female") && !genderLower.equals("other")) {
+                errors.add("Invalid gender value");
+            }
         }
         
         // 5. Validate Hometown (Optional, max 50 chars)
@@ -223,37 +222,35 @@ public class UserProfileDto {
             errors.add("Hometown must not exceed 50 characters");
         }
         
-        // 6. Validate CCCD (Required, 12 digits)
-        if (cccd == null || cccd.trim().isEmpty()) {
-            errors.add("Citizen ID (CCCD) is required");
-        } else if (!cccd.matches("^[0-9]{12}$")) {
-            errors.add("Citizen ID (CCCD) must be exactly 12 digits");
+        // 6. Validate CCCD (Optional, 12 digits if provided)
+        if (cccd != null && !cccd.trim().isEmpty()) {
+            if (!cccd.matches("^[0-9]{12}$")) {
+                errors.add("Citizen ID (CCCD) must be exactly 12 digits");
+            }
         }
         
-        // 7. Validate CCCD Issued Date (Required, must be <= current date)
-        if (cccdIssuedDate == null) {
-            errors.add("CCCD issued date is required");
-        } else if (cccdIssuedDate.isAfter(LocalDate.now())) {
-            errors.add("CCCD issued date must not be in the future");
+        // 7. Validate CCCD Issued Date (Optional, must be <= current date if provided)
+        if (cccdIssuedDate != null) {
+            if (cccdIssuedDate.isAfter(LocalDate.now())) {
+                errors.add("CCCD issued date must not be in the future");
+            }
         }
         
-        // 8. Validate CCCD Issued Place (Required, max 100 chars)
-        if (cccdIssuedPlace == null || cccdIssuedPlace.trim().isEmpty()) {
-            errors.add("CCCD issued place is required");
-        } else if (cccdIssuedPlace.length() > 100) {
-            errors.add("CCCD issued place must not exceed 100 characters");
+        // 8. Validate CCCD Issued Place (Optional, max 100 chars if provided)
+        if (cccdIssuedPlace != null && !cccdIssuedPlace.trim().isEmpty()) {
+            if (cccdIssuedPlace.length() > 100) {
+                errors.add("CCCD issued place must not exceed 100 characters");
+            }
         }
         
-        // 9. Validate Country (Required)
-        if (country == null || country.trim().isEmpty()) {
-            errors.add("Country is required");
-        }
+        // 9. Validate Country (Optional)
+        // No validation needed - can be empty
         
-        // 10. Validate Address Line 1 (Required, max 100 chars)
-        if (addressLine1 == null || addressLine1.trim().isEmpty()) {
-            errors.add("Address line 1 is required");
-        } else if (addressLine1.length() > 100) {
-            errors.add("Address line 1 must not exceed 100 characters");
+        // 10. Validate Address Line 1 (Optional, max 100 chars if provided)
+        if (addressLine1 != null && !addressLine1.trim().isEmpty()) {
+            if (addressLine1.length() > 100) {
+                errors.add("Address line 1 must not exceed 100 characters");
+            }
         }
         
         // 11. Validate Address Line 2 (Optional, max 100 chars)
@@ -261,11 +258,11 @@ public class UserProfileDto {
             errors.add("Address line 2 must not exceed 100 characters");
         }
         
-        // 12. Validate City (Required, max 50 chars)
-        if (city == null || city.trim().isEmpty()) {
-            errors.add("City is required");
-        } else if (city.length() > 50) {
-            errors.add("City must not exceed 50 characters");
+        // 12. Validate City (Optional, max 50 chars if provided)
+        if (city != null && !city.trim().isEmpty()) {
+            if (city.length() > 50) {
+                errors.add("City must not exceed 50 characters");
+            }
         }
         
         // 13. Validate State (Optional, max 50 chars)

@@ -157,3 +157,4 @@
         <script src="${pageContext.request.contextPath}/assets/js/attendance-record-HR.js"></script> 
     </body> 
 </html>
+

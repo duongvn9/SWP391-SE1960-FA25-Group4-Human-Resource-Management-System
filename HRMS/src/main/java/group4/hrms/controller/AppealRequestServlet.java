@@ -22,7 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-@WebServlet("/requests/appeal")
+@WebServlet("/requests/appeal/create")
 @MultipartConfig
 public class AppealRequestServlet extends HttpServlet {
 

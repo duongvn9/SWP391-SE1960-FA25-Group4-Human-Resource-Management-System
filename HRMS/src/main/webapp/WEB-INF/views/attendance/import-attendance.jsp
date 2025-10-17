@@ -17,6 +17,7 @@
         <jsp:include page="../layout/dashboard-header.jsp">
             <jsp:param name="pageTitle" value="attendance-record-empt" />
         </jsp:include>
+
         <h2 class="page-title">Import Attendance</h2>
 
         <!-- Tabs -->
