@@ -4,39 +4,45 @@
 <html>
     <head>
         <title>Submit Attendance Dispute</title>
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/appeal-request.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/appeal-form.css">
         <script src="${pageContext.request.contextPath}/assets/js/appeal-request.js"></script>
     </head>
     <body>
-        <h2>Submit Attendance Dispute</h2>
+        <h2 class="form-title">Submit Attendance Dispute</h2>
 
-        <form action="${pageContext.request.contextPath}/requests/appeal" method="post" enctype="multipart/form-data">
+        <form class="appeal-form" action="${pageContext.request.contextPath}/requests/appeal" method="post" enctype="multipart/form-data">
             <input type="hidden" name="request_type_id" value="${requestTypeId}"/>
 
-            <label>Select Attendance Date:</label><br/>
-            <input type="date" id="attendanceDate" name="attendance_date"/>
-            <button type="button" id="selectFromLogDates">Select from Attendance Logs</button>
-            <input type="hidden" id="selectedLogDates" name="selected_log_dates"/>
-            <br/><br/>
+            <div class="form-group">
+                <label class="form-label">Select Attendance Date:</label><br/>
+                <input class="form-input" type="date" id="attendanceDate" name="attendance_date"/>
+                <button class="form-button" type="button" id="selectFromLogDates">Select from Attendance Logs</button>
+                <input type="hidden" id="selectedLogDates" name="selected_log_dates"/>
+            </div>
 
-            <label for="title">Title:</label>
-            <input type="text" id="title" name="title" required/>
-            <br/><br/>
+            <div class="form-group">
+                <label class="form-label" for="title">Title:</label>
+                <input class="form-input" type="text" id="title" name="title" required/>
+            </div>
 
-            <label for="detail">Detail:</label><br/>
-            <textarea id="detail" name="detail" rows="5" cols="50" required></textarea>
-            <br/><br/>
+            <div class="form-group">
+                <label class="form-label" for="detail">Detail:</label><br/>
+                <textarea class="form-textarea" id="detail" name="detail" rows="5" cols="50" required></textarea>
+            </div>
 
-            <label for="attachment">Attachment:</label>
-            <input type="file" id="attachment" name="attachment"/>
-            <br/><br/>
+            <div class="form-group">
+                <label class="form-label" for="attachment">Attachment:</label>
+                <input class="form-input" type="file" id="attachment" name="attachment"/>
+            </div>
 
-            <!-- Hidden input to store selected attendance log IDs -->
             <input type="hidden" id="selectedLogs" name="selected_log_ids"/>
 
-            <button type="submit">Submit Dispute</button>
+            <div class="form-group">
+                <button class="form-submit" type="submit">Submit Dispute</button>
+            </div>
+
             <c:if test="${not empty message}">
-                <div style="color: red; margin-top: 10px;">
+                <div class="form-message error-message">
                     ${message}
                 </div>
             </c:if>

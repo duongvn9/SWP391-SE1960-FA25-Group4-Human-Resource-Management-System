@@ -588,4 +588,13 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
 
         return 0;
     }
+
+    public void saveAttendanceLogs(List<AttendanceLog> logs) {
+        for (AttendanceLog log : logs) {
+            try {
+                save(log);
+            } catch (SQLException e) {
+            }
+        }
+    }
 }

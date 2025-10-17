@@ -7,74 +7,88 @@
         <title>My Attendance</title>  
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/attendance-record-emp.css">
     </head>
-    <body>
-        <h2>My Attendance Records</h2>
+    <body class="attendance-page">
+        <h2 class="page-title">My Attendance Records</h2>
 
-        <form id="filterForm" method="post" action="${pageContext.request.contextPath}/attendance/record/emp">
-            <label for="startDate">From:</label>
-            <input type="date" id="startDate" name="startDate" value="${param.startDate}">
+        <form id="filterForm" class="filter-form" method="post" action="${pageContext.request.contextPath}/attendance/record/emp">
+            <div class="filter-group">
+                <label for="startDate" class="filter-label">From:</label>
+                <input type="date" id="startDate" name="startDate" value="${param.startDate}" class="filter-input">
+            </div>
 
-            <label for="endDate">To:</label>
-            <input type="date" id="endDate" name="endDate" value="${param.endDate}">
+            <div class="filter-group">
+                <label for="endDate" class="filter-label">To:</label>
+                <input type="date" id="endDate" name="endDate" value="${param.endDate}" class="filter-input">
+            </div>
 
-            <label for="status">Status:</label>
-            <select id="status" name="status">
-                <option value="">All</option>
-                <option value="On time" ${param.status == 'On time' ? 'selected' : ''}>On time</option>
-                <option value="Late" ${param.status == 'Late' ? 'selected' : ''}>Late</option>
-            </select>
+            <div class="filter-group">
+                <label for="status" class="filter-label">Status:</label>
+                <select id="status" name="status" class="filter-select">
+                    <option value="">All</option>
+                    <option value="On time" ${param.status == 'On time' ? 'selected' : ''}>On time</option>
+                    <option value="Late" ${param.status == 'Late' ? 'selected' : ''}>Late</option>
+                </select>
+            </div>
 
-            <label for="source">Source:</label>
-            <select id="source" name="source">
-                <option value="">All</option>
-                <option value="Manual" ${param.source == 'Manual' ? 'selected' : ''}>Manual</option>
-                <option value="Import" ${param.source == 'Import' ? 'selected' : ''}>Import</option>
-            </select>
+            <div class="filter-group">
+                <label for="source" class="filter-label">Source:</label>
+                <select id="source" name="source" class="filter-select">
+                    <option value="">All</option>
+                    <option value="Manual" ${param.source == 'Manual' ? 'selected' : ''}>Manual</option>
+                    <option value="Import" ${param.source == 'Import' ? 'selected' : ''}>Import</option>
+                </select>
+            </div>
 
-            <label for="periodSelect">Select Period:</label>
-            <select id="periodSelect" name="periodSelect">
-                <option value="">-- All Periods --</option>
-                <c:forEach var="p" items="${periodList}">
-                    <option value="${p.id}" ${param.periodSelect == p.id.toString() ? 'selected' : ''}>${p.name}</option>
-                </c:forEach>
-            </select>
+            <div class="filter-group">
+                <label for="periodSelect" class="filter-label">Select Period:</label>
+                <select id="periodSelect" name="periodSelect" class="filter-select">
+                    <option value="">-- All Periods --</option>
+                    <c:forEach var="p" items="${periodList}">
+                        <option value="${p.id}" ${param.periodSelect == p.id.toString() ? 'selected' : ''}>${p.name}</option>
+                    </c:forEach>
+                </select>
+            </div>
 
-            <button type="submit">Filter</button>
-            <button type="submit" name="action" value="reset" id="resetBtn">Reset</button>
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-filter">Filter</button>
+                <button type="submit" name="action" value="reset" id="resetBtn" class="btn btn-reset">Reset</button>
+            </div>
         </form>
         <br/><br/> 
 
-        <form id="exportForm" action="${pageContext.request.contextPath}/attendance/record/emp" method="post">
+        <form id="exportForm" class="export-form" action="${pageContext.request.contextPath}/attendance/record/emp" method="post">
             <input type="hidden" name="exportType" id="exportType">
         </form>
 
-        <button type="button" id="exportXLSBtn">Export XLS</button>
-        <button type="button" id="exportCSVBtn">Export CSV</button>
-        <button type="button" id="exportPDFBtn">Export PDF</button>
+        <div class="export-buttons">
+            <button type="button" id="exportXLSBtn" class="btn btn-export btn-xls">Export XLS</button>
+            <button type="button" id="exportCSVBtn" class="btn btn-export btn-csv">Export CSV</button>
+            <button type="button" id="exportPDFBtn" class="btn btn-export btn-pdf">Export PDF</button>
+        </div>
         <br/><br/>
 
-        <table id="attendanceTable" border="1" cellpadding="6">
+        <table id="attendanceTable" class="attendance-table" border="1" cellpadding="6">
             <thead>
                 <tr>
-                    <th>Select</th>
-                    <th>Date</th>
-                    <th>Check-in</th>
-                    <th>Check-out</th>
-                    <th>Status</th>
-                    <th>Source</th>
-                    <th>Period</th>
+                    <th class="col-select">Select</th>
+                    <th class="col-date">Date</th>
+                    <th class="col-checkin">Check-in</th>
+                    <th class="col-checkout">Check-out</th>
+                    <th class="col-status">Status</th>
+                    <th class="col-source">Source</th>
+                    <th class="col-period">Period</th>
                 </tr>
             </thead>
             <tbody>
                 <c:forEach var="record" items="${attendanceList}">
-                    <tr>
-                        <td><button type="button" class="selectAttendanceBtn">Select</button></td>
-                        <td>${record.dateStr}</td>
-                        <td>${record.checkInStr}</td>
-                        <td>${record.checkOutStr}</td>
-                        <td>${record.status}</td>
-                        <td>${record.source}</td>
-                        <td>${record.period}</td>
+                    <tr class="attendance-row">
+                        <td><button type="button" class="selectAttendanceBtn btn btn-select">Select</button></td>
+                        <td class="cell-date">${record.dateStr}</td>
+                        <td class="cell-checkin">${record.checkInStr}</td>
+                        <td class="cell-checkout">${record.checkOutStr}</td>
+                        <td class="cell-status">${record.status}</td>
+                        <td class="cell-source">${record.source}</td>
+                        <td class="cell-period">${record.period}</td>
                     </tr>
                 </c:forEach>
             </tbody>
@@ -82,22 +96,22 @@
 
         <div class="pagination" style="margin-top: 10px;">
             <c:if test="${currentPage > 1}">
-                <a href="?page=${currentPage - 1}">Previous</a>
+                <a href="?page=${currentPage - 1}" class="page-link">Previous</a>
             </c:if>
 
             <c:forEach var="i" begin="1" end="${totalPages}">
                 <c:choose>
                     <c:when test="${i == currentPage}">
-                        <span><b>${i}</b></span>
-                    </c:when>
-                    <c:otherwise>
-                        <a href="?page=${i}">${i}</a>
+                        <span class="page-current"><b>${i}</b></span>
+                            </c:when>
+                            <c:otherwise>
+                        <a href="?page=${i}" class="page-link">${i}</a>
                     </c:otherwise>
                 </c:choose>
             </c:forEach>
 
             <c:if test="${currentPage < totalPages}">
-                <a href="?page=${currentPage + 1}">Next</a>
+                <a href="?page=${currentPage + 1}" class="page-link">Next</a>
             </c:if>
         </div>
 
