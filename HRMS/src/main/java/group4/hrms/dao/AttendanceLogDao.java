@@ -1,194 +1,169 @@
 package group4.hrms.dao;
 
+import group4.hrms.dto.AttendanceLogDto;
 import group4.hrms.model.AttendanceLog;
 import group4.hrms.util.DatabaseUtil;
 
 import java.sql.*;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * DAO class để xử lý các thao tác với bảng AttendanceLog
- * 
+ *
  * @author Group4
  */
 public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
-    
 
-    
     @Override
     protected String getTableName() {
         return "attendance_logs";
     }
-    
+
     @Override
     protected AttendanceLog mapResultSetToEntity(ResultSet rs) throws SQLException {
         AttendanceLog log = new AttendanceLog();
+
         log.setId(rs.getLong("id"));
         log.setUserId(rs.getLong("user_id"));
-        
-        Date workDate = rs.getDate("work_date");
-        if (workDate != null) {
-            log.setWorkDate(workDate.toLocalDate());
+        log.setCheckType(rs.getString("check_type"));
+
+        Timestamp checkedAtTs = rs.getTimestamp("checked_at");
+        if (checkedAtTs != null) {
+            log.setCheckedAt(checkedAtTs.toLocalDateTime());
         }
-        
-        log.setCheckInTime(getLocalDateTime(rs, "check_in_time"));
-        log.setCheckOutTime(getLocalDateTime(rs, "check_out_time"));
-        log.setCheckInType(rs.getString("check_in_type"));
-        log.setCheckOutType(rs.getString("check_out_type"));
-        
-        Double workingHours = rs.getDouble("working_hours");
+
+        log.setSource(rs.getString("source"));
+        log.setNote(rs.getString("note"));
+
+        long periodId = rs.getLong("period_id");
         if (!rs.wasNull()) {
-            log.setWorkingHours(workingHours);
+            log.setPeriodId(periodId);
         }
-        
-        Double overtimeHours = rs.getDouble("overtime_hours");
-        if (!rs.wasNull()) {
-            log.setOvertimeHours(overtimeHours);
+
+        Timestamp createdAtTs = rs.getTimestamp("created_at");
+        if (createdAtTs != null) {
+            log.setCreatedAt(createdAtTs.toLocalDateTime());
         }
-        
-        log.setStatus(rs.getString("status"));
-        log.setNotes(rs.getString("notes"));
-        log.setCheckInIp(rs.getString("check_in_ip"));
-        log.setCheckOutIp(rs.getString("check_out_ip"));
-        log.setCheckInLocation(rs.getString("check_in_location"));
-        log.setCheckOutLocation(rs.getString("check_out_location"));
-        log.setCreatedAt(getLocalDateTime(rs, "created_at"));
-        log.setUpdatedAt(getLocalDateTime(rs, "updated_at"));
-        
+
         return log;
     }
-    
+
     @Override
     protected String createInsertSql() {
-        return "INSERT INTO attendance_logs (user_id, work_date, check_in_time, check_out_time, " +
-               "check_in_type, check_out_type, working_hours, overtime_hours, status, notes, " +
-               "check_in_ip, check_out_ip, check_in_location, check_out_location, " +
-               "created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        return "INSERT INTO attendance_logs ("
+                + "user_id, check_type, checked_at, source, note, period_id"
+                + ") VALUES (?, ?, ?, ?, ?, ?)";
     }
-    
+
     @Override
     protected String createUpdateSql() {
-        return "UPDATE attendance_logs SET user_id = ?, work_date = ?, check_in_time = ?, " +
-               "check_out_time = ?, check_in_type = ?, check_out_type = ?, working_hours = ?, " +
-               "overtime_hours = ?, status = ?, notes = ?, check_in_ip = ?, check_out_ip = ?, " +
-               "check_in_location = ?, check_out_location = ?, updated_at = ? WHERE id = ?";
+        return "UPDATE attendance_logs SET "
+                + "user_id = ?, "
+                + "check_type = ?, "
+                + "checked_at = ?, "
+                + "source = ?, "
+                + "note = ?, "
+                + "period_id = ? "
+                + "WHERE id = ?";
     }
-    
+
     @Override
     protected void setInsertParameters(PreparedStatement stmt, AttendanceLog log) throws SQLException {
         stmt.setLong(1, log.getUserId());
-        
-        if (log.getWorkDate() != null) {
-            stmt.setDate(2, Date.valueOf(log.getWorkDate()));
+        stmt.setString(2, log.getCheckType());
+
+        if (log.getCheckedAt() != null) {
+            stmt.setTimestamp(3, Timestamp.valueOf(log.getCheckedAt()));
         } else {
-            stmt.setNull(2, Types.DATE);
+            stmt.setNull(3, Types.TIMESTAMP);
         }
-        
-        setTimestamp(stmt, 3, log.getCheckInTime());
-        setTimestamp(stmt, 4, log.getCheckOutTime());
-        stmt.setString(5, log.getCheckInType());
-        stmt.setString(6, log.getCheckOutType());
-        
-        if (log.getWorkingHours() != null) {
-            stmt.setDouble(7, log.getWorkingHours());
+
+        if (log.getSource() != null) {
+            stmt.setString(4, log.getSource());
         } else {
-            stmt.setNull(7, Types.DOUBLE);
+            stmt.setNull(4, Types.VARCHAR);
         }
-        
-        if (log.getOvertimeHours() != null) {
-            stmt.setDouble(8, log.getOvertimeHours());
+
+        if (log.getNote() != null) {
+            stmt.setString(5, log.getNote());
         } else {
-            stmt.setNull(8, Types.DOUBLE);
+            stmt.setNull(5, Types.VARCHAR);
         }
-        
-        stmt.setString(9, log.getStatus());
-        stmt.setString(10, log.getNotes());
-        stmt.setString(11, log.getCheckInIp());
-        stmt.setString(12, log.getCheckOutIp());
-        stmt.setString(13, log.getCheckInLocation());
-        stmt.setString(14, log.getCheckOutLocation());
-        
-        LocalDateTime now = LocalDateTime.now();
-        setTimestamp(stmt, 15, now);
-        setTimestamp(stmt, 16, now);
+
+        if (log.getPeriodId() != null) {
+            stmt.setLong(6, log.getPeriodId());
+        } else {
+            stmt.setNull(6, Types.BIGINT);
+        }
     }
-    
+
     @Override
     protected void setUpdateParameters(PreparedStatement stmt, AttendanceLog log) throws SQLException {
         stmt.setLong(1, log.getUserId());
-        
-        if (log.getWorkDate() != null) {
-            stmt.setDate(2, Date.valueOf(log.getWorkDate()));
+        stmt.setString(2, log.getCheckType());
+
+        if (log.getCheckedAt() != null) {
+            stmt.setTimestamp(3, Timestamp.valueOf(log.getCheckedAt()));
         } else {
-            stmt.setNull(2, Types.DATE);
+            stmt.setNull(3, Types.TIMESTAMP);
         }
-        
-        setTimestamp(stmt, 3, log.getCheckInTime());
-        setTimestamp(stmt, 4, log.getCheckOutTime());
-        stmt.setString(5, log.getCheckInType());
-        stmt.setString(6, log.getCheckOutType());
-        
-        if (log.getWorkingHours() != null) {
-            stmt.setDouble(7, log.getWorkingHours());
+
+        if (log.getSource() != null) {
+            stmt.setString(4, log.getSource());
         } else {
-            stmt.setNull(7, Types.DOUBLE);
+            stmt.setNull(4, Types.VARCHAR);
         }
-        
-        if (log.getOvertimeHours() != null) {
-            stmt.setDouble(8, log.getOvertimeHours());
+
+        if (log.getNote() != null) {
+            stmt.setString(5, log.getNote());
         } else {
-            stmt.setNull(8, Types.DOUBLE);
+            stmt.setNull(5, Types.VARCHAR);
         }
-        
-        stmt.setString(9, log.getStatus());
-        stmt.setString(10, log.getNotes());
-        stmt.setString(11, log.getCheckInIp());
-        stmt.setString(12, log.getCheckOutIp());
-        stmt.setString(13, log.getCheckInLocation());
-        stmt.setString(14, log.getCheckOutLocation());
-        setTimestamp(stmt, 15, LocalDateTime.now());
-        stmt.setLong(16, log.getId());
+
+        if (log.getPeriodId() != null) {
+            stmt.setLong(6, log.getPeriodId());
+        } else {
+            stmt.setNull(6, Types.BIGINT);
+        }
+
+        stmt.setLong(7, log.getId());
     }
-    
+
     @Override
     protected void setEntityId(AttendanceLog log, Long id) {
         log.setId(id);
     }
-    
+
     @Override
     protected Long getEntityId(AttendanceLog log) {
         return log.getId();
     }
-    
-    /**
-     * Override save method để xử lý insert/update
-     */
+
+    //Override save method để xử lý insert/update
     @Override
     public AttendanceLog save(AttendanceLog entity) throws SQLException {
         if (entity == null) {
             throw new IllegalArgumentException("Entity cannot be null");
         }
-        
+
         if (getEntityId(entity) != null) {
             return update(entity);
         } else {
             String sql = createInsertSql();
-            
-            try (Connection conn = DatabaseUtil.getConnection();
-                 PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-                
+
+            try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
                 setInsertParameters(stmt, entity);
-                
+
                 int affectedRows = stmt.executeUpdate();
-                
+
                 if (affectedRows == 0) {
                     throw new SQLException("Creating attendance log failed, no rows affected");
                 }
-                
+
                 try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
                         Long generatedId = generatedKeys.getLong(1);
@@ -197,388 +172,429 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                         throw new SQLException("Creating attendance log failed, no ID obtained");
                     }
                 }
-                
-                logger.info("Created new attendance log for user {} on {}", entity.getUserId(), entity.getWorkDate());
+
+                logger.info("Created new attendance log for user {} on {}",
+                        entity.getUserId(), entity.getCheckedAt());
                 return entity;
-                
+
             } catch (SQLException e) {
                 logger.error("Error saving attendance log: {}", e.getMessage(), e);
                 throw e;
             }
         }
     }
-    
-    /**
-     * Tìm attendance log theo user và work date
-     */
-    public Optional<AttendanceLog> findByUserIdAndWorkDate(Long userId, LocalDate workDate) throws SQLException {
-        if (userId == null || workDate == null) {
-            return Optional.empty();
+
+    //Tìm toàn hộ bản ghi theo định dạng frontend
+    public List<AttendanceLogDto> findAllForOverview(int offset, int limit, boolean paged) throws SQLException {
+        StringBuilder sql = new StringBuilder("""
+            SELECT
+              u.id AS employee_id,
+              u.employee_code AS employee_code,
+              u.full_name AS employee_name,
+              d.name AS department_name,
+              DATE(al.checked_at) AS work_date,
+              MIN(CASE WHEN al.check_type = 'IN'  THEN al.checked_at END)  AS check_in,
+              MAX(CASE WHEN al.check_type = 'OUT' THEN al.checked_at END)  AS check_out,
+              COALESCE(
+                MIN(CASE WHEN al.check_type = 'IN'  THEN al.note END),
+                MAX(CASE WHEN al.check_type = 'OUT' THEN al.note END),
+                'No Records'
+              ) AS status,
+              GROUP_CONCAT(DISTINCT al.source SEPARATOR ', ') AS source,
+              tp.name AS period_name
+            FROM attendance_logs al
+            JOIN users u ON al.user_id = u.id
+            LEFT JOIN departments d ON u.department_id = d.id
+            LEFT JOIN timesheet_periods tp ON al.period_id = tp.id
+            GROUP BY
+              u.id,
+              u.employee_code,
+              u.full_name,
+              d.name,
+              tp.name,
+              DATE(al.checked_at)
+            ORDER BY DATE(al.checked_at) DESC, u.full_name
+        """);
+
+        if (paged) {
+            sql.append(" LIMIT ? OFFSET ?");
         }
-        
-        String sql = "SELECT * FROM attendance_logs WHERE user_id = ? AND work_date = ?";
-        
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setLong(1, userId);
-            stmt.setDate(2, Date.valueOf(workDate));
-            
+
+        List<AttendanceLogDto> results = new ArrayList<>();
+
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+
+            if (paged) {
+                stmt.setInt(1, limit);
+                stmt.setInt(2, offset);
+            }
+
             try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(mapResultSetToEntity(rs));
+                while (rs.next()) {
+                    AttendanceLogDto dto = new AttendanceLogDto();
+                    dto.setUserId(rs.getLong("employee_id"));
+                    dto.setEmployeeName(rs.getString("employee_name"));
+                    dto.setDepartment(rs.getString("department_name"));
+
+                    Date sqlDate = rs.getDate("work_date");
+                    dto.setDate(sqlDate != null ? sqlDate.toLocalDate() : null);
+
+                    Timestamp inTs = rs.getTimestamp("check_in");
+                    Timestamp outTs = rs.getTimestamp("check_out");
+                    dto.setCheckIn(inTs != null ? inTs.toLocalDateTime().toLocalTime() : null);
+                    dto.setCheckOut(outTs != null ? outTs.toLocalDateTime().toLocalTime() : null);
+
+                    dto.setStatus(rs.getString("status"));
+                    dto.setSource(rs.getString("source"));
+                    dto.setPeriod(rs.getString("period_name"));
+
+                    results.add(dto);
                 }
             }
-            
-            return Optional.empty();
-            
-        } catch (SQLException e) {
-            logger.error("Error finding attendance log by user {} and work date {}: {}", userId, workDate, e.getMessage(), e);
-            throw e;
         }
+        return results;
     }
-    
-    /**
-     * Tìm attendance logs theo user ID
-     */
-    public List<AttendanceLog> findByUserId(Long userId) throws SQLException {
+
+    //Đếm số bản ghi để phân trang
+    public int countAllForOverview() throws SQLException {
+        String sql = """
+            SELECT COUNT(*) AS total
+            FROM (
+                SELECT DATE(al.checked_at), u.id
+                FROM attendance_logs al
+                JOIN users u ON al.user_id = u.id
+                LEFT JOIN departments d ON u.department_id = d.id
+                LEFT JOIN timesheet_periods tp ON al.period_id = tp.id
+                GROUP BY u.id, u.employee_code, u.full_name, d.name, tp.name, DATE(al.checked_at)
+            ) AS subquery;
+        """;
+
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
+
+            if (rs.next()) {
+                return rs.getInt("total");
+            }
+        }
+
+        return 0;
+    }
+
+    //Tìm attendance logs theo user ID
+    public List<AttendanceLogDto> findByUserId(Long userId, int limit, int offset, boolean paged) throws SQLException {
         if (userId == null) {
-            return new ArrayList<>();
+            return Collections.emptyList();
         }
-        
-        List<AttendanceLog> logs = new ArrayList<>();
-        String sql = "SELECT * FROM attendance_logs WHERE user_id = ? ORDER BY date DESC";
-        
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
+
+        StringBuilder sql = new StringBuilder("""
+            SELECT
+                u.id AS user_id,
+                u.full_name AS employee_name,
+                d.name AS department_name,
+                DATE(al.checked_at) AS work_date,
+                MIN(CASE WHEN al.check_type = 'IN'  THEN al.checked_at END) AS check_in,
+                MAX(CASE WHEN al.check_type = 'OUT' THEN al.checked_at END) AS check_out,
+                COALESCE(
+                    MIN(CASE WHEN al.check_type = 'IN'  THEN al.note END),
+                    MAX(CASE WHEN al.check_type = 'OUT' THEN al.note END),
+                    'No Records'
+                ) AS status,
+                GROUP_CONCAT(DISTINCT al.source SEPARATOR ', ') AS source,
+                tp.name AS period_name
+            FROM attendance_logs al
+            JOIN users u ON al.user_id = u.id
+            LEFT JOIN departments d ON u.department_id = d.id
+            LEFT JOIN timesheet_periods tp ON al.period_id = tp.id
+            WHERE al.user_id = ?
+            GROUP BY u.id, u.full_name, d.name, DATE(al.checked_at), tp.name
+            ORDER BY DATE(al.checked_at) DESC
+            """);
+
+        if (paged) {
+            sql.append(" LIMIT ? OFFSET ?");
+        }
+
+        List<AttendanceLogDto> results = new ArrayList<>();
+
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+
             stmt.setLong(1, userId);
-            
+
+            if (paged) {
+                stmt.setInt(2, limit);
+                stmt.setInt(3, offset);
+            }
+
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    logs.add(mapResultSetToEntity(rs));
+                    AttendanceLogDto dto = new AttendanceLogDto();
+                    dto.setUserId(rs.getLong("user_id"));
+                    dto.setEmployeeName(rs.getString("employee_name"));
+                    dto.setDepartment(rs.getString("department_name"));
+
+                    Date sqlDate = rs.getDate("work_date");
+                    dto.setDate(sqlDate != null ? sqlDate.toLocalDate() : null);
+
+                    Timestamp inTs = rs.getTimestamp("check_in");
+                    Timestamp outTs = rs.getTimestamp("check_out");
+                    dto.setCheckIn(inTs != null ? inTs.toLocalDateTime().toLocalTime() : null);
+                    dto.setCheckOut(outTs != null ? outTs.toLocalDateTime().toLocalTime() : null);
+
+                    dto.setStatus(rs.getString("status"));
+                    dto.setSource(rs.getString("source"));
+                    dto.setPeriod(rs.getString("period_name"));
+
+                    results.add(dto);
                 }
             }
-            
-            logger.debug("Found {} attendance logs for user {}", logs.size(), userId);
-            return logs;
-            
-        } catch (SQLException e) {
-            logger.error("Error finding attendance logs by user {}: {}", userId, e.getMessage(), e);
-            throw e;
         }
+
+        return results;
     }
-    
-    /**
-     * Tìm attendance logs theo user ID và khoảng thời gian
-     */
-    public List<AttendanceLog> findByUserIdAndDateRange(Long userId, LocalDate startDate, LocalDate endDate) throws SQLException {
-        if (userId == null || startDate == null || endDate == null) {
-            return new ArrayList<>();
-        }
-        
-        List<AttendanceLog> logs = new ArrayList<>();
-        String sql = "SELECT * FROM attendance_logs WHERE user_id = ? AND work_date BETWEEN ? AND ? ORDER BY work_date DESC";
-        
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
+
+    //Đếm số bản ghi để phân trang
+    public int countByUserId(Long userId) throws SQLException {
+        String sql = "SELECT COUNT(DISTINCT DATE(checked_at)) AS total FROM attendance_logs WHERE user_id = ?";
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, userId);
-            stmt.setDate(2, Date.valueOf(startDate));
-            stmt.setDate(3, Date.valueOf(endDate));
-            
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    logs.add(mapResultSetToEntity(rs));
-                }
-            }
-            
-            logger.debug("Found {} attendance logs for user {} between {} and {}", 
-                        logs.size(), userId, startDate, endDate);
-            return logs;
-            
-        } catch (SQLException e) {
-            logger.error("Error finding attendance logs by user {} and date range {}-{}: {}", 
-                        userId, startDate, endDate, e.getMessage(), e);
-            throw e;
-        }
-    }
-    
-    /**
-     * Tìm attendance logs theo work date
-     */
-    public List<AttendanceLog> findByWorkDate(LocalDate workDate) throws SQLException {
-        if (workDate == null) {
-            return new ArrayList<>();
-        }
-        
-        List<AttendanceLog> logs = new ArrayList<>();
-        String sql = "SELECT * FROM attendance_logs WHERE work_date = ? ORDER BY user_id";
-        
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setDate(1, Date.valueOf(workDate));
-            
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    logs.add(mapResultSetToEntity(rs));
-                }
-            }
-            
-            logger.debug("Found {} attendance logs for work date {}", logs.size(), workDate);
-            return logs;
-            
-        } catch (SQLException e) {
-            logger.error("Error finding attendance logs by work date {}: {}", workDate, e.getMessage(), e);
-            throw e;
-        }
-    }
-    
-    /**
-     * Tìm attendance logs theo status
-     */
-    public List<AttendanceLog> findByStatus(String status) throws SQLException {
-        if (status == null || status.trim().isEmpty()) {
-            return new ArrayList<>();
-        }
-        
-        List<AttendanceLog> logs = new ArrayList<>();
-        String sql = "SELECT * FROM attendance_logs WHERE status = ? ORDER BY work_date DESC";
-        
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setString(1, status.trim());
-            
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    logs.add(mapResultSetToEntity(rs));
-                }
-            }
-            
-            logger.debug("Found {} attendance logs with status {}", logs.size(), status);
-            return logs;
-            
-        } catch (SQLException e) {
-            logger.error("Error finding attendance logs by status {}: {}", status, e.getMessage(), e);
-            throw e;
-        }
-    }
-    
-    /**
-     * Cập nhật check-in time
-     */
-    public boolean updateCheckIn(Long logId, LocalDateTime checkInTime) throws SQLException {
-        if (logId == null || checkInTime == null) {
-            return false;
-        }
-        
-        String sql = "UPDATE attendance_logs SET check_in_time = ?, updated_at = ? WHERE id = ?";
-        
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            setTimestamp(stmt, 1, checkInTime);
-            setTimestamp(stmt, 2, LocalDateTime.now());
-            stmt.setLong(3, logId);
-            
-            int affectedRows = stmt.executeUpdate();
-            boolean updated = affectedRows > 0;
-            
-            if (updated) {
-                logger.info("Updated check-in time for attendance log {}", logId);
-            }
-            
-            return updated;
-            
-        } catch (SQLException e) {
-            logger.error("Error updating check-in time for log {}: {}", logId, e.getMessage(), e);
-            throw e;
-        }
-    }
-    
-    /**
-     * Cập nhật check-out time
-     */
-    public boolean updateCheckOut(Long logId, LocalDateTime checkOutTime) throws SQLException {
-        if (logId == null || checkOutTime == null) {
-            return false;
-        }
-        
-        String sql = "UPDATE attendance_logs SET check_out_time = ?, updated_at = ? WHERE id = ?";
-        
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            setTimestamp(stmt, 1, checkOutTime);
-            setTimestamp(stmt, 2, LocalDateTime.now());
-            stmt.setLong(3, logId);
-            
-            int affectedRows = stmt.executeUpdate();
-            boolean updated = affectedRows > 0;
-            
-            if (updated) {
-                logger.info("Updated check-out time for attendance log {}", logId);
-            }
-            
-            return updated;
-            
-        } catch (SQLException e) {
-            logger.error("Error updating check-out time for log {}: {}", logId, e.getMessage(), e);
-            throw e;
-        }
-    }
-    
-    /**
-     * Tính tổng working hours theo user và khoảng thời gian
-     */
-    public double getTotalWorkingHours(Long userId, LocalDate startDate, LocalDate endDate) throws SQLException {
-        if (userId == null || startDate == null || endDate == null) {
-            return 0.0;
-        }
-        
-        String sql = "SELECT SUM(working_hours) FROM attendance_logs " +
-                    "WHERE user_id = ? AND work_date BETWEEN ? AND ? AND working_hours IS NOT NULL";
-        
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setLong(1, userId);
-            stmt.setDate(2, Date.valueOf(startDate));
-            stmt.setDate(3, Date.valueOf(endDate));
-            
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    return rs.getDouble(1);
+                    return rs.getInt("total");
                 }
             }
-            
-            return 0.0;
-            
-        } catch (SQLException e) {
-            logger.error("Error calculating total working hours for user {} between {}-{}: {}", 
-                        userId, startDate, endDate, e.getMessage(), e);
-            throw e;
         }
+        return 0;
     }
-    
-    /**
-     * Tính tổng overtime hours theo user và khoảng thời gian
-     */
-    public double getTotalOvertimeHours(Long userId, LocalDate startDate, LocalDate endDate) throws SQLException {
-        if (userId == null || startDate == null || endDate == null) {
-            return 0.0;
+
+    public List<AttendanceLogDto> findByFilter(
+            Long userId,
+            String employeeKeyword,
+            String department,
+            LocalDate startDate,
+            LocalDate endDate,
+            String status,
+            String source,
+            Long periodId,
+            int limit,
+            int offset,
+            boolean paged
+    ) throws SQLException {
+
+        StringBuilder sql = new StringBuilder("""
+            SELECT
+                u.id AS employee_id,
+                u.full_name AS employee_name,
+                d.name AS department_name,
+                DATE(al.checked_at) AS work_date,
+                MIN(CASE WHEN al.check_type = 'IN'  THEN al.checked_at END) AS check_in,
+                MAX(CASE WHEN al.check_type = 'OUT' THEN al.checked_at END) AS check_out,
+                COALESCE(
+                    MIN(CASE WHEN al.check_type = 'IN'  THEN al.note END),
+                    MAX(CASE WHEN al.check_type = 'OUT' THEN al.note END),
+                    'No Records'
+                ) AS status,
+                GROUP_CONCAT(DISTINCT al.source SEPARATOR ', ') AS source,
+                tp.name AS period_name
+            FROM attendance_logs al
+            LEFT JOIN timesheet_periods tp ON al.period_id = tp.id
+            LEFT JOIN users u ON al.user_id = u.id
+            LEFT JOIN departments d ON u.department_id = d.id
+            WHERE 1=1
+        """);
+
+        List<Object> params = new ArrayList<>();
+
+        if (userId != null) {
+            sql.append(" AND al.user_id = ?");
+            params.add(userId);
         }
-        
-        String sql = "SELECT SUM(overtime_hours) FROM attendance_logs " +
-                    "WHERE user_id = ? AND work_date BETWEEN ? AND ? AND overtime_hours IS NOT NULL";
-        
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setLong(1, userId);
-            stmt.setDate(2, Date.valueOf(startDate));
-            stmt.setDate(3, Date.valueOf(endDate));
-            
+
+        if (employeeKeyword != null && !employeeKeyword.isEmpty()) {
+            sql.append(" AND (u.full_name LIKE ? OR CAST(u.id AS CHAR) LIKE ?)");
+            params.add("%" + employeeKeyword + "%");
+            params.add("%" + employeeKeyword + "%");
+        }
+
+        if (department != null && !department.isEmpty()) {
+            sql.append(" AND d.name = ?");
+            params.add(department);
+        }
+
+        if (startDate != null) {
+            sql.append(" AND DATE(al.checked_at) >= ?");
+            params.add(Date.valueOf(startDate));
+        }
+        if (endDate != null) {
+            sql.append(" AND DATE(al.checked_at) <= ?");
+            params.add(Date.valueOf(endDate));
+        }
+        if (status != null && !status.isEmpty()) {
+            sql.append(" AND al.note = ?");
+            params.add(status);
+        }
+        if (source != null && !source.isEmpty()) {
+            sql.append(" AND al.source = ?");
+            params.add(source);
+        }
+        if (periodId != null) {
+            sql.append(" AND al.period_id = ?");
+            params.add(periodId);
+        }
+
+        sql.append("""
+            GROUP BY u.id, u.full_name, d.name, DATE(al.checked_at), tp.name
+            ORDER BY DATE(al.checked_at) DESC
+        """);
+
+        if (paged) {
+            sql.append(" LIMIT ? OFFSET ?");
+            params.add(limit);
+            params.add(offset);
+        }
+
+        List<AttendanceLogDto> results = new ArrayList<>();
+
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+
+            for (int i = 0; i < params.size(); i++) {
+                Object param = params.get(i);
+                if (param instanceof Long l) {
+                    stmt.setLong(i + 1, l);
+                } else if (param instanceof Date d) {
+                    stmt.setDate(i + 1, d);
+                } else if (param instanceof String s) {
+                    stmt.setString(i + 1, s);
+                } else if (param instanceof Integer in) {
+                    stmt.setInt(i + 1, in);
+                }
+            }
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    AttendanceLogDto dto = new AttendanceLogDto();
+
+                    dto.setUserId(rs.getLong("employee_id"));
+                    dto.setEmployeeName(rs.getString("employee_name"));
+                    dto.setDepartment(rs.getString("department_name"));
+
+                    Date sqlDate = rs.getDate("work_date");
+                    dto.setDate(sqlDate != null ? sqlDate.toLocalDate() : null);
+
+                    Timestamp inTs = rs.getTimestamp("check_in");
+                    Timestamp outTs = rs.getTimestamp("check_out");
+                    dto.setCheckIn(inTs != null ? inTs.toLocalDateTime().toLocalTime() : null);
+                    dto.setCheckOut(outTs != null ? outTs.toLocalDateTime().toLocalTime() : null);
+
+                    dto.setStatus(rs.getString("status"));
+                    dto.setSource(rs.getString("source"));
+                    dto.setPeriod(rs.getString("period_name"));
+
+                    results.add(dto);
+                }
+            }
+        }
+        return results;
+    }
+
+    //Đếm số bản ghi để phân trang
+    public int countByFilter(
+            Long userId,
+            String employeeKeyword,
+            String department,
+            LocalDate startDate,
+            LocalDate endDate,
+            String status,
+            String source,
+            Long periodId
+    ) throws SQLException {
+
+        StringBuilder sql = new StringBuilder("""
+        SELECT COUNT(*) AS total
+        FROM (
+            SELECT DATE(al.checked_at)
+            FROM attendance_logs al
+            LEFT JOIN timesheet_periods tp ON al.period_id = tp.id
+            LEFT JOIN users u ON al.user_id = u.id
+            LEFT JOIN departments d ON u.department_id = d.id
+            WHERE 1=1
+    """);
+
+        List<Object> params = new ArrayList<>();
+
+        if (userId != null) {
+            sql.append(" AND al.user_id = ?");
+            params.add(userId);
+        }
+
+        if (employeeKeyword != null && !employeeKeyword.isEmpty()) {
+            sql.append(" AND (u.full_name LIKE ? OR CAST(u.id AS CHAR) LIKE ?)");
+            params.add("%" + employeeKeyword + "%");
+            params.add("%" + employeeKeyword + "%");
+        }
+
+        if (department != null && !department.isEmpty()) {
+            sql.append(" AND d.name = ?");
+            params.add(department);
+        }
+
+        if (startDate != null) {
+            sql.append(" AND DATE(al.checked_at) >= ?");
+            params.add(Date.valueOf(startDate));
+        }
+
+        if (endDate != null) {
+            sql.append(" AND DATE(al.checked_at) <= ?");
+            params.add(Date.valueOf(endDate));
+        }
+
+        if (status != null && !status.isEmpty()) {
+            sql.append(" AND al.note = ?");
+            params.add(status);
+        }
+
+        if (source != null && !source.isEmpty()) {
+            sql.append(" AND al.source = ?");
+            params.add(source);
+        }
+
+        if (periodId != null) {
+            sql.append(" AND al.period_id = ?");
+            params.add(periodId);
+        }
+
+        sql.append("""
+        GROUP BY u.id, u.full_name, d.name, DATE(al.checked_at), tp.name
+    ) AS subquery;
+    """);
+
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+
+            for (int i = 0; i < params.size(); i++) {
+                Object param = params.get(i);
+                if (param instanceof Long l) {
+                    stmt.setLong(i + 1, l);
+                } else if (param instanceof Date d) {
+                    stmt.setDate(i + 1, d);
+                } else if (param instanceof String s) {
+                    stmt.setString(i + 1, s);
+                }
+            }
+
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    return rs.getDouble(1);
+                    return rs.getInt("total");
                 }
             }
-            
-            return 0.0;
-            
-        } catch (SQLException e) {
-            logger.error("Error calculating total overtime hours for user {} between {}-{}: {}", 
-                        userId, startDate, endDate, e.getMessage(), e);
-            throw e;
         }
+
+        return 0;
     }
-    
-    /**
-     * Đếm số ngày làm việc theo user và khoảng thời gian
-     */
-    public long countWorkingDays(Long userId, LocalDate startDate, LocalDate endDate) throws SQLException {
-        if (userId == null || startDate == null || endDate == null) {
-            return 0;
-        }
-        
-        String sql = "SELECT COUNT(*) FROM attendance_logs " +
-                    "WHERE user_id = ? AND work_date BETWEEN ? AND ? AND status != 'ABSENT'";
-        
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setLong(1, userId);
-            stmt.setDate(2, Date.valueOf(startDate));
-            stmt.setDate(3, Date.valueOf(endDate));
-            
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getLong(1);
-                }
+
+    public void saveAttendanceLogs(List<AttendanceLog> logs) {
+        for (AttendanceLog log : logs) {
+            try {
+                save(log);
+            } catch (SQLException e) {
             }
-            
-            return 0;
-            
-        } catch (SQLException e) {
-            logger.error("Error counting working days for user {} between {}-{}: {}", 
-                        userId, startDate, endDate, e.getMessage(), e);
-            throw e;
-        }
-    }
-    
-    /**
-     * Tìm attendance logs chưa hoàn thành (chưa check-out)
-     */
-    public List<AttendanceLog> findIncompleteAttendance() throws SQLException {
-        List<AttendanceLog> logs = new ArrayList<>();
-        String sql = "SELECT * FROM attendance_logs WHERE check_in_time IS NOT NULL AND check_out_time IS NULL ORDER BY work_date DESC";
-        
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            
-            while (rs.next()) {
-                logs.add(mapResultSetToEntity(rs));
-            }
-            
-            logger.debug("Found {} incomplete attendance logs", logs.size());
-            return logs;
-            
-        } catch (SQLException e) {
-            logger.error("Error finding incomplete attendance logs: {}", e.getMessage(), e);
-            throw e;
-        }
-    }
-    
-    /**
-     * Xóa attendance logs cũ (trước một ngày cụ thể)
-     */
-    public int deleteOldLogs(LocalDate beforeDate) throws SQLException {
-        if (beforeDate == null) {
-            return 0;
-        }
-        
-        String sql = "DELETE FROM attendance_logs WHERE work_date < ?";
-        
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setDate(1, Date.valueOf(beforeDate));
-            
-            int deletedRows = stmt.executeUpdate();
-            
-            if (deletedRows > 0) {
-                logger.info("Deleted {} old attendance logs before {}", deletedRows, beforeDate);
-            }
-            
-            return deletedRows;
-            
-        } catch (SQLException e) {
-            logger.error("Error deleting old attendance logs before {}: {}", beforeDate, e.getMessage(), e);
-            throw e;
         }
     }
 }

@@ -1,12 +1,13 @@
 package group4.hrms.dto;
 
-import group4.hrms.model.Request;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import group4.hrms.model.Request;
+
 /**
- * DTO cho Request với thông tin bổ sung
- * Bao gồm tên người tạo, loại request, người duyệt
+ * DTO cho Request với thông tin bổ sung Bao gồm tên người tạo, loại request,
+ * người duyệt
  */
 public class RequestDto {
 
@@ -41,7 +42,8 @@ public class RequestDto {
     private LocalDateTime updatedAt;
 
     // Constructors
-    public RequestDto() {}
+    public RequestDto() {
+    }
 
     public RequestDto(Request request) {
         this.id = request.getId();
@@ -77,7 +79,6 @@ public class RequestDto {
         this.approvedAt = request.getApprovedAt();
         this.createdAt = request.getCreatedAt();
         this.updatedAt = request.getUpdatedAt();
-
         // Set display values
         this.statusDisplay = getStatusDisplayText(this.status);
         this.priorityDisplay = getPriorityDisplayText(this.priority);
@@ -194,8 +195,7 @@ public class RequestDto {
     }
 
     /**
-     * Get parsed LeaveRequestDetail from JSON
-     * Lazy-loads and caches the result
+     * Get parsed LeaveRequestDetail from JSON Lazy-loads and caches the result
      */
     public LeaveRequestDetail getLeaveDetail() {
         if (leaveDetail == null && detailJson != null && !detailJson.trim().isEmpty()) {
@@ -210,8 +210,7 @@ public class RequestDto {
     }
 
     /**
-     * Get parsed OTRequestDetail from JSON
-     * Lazy-loads and caches the result
+     * Get parsed OTRequestDetail from JSON Lazy-loads and caches the result
      */
     public OTRequestDetail getOtDetail() {
         if (otDetail == null && detailJson != null && !detailJson.trim().isEmpty()) {
@@ -392,8 +391,9 @@ public class RequestDto {
 
     // Helper methods
     private String getStatusDisplayText(String status) {
-        if (status == null) return "";
-
+        if (status == null) {
+            return "";
+        }
         switch (status) {
             case "PENDING":
                 return "Chờ duyệt";
@@ -409,7 +409,9 @@ public class RequestDto {
     }
 
     private String getPriorityDisplayText(String priority) {
-        if (priority == null) return "";
+        if (priority == null) {
+            return "";
+        }
 
         switch (priority) {
             case "LOW":

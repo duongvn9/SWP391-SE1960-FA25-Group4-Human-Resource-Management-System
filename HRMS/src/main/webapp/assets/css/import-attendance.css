@@ -1,0 +1,242 @@
+/* ============ Import Attendance Page ============ */
+:root {
+    --ia-primary: #4f46e5;
+    --ia-primary-700: #4338ca;
+    --ia-muted: #6c757d;
+    --ia-danger: #ef4444;
+    --ia-success: #10b981;
+    --ia-radius: 12px;
+    --ia-shadow-md: 0 10px 28px rgba(17, 24, 39, 0.1);
+    --ia-shadow-lg: 0 20px 40px rgba(17, 24, 39, 0.15);
+}
+
+/* Page Layout */
+.import-attendance-page {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    min-height: 100vh;
+    padding: 1.5rem;
+    font-family: sans-serif;
+}
+
+.page-title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #111827;
+    margin-bottom: 1.5rem;
+}
+
+/* Tabs */
+.tab-header {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.tab-btn {
+    background: #fff;
+    border: 2px solid #e5e7eb;
+    border-radius: var(--ia-radius);
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tab-btn:hover {
+    border-color: var(--ia-primary);
+    color: var(--ia-primary);
+}
+
+.tab-btn.active {
+    background: var(--ia-primary);
+    color: #fff;
+}
+
+/* Divider */
+.tab-divider {
+    border: none;
+    border-top: 2px solid #e5e7eb;
+    margin-bottom: 1rem;
+}
+
+/* Section Titles */
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: #111827;
+}
+
+/* File Upload */
+.file-upload {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.file-input {
+    border: 2px solid #e5e7eb;
+    border-radius: var(--ia-radius);
+    padding: 0.5rem 1rem;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.file-input:hover {
+    border-color: var(--ia-primary);
+}
+
+.file-name {
+    font-size: 0.9rem;
+    color: var(--ia-muted);
+}
+
+/* Buttons */
+.btn {
+    border: none;
+    border-radius: var(--ia-radius);
+    padding: 0.6rem 1.2rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-right: 0.5rem;
+}
+
+.btn-preview {
+    background: var(--ia-primary);
+    color: #fff;
+}
+
+.btn-preview:hover {
+    background: var(--ia-primary-700);
+}
+
+.btn-import {
+    background: #111827;
+    color: #fff;
+}
+
+.btn-import:hover {
+    opacity: 0.9;
+}
+
+/* Alerts */
+.alert {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--ia-radius);
+    font-weight: 500;
+    margin-top: 1rem;
+}
+
+.alert-error {
+    background: #fee2e2;
+    border-left: 4px solid var(--ia-danger);
+    color: #991b1b;
+}
+
+.alert-success {
+    background: #d1fae5;
+    border-left: 4px solid var(--ia-success);
+    color: #065f46;
+}
+
+/* Tables */
+.preview-data-table,
+.manual-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.preview-data-table th,
+.preview-data-table td,
+.manual-table th,
+.manual-table td {
+    border: 1px solid #e5e7eb;
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    font-size: 0.9rem;
+}
+
+.preview-data-table th,
+.manual-table th {
+    background: #f3f4f6;
+    font-weight: 600;
+}
+
+.preview-data-table tr:hover,
+.manual-table tr:hover {
+    background: #f9fafb;
+}
+
+/* Form Actions */
+.form-actions {
+    margin-top: 1rem;
+}
+
+/* Tabs Content */
+.tab-content {
+    display: none;
+    padding: 1rem 0;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Manual Table */
+.excel-table {
+    border-radius: var(--ia-radius);
+    overflow: hidden;
+    background: #fff;
+    box-shadow: var(--ia-shadow-md);
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.excel-table:hover {
+    box-shadow: var(--ia-shadow-lg);
+    transform: translateY(-2px);
+}
+
+.excel-table th,
+.excel-table td {
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .tab-header {
+        flex-direction: column;
+    }
+
+    .btn,
+    .btn-preview,
+    .btn-import {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 0.5rem;
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+    }
+
+    .page-title {
+        font-size: 1.5rem;
+    }
+
+    .preview-data-table th,
+    .preview-data-table td,
+    .manual-table th,
+    .manual-table td {
+        font-size: 0.85rem;
+        padding: 0.4rem 0.6rem;
+    }
+}
