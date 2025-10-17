@@ -1,14 +1,23 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib uri="jakarta.tags.core" prefix="m" %>
 <html>
     <head>
         <title>Submit Attendance Dispute</title>
+        <jsp:include page="../layout/head.jsp">
+            <jsp:param name="pageTitle" value="appeal-form" />
+        </jsp:include>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/appeal-form.css">
         <script src="${pageContext.request.contextPath}/assets/js/appeal-request.js"></script>
     </head>
     <body>
-        <h2 class="form-title">Submit Attendance Dispute</h2>
+        <jsp:include page="../layout/sidebar.jsp">
+            <jsp:param name="currentPage" value="appeal-form" />
+        </jsp:include>
+
+        <jsp:include page="../layout/dashboard-header.jsp">
+            <jsp:param name="pageTitle" value="appeal-form" />
+        </jsp:include>
 
         <form class="appeal-form" action="${pageContext.request.contextPath}/requests/appeal" method="post" enctype="multipart/form-data">
             <input type="hidden" name="request_type_id" value="${requestTypeId}"/>

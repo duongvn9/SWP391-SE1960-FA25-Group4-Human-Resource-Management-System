@@ -1,26 +1,47 @@
-/* ============ Attendance Record Page ============ */
+/* ==============================
+   My Attendance Records (Employee)
+   ============================== */
+
 :root {
     --att-primary: #4f46e5;
     --att-primary-700: #4338ca;
-    --att-muted: #6c757d;
+    --att-muted: #6b7280;
     --att-danger: #ef4444;
-    --att-warning: #f59e0b;
     --att-success: #10b981;
+    --att-bg: #f8fafc;
     --att-radius: 12px;
-    --att-shadow-sm: 0 2px 10px rgba(0,0,0,0.06);
-    --att-shadow-md: 0 10px 28px rgba(17,24,39,0.1);
-    --att-shadow-lg: 0 20px 40px rgba(17,24,39,0.15);
+    --att-shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.06);
+    --att-shadow-md: 0 8px 22px rgba(17, 24, 39, 0.08);
+    --att-sidebar-width: 260px; /* sidebar width */
 }
 
-/* Content area */
+/* ---------- Page Layout ---------- */
 body.attendance-page {
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    background: linear-gradient(135deg, var(--att-bg) 0%, #f1f5f9 100%);
+    font-family: "Segoe UI", Arial, sans-serif;
     min-height: 100vh;
-    padding: 2rem;
-    font-family: Arial, sans-serif;
+    display: flex;
 }
 
-/* Page title */
+/* Main content wrapper to avoid overlap with sidebar */
+body.attendance-page main,
+body.attendance-page .main-content {
+    flex: 1;
+    margin-left: var(--att-sidebar-width);
+    padding: 2rem;
+    transition: margin-left 0.3s ease;
+    min-width: 0;
+}
+
+@media (max-width: 992px) {
+    body.attendance-page main,
+    body.attendance-page .main-content {
+        margin-left: 0;
+        padding: 1rem;
+    }
+}
+
+/* ---------- Page Title ---------- */
 body.attendance-page .page-title {
     font-size: 1.75rem;
     font-weight: 800;
@@ -28,23 +49,26 @@ body.attendance-page .page-title {
     margin-bottom: 1.5rem;
 }
 
-/* Forms */
-body.attendance-page .filter-form{
+/* ---------- Filter Form ---------- */
+body.attendance-page .filter-form {
     background: #fff;
     border-radius: var(--att-radius);
     box-shadow: var(--att-shadow-md);
-    padding: 1.5rem;
+    padding: 1.5rem 2rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 1.25rem;
     margin-bottom: 2rem;
 }
 
 body.attendance-page .filter-group {
-    display: inline-block;
-    margin-right: 1.5rem;
-    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    min-width: 160px;
 }
 
 body.attendance-page .filter-label {
-    display: block;
     font-weight: 600;
     color: #111827;
     margin-bottom: 0.25rem;
@@ -52,15 +76,11 @@ body.attendance-page .filter-label {
 
 body.attendance-page .filter-input,
 body.attendance-page .filter-select {
-    border-radius: 8px;
     border: 2px solid #e5e7eb;
+    border-radius: 8px;
     padding: 0.5rem 0.75rem;
     transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-body.attendance-page .filter-input:hover,
-body.attendance-page .filter-select:hover {
-    border-color: #c7d2fe;
+    font-size: 0.95rem;
 }
 
 body.attendance-page .filter-input:focus,
@@ -70,9 +90,14 @@ body.attendance-page .filter-select:focus {
     outline: none;
 }
 
-/* Buttons */
+/* ---------- Filter Actions ---------- */
+body.attendance-page .filter-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
 body.attendance-page .btn {
-    border: 0;
+    border: none;
     border-radius: var(--att-radius);
     padding: 0.6rem 1.2rem;
     font-weight: 700;
@@ -89,26 +114,38 @@ body.attendance-page .btn-filter {
 body.attendance-page .btn-filter:hover {
     background: var(--att-primary-700);
     transform: translateY(-1px);
-    box-shadow: 0 10px 24px color-mix(in srgb, var(--att-primary), transparent 60%);
 }
 
 body.attendance-page .btn-reset {
     background: #111827;
     color: #fff;
-    font-weight: 600;
+}
+
+/* ---------- Export Buttons ---------- */
+body.attendance-page .export-buttons {
+    margin-bottom: 2rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
 }
 
 body.attendance-page .btn-export {
     background: var(--att-primary);
     color: #fff;
-    margin-right: 0.5rem;
+    border: none;
+    border-radius: var(--att-radius);
+    padding: 0.6rem 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
 body.attendance-page .btn-export:hover {
     background: var(--att-primary-700);
+    transform: translateY(-1px);
 }
 
-/* Tables */
+/* ---------- Attendance Table ---------- */
 body.attendance-page .attendance-table {
     width: 100%;
     border-collapse: collapse;
@@ -141,44 +178,26 @@ body.attendance-page .attendance-row:hover {
     background: #f9fafb;
 }
 
-/* Select button inside table */
+/* ---------- Table Buttons ---------- */
 body.attendance-page .btn-select {
     background: var(--att-primary);
     color: #fff;
     padding: 0.35rem 0.7rem;
     font-size: 0.85rem;
+    border-radius: 6px;
 }
 
 body.attendance-page .btn-select:hover {
     background: var(--att-primary-700);
 }
 
-/* Alerts */
-body.attendance-page .alert {
-    border-radius: 12px;
-    padding: 1rem 1.25rem;
-    margin-bottom: 1rem;
-    font-weight: 500;
-}
-
-body.attendance-page .alert-error {
-    background: linear-gradient(135deg, #fee2e2 0%, #fef2f2 100%);
-    color: #991b1b;
-    border-left: 4px solid var(--att-danger);
-}
-
-body.attendance-page .alert-success {
-    background: linear-gradient(135deg, #d1fae5 0%, #ecfdf5 100%);
-    color: #065f46;
-    border-left: 4px solid var(--att-success);
-}
-
-/* Pagination */
+/* ---------- Pagination ---------- */
 body.attendance-page .pagination {
     display: flex;
     gap: 0.5rem;
     flex-wrap: wrap;
     align-items: center;
+    margin-top: 1rem;
 }
 
 body.attendance-page .pagination .page-link {
@@ -187,6 +206,7 @@ body.attendance-page .pagination .page-link {
     border: 1px solid #e5e7eb;
     text-decoration: none;
     color: #111827;
+    font-weight: 500;
     transition: background 0.2s;
 }
 
@@ -202,20 +222,32 @@ body.attendance-page .pagination .page-current {
     border-radius: 8px;
 }
 
-/* Responsive */
+/* ---------- Responsive ---------- */
 @media (max-width: 768px) {
     body.attendance-page {
+        flex-direction: column;
+    }
+
+    body.attendance-page main,
+    body.attendance-page .main-content {
+        margin-left: 0;
         padding: 1rem;
     }
-    body.attendance-page .filter-group {
-        display: block;
-        margin-right: 0;
+
+    body.attendance-page .filter-form {
+        flex-direction: column;
+        gap: 1rem;
     }
+
+    body.attendance-page .export-buttons {
+        flex-direction: column;
+    }
+
     body.attendance-page .btn,
     body.attendance-page .btn-export {
         width: 100%;
-        margin-bottom: 0.5rem;
     }
+
     body.attendance-page .attendance-table th,
     body.attendance-page .attendance-table td {
         padding: 0.5rem;

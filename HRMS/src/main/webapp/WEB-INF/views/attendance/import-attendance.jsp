@@ -3,10 +3,20 @@
 <html>
     <head>
         <title>Import Attendance</title>
+        <jsp:include page="../layout/head.jsp">
+            <jsp:param name="pageTitle" value="attendance-record-emp" />
+        </jsp:include>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/import-attendance.css">
         <script src="${pageContext.request.contextPath}/assets/js/import-attendance.js"></script>
     </head>
     <body class="import-attendance-page">
+        <jsp:include page="../layout/sidebar.jsp">
+            <jsp:param name="currentPage" value="attendance-record-emp" />
+        </jsp:include>
+
+        <jsp:include page="../layout/dashboard-header.jsp">
+            <jsp:param name="pageTitle" value="attendance-record-empt" />
+        </jsp:include>
         <h2 class="page-title">Import Attendance</h2>
 
         <!-- Tabs -->
