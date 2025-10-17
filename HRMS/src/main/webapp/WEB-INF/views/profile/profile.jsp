@@ -158,27 +158,36 @@
             <!-- CSRF Token -->
             <input type="hidden" name="_csrf_token" value="${csrfToken}">
 
-            <!-- Employee Code (readonly) -->
+            <!-- Employee Code & Full Name -->
             <div class="form-row">
                 <label class="form-label">Employee Code:</label>
                 <div class="form-input-wrapper">
-                    <input type="text" class="form-control readonly-field" value="${profile.employeeCode}" readonly>
+                    <input type="text" class="form-control half-width readonly-field" value="${profile.employeeCode}" readonly>
+                    <div class="label-inline">Full Name: <span class="text-danger">*</span></div>
+                    <input type="text" name="fullName" class="form-control half-width" value="${profile.fullName}" required>
                 </div>
             </div>
 
-            <!-- Full Name -->
-            <div class="form-row">
-                <label class="form-label">Full Name: <span class="text-danger">*</span></label>
-                <div class="form-input-wrapper">
-                    <input type="text" name="fullName" class="form-control" value="${profile.fullName}" required>
-                </div>
-            </div>
-
-            <!-- Phone -->
+            <!-- Phone Number & Gender -->
             <div class="form-row">
                 <label class="form-label">Phone Number:</label>
                 <div class="form-input-wrapper">
-                    <input type="text" name="phone" class="form-control" value="${profile.phone}" placeholder="10-11 digits">
+                    <input type="text" name="phone" class="form-control half-width" value="${profile.phone}" placeholder="10-11 digits">
+                    <div class="label-inline">Gender:</div>
+                    <div class="radio-group">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="gender" id="genderMale" value="male" ${profile.gender == 'male' ? 'checked' : ''}>
+                            <label class="form-check-label" for="genderMale">Male</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="gender" id="genderFemale" value="female" ${profile.gender == 'female' ? 'checked' : ''}>
+                            <label class="form-check-label" for="genderFemale">Female</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="gender" id="genderOther" value="other" ${profile.gender == 'other' ? 'checked' : ''}>
+                            <label class="form-check-label" for="genderOther">Others</label>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -192,32 +201,13 @@
                 </div>
             </div>
 
-            <!-- Gender -->
-            <div class="form-row">
-                <label class="form-label">Gender:</label>
-                <div class="form-input-wrapper">
-                    <div class="radio-group">
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="gender" id="genderMale" value="male" ${profile.gender == 'male' ? 'checked' : ''}>
-                            <label class="form-check-label" for="genderMale">Male</label>
-                        </div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="gender" id="genderFemale" value="female" ${profile.gender == 'female' ? 'checked' : ''}>
-                            <label class="form-check-label" for="genderFemale">Female</label>
-                        </div>
-                            <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="gender" id="genderFemale" value="female" ${profile.gender == 'female' ? 'checked' : ''}>
-                            <label class="form-check-label" for="genderFemale">Others</label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Citizen ID (CCCD) -->
+            <!-- Citizen ID (CCCD) & Country -->
             <div class="form-row">
                 <label class="form-label">Citizen ID (CCCD):</label>
                 <div class="form-input-wrapper">
-                    <input type="text" name="cccd" class="form-control" value="${profile.cccd}" placeholder="9 or 12 digits">
+                    <input type="text" name="cccd" class="form-control half-width" value="${profile.cccd}" placeholder="9 or 12 digits">
+                    <div class="label-inline">Country:</div>
+                    <input type="text" name="country" class="form-control half-width" value="${profile.country}">
                 </div>
             </div>
 
@@ -234,14 +224,6 @@
                 <label class="form-label">CCCD Issued Place:</label>
                 <div class="form-input-wrapper">
                     <input type="text" name="cccdIssuedPlace" class="form-control" value="${profile.cccdIssuedPlace}">
-                </div>
-            </div>
-
-            <!-- Country -->
-            <div class="form-row">
-                <label class="form-label">Country:</label>
-                <div class="form-input-wrapper">
-                    <input type="text" name="country" class="form-control" value="${profile.country}">
                 </div>
             </div>
 
@@ -269,11 +251,13 @@
                 </div>
             </div>
 
-            <!-- Status (readonly) -->
+            <!-- Status & Postal Code -->
             <div class="form-row">
                 <label class="form-label">Status:</label>
                 <div class="form-input-wrapper">
-                    <input type="text" class="form-control readonly-field" value="${profile.status}" readonly>
+                    <input type="text" class="form-control half-width readonly-field" value="${profile.status}" readonly>
+                    <div class="label-inline">Postal Code:</div>
+                    <input type="text" name="postalCode" class="form-control half-width" value="${profile.postalCode}">
                 </div>
             </div>
 
@@ -325,24 +309,51 @@
                 </div>
             </div>
 
-            <!-- Postal Code -->
-            <div class="form-row">
-                <label class="form-label">Postal Code:</label>
-                <div class="form-input-wrapper">
-                    <input type="text" name="postalCode" class="form-control" value="${profile.postalCode}">
-                </div>
-            </div>
-
-            <!-- Update button centered -->
+            <!-- Update and Cancel buttons centered -->
             <div class="text-center mt-4">
                 <button type="submit" class="btn btn-primary btn-update">
                     <i class="fa-solid fa-floppy-disk me-2"></i>Save
+                </button>
+                <button type="button" class="btn btn-secondary btn-update ms-3" onclick="confirmCancel()">
+                    <i class="fa-solid fa-xmark me-2"></i>Cancel
                 </button>
             </div>
         </form>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Alt Flow 2: Cancel with confirmation
+        function confirmCancel() {
+            if (confirm('Are you sure you want to cancel changes?')) {
+                window.location.href = '${pageContext.request.contextPath}/user-profile';
+            }
+        }
+        
+        // Track form changes to warn user
+        let formChanged = false;
+        const form = document.querySelector('form');
+        const inputs = form.querySelectorAll('input:not([readonly]), textarea:not([readonly])');
+        
+        inputs.forEach(input => {
+            input.addEventListener('change', () => {
+                formChanged = true;
+            });
+        });
+        
+        // Warn before leaving page if form has changes
+        window.addEventListener('beforeunload', (e) => {
+            if (formChanged) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
+        
+        // Don't warn when submitting form
+        form.addEventListener('submit', () => {
+            formChanged = false;
+        });
+    </script>
 </body>
 
 </html>

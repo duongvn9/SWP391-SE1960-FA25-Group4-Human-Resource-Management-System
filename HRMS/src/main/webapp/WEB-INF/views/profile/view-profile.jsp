@@ -61,26 +61,27 @@
             min-height: 40px;
         }
         .form-row.two-columns .form-label:first-child {
-            width: 200px;
+            width: 150px;
         }
         .form-row.two-columns .form-value:first-of-type {
-            flex: 0 0 calc(50% - 150px);
+            flex: 0 0 calc(50% - 125px);
             margin-right: 15px;
         }
         .form-row.two-columns .form-label:nth-child(3) {
-            flex: 0 0 120px;
+            flex: 0 0 150px;
             text-align: right;
             padding-right: 15px;
+            white-space: nowrap;
         }
         .form-row.two-columns .form-value:last-of-type {
             flex: 1;
         }
         .form-label {
-            width: 200px;
+            width: 150px;
             font-weight: 500;
             color: #333;
             margin: 0;
-            padding-right: 20px;
+            padding-right: 15px;
             text-align: left;
             flex-shrink: 0;
         }
@@ -129,34 +130,18 @@
 
         <!-- Profile Information (Read-only) -->
         
-        <!-- Employee Code -->
-        <div class="form-row">
+        <!-- Employee Code & Full Name -->
+        <div class="form-row two-columns">
             <label class="form-label">Employee Code:</label>
             <div class="form-value">${profile.employeeCode}</div>
-        </div>
-
-        <!-- Full Name -->
-        <div class="form-row">
             <label class="form-label">Full Name:</label>
             <div class="form-value">${profile.fullName}</div>
         </div>
 
-        <!-- Phone -->
-        <div class="form-row">
+        <!-- Phone Number & Gender -->
+        <div class="form-row two-columns">
             <label class="form-label">Phone Number:</label>
             <div class="form-value">${profile.phone}</div>
-        </div>
-
-        <!-- Date of Birth & Hometown -->
-        <div class="form-row two-columns">
-            <label class="form-label">Date of Birth:</label>
-            <div class="form-value">${profile.dob}</div>
-            <label class="form-label">Hometown:</label>
-            <div class="form-value">${profile.hometown}</div>
-        </div>
-
-        <!-- Gender -->
-        <div class="form-row">
             <label class="form-label">Gender:</label>
             <div class="form-value">
                 <c:choose>
@@ -168,10 +153,20 @@
             </div>
         </div>
 
-        <!-- Citizen ID (CCCD) -->
-        <div class="form-row">
+        <!-- Date of Birth & Hometown -->
+        <div class="form-row two-columns">
+            <label class="form-label">Date of Birth:</label>
+            <div class="form-value">${profile.dob}</div>
+            <label class="form-label">Hometown:</label>
+            <div class="form-value">${profile.hometown}</div>
+        </div>
+
+        <!-- Citizen ID (CCCD) & Country -->
+        <div class="form-row two-columns">
             <label class="form-label">Citizen ID (CCCD):</label>
             <div class="form-value">${profile.cccd}</div>
+            <label class="form-label">Country:</label>
+            <div class="form-value">${profile.country}</div>
         </div>
 
         <!-- CCCD Issued Date & Place -->
@@ -180,12 +175,6 @@
             <div class="form-value">${profile.cccdIssuedDate}</div>
             <label class="form-label">CCCD Issued Place:</label>
             <div class="form-value">${profile.cccdIssuedPlace}</div>
-        </div>
-
-        <!-- Country -->
-        <div class="form-row">
-            <label class="form-label">Country:</label>
-            <div class="form-value">${profile.country}</div>
         </div>
 
         <!-- Email Company -->
@@ -202,10 +191,12 @@
             <div class="form-value">${profile.positionName}</div>
         </div>
 
-        <!-- Status -->
-        <div class="form-row">
+        <!-- Status & Postal Code -->
+        <div class="form-row two-columns">
             <label class="form-label">Status:</label>
             <div class="form-value">${profile.status}</div>
+            <label class="form-label">Postal Code:</label>
+            <div class="form-value">${profile.postalCode}</div>
         </div>
 
         <!-- Date Joined & Start Work Date -->
@@ -234,12 +225,6 @@
             <div class="form-value">${profile.city}</div>
             <label class="form-label">State/Province:</label>
             <div class="form-value">${profile.state}</div>
-        </div>
-
-        <!-- Postal Code & Country -->
-        <div class="form-row two-columns">
-            <label class="form-label">Postal Code:</label>
-            <div class="form-value">${profile.postalCode}</div>
         </div>
 
     </div>
