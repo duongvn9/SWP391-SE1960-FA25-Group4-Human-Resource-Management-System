@@ -2,25 +2,27 @@
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <title>View Profile - HRMS</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <jsp:include page="../layout/head.jsp">
+        <jsp:param name="pageTitle" value="View Profile - HRMS" />
+        <jsp:param name="pageCss" value="dashboard.css" />
+    </jsp:include>
     <style>
-        body {
-            background-color: #f5f5f5;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
+        .main-content {
+            margin-left: 260px;
+            padding: 2rem;
         }
         .profile-container {
-            max-width: 95%;
-            margin: 20px auto;
+            max-width: 100%;
             background: white;
             padding: 30px 50px;
-            min-height: calc(100vh - 40px);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+            }
         }
         .profile-header {
             display: flex;
@@ -61,26 +63,27 @@
             min-height: 40px;
         }
         .form-row.two-columns .form-label:first-child {
-            width: 200px;
+            width: 150px;
         }
         .form-row.two-columns .form-value:first-of-type {
-            flex: 0 0 calc(50% - 150px);
+            flex: 0 0 calc(50% - 125px);
             margin-right: 15px;
         }
         .form-row.two-columns .form-label:nth-child(3) {
-            flex: 0 0 120px;
+            flex: 0 0 150px;
             text-align: right;
             padding-right: 15px;
+            white-space: nowrap;
         }
         .form-row.two-columns .form-value:last-of-type {
             flex: 1;
         }
         .form-label {
-            width: 200px;
+            width: 150px;
             font-weight: 500;
             color: #333;
             margin: 0;
-            padding-right: 20px;
+            padding-right: 15px;
             text-align: left;
             flex-shrink: 0;
         }
@@ -93,27 +96,23 @@
             font-size: 0.95rem;
             color: #495057;
         }
-        .back-link {
-            display: inline-block;
-            margin-bottom: 15px;
-            color: #007bff;
-            text-decoration: none;
-            font-size: 0.95rem;
-        }
-        .back-link:hover {
-            text-decoration: underline;
-        }
+
     </style>
 </head>
 
 <body>
-    <div class="profile-container">
-        <!-- Back to Dashboard Link -->
-        <a href="${pageContext.request.contextPath}/dashboard" class="back-link">
-            <i class="fa-solid fa-arrow-left me-2"></i>Back to Dashboard
-        </a>
+    <jsp:include page="../layout/sidebar.jsp">
+        <jsp:param name="currentPage" value="profile" />
+    </jsp:include>
 
-        <!-- Profile Header with Update Button -->
+    <div class="main-content" id="main-content">
+        <!-- Header -->
+        <jsp:include page="../layout/dashboard-header.jsp" />
+
+        <!-- Content Area -->
+        <div class="content-area">
+            <div class="profile-container">
+                <!-- Profile Header with Update Button -->
         <div class="profile-header">
             <h2>View Profile</h2>
             <a href="${pageContext.request.contextPath}/user-profile/edit" class="btn btn-primary btn-update-profile">
@@ -129,22 +128,20 @@
 
         <!-- Profile Information (Read-only) -->
         
-        <!-- Employee Code -->
-        <div class="form-row">
+        <!-- Employee Code & Full Name -->
+        <div class="form-row two-columns">
             <label class="form-label">Employee Code:</label>
             <div class="form-value">${profile.employeeCode}</div>
-        </div>
-
-        <!-- Full Name -->
-        <div class="form-row">
             <label class="form-label">Full Name:</label>
             <div class="form-value">${profile.fullName}</div>
         </div>
 
-        <!-- Phone -->
-        <div class="form-row">
+        <!-- Phone Number & Gender -->
+        <div class="form-row two-columns">
             <label class="form-label">Phone Number:</label>
             <div class="form-value">${profile.phone}</div>
+            <label class="form-label">Gender:</label>
+            <div class="form-value">${profile.gender} </div>
         </div>
 
         <!-- Date of Birth & Hometown -->
@@ -155,23 +152,12 @@
             <div class="form-value">${profile.hometown}</div>
         </div>
 
-        <!-- Gender -->
-        <div class="form-row">
-            <label class="form-label">Gender:</label>
-            <div class="form-value">
-                <c:choose>
-                    <c:when test="${profile.gender == 'male'}">Male</c:when>
-                    <c:when test="${profile.gender == 'female'}">Female</c:when>
-                    <c:when test="${profile.gender == 'others'}">Others</c:when>
-                    <c:otherwise>-</c:otherwise>
-                </c:choose>
-            </div>
-        </div>
-
-        <!-- Citizen ID (CCCD) -->
-        <div class="form-row">
+        <!-- Citizen ID (CCCD) & Country -->
+        <div class="form-row two-columns">
             <label class="form-label">Citizen ID (CCCD):</label>
             <div class="form-value">${profile.cccd}</div>
+            <label class="form-label">Country:</label>
+            <div class="form-value">${profile.country}</div>
         </div>
 
         <!-- CCCD Issued Date & Place -->
@@ -180,12 +166,6 @@
             <div class="form-value">${profile.cccdIssuedDate}</div>
             <label class="form-label">CCCD Issued Place:</label>
             <div class="form-value">${profile.cccdIssuedPlace}</div>
-        </div>
-
-        <!-- Country -->
-        <div class="form-row">
-            <label class="form-label">Country:</label>
-            <div class="form-value">${profile.country}</div>
         </div>
 
         <!-- Email Company -->
@@ -202,10 +182,12 @@
             <div class="form-value">${profile.positionName}</div>
         </div>
 
-        <!-- Status -->
-        <div class="form-row">
+        <!-- Status & Postal Code -->
+        <div class="form-row two-columns">
             <label class="form-label">Status:</label>
             <div class="form-value">${profile.status}</div>
+            <label class="form-label">Postal Code:</label>
+            <div class="form-value">${profile.postalCode}</div>
         </div>
 
         <!-- Date Joined & Start Work Date -->
@@ -234,17 +216,12 @@
             <div class="form-value">${profile.city}</div>
             <label class="form-label">State/Province:</label>
             <div class="form-value">${profile.state}</div>
+            </div>
+            </div>
         </div>
 
-        <!-- Postal Code & Country -->
-        <div class="form-row two-columns">
-            <label class="form-label">Postal Code:</label>
-            <div class="form-value">${profile.postalCode}</div>
-        </div>
-
+        <!-- Footer -->
+        <jsp:include page="../layout/dashboard-footer.jsp" />
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-
 </html>

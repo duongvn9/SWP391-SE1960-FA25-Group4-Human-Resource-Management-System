@@ -1,6 +1,7 @@
 package group4.hrms.controller;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.logging.Logger;
 
 import group4.hrms.dao.HolidayDao;
@@ -143,14 +144,23 @@ public class OTRequestController extends HttpServlet {
             request.setAttribute("holidays", allHolidays);
             request.setAttribute("compensatoryDays", allCompensatoryDays);
 
-            // TODO: Load department employees if user is manager (Requirement 9)
-            // For now, we'll skip this and implement in a future iteration
-            /*
-            if (user.isManager()) {
-                List<User> departmentEmployees = service.getDepartmentEmployees(user.getDepartmentId());
-                request.setAttribute("departmentEmployees", departmentEmployees);
+            // Load subordinates if user has management privileges
+            // Based on job_level: lower number = higher authority
+            // ADMIN (1) > HR_MANAGER (2) > HR_STAFF (3) > DEPT_MANAGER (4) > STAFF (5)
+            logger.info("Loading subordinates for user " + user.getId());
+            try {
+                UserDao userDao = new UserDao();
+                List<User> subordinates = userDao.getSubordinates(user.getId());
+                if (subordinates != null && !subordinates.isEmpty()) {
+                    request.setAttribute("departmentEmployees", subordinates);
+                    logger.info("Loaded " + subordinates.size() + " subordinates for user " + user.getId());
+                } else {
+                    logger.info("No subordinates found for user " + user.getId());
+                }
+            } catch (Exception e) {
+                logger.warning("Error loading subordinates: " + e.getMessage());
+                // Continue without subordinates - user can still create for themselves
             }
-            */
 
             logger.info("Forwarding to ot-form.jsp...");
             // Forward to ot-form.jsp
@@ -217,6 +227,8 @@ public class OTRequestController extends HttpServlet {
         }
 
         // Extract form parameters (declare outside try for catch block access)
+        String requestFor = request.getParameter("requestFor");
+        String selectedEmployeeIdStr = request.getParameter("selectedEmployeeId");
         String otDate = request.getParameter("otDate");
         String startTime = request.getParameter("startTime");
         String endTime = request.getParameter("endTime");
@@ -225,9 +237,40 @@ public class OTRequestController extends HttpServlet {
         Boolean employeeConsent = "on".equals(employeeConsentStr) || "true".equals(employeeConsentStr);
 
         try {
+            // Determine target user (self or subordinate)
+            Long targetUserId = user.getId();
+            Long targetDepartmentId = user.getDepartmentId();
 
-            logger.info("Creating OT request: date=" + otDate + ", start=" + startTime +
-                ", end=" + endTime + ", consent=" + employeeConsent);
+            if ("employee".equals(requestFor) && selectedEmployeeIdStr != null && !selectedEmployeeIdStr.trim().isEmpty()) {
+                // Creating for subordinate
+                final Long selectedUserId = Long.parseLong(selectedEmployeeIdStr);
+                targetUserId = selectedUserId;
+
+                // Verify the selected employee is actually a subordinate
+                final UserDao userDaoForValidation = new UserDao();
+                java.util.List<User> subordinates = userDaoForValidation.getSubordinates(user.getId());
+                boolean isValidSubordinate = subordinates.stream()
+                    .anyMatch(sub -> sub.getId().equals(selectedUserId));
+
+                if (!isValidSubordinate) {
+                    throw new IllegalArgumentException("You can only create OT requests for your subordinates");
+                }
+
+                // Get target employee's department
+                java.util.Optional<User> targetUserOpt = userDaoForValidation.findById(selectedUserId);
+                if (targetUserOpt.isPresent()) {
+                    targetDepartmentId = targetUserOpt.get().getDepartmentId();
+                } else {
+                    throw new IllegalArgumentException("Selected employee not found");
+                }
+
+                logger.info("Manager " + user.getId() + " creating OT request for employee " + targetUserId);
+            } else {
+                logger.info("User " + user.getId() + " creating OT request for themselves");
+            }
+
+            logger.info("Creating OT request: targetUser=" + targetUserId + ", date=" + otDate +
+                ", start=" + startTime + ", end=" + endTime + ", consent=" + employeeConsent);
 
             // Initialize service
             OTRequestService service = new OTRequestService(
@@ -238,11 +281,11 @@ public class OTRequestController extends HttpServlet {
                 new UserDao()
             );
 
-            // Call service.createOTRequest() with all parameters
+            // Call service.createOTRequest() with target user parameters
             Long requestId = service.createOTRequest(
                 account.getId(),
-                user.getId(),
-                user.getDepartmentId(),
+                targetUserId,
+                targetDepartmentId,
                 otDate,
                 startTime,
                 endTime,
