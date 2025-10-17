@@ -12,6 +12,7 @@ public class Account {
     private Long userId;
     private String username;
     private String emailLogin;
+    private String passwordHash;
     private Long departmentId;
     private Long positionId;
     private String status;
@@ -48,7 +49,8 @@ public class Account {
     }
 
     // Constructors
-    public Account() {}
+    public Account() {
+    }
 
     public Account(Long userId, String username, String emailLogin) {
         this.userId = userId;
@@ -89,6 +91,14 @@ public class Account {
 
     public void setEmailLogin(String emailLogin) {
         this.emailLogin = emailLogin;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 
     public Long getDepartmentId() {
@@ -193,8 +203,10 @@ public class Account {
     // equals, hashCode, toString
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         Account account = (Account) o;
         return Objects.equals(id, account.id) && Objects.equals(username, account.username);
     }

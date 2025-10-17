@@ -21,82 +21,82 @@ public class UserDao {
 
     // SQL queries
     private static final String SELECT_ALL = """
-        SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
-               u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
-               u.start_work_date, u.created_at, u.updated_at,
-               d.name as department_name, p.name as position_name
-        FROM users u
-        LEFT JOIN departments d ON u.department_id = d.id
-        LEFT JOIN positions p ON u.position_id = p.id
-        ORDER BY u.created_at DESC
-        """;
+            SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
+                   u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                   u.start_work_date, u.created_at, u.updated_at,
+                   d.name as department_name, p.name as position_name
+            FROM users u
+            LEFT JOIN departments d ON u.department_id = d.id
+            LEFT JOIN positions p ON u.position_id = p.id
+            ORDER BY u.created_at DESC
+            """;
 
     private static final String SELECT_BY_ID = """
-        SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
-               u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
-               u.start_work_date, u.created_at, u.updated_at,
-               d.name as department_name, p.name as position_name
-        FROM users u
-        LEFT JOIN departments d ON u.department_id = d.id
-        LEFT JOIN positions p ON u.position_id = p.id
-        WHERE u.id = ?
-        """;
+            SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
+                   u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                   u.start_work_date, u.created_at, u.updated_at,
+                   d.name as department_name, p.name as position_name
+            FROM users u
+            LEFT JOIN departments d ON u.department_id = d.id
+            LEFT JOIN positions p ON u.position_id = p.id
+            WHERE u.id = ?
+            """;
 
     private static final String SELECT_BY_EMPLOYEE_CODE = """
-        SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
-               u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
-               u.start_work_date, u.created_at, u.updated_at,
-               d.name as department_name, p.name as position_name
-        FROM users u
-        LEFT JOIN departments d ON u.department_id = d.id
-        LEFT JOIN positions p ON u.position_id = p.id
-        WHERE u.employee_code = ?
-        """;
+            SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
+                   u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                   u.start_work_date, u.created_at, u.updated_at,
+                   d.name as department_name, p.name as position_name
+            FROM users u
+            LEFT JOIN departments d ON u.department_id = d.id
+            LEFT JOIN positions p ON u.position_id = p.id
+            WHERE u.employee_code = ?
+            """;
 
     private static final String SELECT_BY_EMAIL = """
-        SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
-               u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
-               u.start_work_date, u.created_at, u.updated_at,
-               d.name as department_name, p.name as position_name
-        FROM users u
-        LEFT JOIN departments d ON u.department_id = d.id
-        LEFT JOIN positions p ON u.position_id = p.id
-        WHERE u.email_company = ?
-        """;
+            SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
+                   u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                   u.start_work_date, u.created_at, u.updated_at,
+                   d.name as department_name, p.name as position_name
+            FROM users u
+            LEFT JOIN departments d ON u.department_id = d.id
+            LEFT JOIN positions p ON u.position_id = p.id
+            WHERE u.email_company = ?
+            """;
 
     private static final String SELECT_BY_DEPARTMENT = """
-        SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
-               u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
-               u.start_work_date, u.created_at, u.updated_at,
-               d.name as department_name, p.name as position_name
-        FROM users u
-        LEFT JOIN departments d ON u.department_id = d.id
-        LEFT JOIN positions p ON u.position_id = p.id
-        WHERE u.department_id = ? AND u.status = 'active'
-        ORDER BY u.full_name
-        """;
+            SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
+                   u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                   u.start_work_date, u.created_at, u.updated_at,
+                   d.name as department_name, p.name as position_name
+            FROM users u
+            LEFT JOIN departments d ON u.department_id = d.id
+            LEFT JOIN positions p ON u.position_id = p.id
+            WHERE u.department_id = ? AND u.status = 'active'
+            ORDER BY u.full_name
+            """;
 
     private static final String INSERT_USER = """
-        INSERT INTO users (employee_code, full_name, cccd, email_company, phone,
-                          department_id, position_id, status, date_joined, start_work_date)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """;
+            INSERT INTO users (employee_code, full_name, cccd, email_company, phone,
+                              department_id, position_id, status, date_joined, start_work_date)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """;
 
     private static final String UPDATE_USER = """
-        UPDATE users SET
-            employee_code = ?, full_name = ?, cccd = ?, email_company = ?, phone = ?,
-            department_id = ?, position_id = ?, status = ?, date_joined = ?, start_work_date = ?,
-            updated_at = NOW()
-        WHERE id = ?
-        """;
+            UPDATE users SET
+                employee_code = ?, full_name = ?, cccd = ?, email_company = ?, phone = ?,
+                department_id = ?, position_id = ?, status = ?, date_joined = ?, start_work_date = ?,
+                updated_at = NOW()
+            WHERE id = ?
+            """;
 
     private static final String UPDATE_STATUS = """
-        UPDATE users SET status = ?, updated_at = GETUTCDATE() WHERE id = ?
-        """;
+            UPDATE users SET status = ?, updated_at = GETUTCDATE() WHERE id = ?
+            """;
 
     private static final String DELETE_USER = """
-        DELETE FROM users WHERE id = ?
-        """;
+            DELETE FROM users WHERE id = ?
+            """;
 
     /**
      * Lấy tất cả users
@@ -105,8 +105,8 @@ public class UserDao {
         List<User> users = new ArrayList<>();
 
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(SELECT_ALL);
-             ResultSet rs = ps.executeQuery()) {
+                PreparedStatement ps = conn.prepareStatement(SELECT_ALL);
+                ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 users.add(mapResultSetToUser(rs));
@@ -129,7 +129,7 @@ public class UserDao {
         }
 
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(SELECT_BY_ID)) {
+                PreparedStatement ps = conn.prepareStatement(SELECT_BY_ID)) {
 
             ps.setLong(1, id);
 
@@ -156,7 +156,7 @@ public class UserDao {
         }
 
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(SELECT_BY_EMPLOYEE_CODE)) {
+                PreparedStatement ps = conn.prepareStatement(SELECT_BY_EMPLOYEE_CODE)) {
 
             ps.setString(1, employeeCode.trim());
 
@@ -183,7 +183,7 @@ public class UserDao {
         }
 
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(SELECT_BY_EMAIL)) {
+                PreparedStatement ps = conn.prepareStatement(SELECT_BY_EMAIL)) {
 
             ps.setString(1, email.trim().toLowerCase());
 
@@ -212,7 +212,7 @@ public class UserDao {
         }
 
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(SELECT_BY_DEPARTMENT)) {
+                PreparedStatement ps = conn.prepareStatement(SELECT_BY_DEPARTMENT)) {
 
             ps.setLong(1, departmentId);
 
@@ -248,7 +248,7 @@ public class UserDao {
         }
 
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(INSERT_USER, Statement.RETURN_GENERATED_KEYS)) {
+                PreparedStatement ps = conn.prepareStatement(INSERT_USER, Statement.RETURN_GENERATED_KEYS)) {
 
             ps.setString(1, user.getEmployeeCode());
             ps.setString(2, user.getFullName().trim());
@@ -289,7 +289,7 @@ public class UserDao {
         }
 
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(UPDATE_USER)) {
+                PreparedStatement ps = conn.prepareStatement(UPDATE_USER)) {
 
             ps.setString(1, user.getEmployeeCode());
             ps.setString(2, user.getFullName().trim());
@@ -325,7 +325,7 @@ public class UserDao {
         }
 
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(UPDATE_STATUS)) {
+                PreparedStatement ps = conn.prepareStatement(UPDATE_STATUS)) {
 
             ps.setString(1, status);
             ps.setLong(2, id);
@@ -352,7 +352,7 @@ public class UserDao {
         }
 
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(DELETE_USER)) {
+                PreparedStatement ps = conn.prepareStatement(DELETE_USER)) {
 
             ps.setLong(1, id);
 
@@ -367,6 +367,307 @@ public class UserDao {
         }
 
         return false;
+    }
+
+    /**
+     * Tìm users với filters và pagination
+     * 
+     * @param search       Search keyword (employee code, full name, email)
+     * @param departmentId Department filter
+     * @param positionId   Position filter
+     * @param status       Status filter
+     * @param offset       Offset for pagination
+     * @param limit        Limit for pagination
+     * @param sortBy       Column to sort by
+     * @param sortOrder    Sort order (asc/desc)
+     * @return List of users matching filters
+     */
+    public List<User> findWithFilters(String search, Long departmentId, Long positionId,
+            String status, int offset, int limit,
+            String sortBy, String sortOrder) {
+        List<User> users = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("""
+                SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
+                       u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                       u.start_work_date, u.created_at, u.updated_at,
+                       d.name as department_name, p.name as position_name
+                FROM users u
+                LEFT JOIN departments d ON u.department_id = d.id
+                LEFT JOIN positions p ON u.position_id = p.id
+                WHERE 1=1
+                """);
+
+        // Build dynamic WHERE clauses
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append(" AND (u.employee_code LIKE ? OR u.full_name LIKE ? OR u.email_company LIKE ?)");
+        }
+        if (departmentId != null) {
+            sql.append(" AND u.department_id = ?");
+        }
+        if (positionId != null) {
+            sql.append(" AND u.position_id = ?");
+        }
+        if (status != null && !status.trim().isEmpty()) {
+            sql.append(" AND u.status = ?");
+        }
+
+        // Add ORDER BY
+        String validSortBy = validateSortColumn(sortBy);
+        String validSortOrder = "desc".equalsIgnoreCase(sortOrder) ? "DESC" : "ASC";
+        sql.append(" ORDER BY ").append(validSortBy).append(" ").append(validSortOrder);
+
+        // Add LIMIT and OFFSET (MySQL syntax)
+        sql.append(" LIMIT ? OFFSET ?");
+
+        try (Connection conn = DatabaseUtil.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            int paramIndex = 1;
+
+            // Set search parameters
+            if (search != null && !search.trim().isEmpty()) {
+                String searchPattern = "%" + search.trim() + "%";
+                ps.setString(paramIndex++, searchPattern);
+                ps.setString(paramIndex++, searchPattern);
+                ps.setString(paramIndex++, searchPattern);
+            }
+
+            // Set filter parameters
+            if (departmentId != null) {
+                ps.setLong(paramIndex++, departmentId);
+            }
+            if (positionId != null) {
+                ps.setLong(paramIndex++, positionId);
+            }
+            if (status != null && !status.trim().isEmpty()) {
+                ps.setString(paramIndex++, status.trim());
+            }
+
+            // Set pagination parameters (limit first, then offset for MySQL)
+            ps.setInt(paramIndex++, limit);
+            ps.setInt(paramIndex++, limit);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    users.add(mapResultSetToUser(rs));
+                }
+            }
+
+            logger.info("Tìm thấy {} users với filters", users.size());
+        } catch (SQLException e) {
+            logger.error("Lỗi khi tìm users với filters", e);
+        }
+
+        return users;
+    }
+
+    /**
+     * Đếm tổng số users với filters
+     * 
+     * @param search       Search keyword
+     * @param departmentId Department filter
+     * @param positionId   Position filter
+     * @param status       Status filter
+     * @return Total count of users matching filters
+     */
+    public int countWithFilters(String search, Long departmentId, Long positionId, String status) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM users u WHERE 1=1");
+
+        // Build dynamic WHERE clauses
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append(" AND (u.employee_code LIKE ? OR u.full_name LIKE ? OR u.email_company LIKE ?)");
+        }
+        if (departmentId != null) {
+            sql.append(" AND u.department_id = ?");
+        }
+        if (positionId != null) {
+            sql.append(" AND u.position_id = ?");
+        }
+        if (status != null && !status.trim().isEmpty()) {
+            sql.append(" AND u.status = ?");
+        }
+
+        try (Connection conn = DatabaseUtil.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            int paramIndex = 1;
+
+            // Set search parameters
+            if (search != null && !search.trim().isEmpty()) {
+                String searchPattern = "%" + search.trim() + "%";
+                ps.setString(paramIndex++, searchPattern);
+                ps.setString(paramIndex++, searchPattern);
+                ps.setString(paramIndex++, searchPattern);
+            }
+
+            // Set filter parameters
+            if (departmentId != null) {
+                ps.setLong(paramIndex++, departmentId);
+            }
+            if (positionId != null) {
+                ps.setLong(paramIndex++, positionId);
+            }
+            if (status != null && !status.trim().isEmpty()) {
+                ps.setString(paramIndex++, status.trim());
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Lỗi khi đếm users với filters", e);
+        }
+
+        return 0;
+    }
+
+    /**
+     * Kiểm tra user có accounts active không
+     * 
+     * @param userId User ID
+     * @return true nếu user có ít nhất 1 account active
+     */
+    public boolean hasActiveAccounts(Long userId) {
+        if (userId == null) {
+            return false;
+        }
+
+        String sql = "SELECT COUNT(*) FROM accounts WHERE user_id = ? AND status = 'active'";
+
+        try (Connection conn = DatabaseUtil.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setLong(1, userId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int count = rs.getInt(1);
+                    logger.debug("User ID {} có {} active accounts", userId, count);
+                    return count > 0;
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Lỗi khi kiểm tra active accounts cho user ID: " + userId, e);
+        }
+
+        return false;
+    }
+
+    /**
+     * Tìm users với filters và pagination, trả về UserListDto
+     * 
+     * @param search       Search keyword (employee code, full name, email)
+     * @param departmentId Department filter
+     * @param positionId   Position filter
+     * @param status       Status filter
+     * @param offset       Offset for pagination
+     * @param limit        Limit for pagination
+     * @param sortBy       Column to sort by
+     * @param sortOrder    Sort order (asc/desc)
+     * @return List of UserListDto matching filters
+     */
+    public List<group4.hrms.dto.UserListDto> findWithFiltersAsDto(String search, Long departmentId, Long positionId,
+            String status, int offset, int limit,
+            String sortBy, String sortOrder) {
+        List<group4.hrms.dto.UserListDto> userDtos = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("""
+                SELECT u.id, u.employee_code, u.full_name, u.email_company,
+                       d.name as department_name, p.name as position_name,
+                       u.status, u.date_joined,
+                       (SELECT COUNT(*) FROM accounts a
+                        WHERE a.user_id = u.id AND a.status = 'active') as active_account_count
+                FROM users u
+                LEFT JOIN departments d ON u.department_id = d.id
+                LEFT JOIN positions p ON u.position_id = p.id
+                WHERE 1=1
+                """);
+
+        // Build dynamic WHERE clauses
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append(" AND (u.employee_code LIKE ? OR u.full_name LIKE ? OR u.email_company LIKE ?)");
+        }
+        if (departmentId != null) {
+            sql.append(" AND u.department_id = ?");
+        }
+        if (positionId != null) {
+            sql.append(" AND u.position_id = ?");
+        }
+        if (status != null && !status.trim().isEmpty()) {
+            sql.append(" AND u.status = ?");
+        }
+
+        // Add ORDER BY
+        String validSortBy = validateSortColumn(sortBy);
+        String validSortOrder = "desc".equalsIgnoreCase(sortOrder) ? "DESC" : "ASC";
+        sql.append(" ORDER BY ").append(validSortBy).append(" ").append(validSortOrder);
+
+        // Add LIMIT and OFFSET (MySQL syntax)
+        sql.append(" LIMIT ? OFFSET ?");
+
+        try (Connection conn = DatabaseUtil.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            int paramIndex = 1;
+
+            // Set search parameters
+            if (search != null && !search.trim().isEmpty()) {
+                String searchPattern = "%" + search.trim() + "%";
+                ps.setString(paramIndex++, searchPattern);
+                ps.setString(paramIndex++, searchPattern);
+                ps.setString(paramIndex++, searchPattern);
+            }
+
+            // Set filter parameters
+            if (departmentId != null) {
+                ps.setLong(paramIndex++, departmentId);
+            }
+            if (positionId != null) {
+                ps.setLong(paramIndex++, positionId);
+            }
+            if (status != null && !status.trim().isEmpty()) {
+                ps.setString(paramIndex++, status.trim());
+            }
+
+            // Set pagination parameters (limit first, then offset for MySQL)
+            ps.setInt(paramIndex++, limit);
+            ps.setInt(paramIndex++, offset);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    userDtos.add(new group4.hrms.dto.UserListDto(rs));
+                }
+            }
+
+            logger.info("Tìm thấy {} user DTOs với filters", userDtos.size());
+        } catch (SQLException e) {
+            logger.error("Lỗi khi tìm user DTOs với filters", e);
+        }
+
+        return userDtos;
+    }
+
+    /**
+     * Validate và sanitize sort column để tránh SQL injection
+     */
+    private String validateSortColumn(String sortBy) {
+        if (sortBy == null || sortBy.trim().isEmpty()) {
+            return "u.created_at";
+        }
+
+        // Whitelist các columns được phép sort
+        return switch (sortBy.toLowerCase()) {
+            case "employee_code" -> "u.employee_code";
+            case "full_name" -> "u.full_name";
+            case "email_company" -> "u.email_company";
+            case "department_name" -> "d.name";
+            case "position_name" -> "p.name";
+            case "status" -> "u.status";
+            case "date_joined" -> "u.date_joined";
+            case "created_at" -> "u.created_at";
+            default -> "u.created_at";
+        };
     }
 
     /**
@@ -446,5 +747,89 @@ public class UserDao {
         }
 
         return user;
+    }
+
+    /**
+     * Tìm users theo status
+     * 
+     * @param status Status của user (active, inactive, terminated)
+     * @return List of users với status được chỉ định
+     */
+    public List<User> findByStatus(String status) {
+        logger.debug("Tìm users theo status: {}", status);
+
+        List<User> users = new ArrayList<>();
+        String sql = """
+                SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
+                       u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                       u.start_work_date, u.created_at, u.updated_at
+                FROM users u
+                WHERE u.status = ?
+                ORDER BY u.full_name
+                """;
+
+        try (Connection conn = DatabaseUtil.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, status);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    User user = new User();
+                    user.setId(rs.getLong("id"));
+                    user.setEmployeeCode(rs.getString("employee_code"));
+                    user.setFullName(rs.getString("full_name"));
+                    user.setCccd(rs.getString("cccd"));
+                    user.setEmailCompany(rs.getString("email_company"));
+                    user.setPhone(rs.getString("phone"));
+
+                    Long deptId = rs.getLong("department_id");
+                    if (!rs.wasNull()) {
+                        user.setDepartmentId(deptId);
+                    }
+
+                    Long posId = rs.getLong("position_id");
+                    if (!rs.wasNull()) {
+                        user.setPositionId(posId);
+                    }
+
+                    user.setStatus(rs.getString("status"));
+
+                    Date dateJoined = rs.getDate("date_joined");
+                    if (dateJoined != null) {
+                        user.setDateJoined(dateJoined.toLocalDate());
+                    }
+
+                    Date dateLeft = rs.getDate("date_left");
+                    if (dateLeft != null) {
+                        user.setDateLeft(dateLeft.toLocalDate());
+                    }
+
+                    Date startWorkDate = rs.getDate("start_work_date");
+                    if (startWorkDate != null) {
+                        user.setStartWorkDate(startWorkDate.toLocalDate());
+                    }
+
+                    Timestamp createdAt = rs.getTimestamp("created_at");
+                    if (createdAt != null) {
+                        user.setCreatedAt(createdAt.toLocalDateTime());
+                    }
+
+                    Timestamp updatedAt = rs.getTimestamp("updated_at");
+                    if (updatedAt != null) {
+                        user.setUpdatedAt(updatedAt.toLocalDateTime());
+                    }
+
+                    users.add(user);
+                }
+            }
+
+            logger.debug("Tìm thấy {} users với status: {}", users.size(), status);
+            return users;
+
+        } catch (SQLException e) {
+            logger.error("Lỗi khi tìm users theo status {}: {}", status, e.getMessage(), e);
+            throw new RuntimeException("Lỗi khi tìm users theo status", e);
+        }
     }
 }
