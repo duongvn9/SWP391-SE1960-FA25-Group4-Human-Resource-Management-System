@@ -1,4 +1,4 @@
-# RBAC Features & URLs Specification
+﻿# RBAC Features & URLs Specification
 
 > **⚠️ IMPORTANT FOR AI AGENTS:**  
 > This document MUST be read before implementing any authorization/permission-related code.  
@@ -8,14 +8,21 @@
 
 ## 📋 Document Information
 
-- **Version:** 1.0.0
-- **Last Updated:** 2025-10-14
+- **Version:** 1.1.0
+- **Last Updated:** 2025-10-17
 - **Status:** DRAFT - Pending Team Review
 - **Owner:** Team 4 - HRMS Project
 
 ---
 
 ## 📝 CHANGELOG
+
+### [1.1.0] - 2025-10-17
+- **ADDED**: Employee Management module with User List and Account List features
+- **ADDED**: 12 new feature codes for Employee Management (`EMPLOYEE_USER_*`, `EMPLOYEE_ACCOUNT_*`)
+- **ADDED**: URL mappings for `/employees/users` and `/employees/accounts`
+- **ADDED**: Permission matrix for Employee Management features
+- **NOTE**: Employee Management uses `/employees/*` pattern to distinguish from existing `/users` RBAC module
 
 ### [1.0.0] - 2025-10-14
 - **CREATED**: Initial version with unified `/requests/*` module structure
@@ -93,7 +100,33 @@ Tất cả features được map với URLs cụ thể và có permission matrix
 | `USER_ACTIVATE` | Activate User | `/users/{id}/activate` | Kích hoạt user |
 | `USER_DEACTIVATE` | Deactivate User | `/users/{id}/deactivate` | Vô hiệu hóa user |
 
-### 4. Department Management
+### 4. Employee Management
+
+**Note:** Employee Management module quản lý thông tin nhân viên (User) và tài khoản đăng nhập (Account) riêng biệt. URL pattern `/employees/*` để phân biệt với `/users` (RBAC existing).
+
+#### 4.1 Employee User Management
+
+| Feature Code | Feature Name | URL | Description |
+|--------------|--------------|-----|-------------|
+| `EMPLOYEE_USER_LIST` | List Employee Users | `/employees/users` | Danh sách nhân viên (User) |
+| `EMPLOYEE_USER_VIEW` | View Employee User | `/employees/users/{id}` | Xem chi tiết nhân viên |
+| `EMPLOYEE_USER_CREATE` | Create Employee User | `/employees/users/create` | Tạo nhân viên mới |
+| `EMPLOYEE_USER_EDIT` | Edit Employee User | `/employees/users/{id}/edit` | Chỉnh sửa thông tin nhân viên |
+| `EMPLOYEE_USER_DELETE` | Delete Employee User | `/employees/users/{id}/delete` | Xóa nhân viên |
+
+#### 4.2 Employee Account Management
+
+| Feature Code | Feature Name | URL | Description |
+|--------------|--------------|-----|-------------|
+| `EMPLOYEE_ACCOUNT_LIST` | List Employee Accounts | `/employees/accounts` | Danh sách tài khoản đăng nhập |
+| `EMPLOYEE_ACCOUNT_VIEW` | View Employee Account | `/employees/accounts/{id}` | Xem chi tiết tài khoản |
+| `EMPLOYEE_ACCOUNT_CREATE` | Create Employee Account | `/employees/accounts/create` | Tạo tài khoản mới |
+| `EMPLOYEE_ACCOUNT_EDIT` | Edit Employee Account | `/employees/accounts/{id}/edit` | Chỉnh sửa tài khoản |
+| `EMPLOYEE_ACCOUNT_DELETE` | Delete Employee Account | `/employees/accounts/{id}/delete` | Xóa tài khoản |
+| `EMPLOYEE_ACCOUNT_LOCK` | Lock Employee Account | `/employees/accounts/{id}/lock` | Khóa tài khoản |
+| `EMPLOYEE_ACCOUNT_UNLOCK` | Unlock Employee Account | `/employees/accounts/{id}/unlock` | Mở khóa tài khoản |
+
+### 5. Department Management
 
 | Feature Code | Feature Name | URL | Description |
 |--------------|--------------|-----|-------------|
@@ -103,7 +136,7 @@ Tất cả features được map với URLs cụ thể và có permission matrix
 | `DEPT_EDIT` | Edit Department | `/departments/{id}/edit` | Chỉnh sửa phòng ban |
 | `DEPT_DELETE` | Delete Department | `/departments/{id}/delete` | Xóa phòng ban |
 
-### 5. Position Management
+### 6. Position Management
 
 | Feature Code | Feature Name | URL | Description |
 |--------------|--------------|-----|-------------|
@@ -113,9 +146,9 @@ Tất cả features được map với URLs cụ thể và có permission matrix
 | `POS_EDIT` | Edit Position | `/positions/{id}/edit` | Chỉnh sửa chức vụ |
 | `POS_DELETE` | Delete Position | `/positions/{id}/delete` | Xóa chức vụ |
 
-### 6. Request Management (Unified Module)
+### 7. Request Management (Unified Module)
 
-#### 6.1 Request Dashboard & Lists
+#### 7.1 Request Dashboard & Lists
 
 | Feature Code | Feature Name | URL | Description |
 |--------------|--------------|-----|-------------|
@@ -126,7 +159,7 @@ Tất cả features được map với URLs cụ thể và có permission matrix
 | `REQUEST_PENDING` | Pending Requests | `/requests/pending` | Xem requests chờ duyệt |
 | `REQUEST_HISTORY` | Request History | `/requests/history` | Xem lịch sử requests |
 
-#### 6.2 Leave Requests
+#### 7.2 Leave Requests
 
 | Feature Code | Feature Name | URL | Description |
 |--------------|--------------|-----|-------------|
@@ -137,7 +170,7 @@ Tất cả features được map với URLs cụ thể và có permission matrix
 | `REQUEST_LEAVE_APPROVE` | Approve Leave Request | `/requests/leave/{id}/approve` | Duyệt đơn nghỉ phép |
 | `REQUEST_LEAVE_REJECT` | Reject Leave Request | `/requests/leave/{id}/reject` | Từ chối đơn nghỉ phép |
 
-#### 6.3 OT Requests
+#### 7.3 OT Requests
 
 | Feature Code | Feature Name | URL | Description |
 |--------------|--------------|-----|-------------|
@@ -148,7 +181,7 @@ Tất cả features được map với URLs cụ thể và có permission matrix
 | `REQUEST_OT_APPROVE` | Approve OT Request | `/requests/ot/{id}/approve` | Duyệt đơn OT |
 | `REQUEST_OT_REJECT` | Reject OT Request | `/requests/ot/{id}/reject` | Từ chối đơn OT |
 
-#### 6.4 Attendance Appeal Requests
+#### 7.4 Attendance Appeal Requests
 
 | Feature Code | Feature Name | URL | Description |
 |--------------|--------------|-----|-------------|
@@ -159,7 +192,7 @@ Tất cả features được map với URLs cụ thể và có permission matrix
 | `REQUEST_ATT_APPEAL_APPROVE` | Approve Attendance Appeal | `/requests/attendance-appeal/{id}/approve` | Duyệt khiếu nại |
 | `REQUEST_ATT_APPEAL_REJECT` | Reject Attendance Appeal | `/requests/attendance-appeal/{id}/reject` | Từ chối khiếu nại |
 
-#### 6.5 Recruitment Requests
+#### 7.5 Recruitment Requests
 
 | Feature Code | Feature Name | URL | Description |
 |--------------|--------------|-----|-------------|
@@ -172,7 +205,7 @@ Tất cả features được map với URLs cụ thể và có permission matrix
 | `REQUEST_RECRUITMENT_FINAL_APPROVE` | Final Approve | `/requests/recruitment/{id}/final-approve` | Duyệt cuối (level 2) |
 | `REQUEST_RECRUITMENT_REJECT` | Reject Recruitment | `/requests/recruitment/{id}/reject` | Từ chối yêu cầu |
 
-### 7. Attendance Management
+### 8. Attendance Management
 
 | Feature Code | Feature Name | URL | Description |
 |--------------|--------------|-----|-------------|
@@ -182,7 +215,7 @@ Tất cả features được map với URLs cụ thể và có permission matrix
 | `ATT_IMPORT` | Import Attendance | `/attendance/import` | Import dữ liệu chấm công |
 | `ATT_EXPORT` | Export Attendance | `/attendance/export` | Export dữ liệu chấm công |
 
-### 8. Application Management (Recruitment)
+### 9. Application Management (Recruitment)
 
 | Feature Code | Feature Name | URL | Description |
 |--------------|--------------|-----|-------------|
@@ -190,7 +223,7 @@ Tất cả features được map với URLs cụ thể và có permission matrix
 | `APP_VIEW` | View Application | `/applications/{id}` | Xem hồ sơ ứng viên |
 | `APP_REVIEW` | Review Application | `/applications/{id}/review` | Đánh giá ứng viên |
 
-### 9. Contract Management
+### 10. Contract Management
 
 | Feature Code | Feature Name | URL | Description |
 |--------------|--------------|-----|-------------|
@@ -199,7 +232,7 @@ Tất cả features được map với URLs cụ thể và có permission matrix
 | `CONTRACT_CREATE` | Create Contract | `/contracts/create` | Tạo hợp đồng |
 | `CONTRACT_EDIT` | Edit Contract | `/contracts/{id}/edit` | Chỉnh sửa hợp đồng |
 
-### 10. Payslip Management
+### 11. Payslip Management
 
 | Feature Code | Feature Name | URL | Description |
 |--------------|--------------|-----|-------------|
@@ -208,7 +241,7 @@ Tất cả features được map với URLs cụ thể và có permission matrix
 | `PAYSLIP_CREATE` | Create Payslip | `/payslips/create` | Tạo phiếu lương |
 | `PAYSLIP_EXPORT` | Export Payslips | `/payslips/export` | Export phiếu lương |
 
-### 11. System Settings
+### 12. System Settings
 
 | Feature Code | Feature Name | URL | Description |
 |--------------|--------------|-----|-------------|
@@ -217,7 +250,7 @@ Tất cả features được map với URLs cụ thể và có permission matrix
 | `ROLE_MANAGE` | Manage Roles | `/settings/roles` | Quản lý roles |
 | `PERMISSION_MANAGE` | Manage Permissions | `/settings/permissions` | Quản lý permissions |
 
-### 12. Public Pages (No Authentication Required)
+### 13. Public Pages (No Authentication Required)
 
 | Feature Code | Feature Name | URL | Description |
 |--------------|--------------|-----|-------------|
@@ -238,6 +271,7 @@ Tất cả features được map với URLs cụ thể và có permission matrix
 | Module | Permissions |
 |--------|-------------|
 | **User Management** | ALL (list, view, create, edit, delete, activate, deactivate) |
+| **Employee Management** | ALL (list, view, create, edit, delete for both Users and Accounts) |
 | **Department Management** | ALL |
 | **Position Management** | ALL |
 | **Requests** | ALL (list all, view all types, approve/reject all types) |
@@ -250,6 +284,8 @@ Tất cả features được map với URLs cụ thể và có permission matrix
 **Features:**
 ```
 ✅ USER_LIST, USER_VIEW, USER_CREATE, USER_EDIT, USER_DELETE, USER_ACTIVATE, USER_DEACTIVATE
+✅ EMPLOYEE_USER_LIST, EMPLOYEE_USER_VIEW, EMPLOYEE_USER_CREATE, EMPLOYEE_USER_EDIT, EMPLOYEE_USER_DELETE
+✅ EMPLOYEE_ACCOUNT_LIST, EMPLOYEE_ACCOUNT_VIEW, EMPLOYEE_ACCOUNT_CREATE, EMPLOYEE_ACCOUNT_EDIT, EMPLOYEE_ACCOUNT_DELETE, EMPLOYEE_ACCOUNT_LOCK, EMPLOYEE_ACCOUNT_UNLOCK
 ✅ DEPT_LIST, DEPT_VIEW, DEPT_CREATE, DEPT_EDIT, DEPT_DELETE
 ✅ POS_LIST, POS_VIEW, POS_CREATE, POS_EDIT, POS_DELETE
 ✅ REQUEST_LIST_ALL, REQUEST_PENDING, REQUEST_HISTORY
@@ -267,6 +303,7 @@ Tất cả features được map với URLs cụ thể và có permission matrix
 | Module | Permissions |
 |--------|-------------|
 | **User Management** | LIST, VIEW, CREATE, EDIT (không có DELETE) |
+| **Employee Management** | LIST, VIEW (không có CREATE, EDIT, DELETE) |
 | **Department Management** | LIST, VIEW |
 | **Position Management** | LIST, VIEW |
 | **Requests** | LIST_ALL, VIEW, APPROVE, REJECT (tất cả loại) |
@@ -279,6 +316,9 @@ Tất cả features được map với URLs cụ thể và có permission matrix
 ```
 ✅ USER_LIST, USER_VIEW, USER_CREATE, USER_EDIT
 ❌ USER_DELETE, USER_ACTIVATE, USER_DEACTIVATE
+✅ EMPLOYEE_USER_LIST, EMPLOYEE_USER_VIEW, EMPLOYEE_ACCOUNT_LIST, EMPLOYEE_ACCOUNT_VIEW
+❌ EMPLOYEE_USER_CREATE, EMPLOYEE_USER_EDIT, EMPLOYEE_USER_DELETE
+❌ EMPLOYEE_ACCOUNT_CREATE, EMPLOYEE_ACCOUNT_EDIT, EMPLOYEE_ACCOUNT_DELETE, EMPLOYEE_ACCOUNT_LOCK, EMPLOYEE_ACCOUNT_UNLOCK
 ✅ DEPT_LIST, DEPT_VIEW
 ❌ DEPT_CREATE, DEPT_EDIT, DEPT_DELETE
 ✅ POS_LIST, POS_VIEW
@@ -316,6 +356,7 @@ Tất cả features được map với URLs cụ thể và có permission matrix
 ✅ REQUEST_ATT_APPEAL_VIEW, REQUEST_ATT_APPEAL_APPROVE, REQUEST_ATT_APPEAL_REJECT (scope: team)
 ✅ REQUEST_RECRUITMENT_CREATE, REQUEST_RECRUITMENT_APPROVE (level 1, for department)
 ✅ ATT_VIEW_OWN, ATT_VIEW_TEAM, ATT_EXPORT (scope: team)
+❌ EMPLOYEE_USER_*, EMPLOYEE_ACCOUNT_* (không có quyền truy cập Employee Management)
 ❌ All other features
 ```
 
@@ -344,6 +385,7 @@ Tất cả features được map với URLs cụ thể và có permission matrix
 ✅ REQUEST_ATT_APPEAL_CREATE, REQUEST_ATT_APPEAL_VIEW, REQUEST_ATT_APPEAL_EDIT, REQUEST_ATT_APPEAL_CANCEL
 ✅ ATT_VIEW_OWN
 ✅ PAYSLIP_VIEW_OWN
+❌ EMPLOYEE_USER_*, EMPLOYEE_ACCOUNT_* (không có quyền truy cập Employee Management)
 ❌ All other features
 ```
 
@@ -364,6 +406,32 @@ Tất cả features được map với URLs cụ thể và có permission matrix
 ✅ PUBLIC_ABOUT, PUBLIC_CONTACT, PUBLIC_FAQS
 ❌ All other features
 ```
+
+---
+
+##  Employee Management Permission Matrix
+
+| Feature | ADMIN | HRM | HR | MANAGER | EMPLOYEE | GUEST |
+|---------|-------|-----|----|---------| ---------|-------|
+| `EMPLOYEE_USER_LIST` | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| `EMPLOYEE_USER_VIEW` | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| `EMPLOYEE_USER_CREATE` | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| `EMPLOYEE_USER_EDIT` | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| `EMPLOYEE_USER_DELETE` | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| `EMPLOYEE_ACCOUNT_LIST` | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| `EMPLOYEE_ACCOUNT_VIEW` | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| `EMPLOYEE_ACCOUNT_CREATE` | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| `EMPLOYEE_ACCOUNT_EDIT` | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| `EMPLOYEE_ACCOUNT_DELETE` | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| `EMPLOYEE_ACCOUNT_LOCK` | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| `EMPLOYEE_ACCOUNT_UNLOCK` | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+
+**Key Points:**
+- **ADMIN & HRM**: Full access to all Employee Management features
+- **HR**: View-only access (LIST and VIEW for both Users and Accounts)
+- **MANAGER, EMPLOYEE, GUEST**: No access to Employee Management module
+- **URL Pattern**: `/employees/*` to distinguish from existing `/users` RBAC module
+- **Separation**: User (employee info) and Account (login credentials) managed separately
 
 ---
 
@@ -859,13 +927,31 @@ INSERT INTO features (code, name, description, route, sort_order, is_active) VAL
 ('USER_EDIT', 'Edit User', 'Chỉnh sửa user', '/users/{id}/edit', 23, 1),
 ('USER_DELETE', 'Delete User', 'Xóa user', '/users/{id}/delete', 24, 1);
 
+-- Employee Management - User Module
+INSERT INTO features (code, name, description, route, sort_order, is_active) VALUES
+('EMPLOYEE_USER_LIST', 'List Employee Users', 'Danh sách nhân viên', '/employees/users', 25, 1),
+('EMPLOYEE_USER_VIEW', 'View Employee User', 'Xem chi tiết nhân viên', '/employees/users/{id}', 26, 1),
+('EMPLOYEE_USER_CREATE', 'Create Employee User', 'Tạo nhân viên mới', '/employees/users/create', 27, 1),
+('EMPLOYEE_USER_EDIT', 'Edit Employee User', 'Chỉnh sửa nhân viên', '/employees/users/{id}/edit', 28, 1),
+('EMPLOYEE_USER_DELETE', 'Delete Employee User', 'Xóa nhân viên', '/employees/users/{id}/delete', 29, 1);
+
+-- Employee Management - Account Module
+INSERT INTO features (code, name, description, route, sort_order, is_active) VALUES
+('EMPLOYEE_ACCOUNT_LIST', 'List Employee Accounts', 'Danh sách tài khoản', '/employees/accounts', 30, 1),
+('EMPLOYEE_ACCOUNT_VIEW', 'View Employee Account', 'Xem chi tiết tài khoản', '/employees/accounts/{id}', 31, 1),
+('EMPLOYEE_ACCOUNT_CREATE', 'Create Employee Account', 'Tạo tài khoản mới', '/employees/accounts/create', 32, 1),
+('EMPLOYEE_ACCOUNT_EDIT', 'Edit Employee Account', 'Chỉnh sửa tài khoản', '/employees/accounts/{id}/edit', 33, 1),
+('EMPLOYEE_ACCOUNT_DELETE', 'Delete Employee Account', 'Xóa tài khoản', '/employees/accounts/{id}/delete', 34, 1),
+('EMPLOYEE_ACCOUNT_LOCK', 'Lock Employee Account', 'Khóa tài khoản', '/employees/accounts/{id}/lock', 35, 1),
+('EMPLOYEE_ACCOUNT_UNLOCK', 'Unlock Employee Account', 'Mở khóa tài khoản', '/employees/accounts/{id}/unlock', 36, 1);
+
 -- Request Management
 INSERT INTO features (code, name, description, route, sort_order, is_active) VALUES
-('REQUEST_LIST_OWN', 'My Requests', 'Xem requests của mình', '/requests', 30, 1),
-('REQUEST_LIST_TEAM', 'Team Requests', 'Xem requests của team', '/requests/team', 31, 1),
-('REQUEST_LIST_ALL', 'All Requests', 'Xem tất cả requests', '/requests/all', 32, 1),
-('REQUEST_LEAVE_CREATE', 'Create Leave', 'Tạo đơn nghỉ phép', '/requests/leave/create', 33, 1),
-('REQUEST_LEAVE_APPROVE', 'Approve Leave', 'Duyệt đơn nghỉ phép', '/requests/leave/{id}/approve', 34, 1);
+('REQUEST_LIST_OWN', 'My Requests', 'Xem requests của mình', '/requests', 40, 1),
+('REQUEST_LIST_TEAM', 'Team Requests', 'Xem requests của team', '/requests/team', 41, 1),
+('REQUEST_LIST_ALL', 'All Requests', 'Xem tất cả requests', '/requests/all', 42, 1),
+('REQUEST_LEAVE_CREATE', 'Create Leave', 'Tạo đơn nghỉ phép', '/requests/leave/create', 43, 1),
+('REQUEST_LEAVE_APPROVE', 'Approve Leave', 'Duyệt đơn nghỉ phép', '/requests/leave/{id}/approve', 44, 1);
 
 -- ... (Continue for all 70+ features)
 ```
@@ -881,7 +967,7 @@ SELECT
 FROM features
 WHERE is_active = 1;
 
--- EMPLOYEE: Grant basic features only
+-- EMPLOYEE: Grant basic features only (NO Employee Management access)
 INSERT INTO role_features (role_id, feature_id)
 SELECT 
     (SELECT id FROM roles WHERE code = 'EMPLOYEE'),
@@ -897,7 +983,7 @@ WHERE code IN (
     'PAYSLIP_VIEW_OWN'
 );
 
--- MANAGER: Grant team management features
+-- MANAGER: Grant team management features (NO Employee Management access)
 INSERT INTO role_features (role_id, feature_id)
 SELECT 
     (SELECT id FROM roles WHERE code = 'MANAGER'),
@@ -915,7 +1001,7 @@ WHERE code IN (
     'ATT_VIEW_OWN', 'ATT_VIEW_TEAM', 'ATT_EXPORT'
 );
 
--- HR: Grant HR operations features
+-- HR: Grant HR operations features (VIEW-ONLY for Employee Management)
 INSERT INTO role_features (role_id, feature_id)
 SELECT 
     (SELECT id FROM roles WHERE code = 'HR'),
@@ -923,6 +1009,8 @@ SELECT
 FROM features
 WHERE code NOT IN (
     'USER_DELETE', 'USER_ACTIVATE', 'USER_DEACTIVATE',
+    'EMPLOYEE_USER_CREATE', 'EMPLOYEE_USER_EDIT', 'EMPLOYEE_USER_DELETE',
+    'EMPLOYEE_ACCOUNT_CREATE', 'EMPLOYEE_ACCOUNT_EDIT', 'EMPLOYEE_ACCOUNT_DELETE', 'EMPLOYEE_ACCOUNT_LOCK', 'EMPLOYEE_ACCOUNT_UNLOCK',
     'DEPT_CREATE', 'DEPT_EDIT', 'DEPT_DELETE',
     'POS_CREATE', 'POS_EDIT', 'POS_DELETE',
     'CONTRACT_EDIT',
@@ -930,7 +1018,7 @@ WHERE code NOT IN (
     'SETTINGS_EDIT', 'ROLE_MANAGE', 'PERMISSION_MANAGE'
 );
 
--- HRM: Grant almost all features except system settings
+-- HRM: Grant almost all features except system settings (FULL Employee Management access)
 INSERT INTO role_features (role_id, feature_id)
 SELECT 
     (SELECT id FROM roles WHERE code = 'HRM'),
@@ -978,6 +1066,8 @@ User: employee@company.com (Role: EMPLOYEE)
 - POST /requests/leave/123/approve → Cannot approve requests
 - GET /users → Cannot list users
 - GET /attendance/all → Cannot view all attendance
+- GET /employees/users → Cannot access Employee Management
+- GET /employees/accounts → Cannot access Employee Management
 ```
 
 ### Test Case 2: MANAGER Access
@@ -996,6 +1086,8 @@ User: manager@company.com (Role: MANAGER, Department: IT)
 - POST /requests/leave/456/approve → Cannot approve other department's request
 - POST /users/create → Cannot create users
 - DELETE /users/123 → Cannot delete users
+- GET /employees/users → Cannot access Employee Management
+- GET /employees/accounts → Cannot access Employee Management
 ```
 
 ### Test Case 3: HR Access
@@ -1014,6 +1106,9 @@ User: hr@company.com (Role: HR)
 - DELETE /users/123 → Cannot delete users (only HRM)
 - POST /departments/create → Cannot create departments
 - POST /payslips/create → Cannot create payslips
+- POST /employees/users/create → Cannot create employee users (only HRM)
+- POST /employees/accounts/create → Cannot create accounts (only HRM)
+- DELETE /employees/users/123 → Cannot delete employee users (only HRM)
 ```
 
 ### Test Case 4: HRM Access
@@ -1031,6 +1126,14 @@ User: hrm@company.com (Role: HRM)
 - POST /settings/edit → Cannot edit system settings
 - GET /settings/roles → Cannot manage roles
 - GET /settings/permissions → Cannot manage permissions
+
+✅ SHOULD PASS (Employee Management):
+- GET /employees/users → List all employee users
+- GET /employees/accounts → List all employee accounts
+- POST /employees/users/create → Create new employee user
+- POST /employees/accounts/create → Create new account
+- DELETE /employees/users/123 → Delete employee user
+- POST /employees/accounts/123/lock → Lock account
 ```
 
 ### Test Case 5: ADMIN Access
@@ -1044,7 +1147,52 @@ User: admin@company.com (Role: ADMIN)
 - GET /settings/permissions → Manage permissions
 ```
 
-### Test Case 6: Resource-Level Permission
+### Test Case 6: Employee Management Access
+
+```
+Scenario: Different roles accessing Employee Management module
+
+Test 6.1 - ADMIN Access:
+User: admin@company.com (Role: ADMIN)
+✅ GET /employees/users → List all employee users
+✅ GET /employees/accounts → List all accounts
+✅ POST /employees/users/create → Create employee user
+✅ POST /employees/accounts/create → Create account
+✅ DELETE /employees/users/123 → Delete employee user
+✅ POST /employees/accounts/123/lock → Lock account
+
+Test 6.2 - HRM Access:
+User: hrm@company.com (Role: HRM)
+✅ GET /employees/users → List all employee users
+✅ GET /employees/accounts → List all accounts
+✅ POST /employees/users/create → Create employee user
+✅ POST /employees/accounts/create → Create account
+✅ DELETE /employees/users/123 → Delete employee user
+✅ POST /employees/accounts/123/lock → Lock account
+
+Test 6.3 - HR Access (VIEW ONLY):
+User: hr@company.com (Role: HR)
+✅ GET /employees/users → List all employee users
+✅ GET /employees/accounts → List all accounts
+✅ GET /employees/users/123 → View employee user detail
+✅ GET /employees/accounts/456 → View account detail
+❌ POST /employees/users/create → Cannot create (403)
+❌ POST /employees/accounts/create → Cannot create (403)
+❌ DELETE /employees/users/123 → Cannot delete (403)
+❌ POST /employees/accounts/123/lock → Cannot lock (403)
+
+Test 6.4 - MANAGER Access (NO ACCESS):
+User: manager@company.com (Role: MANAGER)
+❌ GET /employees/users → Cannot access (403)
+❌ GET /employees/accounts → Cannot access (403)
+
+Test 6.5 - EMPLOYEE Access (NO ACCESS):
+User: employee@company.com (Role: EMPLOYEE)
+❌ GET /employees/users → Cannot access (403)
+❌ GET /employees/accounts → Cannot access (403)
+```
+
+### Test Case 7: Resource-Level Permission
 ```
 Scenario: Employee tries to view another employee's leave request
 
@@ -1152,7 +1300,3 @@ Before implementing RBAC features, ensure:
 
 ---
 
-**END OF DOCUMENT**
-
-_Last reviewed: 2025-10-14_  
-_Next review: 2026-01-14 (Quarterly)_
