@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -221,15 +222,15 @@
                         <div class="radio-group">
                             <div class="form-check form-check-inline">
                                 <input class="form-check-input" type="radio" name="gender" id="genderMale" value="male" 
-                                       ${profile.gender == 'male' ? 'checked' : ''}>
+                                       ${fn:toLowerCase(profile.gender) == 'male' ? 'checked' : ''}>
                                 <label class="form-check-label" for="genderMale">Male</label>
                             </div>
                             <div class="form-check form-check-inline">
                                 <input class="form-check-input" type="radio" name="gender" id="genderFemale" value="female" 
-                                       ${profile.gender == 'female' ? 'checked' : ''}>
+                                       ${fn:toLowerCase(profile.gender) == 'female' ? 'checked' : ''}>
                                 <label class="form-check-label" for="genderFemale">Female</label>
                             </div>
-                            
+                         
                         </div>
                     </div>
                 </div>

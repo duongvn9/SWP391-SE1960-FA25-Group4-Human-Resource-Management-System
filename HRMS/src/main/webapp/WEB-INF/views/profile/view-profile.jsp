@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -141,7 +142,14 @@
             <label class="form-label">Phone Number:</label>
             <div class="form-value">${profile.phone}</div>
             <label class="form-label">Gender:</label>
-            <div class="form-value">${profile.gender} </div>
+            <div class="form-value">
+                <c:choose>
+                    <c:when test="${not empty profile.gender}">
+                        ${fn:substring(fn:toUpperCase(profile.gender), 0, 1)}${fn:toLowerCase(fn:substring(profile.gender, 1, fn:length(profile.gender)))}
+                    </c:when>
+                    <c:otherwise>-</c:otherwise>
+                </c:choose>
+            </div>
         </div>
 
         <!-- Date of Birth & Hometown -->

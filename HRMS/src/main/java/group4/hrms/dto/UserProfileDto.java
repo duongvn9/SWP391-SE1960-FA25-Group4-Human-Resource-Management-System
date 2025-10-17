@@ -209,9 +209,10 @@ public class UserProfileDto {
             }
         }
         
-        // 4. Validate Gender (Optional, must be valid value if provided)
+        // 4. Validate Gender (Optional, must be valid value if provided - case insensitive)
         if (gender != null && !gender.trim().isEmpty()) {
-            if (!gender.equals("male") && !gender.equals("female") && !gender.equals("other")) {
+            String genderLower = gender.trim().toLowerCase();
+            if (!genderLower.equals("male") && !genderLower.equals("female") && !genderLower.equals("other")) {
                 errors.add("Invalid gender value");
             }
         }
