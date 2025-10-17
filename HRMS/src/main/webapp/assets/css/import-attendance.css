@@ -166,26 +166,61 @@ body.import-attendance-page {
 }
 
 /* ---------- Pagination ---------- */
-.import-attendance-page .pagination {
+.preview-pagination {
     display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
     align-items: center;
-    margin-top: 1rem;
+    gap: 6px;
+    margin-top: 15px;
+    flex-wrap: wrap;
 }
 
-.import-attendance-page .page-btn {
-    padding: 0.4rem 0.8rem;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
+/* Nút bình thường */
+.page-btn {
+    display: inline-block;
+    min-width: 36px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
     text-decoration: none;
-    color: #111827;
+    color: var(--att-primary);
     font-weight: 500;
-    transition: background 0.2s;
+    text-align: center;
+    transition: background-color 0.2s, color 0.2s, transform 0.1s;
 }
 
-.import-attendance-page .page-btn:hover {
-    background: #f3f4f6;
+/* Hover các nút */
+.page-btn:not(.current-page):hover {
+    background-color: #e0e0ff;
+    transform: scale(1.05);
+}
+
+/* Nút trang hiện tại */
+.page-btn.current-page {
+    background-color: var(--att-primary) !important;
+    color: #fff !important;
+    font-weight: 600;
+    border-color: var(--att-primary) !important;
+    cursor: default;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    transform: none;
+}
+
+/* Vô hiệu hover cho trang hiện tại */
+.page-btn.current-page:hover {
+    background-color: var(--att-primary) !important;
+    transform: none !important;
+}
+
+/* Nút Previous/Next */
+.prev-btn, .next-btn {
+    font-weight: 500;
+    background-color: #f9f9f9;
+    border: 1px solid #ccc;
+    transition: background-color 0.2s;
+}
+
+.prev-btn:hover, .next-btn:hover {
+    background-color: #eaeaff;
 }
 
 /* ---------- Responsive ---------- */

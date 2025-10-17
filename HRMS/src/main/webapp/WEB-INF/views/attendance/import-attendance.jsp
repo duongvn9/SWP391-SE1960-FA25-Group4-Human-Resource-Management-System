@@ -92,24 +92,37 @@
                             <!-- Phân trang -->
                             <c:if test="${totalPages > 1}">
                                 <div class="pagination preview-pagination">
+                                    <!-- Previous -->
                                     <c:if test="${currentPage > 1}">
                                         <a href="?action=Preview&page=${currentPage - 1}" class="page-btn prev-btn">Previous</a>
                                     </c:if>
 
-                                    <span class="page-info">Page ${currentPage} of ${totalPages}</span>
+                                    <!-- Nút số trang -->
+                                    <c:forEach var="i" begin="1" end="${totalPages}">
+                                        <c:choose>
+                                            <c:when test="${i == currentPage}">
+                                                <a href="javascript:void(0)" class="page-btn current-page">${i}</a>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <a href="?action=Preview&page=${i}" class="page-btn">${i}</a>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </c:forEach>
 
+                                    <!-- Next -->
                                     <c:if test="${currentPage < totalPages}">
                                         <a href="?action=Preview&page=${currentPage + 1}" class="page-btn next-btn">Next</a>
                                     </c:if>
                                 </div>
                             </c:if>
+
                         </c:if>
                     </form>
                 </div>
 
                 <!-- Manual Entry Tab -->
                 <div id="manual" class="tab-content manual-tab">
-                    <h3 class="section-title">Manual Entry (Excel-like Grid)</h3>
+                    <h3 class="section-title">Manual Entry</h3>
                     <table id="manualTable" class="excel-table manual-table">
                         <thead>
                             <tr>

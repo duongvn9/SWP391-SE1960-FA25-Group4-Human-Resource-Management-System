@@ -1,255 +1,289 @@
-/* ==============================
-   My Attendance Records (Employee)
-   ============================== */
+/* ==========================
+   Attendance Record Page
+   ========================== */
 
 :root {
-    --att-primary: #4f46e5;
-    --att-primary-700: #4338ca;
-    --att-muted: #6b7280;
-    --att-danger: #ef4444;
-    --att-success: #10b981;
-    --att-bg: #f8fafc;
-    --att-radius: 12px;
-    --att-shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.06);
-    --att-shadow-md: 0 8px 22px rgba(17, 24, 39, 0.08);
-    --att-sidebar-width: 260px; /* sidebar width */
+    --sidebar-width: 260px;
+    --sidebar-collapsed-width: 70px;
+    --header-height: 64px;
+    --primary: #4f46e5;
+    --primary-dark: #3730a3;
+    --gray: #6b7280;
+    --light-bg: #f9fafb;
+    --radius: 10px;
 }
 
-/* ---------- Page Layout ---------- */
-body.attendance-page {
-    background: linear-gradient(135deg, var(--att-bg) 0%, #f1f5f9 100%);
-    font-family: "Segoe UI", Arial, sans-serif;
-    min-height: 100vh;
+/* ---------------------------
+   PAGE LAYOUT
+----------------------------*/
+.page-wrapper {
     display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: var(--light-bg);
 }
 
-/* Main content wrapper to avoid overlap with sidebar */
-body.attendance-page main,
-body.attendance-page .main-content {
+/* Header cố định */
+.dashboard-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--header-height);
+    background: #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    z-index: 1000;
+}
+
+/* Container chính chia sidebar + nội dung */
+.main-container {
+    display: flex;
+    margin-top: var(--header-height);
+    min-height: calc(100vh - var(--header-height));
+}
+
+/* Sidebar (đã có sẵn style từ dashboard.css) */
+.sidebar {
+    width: var(--sidebar-width);
+    transition: width 0.3s ease;
+    background: #fff;
+    box-shadow: 2px 0 6px rgba(0,0,0,0.05);
+    z-index: 900;
+}
+
+/* Khi sidebar thu nhỏ */
+.sidebar.collapsed {
+    width: var(--sidebar-collapsed-width);
+}
+
+/* Nội dung chính */
+.main-content {
     flex: 1;
-    margin-left: var(--att-sidebar-width);
     padding: 2rem;
     transition: margin-left 0.3s ease;
-    min-width: 0;
+    overflow-x: auto;
 }
 
-@media (max-width: 992px) {
-    body.attendance-page main,
-    body.attendance-page .main-content {
-        margin-left: 0;
-        padding: 1rem;
-    }
+/* Khi sidebar thu nhỏ (nếu dùng toggle class ngoài JS) */
+.main-container.sidebar-collapsed .main-content {
+    margin-left: var(--sidebar-collapsed-width);
 }
 
-/* ---------- Page Title ---------- */
-body.attendance-page .page-title {
+/* ---------------------------
+   PAGE CONTENT
+----------------------------*/
+.page-title {
     font-size: 1.75rem;
-    font-weight: 800;
+    font-weight: 700;
     color: #111827;
     margin-bottom: 1.5rem;
 }
 
-/* ---------- Filter Form ---------- */
-body.attendance-page .filter-form {
-    background: #fff;
-    border-radius: var(--att-radius);
-    box-shadow: var(--att-shadow-md);
-    padding: 1.5rem 2rem;
+/* -------- Filter Form -------- */
+.filter-form {
     display: flex;
     flex-wrap: wrap;
-    align-items: flex-end;
-    gap: 1.25rem;
-    margin-bottom: 2rem;
+    gap: 1rem;
+    background: #fff;
+    padding: 1rem;
+    border-radius: var(--radius);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
 }
 
-body.attendance-page .filter-group {
+.filter-group {
     display: flex;
     flex-direction: column;
+    flex: 1 1 180px;
     min-width: 160px;
 }
 
-body.attendance-page .filter-label {
+.filter-label {
     font-weight: 600;
-    color: #111827;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.3rem;
 }
 
-body.attendance-page .filter-input,
-body.attendance-page .filter-select {
-    border: 2px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 0.5rem 0.75rem;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    font-size: 0.95rem;
-}
-
-body.attendance-page .filter-input:focus,
-body.attendance-page .filter-select:focus {
-    border-color: var(--att-primary);
-    box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--att-primary), transparent 82%);
+.filter-input,
+.filter-select {
+    padding: 0.5rem 0.7rem;
+    border: 1px solid #ccc;
+    border-radius: var(--radius);
     outline: none;
+    transition: border-color 0.2s ease;
 }
 
-/* ---------- Filter Actions ---------- */
-body.attendance-page .filter-actions {
+.filter-input:focus,
+.filter-select:focus {
+    border-color: var(--primary);
+}
+
+.filter-actions {
     display: flex;
-    gap: 0.75rem;
-}
-
-body.attendance-page .btn {
-    border: none;
-    border-radius: var(--att-radius);
-    padding: 0.6rem 1.2rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-body.attendance-page .btn-filter {
-    background: var(--att-primary);
-    color: #fff;
-    box-shadow: 0 6px 18px color-mix(in srgb, var(--att-primary), transparent 70%);
-}
-
-body.attendance-page .btn-filter:hover {
-    background: var(--att-primary-700);
-    transform: translateY(-1px);
-}
-
-body.attendance-page .btn-reset {
-    background: #111827;
-    color: #fff;
-}
-
-/* ---------- Export Buttons ---------- */
-body.attendance-page .export-buttons {
-    margin-bottom: 2rem;
-    display: flex;
-    flex-wrap: wrap;
     gap: 0.5rem;
+    align-items: flex-end;
 }
 
-body.attendance-page .btn-export {
-    background: var(--att-primary);
-    color: #fff;
+/* -------- Buttons -------- */
+.btn {
     border: none;
-    border-radius: var(--att-radius);
-    padding: 0.6rem 1.2rem;
-    font-weight: 700;
+    border-radius: var(--radius);
     cursor: pointer;
+    font-weight: 600;
     transition: all 0.2s ease;
 }
 
-body.attendance-page .btn-export:hover {
-    background: var(--att-primary-700);
-    transform: translateY(-1px);
+.btn-filter {
+    background: var(--primary);
+    color: #fff;
+    padding: 0.6rem 1rem;
 }
 
-/* ---------- Attendance Table ---------- */
-body.attendance-page .attendance-table {
+.btn-filter:hover {
+    background: var(--primary-dark);
+}
+
+.btn-reset {
+    background: #1f2937;
+    color: #fff;
+    padding: 0.6rem 1rem;
+}
+
+.btn-reset:hover {
+    opacity: 0.85;
+}
+
+/* -------- Export Buttons -------- */
+.export-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+.btn-export {
+    padding: 0.5rem 1rem;
+    color: #fff;
+}
+
+.btn-xls {
+    background: #16a34a;
+}
+.btn-csv {
+    background: #f59e0b;
+}
+.btn-pdf {
+    background: #dc2626;
+}
+
+.btn-export:hover {
+    opacity: 0.85;
+}
+
+/* -------- Attendance Table -------- */
+.attendance-table {
     width: 100%;
+    margin-top: 1rem;
     border-collapse: collapse;
     background: #fff;
-    border-radius: var(--att-radius);
-    box-shadow: var(--att-shadow-md);
+    border-radius: var(--radius);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
     overflow: hidden;
 }
 
-body.attendance-page .attendance-table th,
-body.attendance-page .attendance-table td {
+.attendance-table th, .attendance-table td {
     padding: 0.75rem 1rem;
     text-align: left;
     border-bottom: 1px solid #e5e7eb;
 }
 
-body.attendance-page .attendance-table th {
-    background: linear-gradient(135deg, #eef2ff 0%, #f5f3ff 100%);
-    color: var(--att-primary);
+.attendance-table th {
+    background: #eef2ff;
+    color: var(--primary);
     font-weight: 700;
 }
 
-/* Ẩn cột Select */
-.attendance-table th:first-child,
-.attendance-table td:first-child {
-    display: none;
-}
-
-body.attendance-page .attendance-row:hover {
-    background: #f9fafb;
-}
-
-/* ---------- Table Buttons ---------- */
-body.attendance-page .btn-select {
-    background: var(--att-primary);
-    color: #fff;
-    padding: 0.35rem 0.7rem;
-    font-size: 0.85rem;
-    border-radius: 6px;
-}
-
-body.attendance-page .btn-select:hover {
-    background: var(--att-primary-700);
-}
-
-/* ---------- Pagination ---------- */
-body.attendance-page .pagination {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    align-items: center;
-    margin-top: 1rem;
-}
-
-body.attendance-page .pagination .page-link {
-    padding: 0.4rem 0.8rem;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
-    text-decoration: none;
-    color: #111827;
-    font-weight: 500;
-    transition: background 0.2s;
-}
-
-body.attendance-page .pagination .page-link:hover {
+.attendance-row:hover {
     background: #f3f4f6;
 }
 
-body.attendance-page .pagination .page-current {
-    padding: 0.4rem 0.8rem;
-    font-weight: 700;
+.btn-select {
+    background: var(--primary);
     color: #fff;
-    background: var(--att-primary);
-    border-radius: 8px;
+    border: none;
+    border-radius: var(--radius);
+    padding: 0.3rem 0.7rem;
+    font-size: 0.875rem;
 }
 
-/* ---------- Responsive ---------- */
+.btn-select:hover {
+    background: var(--primary-dark);
+}
+
+/* -------- Pagination -------- */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    margin-top: 1.2rem;
+    flex-wrap: wrap;
+}
+
+.page-link,
+.page-current {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.page-link {
+    color: var(--primary);
+    background: #fff;
+}
+
+.page-link:hover {
+    background: #e0e7ff;
+    transform: scale(1.05);
+}
+
+.page-current {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+    font-weight: 700;
+    cursor: default;
+}
+
+/* ---------------------------
+   RESPONSIVE
+----------------------------*/
+@media (max-width: 992px) {
+    .main-content {
+        padding: 1.2rem;
+    }
+
+    .filter-form {
+        flex-direction: column;
+    }
+
+    .filter-actions {
+        align-self: flex-start;
+    }
+}
+
 @media (max-width: 768px) {
-    body.attendance-page {
+    .export-buttons {
         flex-direction: column;
     }
 
-    body.attendance-page main,
-    body.attendance-page .main-content {
-        margin-left: 0;
-        padding: 1rem;
-    }
-
-    body.attendance-page .filter-form {
-        flex-direction: column;
-        gap: 1rem;
-    }
-
-    body.attendance-page .export-buttons {
-        flex-direction: column;
-    }
-
-    body.attendance-page .btn,
-    body.attendance-page .btn-export {
-        width: 100%;
-    }
-
-    body.attendance-page .attendance-table th,
-    body.attendance-page .attendance-table td {
+    .attendance-table th,
+    .attendance-table td {
         padding: 0.5rem;
     }
 }

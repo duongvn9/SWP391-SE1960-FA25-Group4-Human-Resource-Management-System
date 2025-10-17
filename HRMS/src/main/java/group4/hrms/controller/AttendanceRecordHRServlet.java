@@ -53,7 +53,7 @@ public class AttendanceRecordHRServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
-            Long userId = null; // TODO: lấy từ session sau
+            Long userId = null; 
             int recordsPerPage = 10;
             int currentPage = PaginationUtil.getCurrentPage(req);
             int offset = (currentPage - 1) * recordsPerPage;
@@ -61,20 +61,17 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             String action = req.getParameter("action");
             String exportType = req.getParameter("exportType");
 
-            // ===== Export =====
             if (exportType != null && !exportType.isEmpty()) {
                 ExportService.AttendanceRecordExport(resp, exportType, userId);
                 return;
             }
 
-            // ===== Reset =====
             if ("reset".equalsIgnoreCase(action)) {
                 resetFilters(req, currentPage, recordsPerPage, userId);
                 req.getRequestDispatcher("/WEB-INF/views/attendance/attendance-record-HR.jsp").forward(req, resp);
                 return;
             }
 
-            // ===== Filter =====
             String employeeKeyword = getParam(req, "employee");
             String departmentIdStr = getParam(req, "department");
             String startDateStr = getParam(req, "startDate");

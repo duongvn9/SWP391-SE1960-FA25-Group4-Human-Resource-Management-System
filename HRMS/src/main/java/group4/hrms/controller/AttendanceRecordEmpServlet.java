@@ -7,6 +7,7 @@ import java.io.IOException;
 
 import group4.hrms.dao.AttendanceLogDao;
 import group4.hrms.dto.AttendanceLogDto;
+import group4.hrms.util.SessionUtil;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -28,7 +29,7 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
-            Long userId = 51L; // từ session sau này
+            Long userId = (Long) req.getSession().getAttribute(SessionUtil.USER_ID_KEY);
             int recordsPerPage = 10;
             int currentPage = PaginationUtil.getCurrentPage(req);
             int offset = (currentPage - 1) * recordsPerPage;
@@ -36,13 +37,11 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
             String action = req.getParameter("action");
             String exportType = req.getParameter("exportType");
 
-            // ===== Export =====
             if (exportType != null) {
                 ExportService.AttendanceRecordExport(resp, exportType, userId);
                 return;
             }
 
-            // ===== Reset =====
             if ("reset".equalsIgnoreCase(action)) {
                 List<AttendanceLogDto> attendanceList = dao.findByUserId(userId, recordsPerPage, offset, true);
                 int totalRecords = dao.countByUserId(userId);
@@ -124,8 +123,7 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
-            Long userId = 51L; // từ session sau này
-
+            Long userId = (Long) req.getSession().getAttribute(SessionUtil.USER_ID_KEY);
             int recordsPerPage = 10;
             int currentPage = PaginationUtil.getCurrentPage(req);
             int offset = (currentPage - 1) * recordsPerPage;
