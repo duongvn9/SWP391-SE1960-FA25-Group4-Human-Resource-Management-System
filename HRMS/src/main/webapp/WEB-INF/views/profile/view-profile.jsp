@@ -2,25 +2,27 @@
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <title>View Profile - HRMS</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <jsp:include page="../layout/head.jsp">
+        <jsp:param name="pageTitle" value="View Profile - HRMS" />
+        <jsp:param name="pageCss" value="dashboard.css" />
+    </jsp:include>
     <style>
-        body {
-            background-color: #f5f5f5;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
+        .main-content {
+            margin-left: 260px;
+            padding: 2rem;
         }
         .profile-container {
-            max-width: 95%;
-            margin: 20px auto;
+            max-width: 100%;
             background: white;
             padding: 30px 50px;
-            min-height: calc(100vh - 40px);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+            }
         }
         .profile-header {
             display: flex;
@@ -94,27 +96,23 @@
             font-size: 0.95rem;
             color: #495057;
         }
-        .back-link {
-            display: inline-block;
-            margin-bottom: 15px;
-            color: #007bff;
-            text-decoration: none;
-            font-size: 0.95rem;
-        }
-        .back-link:hover {
-            text-decoration: underline;
-        }
+
     </style>
 </head>
 
 <body>
-    <div class="profile-container">
-        <!-- Back to Dashboard Link -->
-        <a href="${pageContext.request.contextPath}/dashboard" class="back-link">
-            <i class="fa-solid fa-arrow-left me-2"></i>Back to Dashboard
-        </a>
+    <jsp:include page="../layout/sidebar.jsp">
+        <jsp:param name="currentPage" value="profile" />
+    </jsp:include>
 
-        <!-- Profile Header with Update Button -->
+    <div class="main-content" id="main-content">
+        <!-- Header -->
+        <jsp:include page="../layout/dashboard-header.jsp" />
+
+        <!-- Content Area -->
+        <div class="content-area">
+            <div class="profile-container">
+                <!-- Profile Header with Update Button -->
         <div class="profile-header">
             <h2>View Profile</h2>
             <a href="${pageContext.request.contextPath}/user-profile/edit" class="btn btn-primary btn-update-profile">
@@ -143,14 +141,7 @@
             <label class="form-label">Phone Number:</label>
             <div class="form-value">${profile.phone}</div>
             <label class="form-label">Gender:</label>
-            <div class="form-value">
-                <c:choose>
-                    <c:when test="${profile.gender == 'male'}">Male</c:when>
-                    <c:when test="${profile.gender == 'female'}">Female</c:when>
-                    <c:when test="${profile.gender == 'others'}">Others</c:when>
-                    <c:otherwise>-</c:otherwise>
-                </c:choose>
-            </div>
+            <div class="form-value">${profile.gender} </div>
         </div>
 
         <!-- Date of Birth & Hometown -->
@@ -225,11 +216,12 @@
             <div class="form-value">${profile.city}</div>
             <label class="form-label">State/Province:</label>
             <div class="form-value">${profile.state}</div>
+            </div>
+            </div>
         </div>
 
+        <!-- Footer -->
+        <jsp:include page="../layout/dashboard-footer.jsp" />
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-
 </html>
