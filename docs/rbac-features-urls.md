@@ -739,11 +739,59 @@ public class AuthorizationFilter implements Filter {
         }
         
         // 5. Continue
+        // 4. Load permissions for frontend (UX enhancement)
+        if (req.getSession().getAttribute("userPermissions") == null) {
+            Set<String> permissions = permissionService.getPermissions(account);
+            req.getSession().setAttribute("userPermissions", permissions);
+            
+            Role role = roleService.getHighestRole(account);
+            req.getSession().setAttribute("userRole", role.getCode());
+        }
+        
+        // 5. Continue
         chain.doFilter(request, response);
     }
 }
 ```
 
+### Frontend Permission Check Pattern (RECOMMENDED)
+
+**JSP Example:**
+```jsp
+<%@ taglib prefix="hrms" uri="http://hrms.group4.com/functions" %>
+
+<!-- Hide button if no permission (UX) -->
+<c:if test="${hrms:hasPermission(userPermissions, 'USER_DELETE')}">
+    <button onclick="deleteUser(${user.id})" class="btn btn-danger">
+        Delete User
+    </button>
+</c:if>
+```
+
+**JavaScript Example:**
+```javascript
+function deleteUser(userId) {
+    // Frontend check (UX - can be bypassed)
+    if (!PermissionHelper.hasPermission('USER_DELETE')) {
+        alert('You don\'t have permission');
+        return;
+    }
+    
+    // Send request - Backend will do real security check
+    fetch(`/users/${userId}/delete`, { method: 'POST' })
+        .then(response => {
+            if (response.status === 403) {
+                alert('Access denied by server'); // Backend blocked
+            } else if (response.ok) {
+                alert('Deleted successfully');
+            }
+        });
+}
+```
+
+**See [Frontend RBAC Guide](./rbac-frontend-guide.md) for complete implementation.**
+
+### Backend Service Layer Pattern (REQUIRED)
 ### Frontend Permission Check Pattern (RECOMMENDED)
 
 **JSP Example:**
@@ -788,6 +836,7 @@ public class RequestService {
     
     public List<Request> getRequests(Account account, String scope) {
         // Backend permission check (SECURITY - Cannot be bypassed)
+        // Backend permission check (SECURITY - Cannot be bypassed)
         Role role = roleService.getHighestRole(account);
         
         switch (scope) {
@@ -797,11 +846,15 @@ public class RequestService {
             case "team":
                 // Check permission
                 if (!permissionService.hasPermission(account, "REQUEST_LIST_TEAM")) {
+                // Check permission
+                if (!permissionService.hasPermission(account, "REQUEST_LIST_TEAM")) {
                     throw new ForbiddenException("Only managers can view team requests");
                 }
                 return requestDao.findByDepartmentId(account.getDepartmentId());
                 
             case "all":
+                // Check permission
+                if (!permissionService.hasPermission(account, "REQUEST_LIST_ALL")) {
                 // Check permission
                 if (!permissionService.hasPermission(account, "REQUEST_LIST_ALL")) {
                     throw new ForbiddenException("Insufficient permissions");
@@ -810,6 +863,38 @@ public class RequestService {
                 
             default:
                 throw new IllegalArgumentException("Invalid scope");
+        }
+    }
+    
+    public void deleteRequest(Account account, Long requestId) {
+        // 1. Check feature permission
+        if (!permissionService.hasPermission(account, "REQUEST_LEAVE_DELETE")) {
+            throw new ForbiddenException("No permission to delete requests");
+        }
+        
+        // 2. Check resource ownership
+        Request request = requestDao.findById(requestId);
+        if (!canAccessResource(account, request)) {
+            throw new ForbiddenException("Cannot delete other's request");
+        }
+        
+        // 3. Process delete
+        requestDao.delete(requestId);
+    }
+    
+    private boolean canAccessResource(Account account, Request request) {
+        Role role = roleService.getHighestRole(account);
+        
+        switch (role.getCode()) {
+            case "ADMIN":
+            case "HRM":
+                return true; // Full access
+            case "MANAGER":
+                return request.getDepartmentId().equals(account.getDepartmentId());
+            case "EMPLOYEE":
+                return request.getCreatedByUserId().equals(account.getUserId());
+            default:
+                return false;
         }
     }
     
@@ -1205,98 +1290,6 @@ Check:
    - If YES → ✅ PASS (Can view own request)
    - If NO → ❌ FAIL (Cannot view other's request)
 ```
-
----
-
-## 📝 Notes for Team
-
-### Important Reminders
-
-1. **Always check this document** before implementing authorization logic
-2. **Update CHANGELOG** when making any modifications
-3. **Test thoroughly** with different roles before committing
-4. **Document any deviations** from this spec with reasons
-
-### Common Pitfalls to Avoid
-
-❌ **DON'T:**
-- Hard-code role checks in controllers (use permission service)
-- Skip resource-level permission checks
-- Allow EDIT on non-DRAFT requests
-- Forget to check department/team scope for MANAGER role
-- Cache permissions without invalidation strategy
-
-✅ **DO:**
-- Use centralized permission service
-- Check both feature-level AND resource-level permissions
-- Log all permission denials for audit
-- Cache permissions in session with proper invalidation
-- Write unit tests for permission logic
-
-### Performance Considerations
-
-1. **Cache Strategy:**
-   - Cache user permissions in session after login
-   - Invalidate cache when roles/permissions change
-   - Use application-scope cache for role-feature mappings
-
-2. **Database Optimization:**
-   - Use JOIN queries instead of N+1 queries
-   - Add indexes on foreign keys (already exists)
-   - Consider materialized view for complex permission queries
-
-3. **Response Time Targets:**
-   - Permission check: < 10ms
-   - Authorization filter: < 50ms
-   - Full request with permission check: < 200ms
-
-### Security Best Practices
-
-1. **Default Deny:** If no permission found, always deny
-2. **DENY Override:** DENY always overrides GRANT
-3. **Audit Logging:** Log all permission denials with context
-4. **Session Security:** Store minimal data in session, validate on each request
-5. **SQL Injection:** Always use PreparedStatement for permission queries
-
----
-
-## 🔗 Related Documents
-
-- [Requirements Document](../.kiro/specs/rbac-implementation/requirements.md)
-- [Database Structure](../.kiro/specs/rbac-implementation/database-structure.md)
-- [Frontend RBAC Guide](./rbac-frontend-guide.md) ⭐ **NEW** - How to implement RBAC in JSP/JavaScript
-- [README RBAC](./README-RBAC.md) - Quick start guide
-- [RBAC Summary](./RBAC-SUMMARY.md) - Quick reference
-- [Design Document](../.kiro/specs/rbac-implementation/design.md) _(To be created)_
-- [Implementation Tasks](../.kiro/specs/rbac-implementation/tasks.md) _(To be created)_
-
----
-
-## 📞 Contact & Support
-
-**Questions or Clarifications:**
-- Create an issue in project repository
-- Tag @team-lead for urgent matters
-- Update this document if you find inconsistencies
-
-**Document Maintenance:**
-- Review quarterly or when major changes occur
-- Keep CHANGELOG up to date
-- Notify team when significant changes are made
-
----
-
-## ✅ Review Checklist
-
-Before implementing RBAC features, ensure:
-
-- [ ] Read entire document thoroughly
-- [ ] Understand permission resolution logic
-- [ ] Know the difference between feature-level and resource-level permissions
-- [ ] Familiar with all 6 roles and their permissions
-- [ ] Reviewed test scenarios
-- [ ] Understand database schema
-- [ ] Know how to update this document
 
 ---
 
