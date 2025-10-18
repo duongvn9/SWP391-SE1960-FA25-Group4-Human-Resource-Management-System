@@ -1,15 +1,9 @@
 package group4.hrms.controller;
 
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.logging.Logger;
-
 import group4.hrms.dao.RequestDao;
-import group4.hrms.dao.RequestTypeDao;
-import group4.hrms.dao.LeaveTypeDao;
-import group4.hrms.model.Account;
+import group4.hrms.model.Request;
 import group4.hrms.model.User;
-import group4.hrms.service.LeaveRequestService;
+import group4.hrms.util.RequestListPermissionHelper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -17,100 +11,158 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.time.LocalDateTime;
+import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
- * Controller for approving leave requests.
- * Handles leave request approval and balance deduction.
- *
- * Supported URLs:
- * - POST /requests/approve - Approve a leave request
- *
- * @author HRMS Development Team
- * @version 1.0
+ * Controller for approving/rejecting requests
+ * Can be used from request list page or request detail page
  */
 @WebServlet("/requests/approve")
 public class ApproveRequestController extends HttpServlet {
+
     private static final Logger logger = Logger.getLogger(ApproveRequestController.class.getName());
+    private RequestDao requestDao;
+
+    @Override
+    public void init() throws ServletException {
+        super.init();
+        this.requestDao = new RequestDao();
+    }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        logger.info("ApproveRequestController.doPost() called");
 
-        // Check authentication
-        HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("account") == null) {
-            response.sendRedirect(request.getContextPath() + "/login");
-            return;
-        }
-
-        Account account = (Account) session.getAttribute("account");
-        User user = (User) session.getAttribute("user");
-
-        if (user == null) {
-            response.sendRedirect(request.getContextPath() + "/login");
-            return;
-        }
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        PrintWriter out = response.getWriter();
 
         try {
-            // Get request ID from parameter
-            String requestIdStr = request.getParameter("requestId");
-            if (requestIdStr == null || requestIdStr.trim().isEmpty()) {
-                request.setAttribute("error", "Request ID is required");
-                response.sendRedirect(request.getContextPath() + "/requests/list");
+            // Get session and user
+            HttpSession session = request.getSession(false);
+            if (session == null) {
+                out.print("{\"success\": false, \"message\": \"Session expired\"}");
                 return;
             }
 
-            Long requestId = Long.parseLong(requestIdStr);
+            User currentUser = (User) session.getAttribute("user");
+            if (currentUser == null) {
+                out.print("{\"success\": false, \"message\": \"User not logged in\"}");
+                return;
+            }
 
-            // Initialize service
-            LeaveRequestService service = new LeaveRequestService(
-                new RequestDao(),
-                new RequestTypeDao(),
-                new LeaveTypeDao()
-            );
+            // Get account from session
+            group4.hrms.model.Account currentAccount = (group4.hrms.model.Account) session.getAttribute("account");
+            if (currentAccount == null) {
+                out.print("{\"success\": false, \"message\": \"Account not found in session\"}");
+                return;
+            }
 
-            // Process leave approval (handles balance deduction)
-            service.processLeaveApproval(requestId);
+            // Get parameters
+            String action = request.getParameter("action");
+            String requestIdStr = request.getParameter("requestId");
 
-            logger.info(String.format("Leave request approved successfully: requestId=%d, approvedBy=%d",
-                       requestId, account.getId()));
+            if (action == null || requestIdStr == null) {
+                out.print("{\"success\": false, \"message\": \"Missing parameters\"}");
+                return;
+            }
 
-            // Set success message
-            request.setAttribute("success", "Leave request approved successfully!");
+            Long requestId;
+            try {
+                requestId = Long.parseLong(requestIdStr);
+            } catch (NumberFormatException e) {
+                out.print("{\"success\": false, \"message\": \"Invalid request ID\"}");
+                return;
+            }
 
-            // Redirect to request list or detail page
-            response.sendRedirect(request.getContextPath() + "/requests/list?success=approved");
+            // Fetch the request
+            Optional<Request> requestOpt = requestDao.findById(requestId);
+            if (!requestOpt.isPresent()) {
+                out.print("{\"success\": false, \"message\": \"Request not found\"}");
+                return;
+            }
 
-        } catch (NumberFormatException e) {
-            logger.warning("Invalid request ID format: " + e.getMessage());
-            request.setAttribute("error", "Invalid request ID");
-            response.sendRedirect(request.getContextPath() + "/requests/list?error=invalid_id");
+            Request req = requestOpt.get();
 
-        } catch (IllegalArgumentException e) {
-            logger.warning(String.format("Validation error approving request: error=%s", e.getMessage()));
-            request.setAttribute("error", e.getMessage());
-            response.sendRedirect(request.getContextPath() + "/requests/list?error=" +
-                                java.net.URLEncoder.encode(e.getMessage(), "UTF-8"));
+            // Check if request is already processed
+            if (!"PENDING".equals(req.getStatus())) {
+                out.print("{\"success\": false, \"message\": \"This request has already been processed\"}");
+                return;
+            }
 
-        } catch (SQLException e) {
-            logger.severe(String.format("Database error approving request: error=%s", e.getMessage()));
-            e.printStackTrace();
-            request.setAttribute("error", "Database error occurred. Please try again later.");
-            response.sendRedirect(request.getContextPath() + "/requests/list?error=database");
+            // Get user's position for permission check
+            group4.hrms.dao.PositionDao positionDao = new group4.hrms.dao.PositionDao();
+            group4.hrms.model.Position position = null;
+            if (currentUser.getPositionId() != null) {
+                java.util.Optional<group4.hrms.model.Position> positionOpt = positionDao.findById(currentUser.getPositionId());
+                if (positionOpt.isPresent()) {
+                    position = positionOpt.get();
+                }
+            }
+
+            // Check permission
+            if (!RequestListPermissionHelper.canApproveRequest(currentUser, req, position)) {
+                out.print("{\"success\": false, \"message\": \"You do not have permission to approve/reject this request\"}");
+                return;
+            }
+
+            // Perform action
+            boolean success = false;
+            String message = "";
+
+            if ("approve".equals(action)) {
+                String reason = request.getParameter("reason");
+
+                req.setStatus("APPROVED");
+                req.setApprovedBy(currentAccount.getId());
+                req.setApprovedAt(LocalDateTime.now());
+                // Store approval reason if provided
+                if (reason != null && !reason.trim().isEmpty()) {
+                    req.setRejectReason(reason); // Reuse this field for approval notes
+                } else {
+                    req.setRejectReason(null);
+                }
+                Request updated = requestDao.update(req);
+                success = (updated != null);
+                message = success ? "Request approved successfully" : "Failed to approve request";
+
+            } else if ("reject".equals(action)) {
+                String reason = request.getParameter("reason");
+                if (reason == null || reason.trim().isEmpty()) {
+                    out.print("{\"success\": false, \"message\": \"Rejection reason is required\"}");
+                    return;
+                }
+
+                req.setStatus("REJECTED");
+                req.setApprovedBy(currentAccount.getId());
+                req.setApprovedAt(LocalDateTime.now());
+                req.setRejectReason(reason);
+                Request updated = requestDao.update(req);
+                success = (updated != null);
+                message = success ? "Request rejected successfully" : "Failed to reject request";
+
+            } else {
+                out.print("{\"success\": false, \"message\": \"Invalid action\"}");
+                return;
+            }
+
+            // Return response
+            if (success) {
+                logger.info(String.format("User %d %s request %d", currentUser.getId(), action, requestId));
+                out.print("{\"success\": true, \"message\": \"" + message + "\"}");
+            } else {
+                logger.warning(String.format("Failed to %s request %d by user %d", action, requestId, currentUser.getId()));
+                out.print("{\"success\": false, \"message\": \"" + message + "\"}");
+            }
 
         } catch (Exception e) {
-            logger.severe(String.format("Unexpected error approving request: error=%s", e.getMessage()));
-            e.printStackTrace();
-            request.setAttribute("error", "System error. Please try again later.");
-            response.sendRedirect(request.getContextPath() + "/requests/list?error=system");
+            logger.log(Level.SEVERE, "Error processing approval", e);
+            out.print("{\"success\": false, \"message\": \"An error occurred: " + e.getMessage() + "\"}");
         }
-    }
-
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        // Redirect GET requests to POST (or show error)
-        response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED,
-                          "GET method not supported. Use POST to approve requests.");
     }
 }
