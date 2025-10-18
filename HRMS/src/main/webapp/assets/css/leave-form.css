@@ -27,15 +27,18 @@
   border-radius: var(--lf-radius);
   border-left: 4px solid var(--lf-primary);
 }
+
 .content-area .page-title {
   font-weight: 800;
   margin: 0;
   color: #111827;
   font-size: 1.75rem;
 }
+
 .content-area .page-title i {
   color: var(--lf-primary);
 }
+
 .content-area .page-subtitle {
   color: var(--lf-muted);
   margin: 0.5rem 0 0;
@@ -51,26 +54,28 @@
   overflow: hidden;
   transition: box-shadow 0.3s ease, transform 0.3s ease;
 }
+
 .content-area .leave-request-card:hover {
   box-shadow: var(--lf-shadow-lg);
   transform: translateY(-2px);
 }
+
 .content-area .leave-request-card .card-header {
-  background: linear-gradient(
-      135deg,
+  background: linear-gradient(135deg,
       rgba(79, 70, 229, 0.1) 0%,
-      rgba(139, 92, 246, 0.05) 100%
-    );
+      rgba(139, 92, 246, 0.05) 100%);
   border: 0;
   border-bottom: 2px solid #eef2ff;
   padding: 1.25rem 1.5rem;
 }
+
 .content-area .leave-request-card .card-header h4 {
   margin: 0;
   color: var(--lf-primary);
   font-weight: 700;
   font-size: 1.25rem;
 }
+
 .content-area .leave-request-card .card-body {
   padding: 1.75rem 1.5rem;
 }
@@ -113,6 +118,7 @@
   color: #111827;
   margin-bottom: 0.5rem;
 }
+
 .content-area .form-label i {
   color: var(--lf-primary);
 }
@@ -126,19 +132,21 @@
   padding: 0.7rem 1rem;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
+
 .content-area .form-control:hover,
 .content-area .form-select:hover,
 .content-area textarea:hover {
   border-color: #c7d2fe;
 }
+
 .content-area .form-control:focus,
 .content-area .form-select:focus,
 .content-area textarea:focus {
   border-color: var(--lf-primary);
-  box-shadow: 0 0 0 0.2rem
-    color-mix(in srgb, var(--lf-primary), transparent 82%);
+  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--lf-primary), transparent 82%);
   outline: none;
 }
+
 .content-area .form-text {
   color: var(--lf-muted);
 }
@@ -152,6 +160,7 @@
   margin-bottom: 1rem;
   animation: slideDown 0.3s ease;
 }
+
 .content-area .leave-type-rules h6 {
   color: var(--lf-primary);
   font-weight: 700;
@@ -161,15 +170,18 @@
   align-items: center;
   gap: 0.5rem;
 }
+
 .content-area .leave-type-rules h6::before {
   content: "ℹ️";
   font-size: 1.25rem;
 }
+
 .content-area .rules-content {
   display: grid;
   gap: 0.75rem;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 }
+
 .content-area .rule-item {
   background: #fff;
   border: 2px solid #eef2ff;
@@ -177,17 +189,20 @@
   padding: 1rem;
   transition: all 0.2s ease;
 }
+
 .content-area .rule-item:hover {
   border-color: #c7d2fe;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1);
 }
+
 .content-area .rule-item small {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   font-size: 0.7rem;
 }
+
 .content-area .rule-item strong {
   font-size: 1.1rem;
   color: #111827;
@@ -266,6 +281,7 @@
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -278,9 +294,11 @@
   font-size: 0.85rem;
   color: var(--lf-muted);
 }
+
 .content-area .char-counter.danger {
   color: var(--lf-danger);
 }
+
 .content-area .char-counter.warning {
   color: var(--lf-warning);
 }
@@ -374,16 +392,19 @@
   border-radius: 999px;
   padding: 0.25rem 0.6rem;
 }
+
 .content-area .leave-badge.success {
   background: #ecfdf5;
   color: #065f46;
   border: 1px solid #d1fae5;
 }
+
 .content-area .leave-badge.warning {
   background: #fffbeb;
   color: #92400e;
   border: 1px solid #fde68a;
 }
+
 .content-area .leave-badge.info {
   background: #eef2ff;
   color: #3730a3;
@@ -401,11 +422,13 @@
   box-shadow: 0 6px 18px color-mix(in srgb, var(--lf-primary), transparent 70%);
   transition: transform 0.15s, box-shadow 0.2s, background-color 0.2s;
 }
+
 .content-area .btn-leave-primary:hover {
   background: var(--lf-primary-700);
   transform: translateY(-1px);
   box-shadow: 0 10px 24px color-mix(in srgb, var(--lf-primary), transparent 60%);
 }
+
 .content-area .btn-leave-primary:active {
   transform: translateY(0);
   box-shadow: none;
@@ -420,10 +443,12 @@
   font-weight: 600;
   transition: opacity 0.2s, transform 0.15s;
 }
+
 .content-area .btn-leave-secondary:hover {
   opacity: 0.9;
   transform: translateY(-1px);
 }
+
 .content-area .btn-leave-secondary:active {
   transform: translateY(0);
 }
@@ -432,26 +457,31 @@
 .content-area .leave-types-reference {
   margin-top: 1.25rem;
 }
+
 .content-area .leave-types-reference .card {
   border: 0;
   border-radius: var(--lf-radius);
   box-shadow: var(--lf-shadow-sm);
 }
+
 .content-area .leave-types-reference .card-header {
   background: #fff;
   border: 0;
   border-bottom: 1px solid #f3f4f6;
 }
+
 .content-area .leave-types-reference .card-header h5 {
   margin: 0;
   font-weight: 700;
 }
+
 .content-area .leave-type-card {
   border: 1px solid #eef2ff;
   border-radius: var(--lf-radius);
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
   transition: transform 0.2s, box-shadow 0.2s;
 }
+
 .content-area .leave-type-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--lf-shadow-md);
@@ -495,172 +525,7 @@
   }
 }
 
-/* Leave Balance Cards */
-.content-area .leave-balance-card {
-  background: #fff;
-  border: 2px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 1.25rem;
-  transition: all 0.3s ease;
-  height: 100%;
-}
-
-.content-area .leave-balance-card:hover {
-  border-color: var(--lf-primary);
-  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.12);
-  transform: translateY(-3px);
-}
-
-.content-area .leave-balance-card.selected {
-  border-color: var(--lf-primary);
-  background: linear-gradient(135deg, #eef2ff 0%, #f5f3ff 100%);
-  box-shadow: 0 10px 28px rgba(79, 70, 229, 0.2);
-  transform: translateY(-5px);
-}
-
-.content-area .leave-balance-card.selected .balance-title {
-  color: var(--lf-primary);
-}
-
-.content-area .balance-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 2px solid #f3f4f6;
-}
-
-.content-area .balance-title {
-  font-weight: 700;
-  color: #111827;
-  margin: 0;
-  font-size: 1.1rem;
-}
-
-.content-area .balance-code {
-  background: linear-gradient(135deg, #eef2ff 0%, #f5f3ff 100%);
-  color: var(--lf-primary);
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 0.25rem 0.6rem;
-  border-radius: 6px;
-  letter-spacing: 0.5px;
-}
-
-.content-area .balance-stats {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  margin-bottom: 1rem;
-}
-
-.content-area .stat-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5rem 0;
-}
-
-.content-area .stat-item.total {
-  border-top: 2px solid #f3f4f6;
-  border-bottom: 2px solid #f3f4f6;
-  padding: 0.75rem 0;
-  margin: 0.25rem 0;
-}
-
-.content-area .stat-item.remaining {
-  background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
-  margin-top: 0.25rem;
-}
-
-.content-area .stat-item.available {
-  background: linear-gradient(135deg, #eef2ff 0%, #f5f3ff 100%);
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
-  margin-top: 0.25rem;
-  border: 2px solid var(--lf-primary);
-}
-
-.content-area .stat-item.available .stat-label {
-  color: var(--lf-primary);
-  font-weight: 700;
-}
-
-.content-area .stat-item.available .stat-value {
-  font-size: 1.5rem;
-  color: var(--lf-primary);
-}
-
-.content-area .stat-label {
-  font-size: 0.85rem;
-  color: #6b7280;
-  font-weight: 500;
-}
-
-.content-area .stat-value {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #111827;
-}
-
-.content-area .stat-item.total .stat-value {
-  font-size: 1.25rem;
-  color: var(--lf-primary);
-}
-
-.content-area .stat-item.remaining .stat-label {
-  color: var(--lf-primary);
-  font-weight: 600;
-}
-
-.content-area .stat-item.remaining .stat-value {
-  font-size: 1.5rem;
-  color: var(--lf-primary);
-}
-
-.content-area .balance-progress {
-  margin-top: 1rem;
-}
-
-.content-area .balance-progress .progress {
-  border-radius: 999px;
-  background: #f3f4f6;
-  overflow: hidden;
-}
-
-.content-area .balance-progress .progress-bar {
-  border-radius: 999px;
-  transition: width 0.6s ease;
-}
-
-.content-area .balance-progress small {
-  display: block;
-  margin-top: 0.5rem;
-  text-align: center;
-  font-size: 0.75rem;
-}
-
-/* Responsive for balance cards */
-@media (max-width: 768px) {
-  .content-area .leave-balance-card {
-    padding: 1rem;
-  }
-
-  .content-area .balance-title {
-    font-size: 1rem;
-  }
-
-  .content-area .stat-value {
-    font-size: 1rem;
-  }
-
-  .content-area .stat-item.remaining .stat-value {
-    font-size: 1.25rem;
-  }
-}
+/* Leave Balance Cards - removed old styles, using compact version below */
 
 /* Enhanced Error Messages Styling */
 .content-area .alert-danger {
@@ -738,6 +603,7 @@
     opacity: 0;
     transform: translateY(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -765,5 +631,509 @@
 
   .content-area .alert .flex-shrink-0 i {
     font-size: 1.5rem !important;
+  }
+}
+
+/* ============ Leave Balance Cards - Original Style ============ */
+.leave-balance-card {
+  background: #fff;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.25rem;
+  transition: all 0.3s ease;
+  height: 100%;
+}
+
+.leave-balance-card:hover {
+  border-color: var(--lf-primary);
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.12);
+  transform: translateY(-3px);
+}
+
+.leave-balance-card.selected {
+  border-color: var(--lf-primary);
+  background: linear-gradient(135deg, #eef2ff 0%, #f5f3ff 100%);
+  box-shadow: 0 10px 28px rgba(79, 70, 229, 0.2);
+  transform: translateY(-5px);
+}
+
+.leave-balance-card.selected .balance-title {
+  color: var(--lf-primary);
+}
+
+.leave-balance-card .balance-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.leave-balance-card .balance-title {
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.leave-balance-card .balance-code {
+  background: linear-gradient(135deg, #eef2ff 0%, #f5f3ff 100%);
+  color: var(--lf-primary);
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+}
+
+.leave-balance-card .balance-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.leave-balance-card .stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+
+.leave-balance-card .stat-label {
+  font-size: 0.85rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.leave-balance-card .stat-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.leave-balance-card .balance-progress {
+  margin-top: 1rem;
+}
+
+.leave-balance-card .balance-progress .progress {
+  border-radius: 999px;
+  background: #f3f4f6;
+  overflow: hidden;
+}
+
+.leave-balance-card .balance-progress .progress-bar {
+  border-radius: 999px;
+  transition: width 0.6s ease;
+}
+
+.leave-balance-card .balance-progress small {
+  display: block;
+  margin-top: 0.5rem;
+  text-align: center;
+  font-size: 0.75rem;
+}
+
+/* Remaining section - original style */
+.leave-balance-card .stat-item.remaining {
+  background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-top: 0.25rem;
+}
+
+.leave-balance-card .stat-item.remaining .stat-label {
+  color: var(--lf-primary);
+  font-weight: 600;
+}
+
+.leave-balance-card .stat-item.remaining .stat-value {
+  font-size: 1.5rem;
+  color: var(--lf-primary);
+}
+
+/* Available section - original style with border */
+.leave-balance-card .stat-item.available {
+  background: linear-gradient(135deg, #eef2ff 0%, #f5f3ff 100%);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-top: 0.25rem;
+  border: 2px solid var(--lf-primary);
+}
+
+.leave-balance-card .stat-item.available .stat-label {
+  color: var(--lf-primary);
+  font-weight: 700;
+}
+
+.leave-balance-card .stat-item.available .stat-value {
+  font-size: 1.5rem;
+  color: var(--lf-primary);
+}
+
+/* Compact grid for balance cards */
+.content-area .row.g-2 {
+  row-gap: 0.5rem !important;
+  column-gap: 0.5rem !important;
+}
+
+.content-area .row.g-3 {
+  row-gap: 0.75rem !important;
+  column-gap: 0.75rem !important;
+}
+
+/* Force 6 cards per row on large screens */
+@media (min-width: 992px) {
+  #leaveBalanceContent .row {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    margin: 0 !important;
+    gap: 0.5rem !important;
+  }
+
+  #leaveBalanceContent .row>* {
+    padding: 0 !important;
+    flex: 0 0 calc(16.666667% - 0.42rem) !important;
+    max-width: calc(16.666667% - 0.42rem) !important;
+  }
+
+  .leave-balance-card-compact {
+    min-height: 170px;
+    width: 100%;
+  }
+
+  .leave-balance-card-compact .value-number {
+    font-size: 2rem;
+  }
+}
+
+/* 3 cards per row on medium screens */
+@media (min-width: 768px) and (max-width: 991px) {
+  #leaveBalanceContent .col-md-4 {
+    flex: 0 0 33.333333% !important;
+    max-width: 33.333333% !important;
+  }
+
+  .leave-balance-card-compact {
+    min-height: 190px;
+  }
+}
+
+/* Equal height cards */
+#leaveBalanceContent .row {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+#leaveBalanceContent .row>[class*='col-'] {
+  display: flex;
+}
+
+/* Force date fields to stay on same row */
+#dateFieldsContainer .col-6 {
+  flex: 0 0 50% !important;
+  max-width: 50% !important;
+}
+
+#dateFieldsContainer.row {
+  flex-wrap: nowrap !important;
+}
+
+@media (max-width: 576px) {
+  #dateFieldsContainer .col-6 {
+    flex: 0 0 50% !important;
+    max-width: 50% !important;
+  }
+}
+
+/* Responsive for balance cards */
+@media (max-width: 768px) {
+  .leave-balance-card {
+    padding: 1rem;
+  }
+
+  .leave-balance-card .balance-title {
+    font-size: 1rem;
+  }
+
+  .leave-balance-card .stat-value {
+    font-size: 1rem;
+  }
+
+  .leave-balance-card .stat-item.remaining .stat-value {
+    font-size: 1.25rem;
+  }
+}
+
+
+/* ============ Compact Balance Cards with Modal (6 per row) ============ */
+.leave-balance-card-compact {
+  background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0.875rem;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  min-height: 190px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.leave-balance-card-compact:hover {
+  border-color: var(--lf-primary);
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.15);
+  transform: translateY(-5px);
+}
+
+.leave-balance-card-compact:active {
+  transform: translateY(-2px);
+}
+
+.leave-balance-card-compact .compact-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--lf-primary) 0%, #667eea 100%);
+  color: #fff;
+  font-size: 0.625rem;
+  font-weight: 700;
+  padding: 0.25rem 0.5rem;
+  border-radius: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 0.5rem;
+}
+
+.leave-balance-card-compact .compact-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 0.75rem;
+  line-height: 1.3;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.leave-balance-card-compact .compact-value {
+  margin: 0.875rem 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.leave-balance-card-compact .value-label {
+  font-size: 0.6875rem;
+  color: #6b7280;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 0.3rem;
+}
+
+.leave-balance-card-compact .value-number {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: var(--lf-primary);
+  line-height: 1;
+  margin: 0.3rem 0;
+}
+
+.leave-balance-card-compact .value-unit {
+  font-size: 0.8125rem;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.leave-balance-card-compact .compact-footer {
+  font-size: 0.6875rem;
+  color: #9ca3af;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.leave-balance-card-compact .compact-footer i {
+  color: var(--lf-primary);
+}
+
+/* Modal Styles */
+#balanceDetailModal .modal-content {
+  border-radius: 16px;
+  border: 0;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+#balanceDetailModal .modal-header {
+  background: linear-gradient(135deg, var(--lf-primary) 0%, #667eea 100%);
+  color: #fff;
+  border-radius: 16px 16px 0 0;
+  padding: 1.5rem;
+}
+
+#balanceDetailModal .modal-title {
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+#balanceDetailModal .btn-close {
+  filter: brightness(0) invert(1);
+}
+
+#balanceDetailModal .modal-badge {
+  display: inline-block;
+  background: rgba(79, 70, 229, 0.1);
+  color: var(--lf-primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+#balanceDetailModal .stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+#balanceDetailModal .stat-row:last-child {
+  border-bottom: 0;
+}
+
+#balanceDetailModal .stat-row.highlight {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+  border-bottom: 0;
+}
+
+#balanceDetailModal .stat-row.highlight.primary {
+  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+  border: 2px solid var(--lf-primary);
+}
+
+#balanceDetailModal .stat-row span {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+#balanceDetailModal .stat-row strong {
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+#balanceDetailModal .stat-row.highlight strong {
+  font-size: 1.5rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .leave-balance-card-compact .value-number {
+    font-size: 2rem;
+  }
+
+  .leave-balance-card-compact .compact-title {
+    font-size: 0.8125rem;
+  }
+}
+
+/* Half-
+Day Date Field Layout - Full Width */
+.content-area #dateFieldsContainer.half-day-mode #startDateContainer {
+  flex: 0 0 100%;
+  max-width: 100%;
+}
+
+.content-area #dateFieldsContainer.half-day-mode #endDateContainer {
+  display: none;
+}
+
+/* Ensure date field aligns with Calculated Duration */
+.content-area #dateFieldsContainer.half-day-mode {
+  margin-bottom: 1rem;
+}
+
+/* ==
+========== Half-Day Date Field Layout - Full Width ============ */
+/* Override Bootstrap col-6 when in half-day mode */
+.content-area #dateFieldsContainer.half-day-mode #startDateContainer {
+  flex: 0 0 100% !important;
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+.content-area #dateFieldsContainer.half-day-mode #endDateContainer {
+  display: none !important;
+}
+
+/* Ensure proper spacing */
+.content-area #dateFieldsContainer.half-day-mode {
+  margin-bottom: 1rem;
+}
+
+/* =
+=========== Force Duration Type and Half-Day Period on Same Row ============ */
+/* Override Bootstrap responsive behavior to keep them on same row */
+.content-area .row.g-3.mb-3>.col-md-6 {
+  flex: 0 0 50% !important;
+  max-width: 50% !important;
+  width: 50% !important;
+}
+
+/* Ensure they stay on same row even on smaller screens */
+@media (max-width: 767px) {
+  .content-area .row.g-3.mb-3>.col-md-6 {
+    flex: 0 0 50% !important;
+    max-width: 50% !important;
+    width: 50% !important;
+  }
+}
+
+/* ============ CRITICAL: Keep Duration Type and Half-Day Period on Same Row ============ */
+/* Target the specific row containing duration type fields */
+.content-area .leave-request-card .row.g-3.mb-3 {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+}
+
+.content-area .leave-request-card .row.g-3.mb-3>.col-md-6 {
+  flex: 0 0 50% !important;
+  max-width: 50% !important;
+  min-width: 50% !important;
+}
+
+/* Force on all screen sizes */
+@media (max-width: 991px) {
+  .content-area .leave-request-card .row.g-3.mb-3>.col-md-6 {
+    flex: 0 0 50% !important;
+    max-width: 50% !important;
+    min-width: 50% !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .content-area .leave-request-card .row.g-3.mb-3>.col-md-6 {
+    flex: 0 0 50% !important;
+    max-width: 50% !important;
+    min-width: 50% !important;
+  }
+}
+
+@media (max-width: 575px) {
+  .content-area .leave-request-card .row.g-3.mb-3>.col-md-6 {
+    flex: 0 0 50% !important;
+    max-width: 50% !important;
+    min-width: 50% !important;
   }
 }
