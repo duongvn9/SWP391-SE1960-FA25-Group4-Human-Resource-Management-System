@@ -371,7 +371,7 @@ public class UserDao {
 
     /**
      * Tìm users với filters và pagination
-     * 
+     *
      * @param search       Search keyword (employee code, full name, email)
      * @param departmentId Department filter
      * @param positionId   Position filter
@@ -463,7 +463,7 @@ public class UserDao {
 
     /**
      * Đếm tổng số users với filters
-     * 
+     *
      * @param search       Search keyword
      * @param departmentId Department filter
      * @param positionId   Position filter
@@ -525,7 +525,7 @@ public class UserDao {
 
     /**
      * Kiểm tra user có accounts active không
-     * 
+     *
      * @param userId User ID
      * @return true nếu user có ít nhất 1 account active
      */
@@ -557,7 +557,7 @@ public class UserDao {
 
     /**
      * Tìm users với filters và pagination, trả về UserListDto
-     * 
+     *
      * @param search       Search keyword (employee code, full name, email)
      * @param departmentId Department filter
      * @param positionId   Position filter
@@ -750,8 +750,71 @@ public class UserDao {
     }
 
     /**
+     * Get subordinates (employees with lower job_level) for a manager
+     * - If user is DEPT_MANAGER: only get employees in same department with lower job_level
+     * - If user is HR_MANAGER/HR_STAFF/ADMIN: get all employees with lower job_level across all departments
+     *
+     * @param userId The manager's user ID
+     * @return List of subordinate users
+     */
+    public List<User> getSubordinates(Long userId) throws SQLException {
+        List<User> subordinates = new ArrayList<>();
+
+        String query = """
+            SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
+                   u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                   u.start_work_date, u.created_at, u.updated_at,
+                   d.name as department_name, p.name as position_name, p.job_level
+            FROM users u
+            LEFT JOIN departments d ON u.department_id = d.id
+            LEFT JOIN positions p ON u.position_id = p.id
+            WHERE u.id != ?
+              AND u.status = 'ACTIVE'
+              AND p.job_level > (
+                  SELECT p2.job_level
+                  FROM users u2
+                  JOIN positions p2 ON u2.position_id = p2.id
+                  WHERE u2.id = ?
+              )
+              AND (
+                  -- If manager is DEPT_MANAGER, only show same department
+                  (SELECT p2.code FROM users u2 JOIN positions p2 ON u2.position_id = p2.id WHERE u2.id = ?) = 'DEPT_MANAGER'
+                  AND u.department_id = (SELECT department_id FROM users WHERE id = ?)
+                  OR
+                  -- If manager is HR/ADMIN, show all departments
+                  (SELECT p2.code FROM users u2 JOIN positions p2 ON u2.position_id = p2.id WHERE u2.id = ?) IN ('ADMIN', 'HR_MANAGER', 'HR_STAFF')
+              )
+            ORDER BY d.name, p.job_level, u.full_name
+            """;
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+
+            ps.setLong(1, userId);
+            ps.setLong(2, userId);
+            ps.setLong(3, userId);
+            ps.setLong(4, userId);
+            ps.setLong(5, userId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    User user = mapResultSetToUser(rs);
+                    subordinates.add(user);
+                }
+            }
+
+            logger.info("Found {} subordinates for user ID: {}", subordinates.size(), userId);
+        } catch (SQLException e) {
+            logger.error("Error getting subordinates for user ID: " + userId, e);
+            throw e;
+        }
+
+        return subordinates;
+    }
+
+    /**
      * Tìm users theo status
-     * 
+     *
      * @param status Status của user (active, inactive, terminated)
      * @return List of users với status được chỉ định
      */
