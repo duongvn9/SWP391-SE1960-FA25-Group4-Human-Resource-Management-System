@@ -34,53 +34,53 @@ public class TimesheetPeriodDto {
     
     // Constructors
     public TimesheetPeriodDto() {}
-    
-    public TimesheetPeriodDto(TimesheetPeriod timesheetPeriod) {
-        this.id = timesheetPeriod.getId();
-        this.name = timesheetPeriod.getName();
-        this.code = timesheetPeriod.getCode();
-        this.startDate = timesheetPeriod.getStartDate();
-        this.endDate = timesheetPeriod.getEndDate();
-        this.status = timesheetPeriod.getStatus();
-        this.periodType = timesheetPeriod.getPeriodType();
-        this.workingDays = timesheetPeriod.getWorkingDays();
-        this.standardHours = timesheetPeriod.getStandardHours();
-        this.description = timesheetPeriod.getDescription();
-        this.createdBy = timesheetPeriod.getCreatedBy();
-        this.lockedAt = timesheetPeriod.getLockedAt();
-        this.lockedBy = timesheetPeriod.getLockedBy();
-        this.createdAt = timesheetPeriod.getCreatedAt();
-        this.updatedAt = timesheetPeriod.getUpdatedAt();
-        
-        // Set display values
-        this.statusDisplay = getStatusDisplayText(this.status);
-        this.periodTypeDisplay = getPeriodTypeDisplayText(this.periodType);
-    }
-    
-    // Factory methods
-    public static TimesheetPeriodDto fromEntity(TimesheetPeriod timesheetPeriod) {
-        return new TimesheetPeriodDto(timesheetPeriod);
-    }
-    
-    public TimesheetPeriod toEntity() {
-        TimesheetPeriod timesheetPeriod = new TimesheetPeriod();
-        timesheetPeriod.setId(this.id);
-        timesheetPeriod.setName(this.name);
-        timesheetPeriod.setCode(this.code);
-        timesheetPeriod.setStartDate(this.startDate);
-        timesheetPeriod.setEndDate(this.endDate);
-        timesheetPeriod.setStatus(this.status);
-        timesheetPeriod.setPeriodType(this.periodType);
-        timesheetPeriod.setWorkingDays(this.workingDays);
-        timesheetPeriod.setStandardHours(this.standardHours);
-        timesheetPeriod.setDescription(this.description);
-        timesheetPeriod.setCreatedBy(this.createdBy);
-        timesheetPeriod.setLockedAt(this.lockedAt);
-        timesheetPeriod.setLockedBy(this.lockedBy);
-        timesheetPeriod.setCreatedAt(this.createdAt);
-        timesheetPeriod.setUpdatedAt(this.updatedAt);
-        return timesheetPeriod;
-    }
+//    
+//    public TimesheetPeriodDto(TimesheetPeriod timesheetPeriod) {
+//        this.id = timesheetPeriod.getId();
+//        this.name = timesheetPeriod.getName();
+//        this.code = timesheetPeriod.getCode();
+//        this.startDate = timesheetPeriod.getStartDate();
+//        this.endDate = timesheetPeriod.getEndDate();
+//        this.status = timesheetPeriod.getStatus();
+//        this.periodType = timesheetPeriod.getPeriodType();
+//        this.workingDays = timesheetPeriod.getWorkingDays();
+//        this.standardHours = timesheetPeriod.getStandardHours();
+//        this.description = timesheetPeriod.getDescription();
+//        this.createdBy = timesheetPeriod.getCreatedBy();
+//        this.lockedAt = timesheetPeriod.getLockedAt();
+//        this.lockedBy = timesheetPeriod.getLockedBy();
+//        this.createdAt = timesheetPeriod.getCreatedAt();
+//        this.updatedAt = timesheetPeriod.getUpdatedAt();
+//        
+//        // Set display values
+//        this.statusDisplay = getStatusDisplayText(this.status);
+//        this.periodTypeDisplay = getPeriodTypeDisplayText(this.periodType);
+//    }
+//    
+//    // Factory methods
+//    public static TimesheetPeriodDto fromEntity(TimesheetPeriod timesheetPeriod) {
+//        return new TimesheetPeriodDto(timesheetPeriod);
+//    }
+//    
+//    public TimesheetPeriod toEntity() {
+//        TimesheetPeriod timesheetPeriod = new TimesheetPeriod();
+//        timesheetPeriod.setId(this.id);
+//        timesheetPeriod.setName(this.name);
+//        timesheetPeriod.setCode(this.code);
+//        timesheetPeriod.setStartDate(this.startDate);
+//        timesheetPeriod.setEndDate(this.endDate);
+//        timesheetPeriod.setStatus(this.status);
+//        timesheetPeriod.setPeriodType(this.periodType);
+//        timesheetPeriod.setWorkingDays(this.workingDays);
+//        timesheetPeriod.setStandardHours(this.standardHours);
+//        timesheetPeriod.setDescription(this.description);
+//        timesheetPeriod.setCreatedBy(this.createdBy);
+//        timesheetPeriod.setLockedAt(this.lockedAt);
+//        timesheetPeriod.setLockedBy(this.lockedBy);
+//        timesheetPeriod.setCreatedAt(this.createdAt);
+//        timesheetPeriod.setUpdatedAt(this.updatedAt);
+//        return timesheetPeriod;
+//    }
     
     // Getters và Setters
     public Long getId() {

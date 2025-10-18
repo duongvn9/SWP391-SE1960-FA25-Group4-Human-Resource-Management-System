@@ -52,34 +52,62 @@
                         <input type="hidden" name="_csrf_token" value="${csrfToken}">
 
                         <div class="form-group">
-                            <label class="form-label" for="username">Username</label>
+                            <label class="form-label" for="username">
+                                <i class="fas fa-user label-icon"></i>
+                                Username
+                            </label>
                             <div class="input-group">
-                                <i class="fas fa-user input-group-icon"></i>
+                                <span class="input-icon">
+                                    <i class="fas fa-user"></i>
+                                </span>
                                 <input type="text" id="username" name="username" class="form-control"
-                                    placeholder="Enter username" value="${param.username}" required>
+                                    placeholder="Enter your username" value="${param.username}" required>
                             </div>
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label" for="password">Password</label>
+                            <label class="form-label" for="password">
+                                <i class="fas fa-lock label-icon"></i>
+                                Password
+                            </label>
                             <div class="input-group password-input-group">
-                                <i class="fas fa-lock input-group-icon"></i>
-                                <input type="password" id="password" name="password" class="form-control"
-                                    placeholder="Enter password" required>
-                                <button type="button" class="password-toggle-btn" onclick="togglePassword()">
+                                <span class="input-icon">
+                                    <i class="fas fa-lock"></i>
+                                </span>
+                                <input type="password" id="password" name="password" class="form-control password-field"
+                                    placeholder="Enter your password" required>
+                                <button type="button" class="password-toggle-btn" onclick="togglePassword(event)"
+                                    aria-label="Toggle password visibility" tabindex="-1">
                                     <i class="fas fa-eye" id="password-eye"></i>
                                 </button>
                             </div>
                         </div>
 
+                        <div class="form-options">
+                            <div class="remember-me">
+                                <input type="checkbox" id="remember" name="remember" class="custom-checkbox">
+                                <label for="remember">Remember me</label>
+                            </div>
+                            <a href="${pageContext.request.contextPath}/forgot-password" class="forgot-password-link">
+                                Forgot password?
+                            </a>
+                        </div>
+
                         <button type="submit" class="btn btn-login">
-                            <i class="fas fa-sign-in-alt me-2"></i>Login
+                            <span class="btn-text">
+                                <i class="fas fa-sign-in-alt"></i>
+                                Sign In
+                            </span>
+                            <span class="btn-loader" style="display: none;">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                Signing in...
+                            </span>
                         </button>
                     </form>
 
                     <!-- Divider -->
                     <div class="divider">
-                        <span>or</span>
+                        <span>Or continue with</span>
                     </div>
 
                     <!-- Google Login Button -->
@@ -94,8 +122,16 @@
                             <path fill="#EA4335"
                                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                         </svg>
-                        Sign in with Google
+                        <span>Continue with Google</span>
                     </a>
+
+                    <!-- Footer Info -->
+                    <div class="login-footer">
+                        <p class="help-text">
+                            <i class="fas fa-info-circle"></i>
+                            Need help? Contact your HR administrator
+                        </p>
+                    </div>
                 </div>
             </div>
 
@@ -107,17 +143,29 @@
                     if (usernameField) {
                         usernameField.focus();
                     }
+
+                    // Add animation to login card
+                    const loginCard = document.querySelector('.login-card');
+                    loginCard.classList.add('animate-in');
                 });
 
                 // Handle form submit with loading state
-                document.querySelector('form').addEventListener('submit', function () {
+                document.querySelector('form').addEventListener('submit', function (e) {
                     const submitBtn = document.querySelector('.btn-login');
-                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+                    const btnText = submitBtn.querySelector('.btn-text');
+                    const btnLoader = submitBtn.querySelector('.btn-loader');
+                    
+                    btnText.style.display = 'none';
+                    btnLoader.style.display = 'inline-flex';
                     submitBtn.disabled = true;
+                    submitBtn.classList.add('loading');
                 });
 
                 // Toggle password visibility
-                function togglePassword() {
+                function togglePassword(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    
                     const passwordField = document.getElementById('password');
                     const passwordEye = document.getElementById('password-eye');
 
@@ -130,12 +178,33 @@
                         passwordEye.classList.remove('fa-eye-slash');
                         passwordEye.classList.add('fa-eye');
                     }
+                    
+                    // Keep focus on password field
+                    passwordField.focus();
                 }
 
                 // Enter key support for password toggle
                 document.addEventListener('keydown', function (event) {
                     if (event.target.classList.contains('password-toggle-btn') && event.key === 'Enter') {
                         togglePassword();
+                    }
+                });
+
+                // Add floating label effect
+                document.querySelectorAll('.form-control').forEach(input => {
+                    input.addEventListener('focus', function () {
+                        this.parentElement.parentElement.classList.add('focused');
+                    });
+
+                    input.addEventListener('blur', function () {
+                        if (!this.value) {
+                            this.parentElement.parentElement.classList.remove('focused');
+                        }
+                    });
+
+                    // Check on load if field has value
+                    if (input.value) {
+                        input.parentElement.parentElement.classList.add('focused');
                     }
                 });
             </script>
