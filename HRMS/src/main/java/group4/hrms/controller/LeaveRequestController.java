@@ -97,8 +97,24 @@ public class LeaveRequestController extends HttpServlet {
             // Load user profile to get gender
             group4.hrms.dao.UserProfileDao userProfileDao = new group4.hrms.dao.UserProfileDao();
             group4.hrms.model.UserProfile userProfile = userProfileDao.findByUserId(user.getId());
-            String userGender = (userProfile != null && userProfile.getGender() != null) ? userProfile.getGender() : "MALE";
-            logger.info("User gender: " + userGender);
+
+            // Debug logging
+            logger.info("UserProfile found: " + (userProfile != null));
+            if (userProfile != null) {
+                logger.info("Raw gender value from DB: '" + userProfile.getGender() + "'");
+            }
+
+            // Normalize gender: handle MALE/Male/M and FEMALE/Female/F
+            String userGender = "MALE"; // default
+            if (userProfile != null && userProfile.getGender() != null) {
+                String rawGender = userProfile.getGender().toUpperCase().trim();
+                if (rawGender.startsWith("F") || rawGender.equals("FEMALE")) {
+                    userGender = "FEMALE";
+                } else if (rawGender.startsWith("M") || rawGender.equals("MALE")) {
+                    userGender = "MALE";
+                }
+            }
+            logger.info("User gender (normalized): " + userGender);
 
             logger.info("Loading available leave types...");
             // Load available leave types using service.getAvailableLeaveTypes()
@@ -110,14 +126,14 @@ public class LeaveRequestController extends HttpServlet {
                 String code = entry.getKey();
                 String name = entry.getValue();
 
-                // Filter MATERNITY_LEAVE for females only
-                if ("MATERNITY_LEAVE".equals(code)) {
+                // Filter MATERNITY/MATERNITY_LEAVE for females only
+                if ("MATERNITY".equals(code) || "MATERNITY_LEAVE".equals(code)) {
                     if ("FEMALE".equalsIgnoreCase(userGender)) {
                         leaveTypes.put(code, name);
                     }
                 }
-                // Filter PATERNITY_LEAVE for males only
-                else if ("PATERNITY_LEAVE".equals(code)) {
+                // Filter PATERNITY/PATERNITY_LEAVE for males only
+                else if ("PATERNITY".equals(code) || "PATERNITY_LEAVE".equals(code)) {
                     if ("MALE".equalsIgnoreCase(userGender)) {
                         leaveTypes.put(code, name);
                     }
@@ -136,11 +152,12 @@ public class LeaveRequestController extends HttpServlet {
             // Filter rules based on gender
             List<LeaveTypeRules> leaveTypeRules = new java.util.ArrayList<>();
             for (LeaveTypeRules rules : allLeaveTypeRules) {
-                if ("MATERNITY_LEAVE".equals(rules.getCode())) {
+                String ruleCode = rules.getCode();
+                if ("MATERNITY".equals(ruleCode) || "MATERNITY_LEAVE".equals(ruleCode)) {
                     if ("FEMALE".equalsIgnoreCase(userGender)) {
                         leaveTypeRules.add(rules);
                     }
-                } else if ("PATERNITY_LEAVE".equals(rules.getCode())) {
+                } else if ("PATERNITY".equals(ruleCode) || "PATERNITY_LEAVE".equals(ruleCode)) {
                     if ("MALE".equalsIgnoreCase(userGender)) {
                         leaveTypeRules.add(rules);
                     }
@@ -153,8 +170,32 @@ public class LeaveRequestController extends HttpServlet {
             // Load leave balances from database
             int currentYear = java.time.LocalDateTime.now().getYear();
             logger.info("Loading leave balances for user " + user.getId() + " in year " + currentYear);
-            List<group4.hrms.dto.LeaveBalance> leaveBalances = service.getAllLeaveBalances(user.getId(), currentYear);
-            logger.info("Loaded " + (leaveBalances != null ? leaveBalances.size() : 0) + " leave balances");
+            List<group4.hrms.dto.LeaveBalance> allLeaveBalances = service.getAllLeaveBalances(user.getId(), currentYear);
+            logger.info("Loaded " + (allLeaveBalances != null ? allLeaveBalances.size() : 0) + " leave balances");
+
+            // Filter leave balances based on gender
+            List<group4.hrms.dto.LeaveBalance> leaveBalances = new java.util.ArrayList<>();
+            for (group4.hrms.dto.LeaveBalance balance : allLeaveBalances) {
+                String balanceCode = balance.getLeaveTypeCode();
+
+                // Filter MATERNITY/MATERNITY_LEAVE for females only
+                if ("MATERNITY".equals(balanceCode) || "MATERNITY_LEAVE".equals(balanceCode)) {
+                    if ("FEMALE".equalsIgnoreCase(userGender)) {
+                        leaveBalances.add(balance);
+                    }
+                }
+                // Filter PATERNITY/PATERNITY_LEAVE for males only
+                else if ("PATERNITY".equals(balanceCode) || "PATERNITY_LEAVE".equals(balanceCode)) {
+                    if ("MALE".equalsIgnoreCase(userGender)) {
+                        leaveBalances.add(balance);
+                    }
+                }
+                // All other leave types available for everyone
+                else {
+                    leaveBalances.add(balance);
+                }
+            }
+            logger.info("Filtered to " + leaveBalances.size() + " leave balances based on gender: " + userGender);
 
             // Set leaveTypes, leaveTypeRules and leaveBalances as request attributes
             request.setAttribute("leaveTypes", leaveTypes);
@@ -364,17 +405,73 @@ public class LeaveRequestController extends HttpServlet {
                     new LeaveTypeDao()
                 );
 
-                Map<String, String> leaveTypes = service.getAvailableLeaveTypes();
-                List<LeaveTypeRules> leaveTypeRules = service.getAllLeaveTypeRules();
+                // Load user profile to get gender for filtering
+                group4.hrms.dao.UserProfileDao userProfileDao = new group4.hrms.dao.UserProfileDao();
+                group4.hrms.model.UserProfile userProfile = userProfileDao.findByUserId(user.getId());
+                String userGender = (userProfile != null && userProfile.getGender() != null)
+                    ? userProfile.getGender()
+                    : "UNKNOWN";
 
-                // Reload leave balances for the current year
+                // Get all leave types and filter by gender
+                Map<String, String> allLeaveTypes = service.getAvailableLeaveTypes();
+                Map<String, String> leaveTypes = new java.util.LinkedHashMap<>();
+                for (Map.Entry<String, String> entry : allLeaveTypes.entrySet()) {
+                    String code = entry.getKey();
+                    if ("MATERNITY".equals(code) || "MATERNITY_LEAVE".equals(code)) {
+                        if ("FEMALE".equalsIgnoreCase(userGender)) {
+                            leaveTypes.put(code, entry.getValue());
+                        }
+                    } else if ("PATERNITY".equals(code) || "PATERNITY_LEAVE".equals(code)) {
+                        if ("MALE".equalsIgnoreCase(userGender)) {
+                            leaveTypes.put(code, entry.getValue());
+                        }
+                    } else {
+                        leaveTypes.put(code, entry.getValue());
+                    }
+                }
+
+                // Get all leave type rules and filter by gender
+                List<LeaveTypeRules> allLeaveTypeRules = service.getAllLeaveTypeRules();
+                List<LeaveTypeRules> leaveTypeRules = new java.util.ArrayList<>();
+                for (LeaveTypeRules rules : allLeaveTypeRules) {
+                    String ruleCode = rules.getCode();
+                    if ("MATERNITY".equals(ruleCode) || "MATERNITY_LEAVE".equals(ruleCode)) {
+                        if ("FEMALE".equalsIgnoreCase(userGender)) {
+                            leaveTypeRules.add(rules);
+                        }
+                    } else if ("PATERNITY".equals(ruleCode) || "PATERNITY_LEAVE".equals(ruleCode)) {
+                        if ("MALE".equalsIgnoreCase(userGender)) {
+                            leaveTypeRules.add(rules);
+                        }
+                    } else {
+                        leaveTypeRules.add(rules);
+                    }
+                }
+
+                // Reload leave balances for the current year and filter by gender
                 int currentYear = java.time.LocalDate.now().getYear();
-                List<group4.hrms.dto.LeaveBalance> leaveBalances = service.getAllLeaveBalances(user.getId(), currentYear);
+                List<group4.hrms.dto.LeaveBalance> allLeaveBalances = service.getAllLeaveBalances(user.getId(), currentYear);
+                List<group4.hrms.dto.LeaveBalance> leaveBalances = new java.util.ArrayList<>();
+                for (group4.hrms.dto.LeaveBalance balance : allLeaveBalances) {
+                    String balanceCode = balance.getLeaveTypeCode();
+                    if ("MATERNITY".equals(balanceCode) || "MATERNITY_LEAVE".equals(balanceCode)) {
+                        if ("FEMALE".equalsIgnoreCase(userGender)) {
+                            leaveBalances.add(balance);
+                        }
+                    } else if ("PATERNITY".equals(balanceCode) || "PATERNITY_LEAVE".equals(balanceCode)) {
+                        if ("MALE".equalsIgnoreCase(userGender)) {
+                            leaveBalances.add(balance);
+                        }
+                    } else {
+                        leaveBalances.add(balance);
+                    }
+                }
 
                 request.setAttribute("leaveTypes", leaveTypes);
                 request.setAttribute("leaveTypeRules", leaveTypeRules);
                 request.setAttribute("leaveBalances", leaveBalances);
                 request.setAttribute("currentYear", currentYear);
+                request.setAttribute("userGender", userGender);
 
             } catch (Exception e) {
                 logger.severe("Error reloading form data: " + e.getMessage());
