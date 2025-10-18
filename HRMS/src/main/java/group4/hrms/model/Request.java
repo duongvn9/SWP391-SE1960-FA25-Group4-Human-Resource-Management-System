@@ -1,13 +1,14 @@
 package group4.hrms.model;
 
+import java.time.LocalDateTime;
+
 import group4.hrms.dto.LeaveRequestDetail;
 import group4.hrms.dto.OTRequestDetail;
 import group4.hrms.dto.RecruitmentDetailsDto;
-import java.time.LocalDateTime;
 
 /**
- * Entity Request - Yêu cầu/Đơn từ của nhân viên
- * Bao gồm: nghỉ phép, tăng ca, thay đổi thông tin, v.v.
+ * Entity Request - Yêu cầu/Đơn từ của nhân viên Bao gồm: nghỉ phép, tăng ca,
+ * thay đổi thông tin, v.v.
  */
 public class Request {
 
@@ -26,7 +27,7 @@ public class Request {
     // Transient fields for parsed details (not stored in database)
     private transient LeaveRequestDetail leaveDetail;
     private transient OTRequestDetail otDetail;
-    private transient RecruitmentDetailsDto recruitmentDetail; 
+    private transient RecruitmentDetailsDto recruitmentDetail;
     // Deprecated fields - kept for backward compatibility but should not be used
     @Deprecated
     private Long userId; // Use createdByUserId instead
@@ -171,10 +172,10 @@ public class Request {
     }
 
     // JSON Helper Methods
-
     /**
-     * Get parsed LeaveRequestDetail from JSON
-     * Lazy-loads from detailJson if needed
+     * Get parsed LeaveRequestDetail from JSON Lazy-loads from detailJson if
+     * needed
+     *
      * @return LeaveRequestDetail object or null if detailJson is null
      */
     public LeaveRequestDetail getLeaveDetail() {
@@ -185,8 +186,9 @@ public class Request {
     }
 
     /**
-     * Set LeaveRequestDetail and automatically serialize to JSON
-     * Sets both leaveDetail and detailJson fields
+     * Set LeaveRequestDetail and automatically serialize to JSON Sets both
+     * leaveDetail and detailJson fields
+     *
      * @param detail LeaveRequestDetail object to set
      */
     public void setLeaveDetail(LeaveRequestDetail detail) {
@@ -195,8 +197,8 @@ public class Request {
     }
 
     /**
-     * Get parsed OTRequestDetail from JSON
-     * Lazy-loads from detailJson if needed
+     * Get parsed OTRequestDetail from JSON Lazy-loads from detailJson if needed
+     *
      * @return OTRequestDetail object or null if detailJson is null
      */
     public OTRequestDetail getOtDetail() {
@@ -212,8 +214,9 @@ public class Request {
     }
 
     /**
-     * Set OTRequestDetail and automatically serialize to JSON
-     * Sets both otDetail and detailJson fields
+     * Set OTRequestDetail and automatically serialize to JSON Sets both
+     * otDetail and detailJson fields
+     *
      * @param detail OTRequestDetail object to set
      */
     public void setOtDetail(OTRequestDetail detail) {
@@ -365,32 +368,33 @@ public class Request {
 
     @Override
     public String toString() {
-        return "Request{" +
-                "id=" + id +
-                ", requestTypeId=" + requestTypeId +
-                ", title='" + title + '\'' +
-                ", status='" + status + '\'' +
-                ", createdByAccountId=" + createdByAccountId +
-                ", createdByUserId=" + createdByUserId +
-                ", departmentId=" + departmentId +
-                ", createdAt=" + createdAt +
-                '}';
+        return "Request{"
+                + "id=" + id
+                + ", requestTypeId=" + requestTypeId
+                + ", title='" + title + '\''
+                + ", status='" + status + '\''
+                + ", createdByAccountId=" + createdByAccountId
+                + ", createdByUserId=" + createdByUserId
+                + ", departmentId=" + departmentId
+                + ", createdAt=" + createdAt
+                + '}';
     }
-            /**
-            * Lấy đối tượng RecruitmentDetailsDto đã được parse từ chuỗi JSON.
-            */
-            public RecruitmentDetailsDto getRecruitmentDetail() {
-            if (recruitmentDetail == null && detailJson != null && !detailJson.trim().isEmpty()) {
-                recruitmentDetail = RecruitmentDetailsDto.fromJson(detailJson);
-            }
-            return recruitmentDetail;
-}
-     /**
+
+    /**
+     * Lấy đối tượng RecruitmentDetailsDto đã được parse từ chuỗi JSON.
+     */
+    public RecruitmentDetailsDto getRecruitmentDetail() {
+        if (recruitmentDetail == null && detailJson != null && !detailJson.trim().isEmpty()) {
+            recruitmentDetail = RecruitmentDetailsDto.fromJson(detailJson);
+        }
+        return recruitmentDetail;
+    }
+
+    /**
      * Gán đối tượng RecruitmentDetailsDto và tự động chuyển đổi nó sang JSON.
      */
     public void setRecruitmentDetail(RecruitmentDetailsDto detail) {
         this.recruitmentDetail = detail;
         this.detailJson = (detail != null) ? detail.toJson() : null;
-}
-
+    }
 }
