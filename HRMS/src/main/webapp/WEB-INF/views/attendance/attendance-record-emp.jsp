@@ -27,20 +27,22 @@
                     <form id="filterForm" class="filter-form" method="post" action="${pageContext.request.contextPath}/attendance/record/emp">
                         <div class="filter-group">
                             <label for="startDate" class="filter-label">From:</label>
-                            <input type="date" id="startDate" name="startDate" value="${param.startDate}" class="filter-input">
+                            <input type="date" id="startDate" name="startDate"
+                                   value="${startDate}" class="filter-input">
                         </div>
 
                         <div class="filter-group">
                             <label for="endDate" class="filter-label">To:</label>
-                            <input type="date" id="endDate" name="endDate" value="${param.endDate}" class="filter-input">
+                            <input type="date" id="endDate" name="endDate"
+                                   value="${endDate}" class="filter-input">
                         </div>
 
                         <div class="filter-group">
                             <label for="status" class="filter-label">Status:</label>
                             <select id="status" name="status" class="filter-select">
                                 <option value="">All</option>
-                                <option value="On time" ${param.status == 'On time' ? 'selected' : ''}>On time</option>
-                                <option value="Late" ${param.status == 'Late' ? 'selected' : ''}>Late</option>
+                                <option value="On time" ${status == 'On time' ? 'selected' : ''}>On time</option>
+                                <option value="Late" ${status == 'Late' ? 'selected' : ''}>Late</option>
                             </select>
                         </div>
 
@@ -48,8 +50,8 @@
                             <label for="source" class="filter-label">Source:</label>
                             <select id="source" name="source" class="filter-select">
                                 <option value="">All</option>
-                                <option value="Manual" ${param.source == 'Manual' ? 'selected' : ''}>Manual</option>
-                                <option value="Import" ${param.source == 'Import' ? 'selected' : ''}>Import</option>
+                                <option value="Manual" ${source == 'Manual' ? 'selected' : ''}>Manual</option>
+                                <option value="Import" ${source == 'Import' ? 'selected' : ''}>Import</option>
                             </select>
                         </div>
 
@@ -58,7 +60,7 @@
                             <select id="periodSelect" name="periodSelect" class="filter-select">
                                 <option value="">-- All Periods --</option>
                                 <c:forEach var="p" items="${periodList}">
-                                    <option value="${p.id}" ${param.periodSelect == p.id.toString() ? 'selected' : ''}>${p.name}</option>
+                                    <option value="${p.id}" ${selectedPeriod == p.id ? 'selected' : ''}>${p.name}</option>
                                 </c:forEach>
                             </select>
                         </div>
@@ -68,10 +70,17 @@
                             <button type="submit" name="action" value="reset" id="resetBtn" class="btn btn-reset">Reset</button>
                         </div>
                     </form>
-                    <br/><br/> 
+                    <br/>
 
                     <form id="exportForm" class="export-form" action="${pageContext.request.contextPath}/attendance/record/emp" method="post">
                         <input type="hidden" name="exportType" id="exportType">
+                        <input type="hidden" name="employeeKeyword" id="exportEmployeeKeyword" value="${employeeKeyword}">
+                        <input type="hidden" name="department" id="exportDepartment" value="${department}">
+                        <input type="hidden" name="startDate" id="exportStartDate" value="${startDate}">
+                        <input type="hidden" name="endDate" id="exportEndDate" value="${endDate}">
+                        <input type="hidden" name="status" id="exportStatus" value="${status}">
+                        <input type="hidden" name="source" id="exportSource" value="${source}">
+                        <input type="hidden" name="periodSelect" id="exportPeriodSelect" value="${selectedPeriod}">
                     </form>
 
                     <div class="export-buttons">
@@ -79,7 +88,7 @@
                         <button type="button" id="exportCSVBtn" class="btn btn-export btn-csv">Export CSV</button>
                         <button type="button" id="exportPDFBtn" class="btn btn-export btn-pdf">Export PDF</button>
                     </div>
-                    <br/><br/>
+                    <br/>
 
                     <table id="attendanceTable" class="attendance-table" border="1" cellpadding="6">
                         <thead>

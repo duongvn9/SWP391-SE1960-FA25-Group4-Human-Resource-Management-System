@@ -31,7 +31,7 @@
 
                 <!-- Upload File Tab -->
                 <div id="upload" class="tab-content upload-tab">
-                    <h3 class="section-title">Upload File (Excel / CSV)</h3>
+                    <h3 class="section-title">Upload File (Excel)</h3>
 
                     <form class="upload-form" action="${pageContext.request.contextPath}/attendance/import" 
                           method="post" enctype="multipart/form-data">
@@ -120,24 +120,47 @@
                     </form>
                 </div>
 
-                <!-- Manual Entry Tab -->
                 <div id="manual" class="tab-content manual-tab">
                     <h3 class="section-title">Manual Entry</h3>
-                    <table id="manualTable" class="excel-table manual-table">
+
+                    <!-- Feedback duy nhất -->
+                    <div id="manualFeedback" class="feedback-message" style="display: ${not empty manualError ? 'block' : 'none'}; color: ${not empty manualError ? 'red' : 'green'}; margin-bottom:10px;">
+                        <c:choose>
+                            <c:when test="${not empty manualError}">${manualError}</c:when>
+                            <c:when test="${not empty manualSuccess}">${manualSuccess}</c:when>
+                        </c:choose>
+                    </div>
+
+                    <table id="manualTable" class="excel-table manual-table" style="border-collapse: collapse; width: 100%;">
                         <thead>
                             <tr>
-                                <th class="col-employee-id">Employee ID</th>
-                                <th class="col-date">Date</th>
-                                <th class="col-checkin">Check-in</th>
-                                <th class="col-checkout">Check-out</th>
-                                <th class="col-status">Status</th>
-                                <th class="col-source">Source</th>
-                                <th class="col-note">Note</th>
+                                <th style="border: 1px solid #ccc;">Employee ID</th>
+                                <th style="border: 1px solid #ccc;">Date</th>
+                                <th style="border: 1px solid #ccc;">Check-in</th>
+                                <th style="border: 1px solid #ccc;">Check-out</th>
+                                <th style="border: 1px solid #ccc;">Status</th>
                             </tr>
                         </thead>
-                        <tbody></tbody>
+                        <tbody>
+                            <tr>
+                                <td contenteditable="true" style="border:1px solid #ccc; min-width:100px; max-width:200px; white-space:pre-wrap; word-break:break-word;"></td>
+                                <td contenteditable="true" style="border:1px solid #ccc; min-width:100px; max-width:200px; white-space:pre-wrap; word-break:break-word;"></td>
+                                <td contenteditable="true" style="border:1px solid #ccc; min-width:100px; max-width:200px; white-space:pre-wrap; word-break:break-word;"></td>
+                                <td contenteditable="true" style="border:1px solid #ccc; min-width:100px; max-width:200px; white-space:pre-wrap; word-break:break-word;"></td>
+                                <td contenteditable="true" style="border:1px solid #ccc; min-width:100px; max-width:200px; white-space:pre-wrap; word-break:break-word;"></td>
+                            </tr>
+                        </tbody>
                     </table>
+
+                    <div style="margin-top: 15px;">
+                        <form id="manualImportForm" action="${pageContext.request.contextPath}/attendance/import" method="post">
+                            <input type="hidden" name="action" value="ManualImport"/>
+                            <input type="hidden" id="manualData" name="manualData"/>
+                            <button type="submit" class="btn btn-import">Import</button>
+                        </form>
+                    </div>
                 </div>
+
             </div>
         </div>
     </body>

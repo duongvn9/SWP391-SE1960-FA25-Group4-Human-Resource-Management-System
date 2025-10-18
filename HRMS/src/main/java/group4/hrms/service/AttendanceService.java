@@ -58,7 +58,7 @@ public class AttendanceService {
                     }
                 }
                 if (isEmpty) {
-                    continue; // bỏ qua row trống
+                    continue; 
                 }
                 AttendanceLogDto dto = new AttendanceLogDto();
 
@@ -80,7 +80,7 @@ public class AttendanceService {
                 }
 
                 dto.setStatus(ExcelUtil.parseString(row.getCell(6)));
-                dto.setSource(ExcelUtil.parseString(row.getCell(7)));
+                dto.setSource("Excel");
                 dto.setPeriod(ExcelUtil.parseString(row.getCell(8)));
 
                 list.add(dto);
@@ -108,7 +108,6 @@ public class AttendanceService {
             // Xóa file tạm
             Files.deleteIfExists(tempFilePath);
             req.getSession().removeAttribute("uploadedFile");
-
         } else {
             req.setAttribute("error", "Invalid action.");
         }

@@ -1,5 +1,6 @@
 package group4.hrms.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -11,7 +12,10 @@ public class AttendanceLogDto {
     private Long userId;
     private String employeeName;
     private String department;
+    
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
     private LocalDate date;
+    
     private LocalTime checkIn;
     private LocalTime checkOut;
     private String status;

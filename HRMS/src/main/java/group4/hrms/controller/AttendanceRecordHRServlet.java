@@ -53,7 +53,7 @@ public class AttendanceRecordHRServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
-            Long userId = null; 
+            Long userId = null;
             int recordsPerPage = 10;
             int currentPage = PaginationUtil.getCurrentPage(req);
             int offset = (currentPage - 1) * recordsPerPage;
@@ -61,8 +61,41 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             String action = req.getParameter("action");
             String exportType = req.getParameter("exportType");
 
-            if (exportType != null && !exportType.isEmpty()) {
-                ExportService.AttendanceRecordExport(resp, exportType, userId);
+            if (exportType != null) {
+                String employeeKeyword = req.getParameter("employeeKeyword");
+                String department = req.getParameter("department");
+                String startDateStr = req.getParameter("startDate");
+                String endDateStr = req.getParameter("endDate");
+                String status = req.getParameter("status");
+                String source = req.getParameter("source");
+                String periodIdStr = req.getParameter("periodSelect");
+
+                LocalDate startDate = startDateStr != null && !startDateStr.isEmpty() ? LocalDate.parse(startDateStr) : null;
+                LocalDate endDate = endDateStr != null && !endDateStr.isEmpty() ? LocalDate.parse(endDateStr) : null;
+                Long periodId = null;
+                if (periodIdStr != null && !periodIdStr.isEmpty()) {
+                    try {
+                        periodId = Long.valueOf(periodIdStr);
+                    } catch (NumberFormatException e) {
+                        periodId = null;
+                    }
+                }
+
+                List<AttendanceLogDto> filteredRecords = attendanceLogDao.findByFilter(
+                        userId,
+                        employeeKeyword,
+                        department,
+                        startDate,
+                        endDate,
+                        status,
+                        source,
+                        periodId,
+                        Integer.MAX_VALUE,
+                        0,
+                        false
+                );
+
+                ExportService.AttendanceRecordExport(resp, exportType, filteredRecords);
                 return;
             }
 
