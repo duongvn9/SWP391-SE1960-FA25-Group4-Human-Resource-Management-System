@@ -81,7 +81,7 @@ public class AttendanceService {
 
                 dto.setStatus(ExcelUtil.parseString(row.getCell(6)));
                 dto.setSource("Excel");
-                dto.setPeriod(ExcelUtil.parseString(row.getCell(8)));
+                dto.setPeriod(ExcelUtil.parseString(row.getCell(7)));
 
                 list.add(dto);
             }

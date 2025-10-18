@@ -100,28 +100,28 @@ public class ImportAttendanceServlet extends HttpServlet {
                                     String value = kv[1].trim().replaceAll("\"", "");
 
                                     switch (key) {
-                                        case "employeeId" ->  {
+                                        case "employeeId" -> {
                                             dto.setUserId(value.isEmpty() ? null : Long.valueOf(value));
                                         }
-                                        case "date" ->  {
+                                        case "date" -> {
                                             if (!value.isEmpty()) {
                                                 DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
                                                 dto.setDate(LocalDate.parse(value, dateFormatter));
                                             }
                                         }
-                                        case "checkIn" ->  {
+                                        case "checkIn" -> {
                                             if (!value.isEmpty()) {
                                                 DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("H:mm");
                                                 dto.setCheckIn(LocalTime.parse(value, timeFormatter));
                                             }
                                         }
-                                        case "checkOut" ->  {
+                                        case "checkOut" -> {
                                             if (!value.isEmpty()) {
                                                 DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("H:mm");
                                                 dto.setCheckOut(LocalTime.parse(value, timeFormatter));
                                             }
                                         }
-                                        case "status" ->  {
+                                        case "status" -> {
                                             dto.setStatus(value);
                                         }
                                     }
@@ -179,10 +179,11 @@ public class ImportAttendanceServlet extends HttpServlet {
         try {
             Path tempFilePath = handleFileUpload(req);
             List<AttendanceLogDto> logsDto = AttendanceService.readExcel(tempFilePath);
+            System.out.println(logsDto);
             req.getSession().setAttribute("previewLogsAll", logsDto);
 
             if ("Preview".equalsIgnoreCase(action)) {
-                int page = 1;
+                int page = 1; 
                 String pageParam = req.getParameter("page");
                 if (pageParam != null) {
                     try {
@@ -195,11 +196,13 @@ public class ImportAttendanceServlet extends HttpServlet {
                     }
                 }
 
-                int recordsPerPage = 10;
+                int recordsPerPage = 10; 
                 int totalLogs = logsDto.size();
-                int totalPages = PaginationUtil.calculateTotalPages(totalLogs, recordsPerPage);
+                int totalPages = (int) Math.ceil((double) totalLogs / recordsPerPage);
+
                 int fromIndex = (page - 1) * recordsPerPage;
                 int toIndex = Math.min(fromIndex + recordsPerPage, totalLogs);
+
                 List<AttendanceLogDto> pageLogs = new ArrayList<>();
                 if (fromIndex < totalLogs) {
                     pageLogs = logsDto.subList(fromIndex, toIndex);
