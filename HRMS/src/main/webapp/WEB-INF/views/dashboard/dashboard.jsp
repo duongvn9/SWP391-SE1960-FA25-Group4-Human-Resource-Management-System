@@ -5,7 +5,7 @@
 
         <head>
             <jsp:include page="../layout/head.jsp">
-                <jsp:param name="pageTitle" value="Dashboard - HRMS" />
+                <jsp:param name="pageTitle" value="Home Page" />
                 <jsp:param name="pageCss" value="dashboard.css" />
             </jsp:include>
         </head>

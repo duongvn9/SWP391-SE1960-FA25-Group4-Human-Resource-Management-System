@@ -52,7 +52,18 @@ public class SessionUtil {
         session.setAttribute("account", account);
         session.setAttribute("user", user);
 
-        logger.info("Created session for user: {} (ID: {})", account.getUsername(), account.getId());
+        // Set admin flag based on username (temporary solution until role system is
+        // implemented)
+        boolean isAdmin = "admin".equalsIgnoreCase(account.getUsername());
+        session.setAttribute(IS_ADMIN_KEY, isAdmin);
+
+        // Set roles string (temporary solution)
+        if (isAdmin) {
+            session.setAttribute(USER_ROLES_KEY, "ADMIN");
+        }
+
+        logger.info("Created session for user: {} (ID: {}), isAdmin: {}", account.getUsername(), account.getId(),
+                isAdmin);
     }
 
     /**
@@ -189,5 +200,60 @@ public class SessionUtil {
         if (session != null) {
             session.setMaxInactiveInterval(ConfigUtil.getSessionTimeout());
         }
+    }
+
+    /**
+     * Kiểm tra user có role cụ thể không
+     * 
+     * @param request HttpServletRequest
+     * @param role    Role cần kiểm tra (ADMIN, HRM, HR, MANAGER, EMPLOYEE)
+     * @return true nếu user có role đó
+     */
+    public static boolean hasRole(HttpServletRequest request, String role) {
+        if (role == null || role.trim().isEmpty()) {
+            return false;
+        }
+
+        // Check admin flag first
+        if ("ADMIN".equalsIgnoreCase(role) && isAdmin(request)) {
+            return true;
+        }
+
+        // Check roles string
+        String roles = getUserRoles(request);
+        if (roles == null || roles.trim().isEmpty()) {
+            return false;
+        }
+
+        // Check if role exists in roles string (comma-separated)
+        String[] roleArray = roles.split(",");
+        for (String r : roleArray) {
+            if (role.equalsIgnoreCase(r.trim())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Kiểm tra user có bất kỳ role nào trong danh sách không
+     * 
+     * @param request HttpServletRequest
+     * @param roles   Danh sách roles cần kiểm tra
+     * @return true nếu user có ít nhất một role trong danh sách
+     */
+    public static boolean hasAnyRole(HttpServletRequest request, String... roles) {
+        if (roles == null || roles.length == 0) {
+            return false;
+        }
+
+        for (String role : roles) {
+            if (hasRole(request, role)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

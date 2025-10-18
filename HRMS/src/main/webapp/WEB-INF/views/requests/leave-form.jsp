@@ -77,125 +77,48 @@
                                             </button>
                                         </div>
                                         <div class="card-body" id="leaveBalanceContent">
-                                            <div class="row g-3">
+                                            <div class="row" style="gap: 0.5rem;">
                                                 <c:forEach var="balance" items="${leaveBalances}">
-                                                    <div class="col-md-6 col-lg-4">
-                                                        <div class="leave-balance-card">
-                                                            <div class="balance-header">
-                                                                <h6 class="balance-title">${balance.leaveTypeName}</h6>
-                                                                <span
-                                                                    class="balance-code">${balance.leaveTypeCode}</span>
-                                                            </div>
+                                                    <div class="col-6 col-md-4 col-lg-2">
+                                                        <div class="leave-balance-card-compact"
+                                                             onclick="showBalanceDetail('${balance.leaveTypeCode}')"
+                                                             data-code="${balance.leaveTypeCode}">
+                                                            <div class="compact-badge">${balance.leaveTypeCode}</div>
+                                                            <h6 class="compact-title">${balance.leaveTypeName}</h6>
                                                             <c:choose>
-                                                                <c:when
-                                                                    test="${balance.leaveTypeCode == 'UNPAID_LEAVE' || balance.leaveTypeCode == 'UNPAID'}">
-                                                                    <!-- Unpaid leave: Show only used and pending -->
-                                                                    <div class="balance-stats">
-                                                                        <div class="stat-item">
-                                                                            <span class="stat-label">Used:</span>
-                                                                            <span class="stat-value text-danger">
-                                                                                <fmt:formatNumber
-                                                                                    value="${balance.usedDays}"
-                                                                                    minFractionDigits="0"
-                                                                                    maxFractionDigits="1" /> days
-                                                                            </span>
+                                                                <c:when test="${balance.leaveTypeCode == 'UNPAID_LEAVE' || balance.leaveTypeCode == 'UNPAID'}">
+                                                                    <div class="compact-value">
+                                                                        <div class="value-label">Used</div>
+                                                                        <div class="value-number text-danger">
+                                                                            <fmt:formatNumber value="${balance.usedDays}" minFractionDigits="0" maxFractionDigits="1" />
                                                                         </div>
-                                                                        <div class="stat-item">
-                                                                            <span class="stat-label">Pending:</span>
-                                                                            <span class="stat-value text-warning">
-                                                                                <fmt:formatNumber
-                                                                                    value="${balance.pendingDays}"
-                                                                                    minFractionDigits="0"
-                                                                                    maxFractionDigits="1" /> days
-                                                                            </span>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="balance-progress">
-                                                                        <small class="text-muted">
-                                                                            <i class="fas fa-info-circle"></i> Salary
-                                                                            will be deducted for unpaid leave days
-                                                                        </small>
+                                                                        <div class="value-unit">days</div>
                                                                     </div>
                                                                 </c:when>
                                                                 <c:otherwise>
-                                                                    <!-- Paid leave: Show full balance info -->
-                                                                    <div class="balance-stats">
-                                                                        <div class="stat-item">
-                                                                            <span class="stat-label">Total
-                                                                                Allowed:</span>
-                                                                            <span class="stat-value">
-                                                                                <fmt:formatNumber
-                                                                                    value="${balance.totalAllowed}"
-                                                                                    minFractionDigits="0"
-                                                                                    maxFractionDigits="1" /> days
-                                                                            </span>
+                                                                    <div class="compact-value">
+                                                                        <div class="value-label">Available</div>
+                                                                        <div class="value-number">
+                                                                            <fmt:formatNumber value="${balance.availableDays}" minFractionDigits="0" maxFractionDigits="1" />
                                                                         </div>
-                                                                        <div class="stat-item">
-                                                                            <span class="stat-label">Used:</span>
-                                                                            <span class="stat-value text-danger">
-                                                                                <fmt:formatNumber
-                                                                                    value="${balance.usedDays}"
-                                                                                    minFractionDigits="0"
-                                                                                    maxFractionDigits="1" /> days
-                                                                            </span>
-                                                                        </div>
-                                                                        <div class="stat-item">
-                                                                            <span class="stat-label">Pending:</span>
-                                                                            <span class="stat-value text-warning">
-                                                                                <fmt:formatNumber
-                                                                                    value="${balance.pendingDays}"
-                                                                                    minFractionDigits="0"
-                                                                                    maxFractionDigits="1" /> days
-                                                                            </span>
-                                                                        </div>
-                                                                        <div class="stat-item remaining">
-                                                                            <span class="stat-label">Remaining:</span>
-                                                                            <span class="stat-value text-info fw-bold">
-                                                                                <fmt:formatNumber
-                                                                                    value="${balance.remainingDays}"
-                                                                                    minFractionDigits="0"
-                                                                                    maxFractionDigits="1" /> days
-                                                                            </span>
-                                                                        </div>
-                                                                        <div class="stat-item available">
-                                                                            <span class="stat-label">Available:</span>
-                                                                            <span
-                                                                                class="stat-value text-primary fw-bold">
-                                                                                <fmt:formatNumber
-                                                                                    value="${balance.availableDays}"
-                                                                                    minFractionDigits="0"
-                                                                                    maxFractionDigits="1" /> days
-                                                                                <c:if
-                                                                                    test="${balance.availableDays < 3 && balance.availableDays > 0}">
-                                                                                    <span
-                                                                                        class="badge bg-warning text-dark ms-1">Low</span>
-                                                                                </c:if>
-                                                                                <c:if
-                                                                                    test="${balance.availableDays <= 0}">
-                                                                                    <span
-                                                                                        class="badge bg-danger ms-1">None</span>
-                                                                                </c:if>
-                                                                            </span>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="balance-progress">
-                                                                        <div class="progress" style="height: 8px;">
-                                                                            <div class="progress-bar bg-success"
-                                                                                role="progressbar"
-                                                                                data-width="${balance.remainingPercentage}"
-                                                                                aria-valuenow="${balance.remainingDays}"
-                                                                                aria-valuemin="0"
-                                                                                aria-valuemax="${balance.totalAllowed}">
-                                                                            </div>
-                                                                        </div>
-                                                                        <small class="text-muted">
-                                                                            ${balance.availableDays} available /
-                                                                            ${balance.remainingDays} remaining /
-                                                                            ${balance.totalAllowed} total
-                                                                        </small>
+                                                                        <div class="value-unit">days</div>
                                                                     </div>
                                                                 </c:otherwise>
                                                             </c:choose>
+                                                            <div class="compact-footer">
+                                                                <i class="fas fa-info-circle"></i> Click for details
+                                                            </div>
+                                                            <!-- Hidden data for modal -->
+                                                            <div class="d-none balance-data"
+                                                                 data-name="${balance.leaveTypeName}"
+                                                                 data-code="${balance.leaveTypeCode}"
+                                                                 data-total="${balance.totalAllowed}"
+                                                                 data-used="${balance.usedDays}"
+                                                                 data-pending="${balance.pendingDays}"
+                                                                 data-remaining="${balance.remainingDays}"
+                                                                 data-available="${balance.availableDays}"
+                                                                 data-percentage="${balance.remainingPercentage}">
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </c:forEach>
@@ -205,6 +128,23 @@
                                 </div>
                             </div>
                         </c:if>
+
+                        <!-- Balance Detail Modal -->
+                        <div class="modal fade" id="balanceDetailModal" tabindex="-1">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="modalLeaveTypeName"></h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="modal-badge mb-3" id="modalLeaveTypeCode"></div>
+                                        <div class="balance-detail-stats" id="modalStats"></div>
+                                        <div class="balance-detail-progress mt-3" id="modalProgress"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
                         <!-- Form Card -->
                         <div class="card leave-request-card">
@@ -345,7 +285,7 @@
                                         </div>
 
                                         <!-- Half-Day Period Selector (shown only for half-day) -->
-                                        <div class="col-md-6 d-none" id="halfDayPeriodContainer">
+                                        <div class="col-md-6" id="halfDayPeriodContainer" style="display: none;">
                                             <label class="form-label">
                                                 <i class="fas fa-clock"></i> Half-Day Period
                                                 <span class="text-danger">*</span>
@@ -372,7 +312,7 @@
 
                                     <!-- Dates (Full width for half-day, split for full-day) -->
                                     <div class="row g-3" id="dateFieldsContainer">
-                                        <div class="col-md-6" id="startDateContainer">
+                                        <div class="col-6" id="startDateContainer">
                                             <label for="startDate" class="form-label">
                                                 <i class="fas fa-calendar-alt"></i> <span id="startDateLabel">Start
                                                     Date</span>
@@ -382,7 +322,7 @@
                                                 value="${not empty savedStartDate ? savedStartDate : ''}" required>
                                             <div class="form-text" id="startDateHelp">When your leave will start</div>
                                         </div>
-                                        <div class="col-md-6" id="endDateContainer">
+                                        <div class="col-6" id="endDateContainer">
                                             <label for="endDate" class="form-label">
                                                 <i class="fas fa-calendar-alt"></i> End Date
                                                 <span class="text-danger">*</span>
@@ -624,21 +564,19 @@
                         durationTypeRadios.forEach(function (radio) {
                             radio.addEventListener('change', function () {
                                 const isHalfDay = this.value === 'HALF_DAY';
+                                const dateFieldsContainer = document.getElementById('dateFieldsContainer');
                                 const startDateContainer = document.getElementById('startDateContainer');
                                 const endDateContainer = document.getElementById('endDateContainer');
                                 const startDateLabel = document.getElementById('startDateLabel');
                                 const startDateHelp = document.getElementById('startDateHelp');
 
                                 if (isHalfDay) {
+                                    // Add half-day-mode class for CSS styling
+                                    dateFieldsContainer.classList.add('half-day-mode');
                                     // Show half-day period selector (same row as duration type)
                                     if (halfDayPeriodContainer) {
-                                        halfDayPeriodContainer.classList.remove('d-none');
+                                        halfDayPeriodContainer.style.display = 'block';
                                     }
-                                    // Make start date full width
-                                    startDateContainer.classList.remove('col-md-6');
-                                    startDateContainer.classList.add('col-12');
-                                    // Hide end date field
-                                    endDateContainer.classList.add('d-none');
                                     // Disable end date field
                                     endDateInput.disabled = true;
                                     endDateInput.required = false;
@@ -646,19 +584,16 @@
                                     startDateLabel.textContent = 'Date';
                                     startDateHelp.textContent = 'Select the date for your half-day leave';
                                 } else {
+                                    // Remove half-day-mode class
+                                    dateFieldsContainer.classList.remove('half-day-mode');
                                     // Hide half-day period selector
                                     if (halfDayPeriodContainer) {
-                                        halfDayPeriodContainer.classList.add('d-none');
+                                        halfDayPeriodContainer.style.display = 'none';
                                         // Clear half-day period selection
                                         document.querySelectorAll('input[name="halfDayPeriod"]').forEach(function (p) {
                                             p.checked = false;
                                         });
                                     }
-                                    // Restore start date to half width
-                                    startDateContainer.classList.remove('col-12');
-                                    startDateContainer.classList.add('col-md-6');
-                                    // Show end date field
-                                    endDateContainer.classList.remove('d-none');
                                     // Enable end date field
                                     endDateInput.disabled = false;
                                     endDateInput.required = true;
@@ -1000,6 +935,81 @@
                             icon.classList.add('fa-eye-slash');
                         }
                     }
+
+                    // Balance Detail Modal Function
+                    window.showBalanceDetail = function(code) {
+                        console.log('showBalanceDetail called with code:', code);
+
+                        try {
+                            const card = document.querySelector('.leave-balance-card-compact[data-code="' + code + '"]');
+                            console.log('Card found:', card);
+
+                            if (!card) {
+                                console.error('Card not found for code:', code);
+                                return;
+                            }
+
+                            const data = card.querySelector('.balance-data');
+                            console.log('Data element:', data);
+
+                            if (!data) {
+                                console.error('Balance data not found in card');
+                                return;
+                            }
+
+                            const name = data.dataset.name;
+                            const total = parseFloat(data.dataset.total) || 0;
+                            const used = parseFloat(data.dataset.used) || 0;
+                            const pending = parseFloat(data.dataset.pending) || 0;
+                            const remaining = parseFloat(data.dataset.remaining) || 0;
+                            const available = parseFloat(data.dataset.available) || 0;
+                            const percentage = parseFloat(data.dataset.percentage) || 0;
+
+                            console.log('Data:', {name, total, used, pending, remaining, available, percentage});
+
+                            document.getElementById('modalLeaveTypeName').textContent = name;
+                            document.getElementById('modalLeaveTypeCode').textContent = code;
+
+                            let statsHTML = '';
+                            if (code === 'UNPAID' || code === 'UNPAID_LEAVE') {
+                                statsHTML = '<div class="stat-row"><span>Used:</span><strong class="text-danger">' + used + ' days</strong></div>' +
+                                    '<div class="stat-row"><span>Pending:</span><strong class="text-warning">' + pending + ' days</strong></div>' +
+                                    '<div class="alert alert-warning mt-3"><i class="fas fa-info-circle"></i> Salary will be deducted for unpaid leave days</div>';
+                            } else {
+                                statsHTML = '<div class="stat-row"><span>Total Allowed:</span><strong>' + total + ' days</strong></div>' +
+                                    '<div class="stat-row"><span>Used:</span><strong class="text-danger">' + used + ' days</strong></div>' +
+                                    '<div class="stat-row"><span>Pending:</span><strong class="text-warning">' + pending + ' days</strong></div>' +
+                                    '<div class="stat-row highlight"><span>Remaining:</span><strong class="text-info">' + remaining + ' days</strong></div>' +
+                                    '<div class="stat-row highlight primary"><span>Available:</span><strong class="text-primary">' + available + ' days</strong></div>';
+                            }
+
+                            document.getElementById('modalStats').innerHTML = statsHTML;
+
+                            if (code !== 'UNPAID' && code !== 'UNPAID_LEAVE') {
+                                document.getElementById('modalProgress').innerHTML =
+                                    '<div class="progress" style="height: 10px;">' +
+                                        '<div class="progress-bar bg-success" style="width: ' + percentage + '%"></div>' +
+                                    '</div>' +
+                                    '<small class="text-muted d-block mt-2 text-center">' + available + ' available / ' + remaining + ' remaining / ' + total + ' total</small>';
+                            } else {
+                                document.getElementById('modalProgress').innerHTML = '';
+                            }
+
+                            console.log('About to show modal');
+                            const modalElement = document.getElementById('balanceDetailModal');
+                            console.log('Modal element:', modalElement);
+
+                            if (typeof bootstrap !== 'undefined') {
+                                const modal = new bootstrap.Modal(modalElement);
+                                modal.show();
+                                console.log('Modal shown');
+                            } else {
+                                console.error('Bootstrap is not loaded!');
+                            }
+                        } catch (error) {
+                            console.error('Error in showBalanceDetail:', error);
+                        }
+                    };
                 </script>
 
             </body>

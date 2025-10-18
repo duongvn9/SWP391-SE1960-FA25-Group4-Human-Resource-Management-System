@@ -302,7 +302,7 @@
                                                 </select>
                                                 <div class="form-text">
                                                     <i class="fas fa-info-circle"></i>
-                                                    You can create OT requests for employees in your department
+                                                    You can create OT requests for your subordinates (employees with lower job level)
                                                 </div>
                                             </div>
                                         </c:if>
@@ -620,6 +620,26 @@
                     endMinute.value = parts[1];
                     updateEndTime();
                 }
+            }
+
+            // Employee selection toggle
+            const requestForSelf = document.getElementById('requestForSelf');
+            const requestForEmployee = document.getElementById('requestForEmployee');
+            const employeeSelectionDiv = document.getElementById('employeeSelectionDiv');
+
+            if (requestForSelf && requestForEmployee && employeeSelectionDiv) {
+                requestForSelf.addEventListener('change', function() {
+                    if (this.checked) {
+                        employeeSelectionDiv.classList.add('d-none');
+                        document.getElementById('selectedEmployeeId').value = '';
+                    }
+                });
+
+                requestForEmployee.addEventListener('change', function() {
+                    if (this.checked) {
+                        employeeSelectionDiv.classList.remove('d-none');
+                    }
+                });
             }
         });
     </script>
