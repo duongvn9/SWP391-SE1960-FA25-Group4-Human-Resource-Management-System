@@ -447,6 +447,7 @@ public class RequestDto {
                 return priority;
         }
     }
+<<<<<<< HEAD
 
     // Getters and Setters for UI helper fields
     public String getEmployeeCode() {
@@ -614,4 +615,6 @@ public class RequestDto {
 
         return "";
     }
+=======
+>>>>>>> b2350af44c15db8a209189b323b7c23cc4568bb9
 }

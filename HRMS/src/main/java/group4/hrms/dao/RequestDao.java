@@ -117,14 +117,22 @@ public class RequestDao extends BaseDao<Request, Long> {
             = "SELECT r.id, r.request_type_id, r.title, r.detail, r.created_by_account_id, "
             + "r.created_by_user_id, r.department_id, r.status, r.current_approver_account_id, "
             + "r.created_at, r.updated_at, "
+<<<<<<< HEAD
             + "u.username, u.full_name, u.employee_code, "
             + "rt.name as request_type_name, rt.code as request_type_code, "
             + "d.name as department_name, "
+=======
+            + "u.username, u.full_name, "
+            + "rt.name as request_type_name, rt.code as request_type_code, "
+>>>>>>> b2350af44c15db8a209189b323b7c23cc4568bb9
             + "approver.full_name as approver_name "
             + "FROM " + TABLE_NAME + " r "
             + "LEFT JOIN users u ON r.created_by_user_id = u.id "
             + "LEFT JOIN request_types rt ON r.request_type_id = rt.id "
+<<<<<<< HEAD
             + "LEFT JOIN departments d ON u.department_id = d.id "
+=======
+>>>>>>> b2350af44c15db8a209189b323b7c23cc4568bb9
             + "LEFT JOIN users approver ON r.current_approver_account_id = approver.id ";
 
     private static final String INSERT
@@ -689,6 +697,7 @@ public class RequestDao extends BaseDao<Request, Long> {
     }
 
     /**
+<<<<<<< HEAD
      * Find requests with advanced filtering and pagination.
      * Supports filtering by scope, type, status, date range, employee, and search.
      *
@@ -972,6 +981,8 @@ public class RequestDao extends BaseDao<Request, Long> {
     }
 
     /**
+=======
+>>>>>>> b2350af44c15db8a209189b323b7c23cc4568bb9
      * Find approved OT requests by user ID within a specific date range. Used
      * for conflict detection between leave requests and OT requests. Parses
      * JSON detail to extract otDate for comparison. Only returns requests with
@@ -1272,6 +1283,7 @@ public class RequestDao extends BaseDao<Request, Long> {
 
         return false;
     }
+<<<<<<< HEAD
 
     /**
      * Find requests with advanced filtering and pagination.
@@ -1513,3 +1525,6 @@ public class RequestDao extends BaseDao<Request, Long> {
 
 }
 
+=======
+}
+>>>>>>> b2350af44c15db8a209189b323b7c23cc4568bb9
