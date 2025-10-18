@@ -41,6 +41,16 @@ public class RequestDto {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    // UI helper fields for request list page
+    private String employeeCode;            // Employee code
+    private String departmentName;          // Department name
+    private String statusBadgeClass;        // CSS class for status badge
+    private boolean canUpdate;              // Can user update this request
+    private boolean canDelete;              // Can user delete this request
+    private boolean canApprove;             // Can user approve/reject this request
+    private String updateUrl;               // URL to update page
+    private String detailUrl;               // URL to detail page
+
     // Constructors
     public RequestDto() {
     }
@@ -344,6 +354,17 @@ public class RequestDto {
         this.createdAt = createdAt;
     }
 
+    /**
+     * Get createdAt as java.util.Date for JSP fmt:formatDate compatibility
+     * @return Date object or null if createdAt is null
+     */
+    public java.util.Date getCreatedAtAsDate() {
+        if (createdAt == null) {
+            return null;
+        }
+        return java.util.Date.from(createdAt.atZone(java.time.ZoneId.systemDefault()).toInstant());
+    }
+
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
@@ -426,4 +447,174 @@ public class RequestDto {
                 return priority;
         }
     }
+<<<<<<< HEAD
+
+    // Getters and Setters for UI helper fields
+    public String getEmployeeCode() {
+        return employeeCode;
+    }
+
+    public void setEmployeeCode(String employeeCode) {
+        this.employeeCode = employeeCode;
+    }
+
+    public String getDepartmentName() {
+        return departmentName;
+    }
+
+    public void setDepartmentName(String departmentName) {
+        this.departmentName = departmentName;
+    }
+
+    public String getStatusBadgeClass() {
+        return statusBadgeClass;
+    }
+
+    public void setStatusBadgeClass(String statusBadgeClass) {
+        this.statusBadgeClass = statusBadgeClass;
+    }
+
+    public boolean isCanUpdate() {
+        return canUpdate;
+    }
+
+    public void setCanUpdate(boolean canUpdate) {
+        this.canUpdate = canUpdate;
+    }
+
+    public boolean isCanDelete() {
+        return canDelete;
+    }
+
+    public void setCanDelete(boolean canDelete) {
+        this.canDelete = canDelete;
+    }
+
+    public boolean isCanApprove() {
+        return canApprove;
+    }
+
+    public void setCanApprove(boolean canApprove) {
+        this.canApprove = canApprove;
+    }
+
+    public String getUpdateUrl() {
+        return updateUrl;
+    }
+
+    public void setUpdateUrl(String updateUrl) {
+        this.updateUrl = updateUrl;
+    }
+
+    public String getDetailUrl() {
+        return detailUrl;
+    }
+
+    public void setDetailUrl(String detailUrl) {
+        this.detailUrl = detailUrl;
+    }
+
+    // Helper method to determine status badge CSS class
+    public void calculateStatusBadgeClass() {
+        if (status == null) {
+            this.statusBadgeClass = "bg-secondary";
+            return;
+        }
+        switch (status) {
+            case "PENDING":
+                this.statusBadgeClass = "bg-warning";
+                break;
+            case "APPROVED":
+                this.statusBadgeClass = "bg-success";
+                break;
+            case "REJECTED":
+                this.statusBadgeClass = "bg-danger";
+                break;
+            case "CANCELLED":
+                this.statusBadgeClass = "bg-secondary";
+                break;
+            default:
+                this.statusBadgeClass = "bg-secondary";
+        }
+    }
+
+    // Helper method to build update URL based on request type
+    public void buildUpdateUrl(String contextPath) {
+        if (requestTypeCode == null || id == null) {
+            this.updateUrl = null;
+            return;
+        }
+
+        String typeSegment;
+        if (requestTypeCode.startsWith("LEAVE_")) {
+            typeSegment = "leave";
+        } else if (requestTypeCode.startsWith("OT_")) {
+            typeSegment = "ot";
+        } else if (requestTypeCode.startsWith("ATTENDANCE_")) {
+            typeSegment = "attendance-appeal";
+        } else if (requestTypeCode.startsWith("RECRUITMENT_")) {
+            typeSegment = "recruitment";
+        } else {
+            typeSegment = "request";
+        }
+
+        this.updateUrl = contextPath + "/requests/" + typeSegment + "/" + id + "/edit";
+    }
+
+    // Helper method to build detail URL based on request type
+    public void buildDetailUrl(String contextPath) {
+        if (requestTypeCode == null || id == null) {
+            this.detailUrl = null;
+            return;
+        }
+
+        String typeSegment;
+        if (requestTypeCode.startsWith("LEAVE_")) {
+            typeSegment = "leave";
+        } else if (requestTypeCode.startsWith("OT_")) {
+            typeSegment = "ot";
+        } else if (requestTypeCode.startsWith("ATTENDANCE_")) {
+            typeSegment = "attendance-appeal";
+        } else if (requestTypeCode.startsWith("RECRUITMENT_")) {
+            typeSegment = "recruitment";
+        } else {
+            typeSegment = "request";
+        }
+
+        this.detailUrl = contextPath + "/requests/" + typeSegment + "/" + id;
+    }
+
+    // Helper method to check if request is cancelled
+    public boolean isCancelled() {
+        return "CANCELLED".equals(this.status);
+    }
+
+    /**
+     * Extract reason from detail JSON for export
+     * Tries to get reason from LeaveRequestDetail or OTRequestDetail
+     *
+     * @return Reason text or empty string if not found
+     */
+    public String getReasonFromDetail() {
+        // Try leave detail first
+        LeaveRequestDetail leave = getLeaveDetail();
+        if (leave != null && leave.getReason() != null && !leave.getReason().trim().isEmpty()) {
+            return leave.getReason();
+        }
+
+        // Try OT detail
+        OTRequestDetail ot = getOtDetail();
+        if (ot != null && ot.getReason() != null && !ot.getReason().trim().isEmpty()) {
+            return ot.getReason();
+        }
+
+        // Fallback to description field
+        if (description != null && !description.trim().isEmpty()) {
+            return description;
+        }
+
+        return "";
+    }
+=======
+>>>>>>> b2350af44c15db8a209189b323b7c23cc4568bb9
 }
