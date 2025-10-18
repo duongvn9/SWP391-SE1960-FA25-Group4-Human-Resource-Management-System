@@ -26,40 +26,31 @@ public class DepartmentDao {
             = "UPDATE departments SET name = ?, head_account_id = ?, updated_at = ? WHERE id = ?";
 
     private static final String DELETE_DEPARTMENT = "DELETE FROM departments WHERE id = ?";
-
-    private static final String SELECT_DEPARTMENT_BY_ID
-            = "SELECT d.id, d.name, d.head_account_id, d.created_at, d.updated_at, "
-            + "u.first_name, u.last_name "
-            + "FROM departments d "
-            + "LEFT JOIN accounts a ON d.head_account_id = a.id "
-            + "LEFT JOIN users u ON a.user_id = u.id "
-            + "WHERE d.id = ?";
-
-    private static final String SELECT_ALL_DEPARTMENTS
-            = "SELECT id, name, head_account_id, created_at, updated_at "
-            + "FROM departments "
-            + "ORDER BY name";
-
-    private static final String SELECT_DEPARTMENTS_BY_HEAD
-            = "SELECT d.id, d.name, d.head_account_id, d.created_at, d.updated_at, "
-            + "u.first_name, u.last_name "
-            + "FROM departments d "
-            + "LEFT JOIN accounts a ON d.head_account_id = a.id "
-            + "LEFT JOIN users u ON a.user_id = u.id "
-            + "WHERE d.head_account_id = ? "
-            + "ORDER BY d.name";
-
-    private static final String COUNT_EMPLOYEES_IN_DEPARTMENT
-            = "SELECT COUNT(*) FROM users WHERE department_id = ?";
-
-    private static final String SELECT_DEPARTMENT_BY_NAME
-            = "SELECT d.id, d.name, d.head_account_id, d.created_at, d.updated_at, "
-            + "u.first_name, u.last_name "
-            + "FROM departments d "
-            + "LEFT JOIN accounts a ON d.head_account_id = a.id "
-            + "LEFT JOIN users u ON a.user_id = u.id "
-            + "WHERE d.name = ?";
-
+    
+    private static final String SELECT_DEPARTMENT_BY_ID = 
+        "SELECT id, name, head_account_id, created_at, updated_at " +
+        "FROM departments " +
+        "WHERE id = ?";
+    
+    private static final String SELECT_ALL_DEPARTMENTS = 
+        "SELECT id, name, head_account_id, created_at, updated_at " +
+        "FROM departments " +
+        "ORDER BY name";
+    
+    private static final String SELECT_DEPARTMENTS_BY_HEAD = 
+        "SELECT id, name, head_account_id, created_at, updated_at " +
+        "FROM departments " +
+        "WHERE head_account_id = ? " +
+        "ORDER BY name";
+    
+    private static final String COUNT_EMPLOYEES_IN_DEPARTMENT = 
+        "SELECT COUNT(*) FROM users WHERE department_id = ?";
+    
+    private static final String SELECT_DEPARTMENT_BY_NAME = 
+        "SELECT id, name, head_account_id, created_at, updated_at " +
+        "FROM departments " +
+        "WHERE name = ?";
+    
     /**
      * Tạo mới department
      */
