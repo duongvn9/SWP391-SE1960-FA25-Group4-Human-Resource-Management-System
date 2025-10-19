@@ -813,6 +813,7 @@ public class UserDao {
     }
 
     /**
+<<<<<<< HEAD
      * Find subordinate user IDs for a given manager based on department hierarchy and job level.
      * This method is optimized for filtering requests by subordinate scope.
      *
