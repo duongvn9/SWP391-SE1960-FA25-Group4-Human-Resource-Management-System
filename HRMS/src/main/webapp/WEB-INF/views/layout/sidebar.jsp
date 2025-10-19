@@ -280,9 +280,9 @@
             </a>
             <ul class="sidebar-submenu" id="requests-submenu">
                 <li>
-                    <a href="${pageContext.request.contextPath}/requests/list"
+                    <a href="${pageContext.request.contextPath}/requests"
                        class="nav-link ${param.currentPage == 'request-list' ? 'active' : ''}">
-                        <i class="fas fa-list"></i><span>My Requests</span>
+                        <i class="fas fa-list"></i><span>Request List</span>
                     </a>
                 </li>
                 <li>
@@ -310,7 +310,8 @@
         <c:if test="${sessionScope.user != null && sessionScope.user.positionId == 6}">
             <li class="nav-item">
                 <a href="${pageContext.request.contextPath}/settings"
-                   class="nav-link ${param.currentPage == 'settings' ? 'active' : ''}" data-tooltip="Settings">
+                   class="nav-link ${param.currentPage == 'settings' ? 'active' : ''}"
+                   data-tooltip="Settings">
                     <i class="fas fa-cog"></i><span>Settings</span>
                 </a>
             </li>

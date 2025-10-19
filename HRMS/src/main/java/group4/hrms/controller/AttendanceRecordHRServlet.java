@@ -224,17 +224,6 @@ public class AttendanceRecordHRServlet extends HttpServlet {
         }
     }
 
-    private void resetFilters(HttpServletRequest req, int currentPage, int recordsPerPage, Long userId) throws SQLException {
-        List<AttendanceLogDto> attendanceList = getAttendanceListByFilter(
-                userId, "", "", null, null, "", "", null, recordsPerPage, 0
-        );
-        int totalRecords = countAttendanceByFilter(userId, "", "", null, null, "", "", null);
-        int totalPages = PaginationUtil.calculateTotalPages(totalRecords, recordsPerPage);
-
-        setRequestAttributesAfterFilter(req, attendanceList, "", "", "", "",
-                "", "", "", currentPage, totalPages);
-    }
-
     private String getParam(HttpServletRequest req, String name) {
         return req.getParameter(name) != null ? req.getParameter(name) : "";
     }
