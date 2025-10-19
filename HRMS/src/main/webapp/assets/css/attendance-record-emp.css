@@ -38,8 +38,8 @@
 /* Container chính chia sidebar + nội dung */
 .main-container {
     display: flex;
-    margin-top: var(--header-height);
-    min-height: calc(100vh - var(--header-height));
+    margin-top: 0; /* loại bỏ margin-top */
+    min-height: 100vh;
 }
 
 /* Sidebar (đã có sẵn style từ dashboard.css) */
@@ -59,9 +59,8 @@
 /* Nội dung chính */
 .main-content {
     flex: 1;
-    padding: 2rem;
-    transition: margin-left 0.3s ease;
-    overflow-x: auto;
+    padding: 1rem 2rem; /* padding-top để nội dung không bị che */
+    overflow-x: auto;             /* chắc chắn không có margin trên */
 }
 
 /* Khi sidebar thu nhỏ (nếu dùng toggle class ngoài JS) */
@@ -76,7 +75,7 @@
     font-size: 1.75rem;
     font-weight: 700;
     color: #111827;
-    margin-bottom: 1.5rem;
+    margin: 0 0 1.5rem 0; /* Remove top margin, keep bottom margin */
 }
 
 /* -------- Filter Form -------- */
@@ -265,7 +264,7 @@
 ----------------------------*/
 @media (max-width: 992px) {
     .main-content {
-        padding: 1.2rem;
+        padding: 0.5rem 1.2rem 1.2rem 1.2rem; /* Keep minimal padding-top */
     }
 
     .filter-form {

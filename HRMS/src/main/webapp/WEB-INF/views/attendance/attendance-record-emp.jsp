@@ -14,27 +14,27 @@
     <body class="attendance-page">
         <div class="page-wrapper">
             <jsp:include page="../layout/dashboard-header.jsp">
-                <jsp:param name="pageTitle" value="attendance-record-empt" />
+                <jsp:param name="pageTitle" value="attendance-record-emp" />
             </jsp:include>
+
             <div class="main-container">
                 <jsp:include page="../layout/sidebar.jsp">
                     <jsp:param name="currentPage" value="attendance-record-emp" />
                 </jsp:include>
 
                 <main class="main-content">
-                    <h2 class="page-title">My attendance records</h2>
+                    <h2 class="page-title">My Attendance Records</h2>
 
+                    <!-- Filter Form -->
                     <form id="filterForm" class="filter-form" method="post" action="${pageContext.request.contextPath}/attendance/record/emp">
                         <div class="filter-group">
                             <label for="startDate" class="filter-label">From:</label>
-                            <input type="date" id="startDate" name="startDate"
-                                   value="${startDate}" class="filter-input">
+                            <input type="date" id="startDate" name="startDate" value="${startDate}" class="filter-input">
                         </div>
 
                         <div class="filter-group">
                             <label for="endDate" class="filter-label">To:</label>
-                            <input type="date" id="endDate" name="endDate"
-                                   value="${endDate}" class="filter-input">
+                            <input type="date" id="endDate" name="endDate" value="${endDate}" class="filter-input">
                         </div>
 
                         <div class="filter-group">
@@ -67,11 +67,15 @@
 
                         <div class="filter-actions">
                             <button type="submit" class="btn btn-filter">Filter</button>
-                            <button type="submit" name="action" value="reset" id="resetBtn" class="btn btn-reset">Reset</button>
+                            <button type="submit" name="action" value="reset" class="btn btn-reset">Reset</button>
                         </div>
+
+                        <!-- Hidden input lưu các record đã chọn -->
+                        <input type="hidden" id="selectedLogDates" name="selected_log_dates" value="${selectedLogDates}">
                     </form>
                     <br/>
 
+                    <!-- Export Form (ẩn, dùng JS để submit) -->
                     <form id="exportForm" class="export-form" action="${pageContext.request.contextPath}/attendance/record/emp" method="post">
                         <input type="hidden" name="exportType" id="exportType">
                         <input type="hidden" name="employeeKeyword" id="exportEmployeeKeyword" value="${employeeKeyword}">
@@ -83,6 +87,7 @@
                         <input type="hidden" name="periodSelect" id="exportPeriodSelect" value="${selectedPeriod}">
                     </form>
 
+                    <!-- Export / Submit Buttons -->
                     <div class="export-buttons">
                         <button type="button" id="exportXLSBtn" class="btn btn-export btn-xls">Export XLS</button>
                         <button type="button" id="exportCSVBtn" class="btn btn-export btn-csv">Export CSV</button>
@@ -90,6 +95,7 @@
                     </div>
                     <br/>
 
+                    <!-- Attendance Table -->
                     <table id="attendanceTable" class="attendance-table" border="1" cellpadding="6">
                         <thead>
                             <tr>
@@ -115,9 +121,18 @@
                         </tbody>
                     </table>
 
+                    <!-- Pagination POST -->
                     <div class="pagination" style="margin-top: 10px;">
                         <c:if test="${currentPage > 1}">
-                            <a href="?page=${currentPage - 1}" class="page-link">Previous</a>
+                            <form method="post" style="display:inline;">
+                                <input type="hidden" name="startDate" value="${startDate}">
+                                <input type="hidden" name="endDate" value="${endDate}">
+                                <input type="hidden" name="status" value="${status}">
+                                <input type="hidden" name="source" value="${source}">
+                                <input type="hidden" name="periodSelect" value="${selectedPeriod}">
+                                <input type="hidden" name="page" value="${currentPage - 1}">
+                                <button type="submit" class="page-link">Previous</button>
+                            </form>
                         </c:if>
 
                         <c:forEach var="i" begin="1" end="${totalPages}">
@@ -126,18 +141,32 @@
                                     <span class="page-current"><b>${i}</b></span>
                                         </c:when>
                                         <c:otherwise>
-                                    <a href="?page=${i}" class="page-link">${i}</a>
+                                    <form method="post" style="display:inline;">
+                                        <input type="hidden" name="startDate" value="${startDate}">
+                                        <input type="hidden" name="endDate" value="${endDate}">
+                                        <input type="hidden" name="status" value="${status}">
+                                        <input type="hidden" name="source" value="${source}">
+                                        <input type="hidden" name="periodSelect" value="${selectedPeriod}">
+                                        <input type="hidden" name="page" value="${i}">
+                                        <button type="submit" class="page-link">${i}</button>
+                                    </form>
                                 </c:otherwise>
                             </c:choose>
                         </c:forEach>
 
                         <c:if test="${currentPage < totalPages}">
-                            <a href="?page=${currentPage + 1}" class="page-link">Next</a>
+                            <form method="post" style="display:inline;">
+                                <input type="hidden" name="startDate" value="${startDate}">
+                                <input type="hidden" name="endDate" value="${endDate}">
+                                <input type="hidden" name="status" value="${status}">
+                                <input type="hidden" name="source" value="${source}">
+                                <input type="hidden" name="periodSelect" value="${selectedPeriod}">
+                                <input type="hidden" name="page" value="${currentPage + 1}">
+                                <button type="submit" class="page-link">Next</button>
+                            </form>
                         </c:if>
                     </div>
+
                 </main>
             </div>
         </div>
-        <script src="${pageContext.request.contextPath}/assets/js/attendance-record-emp.js"></script>
-    </body>
-</html>

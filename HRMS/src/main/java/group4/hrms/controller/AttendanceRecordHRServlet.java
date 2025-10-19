@@ -33,17 +33,79 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             int currentPage = PaginationUtil.getCurrentPage(req);
             int offset = (currentPage - 1) * recordsPerPage;
 
-            List<AttendanceLogDto> attendanceList = attendanceLogDao.findAllForOverview(offset, recordsPerPage, true);
-            int totalRecords = attendanceLogDao.countAllForOverview();
+            // --- Lấy các tham số filter từ request ---
+            String startDateStr = req.getParameter("startDate");
+            String endDateStr = req.getParameter("endDate");
+            String status = req.getParameter("status");
+            String source = req.getParameter("source");
+            String periodIdStr = req.getParameter("periodSelect");
+            String department = req.getParameter("department"); 
+
+            LocalDate startDate;
+            LocalDate endDate;
+            Long periodId = null;
+
+            // --- Nếu không chọn ngày, lấy từ ngày đầu đến ngày cuối của tháng hiện tại ---
+            if (startDateStr == null || startDateStr.isEmpty() || endDateStr == null || endDateStr.isEmpty()) {
+                LocalDate now = LocalDate.now();
+                startDate = now.withDayOfMonth(1);
+                endDate = now.withDayOfMonth(now.lengthOfMonth());
+            } else {
+                startDate = LocalDate.parse(startDateStr);
+                endDate = LocalDate.parse(endDateStr);
+            }
+
+            if (periodIdStr != null && !periodIdStr.isEmpty()) {
+                try {
+                    periodId = Long.valueOf(periodIdStr);
+                } catch (NumberFormatException e) {
+                    periodId = null;
+                }
+            }
+
+            // --- Lấy danh sách attendance theo filter và phân trang ---
+            List<AttendanceLogDto> attendanceList = attendanceLogDao.findByFilter(
+                    null, // userId null = lấy tất cả nhân viên
+                    department, // filter theo department nếu cần
+                    null, // employee keyword, null nếu không filter
+                    startDate,
+                    endDate,
+                    status,
+                    source,
+                    periodId,
+                    recordsPerPage,
+                    offset,
+                    true // active only
+            );
+
+            // --- Tổng số bản ghi để tính phân trang ---
+            int totalRecords = attendanceLogDao.countByFilter(
+                    null,
+                    department,
+                    null,
+                    startDate,
+                    endDate,
+                    status,
+                    source,
+                    periodId
+            );
             int totalPages = PaginationUtil.calculateTotalPages(totalRecords, recordsPerPage);
 
+            // --- Set attributes cho JSP ---
             req.setAttribute("attendanceList", attendanceList);
-            req.setAttribute("currentPage", currentPage);
-            req.setAttribute("totalPages", totalPages);
             req.setAttribute("periodList", tDAO.findAll());
             req.setAttribute("departmentList", dDAO.findAll());
+            req.setAttribute("startDate", startDate.toString());
+            req.setAttribute("endDate", endDate.toString());
+            req.setAttribute("status", status);
+            req.setAttribute("source", source);
+            req.setAttribute("selectedPeriod", periodId);
+            req.setAttribute("department", department);
+            req.setAttribute("currentPage", currentPage);
+            req.setAttribute("totalPages", totalPages);
 
             req.getRequestDispatcher("/WEB-INF/views/attendance/attendance-record-HR.jsp").forward(req, resp);
+
         } catch (SQLException ex) {
             Logger.getLogger(AttendanceRecordHRServlet.class.getName()).log(Level.SEVERE, null, ex);
             throw new ServletException(ex);
@@ -53,7 +115,7 @@ public class AttendanceRecordHRServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
-            Long userId = null;
+            Long userId = null; // HR xem tất cả nhân viên
             int recordsPerPage = 10;
             int currentPage = PaginationUtil.getCurrentPage(req);
             int offset = (currentPage - 1) * recordsPerPage;
@@ -61,26 +123,41 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             String action = req.getParameter("action");
             String exportType = req.getParameter("exportType");
 
-            if (exportType != null) {
-                String employeeKeyword = req.getParameter("employeeKeyword");
-                String department = req.getParameter("department");
-                String startDateStr = req.getParameter("startDate");
-                String endDateStr = req.getParameter("endDate");
-                String status = req.getParameter("status");
-                String source = req.getParameter("source");
-                String periodIdStr = req.getParameter("periodSelect");
+            // --- Lấy các tham số filter từ request ---
+            String employeeKeyword = getParam(req, "employeeKeyword");
+            String department = getParam(req, "department");
+            String startDateStr = getParam(req, "startDate");
+            String endDateStr = getParam(req, "endDate");
+            String status = getParam(req, "status");
+            String source = getParam(req, "source");
+            System.out.println(source);
+            String periodIdStr = getParam(req, "periodSelect");
 
-                LocalDate startDate = startDateStr != null && !startDateStr.isEmpty() ? LocalDate.parse(startDateStr) : null;
-                LocalDate endDate = endDateStr != null && !endDateStr.isEmpty() ? LocalDate.parse(endDateStr) : null;
-                Long periodId = null;
-                if (periodIdStr != null && !periodIdStr.isEmpty()) {
-                    try {
-                        periodId = Long.valueOf(periodIdStr);
-                    } catch (NumberFormatException e) {
-                        periodId = null;
-                    }
+            LocalDate startDate = parseDate(startDateStr);
+            LocalDate endDate = parseDate(endDateStr);
+            Long periodId = parseLongSafe(periodIdStr);
+
+            if ("reset".equalsIgnoreCase(action)) {
+                employeeKeyword = "";
+                department = "";
+                status = "";
+                source = "";
+                periodId = null;
+
+                LocalDate now = LocalDate.now();
+                startDate = now.withDayOfMonth(1);
+                endDate = now.withDayOfMonth(now.lengthOfMonth());
+            } else {
+                if (startDateStr != null && !startDateStr.isEmpty()) {
+                    startDate = parseDate(startDateStr);
                 }
+                if (endDateStr != null && !endDateStr.isEmpty()) {
+                    endDate = parseDate(endDateStr);
+                }
+            }
 
+            // --- Xử lý export ---
+            if (exportType != null && !exportType.isEmpty()) {
                 List<AttendanceLogDto> filteredRecords = attendanceLogDao.findByFilter(
                         userId,
                         employeeKeyword,
@@ -94,41 +171,50 @@ public class AttendanceRecordHRServlet extends HttpServlet {
                         0,
                         false
                 );
-
                 ExportService.AttendanceRecordExport(resp, exportType, filteredRecords);
                 return;
             }
 
-            if ("reset".equalsIgnoreCase(action)) {
-                resetFilters(req, currentPage, recordsPerPage, userId);
-                req.getRequestDispatcher("/WEB-INF/views/attendance/attendance-record-HR.jsp").forward(req, resp);
-                return;
-            }
-
-            String employeeKeyword = getParam(req, "employee");
-            String departmentIdStr = getParam(req, "department");
-            String startDateStr = getParam(req, "startDate");
-            String endDateStr = getParam(req, "endDate");
-            String status = getParam(req, "status");
-            String source = getParam(req, "source");
-            String periodIdStr = getParam(req, "periodId");
-
-            LocalDate startDate = parseDate(startDateStr);
-            LocalDate endDate = parseDate(endDateStr);
-            Long periodId = parseLongSafe(periodIdStr);
-
-            List<AttendanceLogDto> attendanceList = getAttendanceListByFilter(
-                    userId, employeeKeyword, departmentIdStr, startDate, endDate,
-                    status, source, periodId, recordsPerPage, offset
+            // --- Lấy dữ liệu theo filter & phân trang ---
+            List<AttendanceLogDto> attendanceList = attendanceLogDao.findByFilter(
+                    userId,
+                    employeeKeyword,
+                    department,
+                    startDate,
+                    endDate,
+                    status,
+                    source,
+                    periodId,
+                    recordsPerPage,
+                    offset,
+                    true
             );
-            int totalRecords = countAttendanceByFilter(
-                    userId, employeeKeyword, departmentIdStr, startDate, endDate,
-                    status, source, periodId
+
+            int totalRecords = attendanceLogDao.countByFilter(
+                    userId,
+                    employeeKeyword,
+                    department,
+                    startDate,
+                    endDate,
+                    status,
+                    source,
+                    periodId
             );
             int totalPages = PaginationUtil.calculateTotalPages(totalRecords, recordsPerPage);
 
-            setRequestAttributesAfterFilter(req, attendanceList, employeeKeyword, departmentIdStr,
-                    startDateStr, endDateStr, status, source, periodIdStr, currentPage, totalPages);
+            // --- Set attributes cho JSP ---
+            req.setAttribute("attendanceList", attendanceList);
+            req.setAttribute("periodList", tDAO.findAll());
+            req.setAttribute("departmentList", dDAO.findAll());
+            req.setAttribute("employeeKeyword", employeeKeyword);
+            req.setAttribute("department", department);
+            req.setAttribute("startDate", (startDate != null) ? startDate.toString() : "");
+            req.setAttribute("endDate", (endDate != null) ? endDate.toString() : "");
+            req.setAttribute("status", status);
+            req.setAttribute("source", source);
+            req.setAttribute("selectedPeriod", periodId);
+            req.setAttribute("currentPage", currentPage);
+            req.setAttribute("totalPages", totalPages);
 
             req.getRequestDispatcher("/WEB-INF/views/attendance/attendance-record-HR.jsp").forward(req, resp);
 

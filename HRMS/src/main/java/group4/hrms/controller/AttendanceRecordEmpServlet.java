@@ -7,7 +7,6 @@ import java.io.IOException;
 
 import group4.hrms.dao.AttendanceLogDao;
 import group4.hrms.dto.AttendanceLogDto;
-import group4.hrms.model.TimesheetPeriod;
 import group4.hrms.util.SessionUtil;
 
 import jakarta.servlet.ServletException;
@@ -72,8 +71,6 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
                 }
             }
 
-            System.out.println(startDate);
-            System.out.println(endDate);
             if (exportType != null) {
                 List<AttendanceLogDto> filteredRecords = dao.findByFilter(
                         userId,

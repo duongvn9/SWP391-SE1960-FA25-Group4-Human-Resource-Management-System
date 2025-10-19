@@ -1,160 +1,196 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%> 
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%> 
 <%@ taglib uri="jakarta.tags.core" prefix="m" %>
-
 <!DOCTYPE html> 
 <html lang="vi"> 
     <head> 
         <meta charset="UTF-8"> 
-        <jsp:include page="../layout/head.jsp"> 
-            <jsp:param name="pageTitle" value="attendance-record-emp" /> 
+        <jsp:include page="../layout/head.jsp">
+            <jsp:param name="pageTitle" value="Submit Attendance Dispute - HRMS" />
         </jsp:include> 
         <title>Attendance Management</title> 
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/attendance-record-HR.css"> 
     </head> 
     <body> 
-        <jsp:include page="../layout/sidebar.jsp"> 
-            <jsp:param name="currentPage" value="attendance-record-emp" /> 
-        </jsp:include> 
+        <div class="page-wrapper">
+            <jsp:include page="../layout/sidebar.jsp"> 
+                <jsp:param name="currentPage" value="attendance-record-emp" /> 
+            </jsp:include> 
 
-        <jsp:include page="../layout/dashboard-header.jsp"> 
-            <jsp:param name="pageTitle" value="attendance-record-empt" /> 
-        </jsp:include> 
+            <div class="dashboard-wrapper">
+                <jsp:include page="../layout/dashboard-header.jsp" />
 
-        <main class="main-content"> 
-            <h2>Attendance Period Management</h2> 
+                <main class="main-content"> 
+                    <h2 class="page-title">Attendance Period Management</h2> 
 
-            <!-- ========== FILTER SECTION ========== --> 
-            <form id="filterForm" method="post" action="${pageContext.request.contextPath}/attendance/record/HR"> 
-                <label>From:</label> 
-                <input type="date" name="startDate" value="${startDate}" /> 
+                    <!-- ========== FILTER SECTION ========== --> 
+                    <form id="filterForm" class="filter-form" method="post" action="${pageContext.request.contextPath}/attendance/record/HR"> 
+                        <input type="hidden" name="page" id="pageInput" value="${currentPage}" />
 
-                <label>To:</label> 
-                <input type="date" name="endDate" value="${endDate}" /> 
+                        <!-- From / To Date -->
+                        <div class="filter-group">
+                            <label class="filter-label">From:</label> 
+                            <input type="date" class="filter-input" name="startDate" value="${startDate}" /> 
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">To:</label> 
+                            <input type="date" class="filter-input" name="endDate" value="${endDate}" /> 
+                        </div>
 
-                <label>Department:</label> 
-                <select name="department"> 
-                    <option value="">--All--</option> 
-                    <c:forEach var="dept" items="${departmentList}"> 
-                        <option value="${dept.name}" 
-                                <c:if test="${department eq dept.name}">selected</c:if>> ${dept.name} 
-                                </option> 
-                    </c:forEach> 
-                </select> 
+                        <!-- Department -->
+                        <div class="filter-group">
+                            <label class="filter-label">Department:</label> 
+                            <select name="department" class="filter-select"> 
+                                <option value="">--All--</option> 
+                                <c:forEach var="dept" items="${departmentList}"> 
+                                    <option value="${dept.name}" <c:if test="${department eq dept.name}">selected</c:if>>${dept.name}</option> 
+                                </c:forEach> 
+                            </select> 
+                        </div>
 
-                <label>Employee:</label> 
-                <input type="text" name="employee" value="${employeeKeyword}" placeholder="Name or ID" /> 
+                        <!-- Employee -->
+                        <div class="filter-group">
+                            <label class="filter-label">Employee:</label> 
+                            <input type="text" class="filter-input" name="employeeKeyword" value="${employeeKeyword}" placeholder="Name or ID" /> 
+                        </div>
 
-                <label>Status:</label> 
-                <select name="status"> 
-                    <option value="">All</option> 
-                    <option value="On time" <c:if test="${status eq 'On time'}">selected</c:if>>On time</option> 
-                    <option value="Late" <c:if test="${status eq 'Late'}">selected</c:if>>Late</option> 
-                    </select> 
+                        <!-- Status -->
+                        <div class="filter-group">
+                            <label class="filter-label">Status:</label> 
+                            <select name="status" class="filter-select"> 
+                                <option value="">All</option> 
+                                <option value="On time" <c:if test="${status eq 'On time'}">selected</c:if>>On time</option> 
+                                <option value="Late" <c:if test="${status eq 'Late'}">selected</c:if>>Late</option> 
+                                </select> 
+                            </div>
 
-                    <label>Source:</label> 
-                    <select name="source"> 
-                        <option value="">All</option> 
-                        <option value="Manual" <c:if test="${source eq 'Manual'}">selected</c:if>>Manual</option> 
-                    <option value="Import" <c:if test="${source eq 'Import'}">selected</c:if>>Import</option> 
-                    </select> 
+                            <!-- Source -->
+                            <div class="filter-group">
+                                <label class="filter-label">Source:</label> 
+                                <select name="source" class="filter-select"> 
+                                    <option value="">All</option> 
+                                    <option value="Manual" <c:if test="${source eq 'Manual'}">selected</c:if>>Manual</option> 
+                                <option value="Excel" <c:if test="${source eq 'Excel'}">selected</c:if>>Excel</option> 
+                                </select> 
+                            </div>
 
-                    <label>Period:</label> 
-                    <select name="periodId"> 
-                        <option value="">-- All Periods --</option> 
-                    <c:forEach var="p" items="${periodList}"> 
-                        <option value="${p.id}" <c:if test="${periodId eq p.id.toString()}">selected</c:if>> ${p.name} </option> 
-                    </c:forEach> </select> 
+                            <!-- Period -->
+                            <div class="filter-group">
+                                <label class="filter-label">Period:</label> 
+                                <select name="periodSelect" class="filter-select">
+                                    <option value="">-- All Periods --</option> 
+                                <c:forEach var="p" items="${periodList}"> 
+                                    <option value="${p.id}" <c:if test="${selectedPeriod eq p.id}">selected</c:if>>${p.name}</option> 
+                                </c:forEach> 
+                            </select> 
+                        </div>
 
-                <button type="submit">Filter</button> 
-                <button type="submit" name="action" value="reset">Reset</button> 
-            </form> 
+                        <!-- Buttons -->
+                        <div class="filter-buttons">
+                            <button type="submit" name="action" value="filter" class="btn btn-primary">Filter</button> 
+                            <button type="submit" name="action" value="reset" class="btn btn-secondary">Reset</button> 
+                        </div>
+                    </form>
 
+                    <!-- ========== ACTION BUTTONS ========== -->
+                    <div id="actions" class="action-buttons"> 
+                        <button type="button" class="btn btn-upload" onclick="importAttendance()">Upload</button> 
+                        <button type="button" id="exportXLSBtn" class="btn btn-export">Export XLS</button> 
+                        <button type="button" id="exportCSVBtn" class="btn btn-export">Export CSV</button> 
+                        <button type="button" id="exportPDFBtn" class="btn btn-export">Export PDF</button> 
+                        <button id="editBtn" class="btn btn-edit" onclick="enableEdit()">Edit</button> 
+                        <button id="submitBtn" class="btn btn-submit" onclick="submitChanges()">Submit</button> 
+                        <button id="deleteBtn" class="btn btn-delete" onclick="toggleDeleteMode()">Delete</button> 
+                        <div class="switch-container">
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="switchInput">
+                                <label for="switchInput" class="slider"></label>
+                            </div>
+                            <span id="sliderStatus" class="status-text">Unlocked</span>
+                        </div>
+                    </div> 
 
-            <div id="actions"> 
-                <button type="button" onclick="importAttendance()">Upload</button> 
-                <button type="button" id="exportXLSBtn">Export XLS</button> 
-                <button type="button" id="exportCSVBtn">Export CSV</button> 
-                <button type="button" id="exportPDFBtn">Export PDF</button> 
-                <button id="editBtn" onclick="enableEdit()">Edit</button> 
-                <button id="submitBtn" onclick="submitChanges()">Submit</button> 
-                <button id="deleteBtn" onclick="toggleDeleteMode()">Delete</button> 
-                <span id="sliderStatus">Unlocked</span> 
-            </div> 
+                    <form id="exportForm" class="export-form" action="${pageContext.request.contextPath}/attendance/record/HR" method="post"> 
+                        <input type="hidden" name="exportType" id="exportType"> 
+                    </form> 
 
-            <form id="exportForm" action="${pageContext.request.contextPath}/attendance/record/HR" method="post"> 
-                <input type="hidden" name="exportType" id="exportType"> 
-            </form> 
+                    <!-- ========== MAIN TABLE ========== --> 
+                    <div class="table-wrapper">
+                        <table id="attendanceTable" class="attendance-table" border="1" cellspacing="0" cellpadding="6"> 
+                            <thead> 
+                                <tr> 
+                                    <th><input type="checkbox" onclick="selectAll(this)" /></th> 
+                                    <th>Employee ID</th> 
+                                    <th>Employee Name</th> 
+                                    <th>Department</th> 
+                                    <th>Date</th> 
+                                    <th>Check-in</th> 
+                                    <th>Check-out</th> 
+                                    <th>Status</th> 
+                                    <th>Source</th> 
+                                    <th>Period</th> 
+                                    <th class="edit-col" style="display:none;">Actions</th> 
+                                </tr> 
+                            </thead> 
+                            <tbody> 
+                                <c:forEach var="att" items="${attendanceList}"> 
+                                    <tr class="attendance-row"> 
+                                        <td><input type="checkbox" class="row-checkbox" /></td> 
+                                        <td>${att.userId}</td> 
+                                        <td>${att.employeeName}</td> 
+                                        <td>${att.department}</td> 
+                                        <td><c:out value="${att.date}" /></td> 
+                                        <td><c:if test="${att.checkIn != null}">${att.checkIn.toString().substring(0,5)}</c:if></td> 
+                                        <td><c:if test="${att.checkOut != null}">${att.checkOut.toString().substring(0,5)}</c:if></td> 
+                                        <td><c:out value="${att.status}" /></td> 
+                                        <td><c:out value="${att.source}" /></td> 
+                                        <td><c:out value="${att.period}" /></td> 
+                                        <td class="edit-col" style="display:none;"> 
+                                            <button class="btn btn-delete-row">Delete</button> 
+                                        </td> 
+                                    </tr> 
+                                </c:forEach> 
+                            </tbody> 
+                        </table> 
+                    </div>
 
-            <!-- ========== MAIN TABLE ========== --> 
-            <table id="attendanceTable" border="1" cellspacing="0" cellpadding="6"> 
-                <thead> 
-                    <tr> 
-                        <th><input type="checkbox" onclick="selectAll(this)" /></th> 
-                        <th>Employee ID</th> <th>Employee Name</th> <th>Department</th> 
-                        <th>Date</th> <th>Check-in</th> <th>Check-out</th> <th>Status</th> 
-                        <th>Source</th> <th>Period</th> <th class="edit-col" style="display:none;">Actions</th> 
-                    </tr> 
-                </thead> 
-                <tbody> 
-                    <c:forEach var="att" items="${attendanceList}"> 
-                        <tr> 
-                            <td><input type="checkbox" /></td> <td>${att.userId}</td> 
-                            <td>${att.employeeName}</td> <td>${att.department}</td> 
-                            <td><c:out value="${att.date}" /></td> 
-                            <td><c:if test="${att.checkIn != null}">${att.checkIn.toString().substring(0,5)}</c:if></td> 
-                            <td><c:if test="${att.checkOut != null}">${att.checkOut.toString().substring(0,5)}</c:if></td> 
-                            <td><c:out value="${att.status}" /></td> <td><c:out value="${att.source}" /></td> 
-                            <td><c:out value="${att.period}" /></td> <td class="edit-col" style="display:none;"> 
-                                <button>Delete</button> </td> 
-                        </tr> </c:forEach> 
-                    </tbody> 
-                </table> 
+                    <!-- ========== PAGINATION ========== --> 
+                    <div class="pagination-wrapper" style="margin-top: 10px;">
+                        <form id="paginationForm" method="post" action="${pageContext.request.contextPath}/attendance/record/HR">
+                            <!-- Giữ tất cả filter hiện tại trong input ẩn -->
+                            <input type="hidden" name="employeeKeyword" value="${employeeKeyword}" />
+                            <input type="hidden" name="department" value="${department}" />
+                            <input type="hidden" name="status" value="${status}" />
+                            <input type="hidden" name="source" value="${source}" />
+                            <input type="hidden" name="periodSelect" value="${selectedPeriod}" />
+                            <input type="hidden" name="startDate" value="${startDate}" />
+                            <input type="hidden" name="endDate" value="${endDate}" />
 
-                <!-- Pagination --> 
-                <div class="pagination" style="margin-top: 10px;"> 
-                <c:if test="${currentPage > 1}"> 
-                    <c:url var="prevUrl" value=""> 
-                        <c:param name="page" value="${currentPage - 1}" /> 
-                        <c:param name="employee" value="${employeeKeyword}" /> 
-                        <c:param name="department" value="${department}" /> 
-                        <c:param name="status" value="${status}" /> 
-                        <c:param name="source" value="${source}" /> 
-                        <c:param name="periodId" value="${periodId}" /> 
-                    </c:url> <a href="${prevUrl}">Previous</a> </c:if> 
-                <c:forEach var="i" begin="1" end="${totalPages}"> 
-                    <c:url var="pageUrl" value=""> <c:param name="page" value="${i}" /> 
-                        <c:param name="employee" value="${employeeKeyword}" /> 
-                        <c:param name="department" value="${department}" /> 
-                        <c:param name="status" value="${status}" /> 
-                        <c:param name="source" value="${source}" /> 
-                        <c:param name="periodId" value="${periodId}" /> 
-                    </c:url> 
-                    <c:choose> 
-                        <c:when test="${i == currentPage}"> 
-                            <span>
-                                <b>${i}</b>
-                            </span> 
-                        </c:when> 
-                        <c:otherwise> 
-                            <a href="${pageUrl}">${i}</a> 
-                        </c:otherwise> 
-                    </c:choose> 
-                </c:forEach> 
-                <c:if test="${currentPage < totalPages}"> 
-                    <c:url var="nextUrl" value=""> 
-                        <c:param name="page" value="${currentPage + 1}" /> 
-                        <c:param name="employee" value="${employeeKeyword}" /> 
-                        <c:param name="department" value="${department}" /> 
-                        <c:param name="status" value="${status}" /> 
-                        <c:param name="source" value="${source}" /> 
-                        <c:param name="periodId" value="${periodId}" /> 
-                    </c:url> 
-                    <a href="${nextUrl}">Next</a> 
-                </c:if> 
-            </div> 
-        </main> 
+                            <c:if test="${currentPage > 1}">
+                                <button type="submit" name="page" value="${currentPage - 1}" class="pagination-link">Previous</button>
+                            </c:if>
+
+                            <c:forEach var="i" begin="1" end="${totalPages}">
+                                <c:choose>
+                                    <c:when test="${i == currentPage}">
+                                        <span class="pagination-current"><b>${i}</b></span>
+                                            </c:when>
+                                            <c:otherwise>
+                                        <button type="submit" name="page" value="${i}" class="pagination-link">${i}</button>
+                                    </c:otherwise>
+                                </c:choose>
+                            </c:forEach>
+
+                            <c:if test="${currentPage < totalPages}">
+                                <button type="submit" name="page" value="${currentPage + 1}" class="pagination-link">Next</button>
+                            </c:if>
+                        </form>
+                    </div>
+
+                </main> 
+            </div>
+        </div>
+
         <script src="${pageContext.request.contextPath}/assets/js/attendance-record-HR.js"></script> 
     </body> 
 </html>
-
