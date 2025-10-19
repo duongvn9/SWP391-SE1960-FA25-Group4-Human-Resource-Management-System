@@ -315,7 +315,7 @@
 
                 <!-- Profile & Logout -->
                 <li class="nav-item mt-3">
-                    <a href="${pageContext.request.contextPath}/profile"
+                    <a href="${pageContext.request.contextPath}/user-profile"
                         class="nav-link ${param.currentPage == 'profile' ? 'active' : ''}" data-tooltip="Profile">
                         <i class="fas fa-user"></i><span>Profile</span>
                     </a>

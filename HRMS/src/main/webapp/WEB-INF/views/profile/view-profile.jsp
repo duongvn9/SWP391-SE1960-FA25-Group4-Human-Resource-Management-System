@@ -11,7 +11,20 @@
     <style>
         .main-content {
             margin-left: 260px;
-            padding: 2rem;
+            padding: 2rem 2rem 0 2rem;
+            min-height: calc(100vh - 64px);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .content-area {
+            flex: 1;
+        }
+        
+        .dashboard-footer {
+            margin-left: -2rem;
+            margin-right: -2rem;
+            margin-bottom: 0;
         }
         .profile-container {
             max-width: 100%;
@@ -228,8 +241,9 @@
             </div>
         </div>
 
-        <!-- Footer -->
-        <jsp:include page="../layout/dashboard-footer.jsp" />
+      <!-- Footer -->
+        <jsp:include page="../layout/dashboard-footer.jsp" />  
     </div>
+    
 </body>
 </html>
