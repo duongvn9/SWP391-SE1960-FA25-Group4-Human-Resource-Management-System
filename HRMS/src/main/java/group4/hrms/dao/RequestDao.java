@@ -130,7 +130,7 @@ public class RequestDao extends BaseDao<Request, Long> {
             = "SELECT r.id, r.request_type_id, r.title, r.detail, r.created_by_account_id, "
             + "r.created_by_user_id, r.department_id, r.status, r.current_approver_account_id, "
             + "r.approve_reason, r.created_at, r.updated_at, "
-            + "u.full_name, u.employee_code, "
+            + "u.username, u.full_name, u.employee_code, "
             + "rt.name as request_type_name, rt.code as request_type_code, "
             + "d.name as department_name, "
             + "approver_user.full_name as approver_name, "
@@ -602,7 +602,7 @@ public class RequestDao extends BaseDao<Request, Long> {
         }
         request.setCreatedByAccountId(createdByAccountId);
         logger.debug("Mapped request {}: created_by_account_id={}", rs.getLong("id"), createdByAccountId);
-        
+
         request.setCreatedByUserId(rs.getLong("created_by_user_id"));
 
         // Handle nullable department_id

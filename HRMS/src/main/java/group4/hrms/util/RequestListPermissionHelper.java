@@ -289,37 +289,37 @@ public class RequestListPermissionHelper {
         if (request.isApproved() && isOTCreatedByManager) {
             Long currentApprover = request.getCurrentApproverAccountId();
             Long creatorAccountId = request.getCreatedByAccountId();
-            
+
             System.out.println("[DEBUG] Manager-created OT check: requestId=" + request.getId()
                 + ", currentApprover=" + currentApprover
                 + ", creatorAccountId=" + creatorAccountId
                 + ", currentAccountId=" + currentAccountId
                 + ", currentUserJobLevel=" + jobLevel);
-            
+
             // Rule 1: Cannot override your own decision
-            if (currentAccountId != null && currentApprover != null 
+            if (currentAccountId != null && currentApprover != null
                 && currentAccountId.equals(currentApprover)) {
-                System.out.println("[DEBUG] User is the last approver (accountId=" + currentAccountId 
+                System.out.println("[DEBUG] User is the last approver (accountId=" + currentAccountId
                     + "), cannot override own decision");
                 return false;
             }
-            
+
             // Rule 2: Must be at manager level (DEPT_MANAGER or above)
             if (jobLevel > JOB_LEVEL_DEPT_MANAGER) {
                 System.out.println("[DEBUG] User is not a manager, cannot override");
                 return false;
             }
-            
+
             // Rule 3: Check if current approver is a manager (not employee)
             // If currentApprover != creatorAccountId and != employee, it means a manager has already reviewed
             // We need to query the approver's job level to compare
             if (currentApprover != null && !currentApprover.equals(creatorAccountId)) {
                 // Try to get approver's job level
                 Integer approverJobLevel = getJobLevelFromAccountId(currentApprover);
-                
+
                 System.out.println("[DEBUG] Previous approver jobLevel=" + approverJobLevel
                     + ", current user jobLevel=" + jobLevel);
-                
+
                 if (approverJobLevel != null) {
                     // Only allow override if current user has HIGHER authority (lower job level number)
                     if (jobLevel >= approverJobLevel) {
@@ -328,7 +328,7 @@ public class RequestListPermissionHelper {
                     }
                 }
             }
-            
+
             // Rule 4: Allow override if user is creator (manager who made the request) or superior
             // Creator can override employee's approval (first override ONLY)
             if (currentAccountId != null && currentAccountId.equals(creatorAccountId)) {
@@ -340,7 +340,7 @@ public class RequestListPermissionHelper {
                 System.out.println("[DEBUG] User is creator manager, can override employee's approval");
                 return true;
             }
-            
+
             // Superior manager can override (already passed hierarchy check in Rule 3)
             System.out.println("[DEBUG] User is superior manager, can override");
             return true;
@@ -351,13 +351,13 @@ public class RequestListPermissionHelper {
         // 2. User has higher authority than the current approver
         if (request.isApproved() && jobLevel <= JOB_LEVEL_HR_STAFF) {
             Long currentApprover = request.getCurrentApproverAccountId();
-            
+
             // Cannot override your own decision
-            if (currentAccountId != null && currentApprover != null 
+            if (currentAccountId != null && currentApprover != null
                 && currentAccountId.equals(currentApprover)) {
                 return false;
             }
-            
+
             // If there's a current approver, check hierarchy
             if (currentApprover != null) {
                 Integer approverJobLevel = getJobLevelFromAccountId(currentApprover);
@@ -366,7 +366,7 @@ public class RequestListPermissionHelper {
                     return jobLevel < approverJobLevel;
                 }
             }
-            
+
             // No approver yet, or couldn't determine level - allow HR to approve
             return true;
         }
@@ -427,7 +427,7 @@ public class RequestListPermissionHelper {
     /**
      * Get job level from account ID by querying user and position
      * Returns null if not found or error occurs
-     * 
+     *
      * @param accountId Account ID to lookup
      * @return Job level (1-5) or null if not found
      */
@@ -435,39 +435,39 @@ public class RequestListPermissionHelper {
         if (accountId == null) {
             return null;
         }
-        
+
         try {
             // Query account to get user_id
             group4.hrms.dao.AccountDao accountDao = new group4.hrms.dao.AccountDao();
             java.util.Optional<group4.hrms.model.Account> accountOpt = accountDao.findById(accountId);
-            
+
             if (!accountOpt.isPresent()) {
                 return null;
             }
-            
+
             Long userId = accountOpt.get().getUserId();
             if (userId == null) {
                 return null;
             }
-            
+
             // Query user to get position_id
             group4.hrms.dao.UserDao userDao = new group4.hrms.dao.UserDao();
             java.util.Optional<User> userOpt = userDao.findById(userId);
-            
+
             if (!userOpt.isPresent() || userOpt.get().getPositionId() == null) {
                 return null;
             }
-            
+
             // Query position to get job_level
             group4.hrms.dao.PositionDao positionDao = new group4.hrms.dao.PositionDao();
             java.util.Optional<Position> positionOpt = positionDao.findById(userOpt.get().getPositionId());
-            
+
             if (positionOpt.isPresent() && positionOpt.get().getJobLevel() != null) {
                 return positionOpt.get().getJobLevel();
             }
-            
+
             return null;
-            
+
         } catch (Exception e) {
             System.err.println("[ERROR] Failed to get job level for accountId " + accountId + ": " + e.getMessage());
             return null;

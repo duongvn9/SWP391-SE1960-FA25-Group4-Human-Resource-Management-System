@@ -146,7 +146,7 @@
                                                     <c:choose>
                                                         <c:when test="${req.status == 'APPROVED'}">
                                                             <button onclick="openApprovalModal(${req.id}, '${req.title}')"
-                                                                class="btn btn-warning" 
+                                                                class="btn btn-warning"
                                                                 title="Review Request"
                                                                 data-bs-toggle="tooltip" data-bs-placement="top">
                                                                 <i class="fas fa-clipboard-check"></i>
@@ -154,7 +154,7 @@
                                                         </c:when>
                                                         <c:otherwise>
                                                             <button onclick="openApprovalModal(${req.id}, '${req.title}')"
-                                                                class="btn btn-warning" 
+                                                                class="btn btn-warning"
                                                                 title="Approve Request"
                                                                 data-bs-toggle="tooltip" data-bs-placement="top">
                                                                 <i class="fas fa-clipboard-check"></i>
