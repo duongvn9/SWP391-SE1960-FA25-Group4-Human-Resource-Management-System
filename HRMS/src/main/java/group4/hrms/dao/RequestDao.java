@@ -1,18 +1,24 @@
 package group4.hrms.dao;
 
-import group4.hrms.model.Request;
-import group4.hrms.dto.RequestDto;
-import group4.hrms.dto.RequestListFilter;
-import group4.hrms.util.DatabaseUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import group4.hrms.dto.RequestDto;
+import group4.hrms.dto.RequestListFilter;
+import group4.hrms.model.Request;
+import group4.hrms.util.DatabaseUtil;
 
 /**
  * Data Access Object for Request entity. Handles database operations for leave
@@ -55,7 +61,7 @@ public class RequestDao extends BaseDao<Request, Long> {
     protected String createUpdateSql() {
         return "UPDATE requests SET request_type_id = ?, title = ?, detail = ?, "
                 + "department_id = ?, status = ?, current_approver_account_id = ?, "
-                + "updated_at = ? WHERE id = ?";
+                + "approve_reason = ?, updated_at = ? WHERE id = ?";
     }
 
     @Override
@@ -102,30 +108,40 @@ public class RequestDao extends BaseDao<Request, Long> {
             stmt.setNull(6, java.sql.Types.BIGINT);
         }
 
-        setTimestamp(stmt, 7, LocalDateTime.now());
-        stmt.setLong(8, request.getId());
+        // Handle nullable approve_reason
+        if (request.getApproveReason() != null && !request.getApproveReason().trim().isEmpty()) {
+            stmt.setString(7, request.getApproveReason());
+        } else {
+            stmt.setNull(7, java.sql.Types.VARCHAR);
+        }
+
+        setTimestamp(stmt, 8, LocalDateTime.now());
+        stmt.setLong(9, request.getId());
     }
 
     private static final String SELECT_ALL
             = "SELECT id, request_type_id, title, detail, created_by_account_id, "
             + "created_by_user_id, department_id, status, current_approver_account_id, "
-            + "created_at, updated_at FROM " + TABLE_NAME;
+            + "approve_reason, created_at, updated_at FROM " + TABLE_NAME;
 
     private static final String SELECT_BY_ID = SELECT_ALL + " WHERE id = ?";
 
     private static final String SELECT_WITH_DETAILS
             = "SELECT r.id, r.request_type_id, r.title, r.detail, r.created_by_account_id, "
             + "r.created_by_user_id, r.department_id, r.status, r.current_approver_account_id, "
-            + "r.created_at, r.updated_at, "
-            + "u.username, u.full_name, u.employee_code, "
+            + "r.approve_reason, r.created_at, r.updated_at, "
+            + "u.full_name, u.employee_code, "
             + "rt.name as request_type_name, rt.code as request_type_code, "
             + "d.name as department_name, "
-            + "approver.full_name as approver_name "
+            + "approver_user.full_name as approver_name, "
+            + "COALESCE(COUNT(a.id), 0) as attachment_count "
             + "FROM " + TABLE_NAME + " r "
             + "LEFT JOIN users u ON r.created_by_user_id = u.id "
             + "LEFT JOIN request_types rt ON r.request_type_id = rt.id "
             + "LEFT JOIN departments d ON u.department_id = d.id "
-            + "LEFT JOIN users approver ON r.current_approver_account_id = approver.id ";
+            + "LEFT JOIN accounts approver_acc ON r.current_approver_account_id = approver_acc.id "
+            + "LEFT JOIN users approver_user ON approver_acc.user_id = approver_user.id "
+            + "LEFT JOIN attachments a ON a.owner_type = 'REQUEST' AND a.owner_id = r.id ";
 
     private static final String INSERT
             = "INSERT INTO " + TABLE_NAME + " (request_type_id, title, detail, created_by_account_id, "
@@ -134,7 +150,7 @@ public class RequestDao extends BaseDao<Request, Long> {
 
     private static final String UPDATE
             = "UPDATE " + TABLE_NAME + " SET request_type_id = ?, title = ?, detail = ?, "
-            + "department_id = ?, status = ?, current_approver_account_id = ?, updated_at = ? WHERE id = ?";
+            + "department_id = ?, status = ?, current_approver_account_id = ?, approve_reason = ?, updated_at = ? WHERE id = ?";
 
     private static final String DELETE = "DELETE FROM " + TABLE_NAME + " WHERE id = ?";
 
@@ -291,8 +307,15 @@ public class RequestDao extends BaseDao<Request, Long> {
                 stmt.setNull(6, java.sql.Types.BIGINT);
             }
 
-            stmt.setTimestamp(7, Timestamp.valueOf(request.getUpdatedAt()));
-            stmt.setLong(8, request.getId());
+            // Handle nullable approve_reason
+            if (request.getApproveReason() != null && !request.getApproveReason().trim().isEmpty()) {
+                stmt.setString(7, request.getApproveReason());
+            } else {
+                stmt.setNull(7, java.sql.Types.VARCHAR);
+            }
+
+            stmt.setTimestamp(8, Timestamp.valueOf(request.getUpdatedAt()));
+            stmt.setLong(9, request.getId());
 
             logger.debug("Executing update with parameters: id={}, typeId={}, status={}",
                     request.getId(), request.getRequestTypeId(), request.getStatus());
@@ -443,7 +466,7 @@ public class RequestDao extends BaseDao<Request, Long> {
     public List<RequestDto> findAllWithDetails(int offset, int limit) {
         logger.debug("Finding all requests with details: offset={}, limit={}", offset, limit);
         List<RequestDto> requests = new ArrayList<>();
-        String sql = SELECT_WITH_DETAILS + " ORDER BY r.created_at DESC LIMIT ? OFFSET ?";
+        String sql = SELECT_WITH_DETAILS + " GROUP BY r.id ORDER BY r.created_at DESC LIMIT ? OFFSET ?";
 
         try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -482,7 +505,7 @@ public class RequestDao extends BaseDao<Request, Long> {
         logger.debug("Finding requests by userId with details: userId={}, offset={}, limit={}",
                 userId, offset, limit);
         List<RequestDto> requests = new ArrayList<>();
-        String sql = SELECT_WITH_DETAILS + " WHERE r.created_by_user_id = ? ORDER BY r.created_at DESC LIMIT ? OFFSET ?";
+        String sql = SELECT_WITH_DETAILS + " WHERE r.created_by_user_id = ? GROUP BY r.id ORDER BY r.created_at DESC LIMIT ? OFFSET ?";
 
         try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -505,6 +528,44 @@ public class RequestDao extends BaseDao<Request, Long> {
         }
 
         return requests;
+    }
+
+    /**
+     * Find request by ID with detailed information (joined with user, request_type,
+     * department, and approver tables). Returns complete request information
+     * including creator details, request type, department, and approver information.
+     *
+     * @param requestId the ID of the request to find
+     * @return Optional containing RequestDto with detailed information if found, empty otherwise
+     * @throws RuntimeException if database error occurs
+     */
+    public Optional<RequestDto> findByIdWithDetails(Long requestId) {
+        logger.debug("Finding request by id with details: requestId={}", requestId);
+        String sql = SELECT_WITH_DETAILS + " WHERE r.id = ? GROUP BY r.id";
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, requestId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    RequestDto dto = mapResultSetToDto(rs);
+                    logger.debug("Found request with details: id={}, title={}, status={}",
+                            dto.getId(), dto.getTitle(), dto.getStatus());
+                    return Optional.of(dto);
+                }
+            }
+
+            logger.debug("No request found with id: {}", requestId);
+
+        } catch (SQLException e) {
+            logger.error("Database error finding request by id with details. RequestId: {}. SQL State: {}, Error Code: {}",
+                    requestId, e.getSQLState(), e.getErrorCode(), e);
+            throw new RuntimeException("Error finding request by id with details: " + requestId, e);
+        }
+
+        return Optional.empty();
     }
 
     @Override
@@ -535,7 +596,13 @@ public class RequestDao extends BaseDao<Request, Long> {
             }
         }
 
-        request.setCreatedByAccountId(rs.getLong("created_by_account_id"));
+        Long createdByAccountId = rs.getLong("created_by_account_id");
+        if (rs.wasNull()) {
+            createdByAccountId = null;
+        }
+        request.setCreatedByAccountId(createdByAccountId);
+        logger.debug("Mapped request {}: created_by_account_id={}", rs.getLong("id"), createdByAccountId);
+        
         request.setCreatedByUserId(rs.getLong("created_by_user_id"));
 
         // Handle nullable department_id
@@ -550,6 +617,12 @@ public class RequestDao extends BaseDao<Request, Long> {
         Long currentApproverId = (Long) rs.getObject("current_approver_account_id");
         if (currentApproverId != null) {
             request.setCurrentApproverAccountId(currentApproverId);
+        }
+
+        // Handle approve_reason (reason from approver when approve/reject)
+        String approveReason = rs.getString("approve_reason");
+        if (approveReason != null && !approveReason.trim().isEmpty()) {
+            request.setApproveReason(approveReason);
         }
 
         request.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
@@ -571,7 +644,6 @@ public class RequestDao extends BaseDao<Request, Long> {
         RequestDto dto = new RequestDto(mapResultSetToEntity(rs));
 
         // Thông tin user
-        dto.setUserName(rs.getString("username"));
         dto.setUserFullName(rs.getString("full_name"));
         dto.setEmployeeCode(rs.getString("employee_code"));
 
@@ -584,6 +656,17 @@ public class RequestDao extends BaseDao<Request, Long> {
 
         // Thông tin approver
         dto.setApproverName(rs.getString("approver_name"));
+
+        // Thông tin approval (cho APPROVED/REJECTED requests)
+        dto.setRejectReason(rs.getString("approve_reason")); // Dùng approve_reason cho cả approve và reject
+        // Sử dụng updated_at làm approval time
+        Timestamp updatedAtTimestamp = rs.getTimestamp("updated_at");
+        if (updatedAtTimestamp != null) {
+            dto.setApprovedAt(updatedAtTimestamp.toLocalDateTime());
+        }
+
+        // Attachment count
+        dto.setAttachmentCount(rs.getInt("attachment_count"));
 
         return dto;
     }
@@ -845,6 +928,9 @@ public class RequestDao extends BaseDao<Request, Long> {
         // Request type information
         dto.setRequestTypeName(rs.getString("request_type_name"));
         dto.setRequestTypeCode(rs.getString("request_type_code"));
+
+        // Attachment count
+        dto.setAttachmentCount(rs.getInt("attachment_count"));
 
         return dto;
     }
@@ -1173,14 +1259,16 @@ public class RequestDao extends BaseDao<Request, Long> {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT r.id, r.request_type_id, r.title, r.detail, r.created_by_account_id, ");
         sql.append("r.created_by_user_id, r.department_id, r.status, r.current_approver_account_id, ");
-        sql.append("r.created_at, r.updated_at, ");
+        sql.append("r.approve_reason, r.created_at, r.updated_at, ");
         sql.append("u.employee_code, u.full_name, ");
         sql.append("d.name as department_name, ");
-        sql.append("rt.name as request_type_name, rt.code as request_type_code ");
+        sql.append("rt.name as request_type_name, rt.code as request_type_code, ");
+        sql.append("COALESCE(COUNT(a.id), 0) as attachment_count ");
         sql.append("FROM ").append(TABLE_NAME).append(" r ");
         sql.append("LEFT JOIN users u ON r.created_by_user_id = u.id ");
         sql.append("LEFT JOIN departments d ON u.department_id = d.id ");
         sql.append("LEFT JOIN request_types rt ON r.request_type_id = rt.id ");
+        sql.append("LEFT JOIN attachments a ON a.owner_type = 'REQUEST' AND a.owner_id = r.id ");
         sql.append("WHERE 1=1 ");
 
         List<Object> params = new ArrayList<>();
@@ -1238,6 +1326,9 @@ public class RequestDao extends BaseDao<Request, Long> {
             params.add(searchPattern);
             params.add(searchPattern);
         }
+
+        // Group by for attachment count
+        sql.append("GROUP BY r.id ");
 
         // Order by
         if ("all".equals(filter.getScope())) {
