@@ -813,7 +813,6 @@ public class UserDao {
     }
 
     /**
-<<<<<<< HEAD
      * Find subordinate user IDs for a given manager based on department hierarchy and job level.
      * This method is optimized for filtering requests by subordinate scope.
      *
@@ -882,8 +881,6 @@ public class UserDao {
     }
 
     /**
-=======
->>>>>>> b2350af44c15db8a209189b323b7c23cc4568bb9
      * Tìm users theo status
      *
      * @param status Status của user (active, inactive, terminated)

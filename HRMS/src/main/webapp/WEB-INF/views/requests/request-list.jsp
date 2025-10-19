@@ -250,23 +250,6 @@
                                 </select>
                             </div>
 
-                            <!-- Date Range -->
-                            <div class="col-md-3">
-                                <label for="fromDate" class="form-label">
-                                    <i class="fas fa-calendar-alt"></i> From Date
-                                </label>
-                                <input type="date" name="fromDate" id="fromDate" class="form-control"
-                                       value="${filter.fromDate != null ? filter.fromDate : ''}">
-                            </div>
-
-                            <div class="col-md-3">
-                                <label for="toDate" class="form-label">
-                                    <i class="fas fa-calendar-alt"></i> To Date
-                                </label>
-                                <input type="date" name="toDate" id="toDate" class="form-control"
-                                       value="${filter.toDate != null ? filter.toDate : ''}">
-                            </div>
-
                             <!-- Employee Filter (Manager/HR only) -->
                             <c:if test="${not empty employees}">
                                 <div class="col-md-3">
@@ -292,6 +275,23 @@
                                 <input type="text" name="search" id="search" class="form-control"
                                        placeholder="Search by title or reason"
                                        value="${filter.searchKeyword != null ? filter.searchKeyword : ''}">
+                            </div>
+
+                            <!-- Date Range -->
+                            <div class="col-md-3">
+                                <label for="fromDate" class="form-label">
+                                    <i class="fas fa-calendar-alt"></i> From Date
+                                </label>
+                                <input type="date" name="fromDate" id="fromDate" class="form-control"
+                                       value="${filter.fromDate != null ? filter.fromDate : ''}">
+                            </div>
+
+                            <div class="col-md-3">
+                                <label for="toDate" class="form-label">
+                                    <i class="fas fa-calendar-alt"></i> To Date
+                                </label>
+                                <input type="date" name="toDate" id="toDate" class="form-control"
+                                       value="${filter.toDate != null ? filter.toDate : ''}">
                             </div>
 
                             <!-- Action Buttons -->

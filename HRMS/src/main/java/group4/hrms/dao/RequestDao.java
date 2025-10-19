@@ -117,22 +117,14 @@ public class RequestDao extends BaseDao<Request, Long> {
             = "SELECT r.id, r.request_type_id, r.title, r.detail, r.created_by_account_id, "
             + "r.created_by_user_id, r.department_id, r.status, r.current_approver_account_id, "
             + "r.created_at, r.updated_at, "
-<<<<<<< HEAD
             + "u.username, u.full_name, u.employee_code, "
             + "rt.name as request_type_name, rt.code as request_type_code, "
             + "d.name as department_name, "
-=======
-            + "u.username, u.full_name, "
-            + "rt.name as request_type_name, rt.code as request_type_code, "
->>>>>>> b2350af44c15db8a209189b323b7c23cc4568bb9
             + "approver.full_name as approver_name "
             + "FROM " + TABLE_NAME + " r "
             + "LEFT JOIN users u ON r.created_by_user_id = u.id "
             + "LEFT JOIN request_types rt ON r.request_type_id = rt.id "
-<<<<<<< HEAD
             + "LEFT JOIN departments d ON u.department_id = d.id "
-=======
->>>>>>> b2350af44c15db8a209189b323b7c23cc4568bb9
             + "LEFT JOIN users approver ON r.current_approver_account_id = approver.id ";
 
     private static final String INSERT
@@ -697,129 +689,6 @@ public class RequestDao extends BaseDao<Request, Long> {
     }
 
     /**
-<<<<<<< HEAD
-     * Find requests with advanced filtering and pagination.
-     * Supports filtering by scope, type, status, date range, employee, and search.
-     *
-     * @param filter RequestListFilter containing all filter criteria
-     * @param offset Starting position for pagination
-     * @param limit Number of records to return
-     * @return List of RequestDto with joined user and department info
-     * @throws RuntimeException if database error occurs
-     */
-    public List<RequestDto> findWithFilters(RequestListFilter filter, int offset, int limit) {
-        logger.debug("Finding requests with filters: filter={}, offset={}, limit={}", filter, offset, limit);
-        List<RequestDto> requests = new ArrayList<>();
-
-        StringBuilder sql = new StringBuilder();
-        sql.append("SELECT r.id, r.request_type_id, r.title, r.detail, r.created_by_account_id, ");
-        sql.append("r.created_by_user_id, r.department_id, r.status, r.current_approver_account_id, ");
-        sql.append("r.created_at, r.updated_at, ");
-        sql.append("u.employee_code, u.full_name, ");
-        sql.append("d.name as department_name, ");
-        sql.append("rt.name as request_type_name, rt.code as request_type_code ");
-        sql.append("FROM ").append(TABLE_NAME).append(" r ");
-        sql.append("LEFT JOIN users u ON r.created_by_user_id = u.id ");
-        sql.append("LEFT JOIN departments d ON u.department_id = d.id ");
-        sql.append("LEFT JOIN request_types rt ON r.request_type_id = rt.id ");
-        sql.append("WHERE 1=1 ");
-
-        List<Object> params = new ArrayList<>();
-
-        // Status filter (excluding CANCELLED by default)
-        if (filter.isShowCancelled()) {
-            if (filter.hasStatusFilter()) {
-                sql.append("AND r.status = ? ");
-                params.add(filter.getStatus());
-            }
-        } else {
-            if (filter.hasStatusFilter()) {
-                sql.append("AND r.status = ? ");
-                params.add(filter.getStatus());
-            } else {
-                sql.append("AND r.status != 'CANCELLED' ");
-            }
-        }
-
-        // Type filter
-        if (filter.hasTypeFilter()) {
-            sql.append("AND r.request_type_id = ? ");
-            params.add(filter.getRequestTypeId());
-        }
-
-        // Date range filter
-        if (filter.getFromDate() != null) {
-            sql.append("AND DATE(r.created_at) >= ? ");
-            params.add(filter.getFromDate());
-        }
-        if (filter.getToDate() != null) {
-            sql.append("AND DATE(r.created_at) <= ? ");
-            params.add(filter.getToDate());
-        }
-
-        // Employee filter
-        if (filter.hasEmployeeFilter()) {
-            sql.append("AND r.created_by_user_id = ? ");
-            params.add(filter.getEmployeeId());
-        }
-
-        // Search filter (title or detail)
-        if (filter.hasSearch()) {
-            sql.append("AND (r.title LIKE ? OR JSON_UNQUOTE(JSON_EXTRACT(r.detail, '$.reason')) LIKE ?) ");
-            String searchPattern = "%" + filter.getSearchKeyword() + "%";
-            params.add(searchPattern);
-            params.add(searchPattern);
-        }
-
-        // Order by department (for "all" scope) then by created_at
-        if ("all".equals(filter.getScope())) {
-            sql.append("ORDER BY d.name ASC, r.created_at DESC ");
-        } else {
-            sql.append("ORDER BY r.created_at DESC ");
-        }
-
-        sql.append("LIMIT ? OFFSET ?");
-        params.add(limit);
-        params.add(offset);
-
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
-
-            // Set parameters
-            for (int i = 0; i < params.size(); i++) {
-                Object param = params.get(i);
-                if (param instanceof Long) {
-                    stmt.setLong(i + 1, (Long) param);
-                } else if (param instanceof Integer) {
-                    stmt.setInt(i + 1, (Integer) param);
-                } else if (param instanceof LocalDate) {
-                    stmt.setDate(i + 1, java.sql.Date.valueOf((LocalDate) param));
-                } else {
-                    stmt.setString(i + 1, param.toString());
-                }
-            }
-
-            logger.debug("Executing query: {}", sql.toString());
-            logger.debug("Parameters: {}", params);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    requests.add(mapResultSetToDtoExtended(rs));
-                }
-            }
-
-            logger.debug("Found {} requests with filters", requests.size());
-
-        } catch (SQLException e) {
-            logger.error("Database error finding requests with filters. Filter: {}, Offset: {}, Limit: {}. SQL State: {}, Error Code: {}",
-                    filter, offset, limit, e.getSQLState(), e.getErrorCode(), e);
-            throw new RuntimeException("Error finding requests with filters", e);
-        }
-
-        return requests;
-    }
-
-    /**
      * Count total requests matching filter criteria.
      * Used for pagination metadata calculation.
      *
@@ -981,8 +850,6 @@ public class RequestDao extends BaseDao<Request, Long> {
     }
 
     /**
-=======
->>>>>>> b2350af44c15db8a209189b323b7c23cc4568bb9
      * Find approved OT requests by user ID within a specific date range. Used
      * for conflict detection between leave requests and OT requests. Parses
      * JSON detail to extract otDate for comparison. Only returns requests with
@@ -1283,7 +1150,6 @@ public class RequestDao extends BaseDao<Request, Long> {
 
         return false;
     }
-<<<<<<< HEAD
 
     /**
      * Find requests with advanced filtering and pagination.
@@ -1524,7 +1390,3 @@ public class RequestDao extends BaseDao<Request, Long> {
     }
 
 }
-
-=======
-}
->>>>>>> b2350af44c15db8a209189b323b7c23cc4568bb9
