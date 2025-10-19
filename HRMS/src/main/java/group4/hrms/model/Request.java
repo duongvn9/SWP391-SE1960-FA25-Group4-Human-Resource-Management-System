@@ -20,9 +20,10 @@ public class Request {
     private Long createdByUserId; // User ID của người tạo
     private Long departmentId; // Department ID
     private String status; // PENDING, APPROVED, REJECTED, CANCELLED
-    private Long currentApproverAccountId; // Account ID của người duyệt hiện tại
+    private Long currentApproverAccountId; // Account ID của người duyệt (PENDING) hoặc người đã duyệt/từ chối (APPROVED/REJECTED)
+    private String approveReason; // Lý do duyệt/từ chối
     private LocalDateTime createdAt; // Thời gian tạo
-    private LocalDateTime updatedAt; // Thời gian cập nhật cuối
+    private LocalDateTime updatedAt; // Thời gian cập nhật cuối (dùng làm approval time)
 
     // Transient fields for parsed details (not stored in database)
     private transient LeaveRequestDetail leaveDetail;
@@ -153,6 +154,16 @@ public class Request {
 
     public void setCurrentApproverAccountId(Long currentApproverAccountId) {
         this.currentApproverAccountId = currentApproverAccountId;
+    }
+
+    public String getApproveReason() {
+        return approveReason;
+    }
+
+    public void setApproveReason(String approveReason) {
+        this.approveReason = approveReason;
+        // Sync with rejectReason for backward compatibility
+        this.rejectReason = approveReason;
     }
 
     public LocalDateTime getCreatedAt() {

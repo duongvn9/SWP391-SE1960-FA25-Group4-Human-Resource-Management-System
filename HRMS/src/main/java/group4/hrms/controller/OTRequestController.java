@@ -1,23 +1,29 @@
 package group4.hrms.controller;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import group4.hrms.dao.HolidayDao;
 import group4.hrms.dao.RequestDao;
 import group4.hrms.dao.RequestTypeDao;
 import group4.hrms.dao.UserDao;
-import group4.hrms.model.Account;
-import group4.hrms.model.User;
 import group4.hrms.dto.OTBalance;
+import group4.hrms.model.Account;
+import group4.hrms.model.Attachment;
+import group4.hrms.model.User;
+import group4.hrms.service.AttachmentService;
 import group4.hrms.service.OTRequestService;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.Part;
 
 /**
  * Controller for handling OT (Overtime) Request operations.
@@ -36,6 +42,10 @@ import jakarta.servlet.http.HttpSession;
  * @see group4.hrms.service.OTRequestService
  */
 @WebServlet("/requests/ot/create")
+@MultipartConfig(
+    maxFileSize = 5 * 1024 * 1024,       // 5MB per file
+    maxRequestSize = 25 * 1024 * 1024    // 25MB total request size
+)
 public class OTRequestController extends HttpServlet {
     private static final Logger logger = Logger.getLogger(OTRequestController.class.getName());
 
@@ -281,20 +291,120 @@ public class OTRequestController extends HttpServlet {
                 new UserDao()
             );
 
-            // Call service.createOTRequest() with target user parameters
-            Long requestId = service.createOTRequest(
-                account.getId(),
-                targetUserId,
-                targetDepartmentId,
-                otDate,
-                startTime,
-                endTime,
-                reason,
-                employeeConsent
-            );
+            // Determine which method to call based on whether creating for subordinate
+            Long requestId;
+            if ("employee".equals(requestFor) && !user.getId().equals(targetUserId)) {
+                // Manager creating for employee - use createOTRequestForEmployee
+                logger.info("Manager creating OT for employee - using createOTRequestForEmployee method");
+                requestId = service.createOTRequestForEmployee(
+                    account.getId(),
+                    targetUserId,
+                    otDate,
+                    startTime,
+                    endTime,
+                    reason
+                );
+            } else {
+                // Employee creating for themselves - use createOTRequest
+                logger.info("Employee creating OT for self - using createOTRequest method");
+                requestId = service.createOTRequest(
+                    account.getId(),
+                    targetUserId,
+                    targetDepartmentId,
+                    otDate,
+                    startTime,
+                    endTime,
+                    reason,
+                    employeeConsent
+                );
+            }
+
+            logger.info("OT request created successfully with ID: " + requestId);
+
+            // Handle attachments - both file uploads and external links
+            try {
+                AttachmentService attachmentService = new AttachmentService();
+
+                // Check attachment type: "file" or "link"
+                String attachmentType = request.getParameter("attachmentType");
+
+                if ("link".equals(attachmentType)) {
+                    // Handle Google Drive link
+                    String driveLink = request.getParameter("driveLink");
+
+                    if (driveLink != null && !driveLink.trim().isEmpty()) {
+                        logger.info(String.format("Processing Google Drive link for OT request ID: %d - URL: %s",
+                            requestId, driveLink));
+
+                        // Save external link to database
+                        Attachment linkAttachment = attachmentService.saveExternalLink(
+                            driveLink.trim(),
+                            requestId,
+                            "REQUEST",
+                            account.getId(),
+                            "Google Drive Link"
+                        );
+
+                        logger.info(String.format("Successfully saved external link attachment: id=%d",
+                            linkAttachment.getId()));
+                    }
+
+                } else {
+                    // Handle file uploads (default)
+                    Collection<Part> fileParts = request.getParts().stream()
+                        .filter(part -> "attachments".equals(part.getName()) && part.getSize() > 0)
+                        .collect(Collectors.toList());
+
+                    if (!fileParts.isEmpty()) {
+                        logger.info(String.format("Processing %d file attachment(s) for OT request ID: %d",
+                            fileParts.size(), requestId));
+
+                        // Get upload base path - save to webapp/assets/img/Request/
+                        String uploadBasePath = getServletContext().getRealPath("/assets/img/Request");
+                        if (uploadBasePath == null) {
+                            // Fallback to system temp directory if realPath is not available
+                            uploadBasePath = System.getProperty("java.io.tmpdir");
+                            logger.warning("Using temp directory for uploads: " + uploadBasePath);
+                        } else {
+                            // Create directory if it doesn't exist
+                            java.io.File uploadDir = new java.io.File(uploadBasePath);
+                            if (!uploadDir.exists()) {
+                                boolean created = uploadDir.mkdirs();
+                                if (created) {
+                                    logger.info("Created upload directory: " + uploadBasePath);
+                                } else {
+                                    logger.warning("Failed to create upload directory: " + uploadBasePath);
+                                }
+                            }
+                        }
+
+                        // Save files to filesystem and database
+                        List<Attachment> attachments = attachmentService.saveFiles(
+                            fileParts,
+                            requestId,
+                            "REQUEST",
+                            account.getId(),
+                            uploadBasePath
+                        );
+
+                        logger.info(String.format("Successfully saved %d file attachment(s) for OT request ID: %d",
+                            attachments.size(), requestId));
+                    }
+                }
+
+            } catch (Exception fileError) {
+                // Attachment handling failed - log error and rollback the request creation
+                logger.severe(String.format("Attachment handling failed for OT request ID: %d, error: %s",
+                    requestId, fileError.getMessage()));
+                fileError.printStackTrace();
+
+                // TODO: Implement transaction rollback - delete the created request
+                // For now, we'll throw an exception to inform the user
+                throw new Exception("OT request was created but attachment handling failed. " +
+                    "Please contact IT support with request ID: " + requestId, fileError);
+            }
 
             // Handle success: set success message attribute
-            logger.info("OT request created successfully with ID: " + requestId);
             request.setAttribute("success", "OT request submitted successfully! Request ID: " + requestId);
 
         } catch (IllegalArgumentException e) {
@@ -336,6 +446,18 @@ public class OTRequestController extends HttpServlet {
 
             OTBalance otBalance = service.getOTBalance(user.getId());
             request.setAttribute("otBalance", otBalance);
+
+            // Reload subordinates for dropdown
+            try {
+                UserDao userDao = new UserDao();
+                List<User> subordinates = userDao.getSubordinates(user.getId());
+                if (subordinates != null && !subordinates.isEmpty()) {
+                    request.setAttribute("departmentEmployees", subordinates);
+                    logger.info("Reloaded " + subordinates.size() + " subordinates for user " + user.getId());
+                }
+            } catch (Exception e) {
+                logger.warning("Error reloading subordinates: " + e.getMessage());
+            }
 
         } catch (Exception e) {
             logger.severe("Error reloading OT balance: " + e.getMessage());

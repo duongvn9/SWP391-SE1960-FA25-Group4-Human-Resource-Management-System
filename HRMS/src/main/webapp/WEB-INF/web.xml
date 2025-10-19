@@ -2,6 +2,25 @@
 <web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd" version="6.0">
 
+    <!-- File Upload Configuration -->
+    <context-param>
+        <param-name>upload.base.path</param-name>
+        <param-value>uploads</param-value>
+        <description>Base path for file uploads (relative to application root)</description>
+    </context-param>
+
+    <context-param>
+        <param-name>upload.max.file.size</param-name>
+        <param-value>5242880</param-value>
+        <description>Maximum file size in bytes (5MB)</description>
+    </context-param>
+
+    <context-param>
+        <param-name>upload.max.request.size</param-name>
+        <param-value>26214400</param-value>
+        <description>Maximum request size in bytes (25MB)</description>
+    </context-param>
+
     <!-- Default servlet to serve static content -->
     <servlet-mapping>
         <servlet-name>default</servlet-name>

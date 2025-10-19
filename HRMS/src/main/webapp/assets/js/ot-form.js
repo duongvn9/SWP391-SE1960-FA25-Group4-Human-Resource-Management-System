@@ -418,5 +418,65 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // File upload preview functionality
+    const attachmentsInput = document.getElementById('attachments');
+    const filePreviewList = document.getElementById('filePreviewList');
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+
+    if (attachmentsInput) {
+        attachmentsInput.addEventListener('change', function(e) {
+            filePreviewList.innerHTML = '';
+            const files = Array.from(e.target.files);
+
+            if (files.length === 0) {
+                return;
+            }
+
+            files.forEach((file, index) => {
+                const fileSize = file.size;
+                const fileSizeKB = (fileSize / 1024).toFixed(1);
+                const fileSizeMB = (fileSize / (1024 * 1024)).toFixed(2);
+                const isOverSize = fileSize > MAX_FILE_SIZE;
+
+                const fileItem = document.createElement('div');
+                fileItem.className = 'alert py-2 px-3 mb-2 d-flex justify-content-between align-items-center ' +
+                                    (isOverSize ? 'alert-danger' : 'alert-info');
+
+                const fileInfo = document.createElement('div');
+                fileInfo.innerHTML = '<i class="fas fa-file me-2"></i>' +
+                                    '<strong>' + file.name + '</strong> ' +
+                                    '<small class="text-muted">(' +
+                                    (fileSizeKB < 1024 ? fileSizeKB + ' KB' : fileSizeMB + ' MB') +
+                                    ')</small>';
+
+                if (isOverSize) {
+                    const errorMsg = document.createElement('small');
+                    errorMsg.className = 'd-block text-danger mt-1';
+                    errorMsg.innerHTML = '<i class="fas fa-exclamation-triangle"></i> File size exceeds 5MB limit';
+                    fileInfo.appendChild(errorMsg);
+                }
+
+                fileItem.appendChild(fileInfo);
+                filePreviewList.appendChild(fileItem);
+            });
+
+            // Check if any file exceeds size limit
+            const hasOversizedFile = files.some(file => file.size > MAX_FILE_SIZE);
+            if (hasOversizedFile) {
+                // Disable submit button
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.title = 'Please remove files larger than 5MB';
+                }
+            } else {
+                // Enable submit button (if not already disabled by form submission)
+                if (submitBtn && !submitBtn.innerHTML.includes('Submitting')) {
+                    submitBtn.disabled = false;
+                    submitBtn.title = '';
+                }
+            }
+        });
+    }
+
     console.log('OT form initialized successfully');
 });

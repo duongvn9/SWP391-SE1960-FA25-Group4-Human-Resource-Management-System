@@ -52,6 +52,23 @@
 
                     <!-- Content Area -->
                     <div class="content-area">
+                        <!-- Breadcrumb Navigation -->
+                        <nav aria-label="breadcrumb" class="mb-3">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item">
+                                    <a href="${pageContext.request.contextPath}/dashboard">
+                                        <i class="fas fa-home"></i> Home
+                                    </a>
+                                </li>
+                                <li class="breadcrumb-item">
+                                    <a href="${pageContext.request.contextPath}/requests">
+                                        <i class="fas fa-clipboard-list"></i> Requests
+                                    </a>
+                                </li>
+                                <li class="breadcrumb-item active" aria-current="page">Create Leave Request</li>
+                            </ol>
+                        </nav>
+
                         <!-- Page Title -->
                         <div class="page-head d-flex justify-content-between align-items-center">
                             <div>
@@ -214,7 +231,7 @@
 
                                 <!-- Form -->
                                 <form method="post" action="${pageContext.request.contextPath}/requests/leave/create"
-                                    id="leaveRequestForm" novalidate>
+                                    id="leaveRequestForm" enctype="multipart/form-data" novalidate>
 
                                     <!-- Leave Type -->
                                     <div class="mb-3">
@@ -364,31 +381,59 @@
                                         </div>
                                     </div>
 
-                                    <!-- File Upload (Optional) -->
+                                    <!-- Supporting Documents (Optional) - Hybrid: File Upload or Link -->
                                     <div class="mt-3">
-                                        <label for="attachment" class="form-label">
-                                            <i class="fas fa-paperclip"></i> Supporting Document
+                                        <label class="form-label">
+                                            <i class="fas fa-paperclip"></i> Supporting Documents
                                             <span class="text-muted">(Optional)</span>
                                         </label>
-                                        <div class="file-upload-wrapper">
-                                            <input type="file" class="form-control" id="attachment" name="attachment"
-                                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+
+                                        <!-- Attachment Type Selection -->
+                                        <div class="btn-group w-100 mb-3" role="group" aria-label="Attachment Type">
+                                            <input type="radio" class="btn-check" name="attachmentType" id="attachmentTypeFile"
+                                                   value="file" checked autocomplete="off">
+                                            <label class="btn btn-outline-primary" for="attachmentTypeFile">
+                                                <i class="fas fa-upload me-1"></i> Upload File
+                                            </label>
+
+                                            <input type="radio" class="btn-check" name="attachmentType" id="attachmentTypeLink"
+                                                   value="link" autocomplete="off">
+                                            <label class="btn btn-outline-primary" for="attachmentTypeLink">
+                                                <i class="fab fa-google-drive me-1"></i> Google Drive Link
+                                            </label>
+                                        </div>
+
+                                        <!-- File Upload Section -->
+                                        <div id="fileUploadSection" class="file-upload-wrapper">
+                                            <input type="file" class="form-control" id="attachments" name="attachments"
+                                                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" multiple>
                                             <div class="form-text">
                                                 <i class="fas fa-info-circle"></i>
-                                                Accepted formats: PDF, DOC, DOCX, JPG, PNG (Max 5MB)
+                                                Accepted formats: PDF, JPG, PNG, DOC, DOCX (Max 5MB each)
                                             </div>
-                                            <div id="fileInfo" class="file-info d-none mt-2">
-                                                <i class="fas fa-file"></i>
-                                                <span id="fileName"></span>
-                                                <button type="button" class="btn-remove-file" id="removeFile">
-                                                    <i class="fas fa-times"></i>
-                                                </button>
+                                            <div id="filePreviewList" class="file-preview-list mt-2"></div>
+                                        </div>
+
+                                        <!-- Google Drive Link Section -->
+                                        <div id="driveLinkSection" class="drive-link-wrapper d-none">
+                                            <input type="url" class="form-control" id="driveLink" name="driveLink"
+                                                placeholder="Paste Google Drive link here (e.g., https://drive.google.com/file/d/...)">
+                                            <div class="form-text">
+                                                <i class="fas fa-info-circle"></i>
+                                                Paste a shareable Google Drive link to your supporting document
                                             </div>
-                                            <div id="certificateRequired" class="certificate-notice d-none mt-2">
-                                                <i class="fas fa-exclamation-circle"></i>
-                                                <strong>Certificate Required:</strong> This leave type requires a
-                                                medical certificate or supporting document.
+                                            <div id="driveLinkPreview" class="alert alert-info mt-2 d-none">
+                                                <i class="fab fa-google-drive me-2"></i>
+                                                <strong>Drive Link:</strong> <span id="driveLinkText"></span>
+                                                <button type="button" class="btn-close float-end" onclick="clearDriveLink()"></button>
                                             </div>
+                                        </div>
+
+                                        <!-- Certificate Required Notice -->
+                                        <div id="certificateRequired" class="certificate-notice d-none mt-2">
+                                            <i class="fas fa-exclamation-circle"></i>
+                                            <strong>Certificate Required:</strong> This leave type requires a
+                                            medical certificate or supporting document.
                                         </div>
                                     </div>
 
@@ -478,10 +523,7 @@
                         const reasonTextarea = document.getElementById('reason');
                         const charCount = document.getElementById('charCount');
 
-                        const attachmentInput = document.getElementById('attachment');
-                        const fileInfo = document.getElementById('fileInfo');
-                        const fileName = document.getElementById('fileName');
-                        const removeFileBtn = document.getElementById('removeFile');
+                        const attachmentInput = document.getElementById('attachments'); // Changed from 'attachment' to 'attachments'
 
                         // Leave type change handler
                         leaveTypeSelect.addEventListener('change', function () {
@@ -577,6 +619,10 @@
                                     if (halfDayPeriodContainer) {
                                         halfDayPeriodContainer.style.display = 'block';
                                     }
+                                    // Auto-fill end date same as start date for half-day
+                                    if (startDateInput.value) {
+                                        endDateInput.value = startDateInput.value;
+                                    }
                                     // Disable end date field
                                     endDateInput.disabled = true;
                                     endDateInput.required = false;
@@ -613,7 +659,14 @@
                         });
 
                         // Date change handlers
-                        startDateInput.addEventListener('change', updateDuration);
+                        startDateInput.addEventListener('change', function() {
+                            // Auto-fill end date for half-day leave
+                            const durationType = document.querySelector('input[name="durationType"]:checked')?.value;
+                            if (durationType === 'HALF_DAY' && this.value) {
+                                endDateInput.value = this.value;
+                            }
+                            updateDuration();
+                        });
                         endDateInput.addEventListener('change', updateDuration);
 
                         // Task 8.3: Update duration display in real-time
@@ -712,27 +765,8 @@
                             }
                         });
 
-                        // File upload
-                        attachmentInput.addEventListener('change', function () {
-                            if (this.files && this.files[0]) {
-                                const file = this.files[0];
-                                const maxSize = 5 * 1024 * 1024; // 5MB
-
-                                if (file.size > maxSize) {
-                                    alert('File size exceeds 5MB limit');
-                                    this.value = '';
-                                    return;
-                                }
-
-                                fileName.textContent = file.name;
-                                fileInfo.classList.remove('d-none');
-                            }
-                        });
-
-                        removeFileBtn.addEventListener('click', function () {
-                            attachmentInput.value = '';
-                            fileInfo.classList.add('d-none');
-                        });
+                        // NOTE: File upload handling has been moved to a separate section below (line ~920)
+                        // to support multiple file uploads with preview
 
                         // Task 8.3: Calculate duration function
                         function calculateDuration(durationType, startDate, endDate, period) {
@@ -799,7 +833,7 @@
                             }
                         }
 
-                        // Task 8.2: Validate half-day request function
+                        // Validate half-day request function
                         async function validateHalfDayRequest(date, period) {
                             const errors = [];
 
@@ -916,8 +950,128 @@
                             this.submit();
                         });
 
+                        // File upload preview functionality
+                        const attachmentsInput = document.getElementById('attachments');
+                        const filePreviewList = document.getElementById('filePreviewList');
+                        const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+
+                        if (attachmentsInput) {
+                            attachmentsInput.addEventListener('change', function(e) {
+                                filePreviewList.innerHTML = '';
+                                const files = Array.from(e.target.files);
+
+                                if (files.length === 0) {
+                                    return;
+                                }
+
+                                files.forEach((file, index) => {
+                                    const fileSize = file.size;
+                                    const fileSizeKB = (fileSize / 1024).toFixed(1);
+                                    const fileSizeMB = (fileSize / (1024 * 1024)).toFixed(2);
+                                    const isOverSize = fileSize > MAX_FILE_SIZE;
+
+                                    const fileItem = document.createElement('div');
+                                    fileItem.className = 'alert py-2 px-3 mb-2 d-flex justify-content-between align-items-center ' +
+                                                        (isOverSize ? 'alert-danger' : 'alert-info');
+
+                                    const fileInfo = document.createElement('div');
+                                    fileInfo.innerHTML = '<i class="fas fa-file me-2"></i>' +
+                                                        '<strong>' + file.name + '</strong> ' +
+                                                        '<small class="text-muted">(' +
+                                                        (fileSizeKB < 1024 ? fileSizeKB + ' KB' : fileSizeMB + ' MB') +
+                                                        ')</small>';
+
+                                    if (isOverSize) {
+                                        const errorMsg = document.createElement('small');
+                                        errorMsg.className = 'd-block text-danger mt-1';
+                                        errorMsg.innerHTML = '<i class="fas fa-exclamation-triangle"></i> File size exceeds 5MB limit';
+                                        fileInfo.appendChild(errorMsg);
+                                    }
+
+                                    fileItem.appendChild(fileInfo);
+                                    filePreviewList.appendChild(fileItem);
+                                });
+
+                                // Check if any file exceeds size limit
+                                const hasOversizedFile = files.some(file => file.size > MAX_FILE_SIZE);
+                                if (hasOversizedFile) {
+                                    // Disable submit button
+                                    const submitBtn = document.getElementById('submitBtn');
+                                    if (submitBtn) {
+                                        submitBtn.disabled = true;
+                                        submitBtn.title = 'Please remove files larger than 5MB';
+                                    }
+                                } else {
+                                    // Enable submit button
+                                    const submitBtn = document.getElementById('submitBtn');
+                                    if (submitBtn) {
+                                        submitBtn.disabled = false;
+                                        submitBtn.title = '';
+                                    }
+                                }
+                            });
+                        }
+
                         console.log('Form initialized successfully');
+
+                        // Attachment type toggle functionality
+                        const attachmentTypeFile = document.getElementById('attachmentTypeFile');
+                        const attachmentTypeLink = document.getElementById('attachmentTypeLink');
+                        const fileUploadSection = document.getElementById('fileUploadSection');
+                        const driveLinkSection = document.getElementById('driveLinkSection');
+                        const driveLinkInput = document.getElementById('driveLink');
+                        const driveLinkPreview = document.getElementById('driveLinkPreview');
+                        const driveLinkText = document.getElementById('driveLinkText');
+
+                        // Toggle between file upload and link sections
+                        if (attachmentTypeFile && attachmentTypeLink) {
+                            attachmentTypeFile.addEventListener('change', function() {
+                                if (this.checked) {
+                                    fileUploadSection.classList.remove('d-none');
+                                    driveLinkSection.classList.add('d-none');
+                                    // Clear drive link when switching to file upload
+                                    if (driveLinkInput) driveLinkInput.value = '';
+                                    if (driveLinkPreview) driveLinkPreview.classList.add('d-none');
+                                }
+                            });
+
+                            attachmentTypeLink.addEventListener('change', function() {
+                                if (this.checked) {
+                                    fileUploadSection.classList.add('d-none');
+                                    driveLinkSection.classList.remove('d-none');
+                                    // Clear file uploads when switching to link
+                                    if (attachmentsInput) attachmentsInput.value = '';
+                                    if (filePreviewList) filePreviewList.innerHTML = '';
+                                }
+                            });
+                        }
+
+                        // Drive link preview functionality
+                        if (driveLinkInput) {
+                            driveLinkInput.addEventListener('input', function() {
+                                const link = this.value.trim();
+                                if (link && (link.includes('drive.google.com') || link.includes('docs.google.com'))) {
+                                    driveLinkText.textContent = link.length > 60 ? link.substring(0, 60) + '...' : link;
+                                    driveLinkPreview.classList.remove('d-none');
+                                } else if (link) {
+                                    driveLinkText.textContent = 'Invalid Google Drive link';
+                                    driveLinkPreview.classList.remove('d-none');
+                                    driveLinkPreview.classList.remove('alert-info');
+                                    driveLinkPreview.classList.add('alert-warning');
+                                } else {
+                                    driveLinkPreview.classList.add('d-none');
+                                }
+                            });
+                        }
                     });
+
+                    // Clear Drive Link function
+                    window.clearDriveLink = function() {
+                        const driveLinkInput = document.getElementById('driveLink');
+                        const driveLinkPreview = document.getElementById('driveLinkPreview');
+                        if (driveLinkInput) driveLinkInput.value = '';
+                        if (driveLinkPreview) driveLinkPreview.classList.add('d-none');
+                    };
 
                     // Toggle Leave Balance
                     function toggleLeaveBalance() {
@@ -1011,6 +1165,9 @@
                         }
                     };
                 </script>
+
+                <!-- Attachment Toggle Script -->
+                <script src="${pageContext.request.contextPath}/assets/js/attachment-toggle.js"></script>
 
             </body>
 
