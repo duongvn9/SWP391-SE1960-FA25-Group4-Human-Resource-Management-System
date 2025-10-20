@@ -52,39 +52,54 @@ public class RecruitmentRequestCreateServlet extends HttpServlet {
         */
 
         try {
-            // 1. UPLOAD FILE và LẤY PATH
-            String attachmentPath = FileUploadUtil.uploadFile(req, "attachment", "uploads/recruitments");
+            // 1. HANDLE ATTACHMENT: could be multiple files or a drive link
+            String attachmentType = req.getParameter("attachmentType"); // 'file' or 'link'
+            String attachmentPath = null;
+            java.util.List<String> attachmentsList = null;
+            if ("link".equals(attachmentType)) {
+                String driveLink = req.getParameter("driveLink");
+                if (driveLink != null && !driveLink.trim().isEmpty()) {
+                    attachmentPath = driveLink.trim();
+                } else {
+                    req.setAttribute("error", "Please provide a Google Drive link or switch to Upload File.");
+                    req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
+                    return;
+                }
+            } else {
+                attachmentsList = new java.util.ArrayList<>();
+                try {
+                    for (jakarta.servlet.http.Part p : req.getParts()) {
+                        if (p.getName().equals("attachments") && p.getSize() > 0) {
+                            String stored = FileUploadUtil.uploadPart(p, "uploads/recruitments", req);
+                            if (stored != null) {
+                                attachmentsList.add(stored);
+                            }
+                        }
+                    }
+                } catch (Exception ex) {
+                    throw new ServletException("Failed to upload attachments: " + ex.getMessage(), ex);
+                }
+                if (!attachmentsList.isEmpty()) {
+                    // attachmentPath lưu JSON array
+                    attachmentPath = new com.google.gson.Gson().toJson(attachmentsList);
+                } else {
+                    attachmentPath = null;
+                }
+            }
 
             // 2. GÁN DỮ LIỆU VÀO OBJECT CHI TIẾT (RecruitmentDetailsDto)
             RecruitmentDetailsDto details = new RecruitmentDetailsDto();
             details.setPositionCode(req.getParameter("positionCode"));
             details.setPositionName(req.getParameter("positionName"));
 
-            // Parse jobLevel as String (DB stores as String: SENIOR, JUNIOR, etc.)
-            String jobLevel = req.getParameter("jobLevel");
-            details.setJobLevel(jobLevel);
-
-            // Parse quantity
-            String quantityStr = req.getParameter("quantity");
-            if (quantityStr != null && !quantityStr.trim().isEmpty()) {
-                try {
-                    details.setQuantity(Integer.parseInt(quantityStr.trim()));
-                } catch (NumberFormatException nfe) {
-                    req.setAttribute("error", "Invalid quantity: must be a number");
-                    req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
-                    return;
-                }
-            }
-
-            // Set jobType (FULL_TIME, PART_TIME, CONTRACT, etc.)
+            // Lấy job level trực tiếp từ select box
+            details.setJobLevel(req.getParameter("jobLevel"));
+            details.setQuantity(Integer.parseInt(req.getParameter("quantity")));
             details.setJobType(req.getParameter("jobType"));
             details.setRecruitmentReason(req.getParameter("recruitmentReason"));
-
-            // Parse salary fields separately (stored as individual fields in DB)
             String minSalaryRaw = req.getParameter("minSalary");
             String maxSalaryRaw = req.getParameter("maxSalary");
-            String salaryType = req.getParameter("salaryType");
-
+            // If user provided salary inputs, ensure they are numeric
             if (minSalaryRaw != null && !minSalaryRaw.trim().isEmpty()) {
                 try {
                     details.setMinSalary(Double.parseDouble(minSalaryRaw.trim()));
@@ -93,6 +108,8 @@ public class RecruitmentRequestCreateServlet extends HttpServlet {
                     req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
                     return;
                 }
+            } else {
+                details.setMinSalary(null);
             }
 
             if (maxSalaryRaw != null && !maxSalaryRaw.trim().isEmpty()) {
@@ -103,32 +120,30 @@ public class RecruitmentRequestCreateServlet extends HttpServlet {
                     req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
                     return;
                 }
+            } else {
+                details.setMaxSalary(null);
             }
-
-            details.setSalaryType(salaryType);
-
-            // Set job summary and working location as separate fields
+            details.setSalaryType(req.getParameter("salaryType"));
             details.setJobSummary(req.getParameter("jobSummary"));
-            details.setWorkingLocation(req.getParameter("workingLocation"));
             details.setAttachmentPath(attachmentPath);
-
-            // Basic validation (since validate() method is removed)
-            if (details.getPositionName() == null || details.getPositionName().trim().isEmpty()) {
-                req.setAttribute("error", "Position name is required");
-                req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
-                return;
-            }
-            if (details.getQuantity() == null || details.getQuantity() <= 0) {
-                req.setAttribute("error", "Quantity must be greater than 0");
-                req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
-                return;
-            }
+            details.setAttachments(attachmentsList);
+            details.setWorkingLocation(req.getParameter("workingLocation"));
+    
+            
+                // VALIDATION chi tiết
+                try {
+                    details.validate();
+                } catch (IllegalArgumentException ve) {
+                    req.setAttribute("error", "Invalid recruitment details: " + ve.getMessage());
+                    req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
+                    return;
+                }
 
             // 3. TẠO REQUEST CHÍNH VÀ GÁN JSON
             Request request = new Request();
 
-            Long accountId = (Long) session.getAttribute("accountId");
-            Long userId = (Long) session.getAttribute("userId");
+            Long accountId = (Long) session.getAttribute("accountId"); 
+            Long userId = (Long) session.getAttribute("userId");       
 
             // Kiểm tra tính hợp lệ của ID (Thêm bước an toàn)
             if (accountId == null || userId == null) {
@@ -159,7 +174,7 @@ public class RecruitmentRequestCreateServlet extends HttpServlet {
             } catch (Exception e) {
                 throw new ServletException("Error handling RequestType: " + e.getMessage(), e);
             }
-
+            
             request.setRequestTypeId(requestTypeId);
             request.setTitle(req.getParameter("jobTitle")); // Tiêu đề chính
 
@@ -183,8 +198,12 @@ public class RecruitmentRequestCreateServlet extends HttpServlet {
             requestDao.save(request);
 
             sendNotificationToHRAndHRM(req, request);
-            // Redirect back to dashboard after successful submission
-            res.sendRedirect(req.getContextPath() + "/dashboard?success=submitted");
+            // Truyền thông báo thành công và forward về trang create
+            String successText = "Recruitment request submitted successfully! Request ID: " + request.getId();
+            // Keep backward-compatible attribute name and also set 'success' which the JSP now expects
+            req.setAttribute("successMessage", successText);
+            req.setAttribute("success", successText);
+            req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
 
         } catch (Exception e) {
             System.err.println("Error in RecruitmentRequestCreateServlet: " + e.getMessage());

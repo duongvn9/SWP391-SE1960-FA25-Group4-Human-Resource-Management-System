@@ -26,16 +26,22 @@
 
         <div class="container-fluid px-4 py-3">
             <!-- Alert Messages -->
-            <div id="alertSuccess" class="alert alert-success alert-dismissible fade show mb-3" role="alert" style="display:none;">
-                <i class="bi bi-check-circle me-2"></i>
-                <span id="successMessage"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            <div id="alertError" class="alert alert-danger alert-dismissible fade show mb-3" role="alert" style="display:none;">
-                <i class="bi bi-exclamation-circle me-2"></i>
-                <span id="errorMessage"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+            <!-- Success Alert -->
+            <c:if test="${not empty success}">
+                <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+                    <i class="bi bi-check-circle me-2"></i>
+                    <span><c:out value="${success}"/></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            </c:if>
+            <!-- Error Alert -->
+            <c:if test="${not empty error}">
+                <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+                    <i class="bi bi-exclamation-circle me-2"></i>
+                    <span><c:out value="${error}"/></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            </c:if>
 
             <div class="row g-4">
                 <!-- FORM SECTION -->
@@ -80,9 +86,9 @@
                                     <label class="form-label"><i class="bi bi-layers"></i>Job Level <span class="text-danger">*</span></label>
                                     <select name="jobLevel" id="jobLevel" class="form-select" required>
                                         <option value="">Select Level</option>
-                                        <option>Junior</option>
-                                        <option>Middle</option>
-                                        <option>Senior</option>
+                                        <option>JUNIOR</option>
+                                        <option>MIDDLE</option>
+                                        <option>SENIOR</option>
                                     </select>
                                 </div>
                                 <div class="col-md-4">
@@ -127,8 +133,49 @@
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label"><i class="bi bi-paperclip"></i>Attachment (optional)</label>
-                                <input type="file" name="attachment" class="form-control file-input" />
+                                <label class="form-label">
+                                    <i class="bi bi-paperclip"></i> Supporting Documents
+                                    <span class="text-muted">(Optional)</span>
+                                </label>
+                                <div class="btn-group w-100 mb-3" role="group" aria-label="Attachment Type">
+                                    <input type="radio" class="btn-check" name="attachmentType" id="attachmentTypeFile"
+                                           value="file" checked autocomplete="off">
+                                    <label class="btn btn-outline-primary" for="attachmentTypeFile">
+                                        <i class="bi bi-upload me-1"></i> Upload File
+                                    </label>
+
+                                    <input type="radio" class="btn-check" name="attachmentType" id="attachmentTypeLink"
+                                           value="link" autocomplete="off">
+                                    <label class="btn btn-outline-primary" for="attachmentTypeLink">
+                                        <i class="bi bi-link-45deg me-1"></i> Google Drive Link
+                                    </label>
+                                </div>
+
+                                <!-- File Upload Section -->
+                                <div id="fileUploadSection" class="file-upload-wrapper">
+                                    <input type="file" class="form-control" id="attachments" name="attachments"
+                                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" multiple>
+                                    <div class="form-text">
+                                        <i class="bi bi-info-circle"></i>
+                                        Accepted formats: PDF, JPG, PNG, DOC, DOCX (Max 5MB each)
+                                    </div>
+                                    <div id="filePreviewList" class="file-preview-list mt-2"></div>
+                                </div>
+
+                                <!-- Google Drive Link Section -->
+                                <div id="driveLinkSection" class="drive-link-wrapper d-none">
+                                    <input type="url" class="form-control" id="driveLink" name="driveLink"
+                                        placeholder="Paste Google Drive link here (e.g., https://drive.google.com/file/d/...)" />
+                                    <div class="form-text">
+                                        <i class="bi bi-info-circle"></i>
+                                        Paste a shareable Google Drive link to your supporting document
+                                    </div>
+                                    <div id="driveLinkPreview" class="alert alert-info mt-2 d-none">
+                                        <i class="bi bi-link-45deg me-2"></i>
+                                        <strong>Drive Link:</strong> <span id="driveLinkText"></span>
+                                        <button type="button" class="btn-close float-end" onclick="clearDriveLink()"></button>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="form-check mb-4">
@@ -149,6 +196,23 @@
                         </form>
                     </div>
                 </div>
+                <!-- TIPS SECTION -->
+                <div class="col-lg-4">
+                    <div class="card p-4 tips-card">
+                        <h6 class="mb-3 d-flex align-items-center text-primary fw-bold">
+                            <i class="bi bi-lightbulb-fill me-2"></i>
+                            Tips for Better Recruitment Request
+                        </h6>
+                        <ul class="tips-list mb-0">
+                            <li><i class="bi bi-check-circle-fill text-success me-2"></i> Clearly describe the job responsibilities.</li>
+                            <li><i class="bi bi-check-circle-fill text-success me-2"></i> Double-check required skills and experience.</li>
+                            <li><i class="bi bi-check-circle-fill text-success me-2"></i> Attach supporting documents if available.</li>
+                            <li><i class="bi bi-check-circle-fill text-success me-2"></i> Provide an accurate salary range.</li>
+                            <li><i class="bi bi-check-circle-fill text-success me-2"></i> Confirm all information before submitting.</li>
+                            <li><i class="bi bi-check-circle-fill text-success me-2"></i> Explicitly State the Recruitment Purpose: Clarify whether this is a new position (due to growth/new projects) or a replacement position.</li>
+                        </ul>
+                    </div>
+                </div>
 
                 
                
@@ -159,5 +223,86 @@
     </div>
 </div>
 
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const attachmentTypeFile = document.getElementById('attachmentTypeFile');
+                const attachmentTypeLink = document.getElementById('attachmentTypeLink');
+                const fileUploadSection = document.getElementById('fileUploadSection');
+                const driveLinkSection = document.getElementById('driveLinkSection');
+                const attachmentsInput = document.getElementById('attachments');
+                const filePreviewList = document.getElementById('filePreviewList');
+                const driveLink = document.getElementById('driveLink');
+                const driveLinkPreview = document.getElementById('driveLinkPreview');
+                const driveLinkText = document.getElementById('driveLinkText');
+
+                function showFileSection() {
+                    fileUploadSection.classList.remove('d-none');
+                    driveLinkSection.classList.add('d-none');
+                    // enable file input, disable link
+                    attachmentsInput.disabled = false;
+                    driveLink.disabled = true;
+                }
+
+                function showLinkSection() {
+                    fileUploadSection.classList.add('d-none');
+                    driveLinkSection.classList.remove('d-none');
+                    attachmentsInput.disabled = true;
+                    driveLink.disabled = false;
+                }
+
+                // initial state
+                if (attachmentTypeLink.checked) {
+                    showLinkSection();
+                } else {
+                    showFileSection();
+                }
+
+                attachmentTypeFile.addEventListener('change', showFileSection);
+                attachmentTypeLink.addEventListener('change', showLinkSection);
+
+                // File preview
+                attachmentsInput.addEventListener('change', function (e) {
+                    filePreviewList.innerHTML = '';
+                    const files = Array.from(e.target.files || []);
+                    files.forEach((file, idx) => {
+                        const li = document.createElement('div');
+                        li.className = 'd-flex align-items-center mb-1 p-2 border rounded bg-light';
+                        li.innerHTML = `<div class="me-2"><i class="bi bi-file-earmark-fill fs-4"></i></div>
+                                        <div class="flex-grow-1">${file.name} <small class="text-muted">(${Math.round(file.size/1024)} KB)</small></div>
+                                        <div><button type="button" class="btn btn-sm btn-outline-danger" data-idx="${idx}">Remove</button></div>`;
+                        filePreviewList.appendChild(li);
+                    });
+
+                    // Remove handler
+                    filePreviewList.querySelectorAll('button[data-idx]').forEach(btn => {
+                        btn.addEventListener('click', function () {
+                            const index = parseInt(this.getAttribute('data-idx'));
+                            const dt = new DataTransfer();
+                            const currentFiles = Array.from(attachmentsInput.files);
+                            currentFiles.forEach((f, i) => { if (i !== index) dt.items.add(f); });
+                            attachmentsInput.files = dt.files;
+                            attachmentsInput.dispatchEvent(new Event('change'));
+                        });
+                    });
+                });
+
+                // Drive link preview
+                driveLink.addEventListener('input', function () {
+                    const v = this.value && this.value.trim();
+                    if (v) {
+                        driveLinkText.textContent = v;
+                        driveLinkPreview.classList.remove('d-none');
+                        driveLinkPreview.classList.add('d-block');
+                    } else {
+                        driveLinkPreview.classList.add('d-none');
+                    }
+                });
+
+                window.clearDriveLink = function () {
+                    driveLink.value = '';
+                    driveLinkPreview.classList.add('d-none');
+                };
+            });
+        </script>
 </body>
 </html>
