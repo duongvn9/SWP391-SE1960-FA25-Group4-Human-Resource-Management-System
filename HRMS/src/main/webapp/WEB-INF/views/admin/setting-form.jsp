@@ -50,15 +50,23 @@
 
                         <div class="mb-3">
                             <label for="type" class="form-label">Type <span class="text-danger">*</span></label>
-                            <select class="form-select" id="type" name="type" required>
-                                <option value="">-- Select Type --</option>
-                                <option value="Department" ${(setting != null && setting.type == 'Department') || type == 'Department' ? 'selected' : ''}>Department</option>
-                                <option value="Position" ${(setting != null && setting.type == 'Position') || type == 'Position' ? 'selected' : ''}>Position</option>
-                                <option value="Role" ${(setting != null && setting.type == 'Role') || type == 'Role' ? 'selected' : ''}>Role</option>
-                            </select>
-                            <c:if test="${setting != null}">
-                                <small class="text-muted">Warning: Changing type will move this setting to a different table</small>
-                            </c:if>
+                            <c:choose>
+                                <c:when test="${setting != null}">
+                                    <!-- Read-only type field when editing -->
+                                    <input type="text" class="form-control" id="type-display" value="${setting.type}" readonly disabled>
+                                    <input type="hidden" name="type" value="${setting.type}">
+                                    <small class="text-muted">Type cannot be changed after creation</small>
+                                </c:when>
+                                <c:otherwise>
+                                    <!-- Editable type dropdown when creating new -->
+                                    <select class="form-select" id="type" name="type" required>
+                                        <option value="">-- Select Type --</option>
+                                        <option value="Department" ${type == 'Department' ? 'selected' : ''}>Department</option>
+                                        <option value="Position" ${type == 'Position' ? 'selected' : ''}>Position</option>
+                                        <option value="Role" ${type == 'Role' ? 'selected' : ''}>Role</option>
+                                    </select>
+                                </c:otherwise>
+                            </c:choose>
                         </div>
 
                         <div class="mb-3">

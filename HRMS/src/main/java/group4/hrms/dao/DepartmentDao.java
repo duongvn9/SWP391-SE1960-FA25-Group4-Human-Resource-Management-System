@@ -305,6 +305,36 @@ public class DepartmentDao {
         Optional<Department> dept = findByName(name);
         return dept.isPresent() && !dept.get().getId().equals(excludeId);
     }
+    
+    /**
+     * Đếm số employees trong department
+     * @param departmentId ID của department
+     * @return Số lượng employees
+     */
+    public int countEmployees(Long departmentId) {
+        logger.debug("Counting employees in department ID: {}", departmentId);
+        
+        String sql = "SELECT COUNT(*) FROM users WHERE department_id = ?";
+        
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setLong(1, departmentId);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    int count = rs.getInt(1);
+                    logger.debug("Department ID {} has {} employees", departmentId, count);
+                    return count;
+                }
+                return 0;
+            }
+            
+        } catch (SQLException e) {
+            logger.error("Error counting employees in department ID {}: {}", departmentId, e.getMessage(), e);
+            throw new RuntimeException("Error counting employees", e);
+        }
+    }
 
     // Helper methods
     /**

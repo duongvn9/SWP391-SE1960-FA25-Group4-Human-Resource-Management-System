@@ -181,12 +181,30 @@
             var type = btn.getAttribute('data-type');
             var name = btn.getAttribute('data-name');
             
-            if (confirm('Are you sure you want to delete setting "' + name + '"?')) {
+            // Confirmation dialog as per use case
+            var message = 'Are you sure you want to delete "' + name + '"?\n\n' +
+                         'This action cannot be undone.';
+            
+            if (confirm(message)) {
                 document.getElementById('deleteId').value = id;
                 document.getElementById('deleteType').value = type;
                 document.getElementById('deleteForm').submit();
             }
         }
+        
+        // Auto-dismiss success messages after 3 seconds
+        window.addEventListener('DOMContentLoaded', function() {
+            var successAlert = document.querySelector('.alert-success');
+            if (successAlert) {
+                setTimeout(function() {
+                    successAlert.style.transition = 'opacity 0.5s';
+                    successAlert.style.opacity = '0';
+                    setTimeout(function() {
+                        successAlert.remove();
+                    }, 500);
+                }, 3000);
+            }
+        });
     </script>
 </body>
 </html>
