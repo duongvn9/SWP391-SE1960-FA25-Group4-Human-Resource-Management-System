@@ -236,6 +236,22 @@
                     </ul>
                 </li>
 
+                <!-- Admin Only -->
+                <c:if test="${sessionScope.userRole == 'ADMIN' || sessionScope.userRole == 'Admin'}">
+                    <li class="nav-item">
+                        <a href="${pageContext.request.contextPath}/admin/accounts"
+                            class="nav-link ${param.currentPage == 'accounts' ? 'active' : ''}"
+                            data-tooltip="Account Management">
+                            <i class="fas fa-user-shield"></i><span>Account Management</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="${pageContext.request.contextPath}/reports"
+                            class="nav-link ${param.currentPage == 'reports' ? 'active' : ''}" data-tooltip="Reports">
+                            <i class="fas fa-chart-bar"></i><span>Reports</span>
+                        </a>
+                    </li>
+                </c:if>
                 <!-- Dropdown: Attendance -->
                 <li class="nav-item">
                     <a href="#" class="nav-link sidebar-dropdown-toggle" data-target="attendance-submenu"
@@ -318,45 +334,13 @@
                     </li>
                 </c:if>
 
-                <!-- Admin Only -->
-                <c:if test="${sessionScope.userRole == 'ADMIN' || sessionScope.userRole == 'Admin'}">
-                    <li class="nav-item">
-                        <a href="${pageContext.request.contextPath}/admin/accounts"
-                            class="nav-link ${param.currentPage == 'accounts' ? 'active' : ''}"
-                            data-tooltip="Account Management">
-                            <i class="fas fa-user-shield"></i><span>Account Management</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="${pageContext.request.contextPath}/reports"
-                            class="nav-link ${param.currentPage == 'reports' ? 'active' : ''}" data-tooltip="Reports">
-                            <i class="fas fa-chart-bar"></i><span>Reports</span>
-                        </a>
-                    </li>
-                </c:if>
+
 
                 <!-- Profile & Logout -->
                 <li class="nav-item mt-3">
                     <a href="${pageContext.request.contextPath}/user-profile"
                         class="nav-link ${param.currentPage == 'profile' ? 'active' : ''}" data-tooltip="Profile">
                         <i class="fas fa-user"></i><span>Profile</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="${pageContext.request.contextPath}/user-profile/change-password"
-                        class="nav-link ${param.currentPage == 'change-password' ? 'active' : ''}"
-                        data-tooltip="Change Password">
-                        <i class="fas fa-key"></i><span>Change Password</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="${pageContext.request.contextPath}/" class="nav-link" data-tooltip="Back to Home">
-                        <i class="fas fa-home"></i><span>Back to Home</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="${pageContext.request.contextPath}/logout" class="nav-link" data-tooltip="Logout">
-                        <i class="fas fa-sign-out-alt"></i><span>Logout</span>
                     </a>
                 </li>
             </ul>
