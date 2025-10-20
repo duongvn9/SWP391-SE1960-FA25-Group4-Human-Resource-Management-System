@@ -78,15 +78,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const openEditModalFromForm = (form) => {
         const getVal = (name) => form.querySelector(`[name="${name}"]`)?.value || "";
 
-        document.getElementById("modalEmpId").value = getVal("userId");
-        document.getElementById("modalEmpName").value = getVal("employeeName");
-        document.getElementById("modalDepartment").value = getVal("department");
-        document.getElementById("modalDate").value = getVal("date");
-        document.getElementById("modalCheckIn").value = getVal("checkIn");
-        document.getElementById("modalCheckOut").value = getVal("checkOut");
-        document.getElementById("modalStatus").value = getVal("status");
-        document.getElementById("modalSource").value = getVal("source");
-        document.getElementById("modalPeriod").value = getVal("period");
+        document.getElementById("modalEmpId").value = getVal("userIdEdit");
+        document.getElementById("modalEmpName").value = getVal("employeeNameEdit");
+        document.getElementById("modalDepartment").value = getVal("departmentEdit");
+        document.getElementById("modalDate").value = getVal("dateEdit");
+        document.getElementById("modalCheckIn").value = getVal("checkInEdit");
+        document.getElementById("modalCheckOut").value = getVal("checkOutEdit");
+        document.getElementById("modalStatus").value = getVal("statusEdit");
+        document.getElementById("modalSource").value = getVal("sourceEdit");
+        document.getElementById("modalPeriod").value = getVal("periodEdit");
 
         document.getElementById("editModal").style.display = "flex";
     };

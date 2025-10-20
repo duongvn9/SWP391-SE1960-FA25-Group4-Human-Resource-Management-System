@@ -130,12 +130,12 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             LocalDate startDate = parseDate(startDateStr);
             LocalDate endDate = parseDate(endDateStr);
             Long periodId = parseLongSafe(periodIdStr);
-
+            System.out.println(department);
             if ("delete".equalsIgnoreCase(action)) {
-                String userIdStr = req.getParameter("userId");
-                String dateStr = req.getParameter("date");
-                String checkInStr = req.getParameter("checkIn");
-                String checkOutStr = req.getParameter("checkOut");
+                String userIdStr = req.getParameter("userIdEdit");
+                String dateStr = req.getParameter("dateEdit");
+                String checkInStr = req.getParameter("checkInEdit");
+                String checkOutStr = req.getParameter("checkOutEdit");
 
                 if (userIdStr != null && !userIdStr.isEmpty() && dateStr != null && !dateStr.isEmpty()) {
                     try {
@@ -183,7 +183,7 @@ public class AttendanceRecordHRServlet extends HttpServlet {
                 record.setPeriod(periodStr);
 
                 List<AttendanceLog> logs = AttendanceMapper.convertDtoToEntity(record);
-                boolean success = attendanceLogDao.saveAttendanceLogs(logs);
+                boolean success = attendanceLogDao.updateAttendanceLogs(logs);
 
                 if (success) {
                     req.setAttribute("message", "Record updated successfully!");
@@ -240,7 +240,7 @@ public class AttendanceRecordHRServlet extends HttpServlet {
                 currentPage = totalPages > 0 ? totalPages : 1;
             }
             int offset = (currentPage - 1) * recordsPerPage;
-
+            
             List<AttendanceLogDto> attendanceList = attendanceLogDao.findByFilter(
                     null,
                     employeeKeyword,

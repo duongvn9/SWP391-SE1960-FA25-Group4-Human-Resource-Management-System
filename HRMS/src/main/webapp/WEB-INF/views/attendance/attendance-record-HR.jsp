@@ -151,15 +151,15 @@
                                         <td><c:out value="${att.period}" /></td> 
                                         <td class="edit-col" style="display:none;"> 
                                             <form class="actionForm" method="post" action="${pageContext.request.contextPath}/attendance/record/HR">
-                                                <input type="hidden" name="userId" value="${att.userId}">
-                                                <input type="hidden" name="employeeName" value="${att.employeeName}">
-                                                <input type="hidden" name="department" value="${att.department}">
-                                                <input type="hidden" name="date" value="${att.date}">
-                                                <input type="hidden" name="checkIn" value="${att.checkIn}">
-                                                <input type="hidden" name="checkOut" value="${att.checkOut}">
-                                                <input type="hidden" name="status" value="${att.status}">
-                                                <input type="hidden" name="source" value="${att.source}">
-                                                <input type="hidden" name="period" value="${att.period}">
+                                                <input type="hidden" name="userIdEdit" value="${att.userId}">
+                                                <input type="hidden" name="employeeNameEdit" value="${att.employeeName}">
+                                                <input type="hidden" name="departmentEdit" value="${att.department}">
+                                                <input type="hidden" name="dateEdit" value="${att.date}">
+                                                <input type="hidden" name="checkInEdit" value="${att.checkIn}">
+                                                <input type="hidden" name="checkOutEdit" value="${att.checkOut}">
+                                                <input type="hidden" name="statusEdit" value="${att.status}">
+                                                <input type="hidden" name="sourceEdit" value="${att.source}">
+                                                <input type="hidden" name="periodEdit" value="${att.period}">
                                                 <input type="hidden" class="formAction" name="action" value="">
                                                 <button type="button" class="btn btn-update-row" onclick="submitAction(this, 'update')">Update</button>
                                                 <button type="button" class="btn btn-delete-row" onclick="submitAction(this, 'delete')">Delete</button>

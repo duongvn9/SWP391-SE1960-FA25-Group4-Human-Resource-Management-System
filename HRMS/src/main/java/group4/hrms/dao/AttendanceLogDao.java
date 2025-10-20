@@ -62,13 +62,11 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
     @Override
     protected String createUpdateSql() {
         return "UPDATE attendance_logs SET "
-                + "user_id = ?, "
                 + "check_type = ?, "
-                + "checked_at = ?, "
                 + "source = ?, "
                 + "note = ?, "
                 + "period_id = ? "
-                + "WHERE id = ?";
+                + "WHERE user_id = ? AND checked_at = ?";
     }
 
     @Override
@@ -103,34 +101,32 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
 
     @Override
     protected void setUpdateParameters(PreparedStatement stmt, AttendanceLog log) throws SQLException {
-        stmt.setLong(1, log.getUserId());
-        stmt.setString(2, log.getCheckType());
-
-        if (log.getCheckedAt() != null) {
-            stmt.setTimestamp(3, Timestamp.valueOf(log.getCheckedAt()));
-        } else {
-            stmt.setNull(3, Types.TIMESTAMP);
+        if (log.getCheckedAt() == null) {
+            throw new IllegalArgumentException("checkedAt cannot be null for update");
         }
 
+        stmt.setString(1, log.getCheckType());
+
         if (log.getSource() != null) {
-            stmt.setString(4, log.getSource());
+            stmt.setString(2, log.getSource());
         } else {
-            stmt.setNull(4, Types.VARCHAR);
+            stmt.setNull(2, Types.VARCHAR);
         }
 
         if (log.getNote() != null) {
-            stmt.setString(5, log.getNote());
+            stmt.setString(3, log.getNote());
         } else {
-            stmt.setNull(5, Types.VARCHAR);
+            stmt.setNull(3, Types.VARCHAR);
         }
 
         if (log.getPeriodId() != null) {
-            stmt.setLong(6, log.getPeriodId());
+            stmt.setLong(4, log.getPeriodId());
         } else {
-            stmt.setNull(6, Types.BIGINT);
+            stmt.setNull(4, Types.BIGINT);
         }
 
-        stmt.setLong(7, log.getId());
+        stmt.setLong(5, log.getUserId());
+        stmt.setTimestamp(6, Timestamp.valueOf(log.getCheckedAt()));
     }
 
     @Override
@@ -150,38 +146,61 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
             throw new IllegalArgumentException("Entity cannot be null");
         }
 
-        if (getEntityId(entity) != null) {
-            return update(entity);
-        } else {
-            String sql = createInsertSql();
+        String sql = createInsertSql();
 
-            try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-                setInsertParameters(stmt, entity);
+            setInsertParameters(stmt, entity);
 
-                int affectedRows = stmt.executeUpdate();
-
-                if (affectedRows == 0) {
-                    throw new SQLException("Creating attendance log failed, no rows affected");
-                }
-
-                try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
-                    if (generatedKeys.next()) {
-                        Long generatedId = generatedKeys.getLong(1);
-                        setEntityId(entity, generatedId);
-                    } else {
-                        throw new SQLException("Creating attendance log failed, no ID obtained");
-                    }
-                }
-
-                logger.info("Created new attendance log for user {} on {}",
-                        entity.getUserId(), entity.getCheckedAt());
-                return entity;
-
-            } catch (SQLException e) {
-                logger.error("Error saving attendance log: {}", e.getMessage(), e);
-                throw e;
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows == 0) {
+                throw new SQLException("Creating attendance log failed, no rows affected");
             }
+
+            try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    Long generatedId = generatedKeys.getLong(1);
+                    setEntityId(entity, generatedId);
+                } else {
+                    throw new SQLException("Creating attendance log failed, no ID obtained");
+                }
+            }
+
+            logger.info("Created new attendance log for user {} on {}",
+                    entity.getUserId(), entity.getCheckedAt());
+
+            return entity;
+
+        } catch (SQLException e) {
+            logger.error("Error saving attendance log: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    @Override
+    public AttendanceLog update(AttendanceLog entity) throws SQLException {
+        if (entity == null) {
+            throw new IllegalArgumentException("Entity cannot be null");
+        }
+
+        String sql = createUpdateSql();
+
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            setUpdateParameters(stmt, entity);
+
+            int affectedRows = stmt.executeUpdate();
+
+            if (affectedRows == 0) {
+                throw new SQLException("Updating record failed, no rows affected");
+            }
+
+            logger.info("Updated record in {}", getTableName());
+            return entity;
+
+        } catch (SQLException e) {
+            logger.error("Error updating record in {}: {}", getTableName(), e.getMessage(), e);
+            throw e;
         }
     }
 
@@ -605,6 +624,19 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
         for (AttendanceLog log : logs) {
             try {
                 save(log);
+            } catch (SQLException e) {
+                allSuccess = false;
+            }
+        }
+        return allSuccess;
+    }
+
+    public boolean updateAttendanceLogs(List<AttendanceLog> logs) {
+        boolean allSuccess = true;
+
+        for (AttendanceLog log : logs) {
+            try {
+                update(log);
             } catch (SQLException e) {
                 allSuccess = false;
             }
