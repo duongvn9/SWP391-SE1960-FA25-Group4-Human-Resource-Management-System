@@ -48,7 +48,7 @@
                 <div class="d-flex gap-2">
                     <!-- Export to Excel Button (HR only) -->
                     <c:if test="${canExport}">
-                        <a href="${pageContext.request.contextPath}/requests/export?scope=${filter.scope}&type=${filter.requestTypeId}&status=${filter.status}&fromDate=${filter.fromDate}&toDate=${filter.toDate}&employeeId=${filter.employeeId}&search=${filter.searchKeyword}&format=excel" 
+                        <a href="${pageContext.request.contextPath}/requests/export?scope=${filter.scope}&type=${filter.requestTypeId}&status=${filter.status}&fromDate=${filter.fromDate}&toDate=${filter.toDate}&employeeId=${filter.employeeId}&search=${filter.searchKeyword}&format=excel"
                            class="btn btn-success"
                            download>
                             <i class="fas fa-file-excel me-1"></i> Export Excel
@@ -95,113 +95,81 @@
                 <c:remove var="success" scope="session" />
             </c:if>
 
-            <!-- Statistics Cards (for managers and HR) -->
-            <c:if test="${filter.scope != 'my'}">
-                <div class="stats-container">
-                    <div class="stat-card">
-                        <div class="stat-card-header">
-                            <div class="stat-icon primary">
-                                <i class="fas fa-clipboard-list"></i>
-                            </div>
+            <!-- Statistics Cards (for all users) -->
+            <!-- Counts are based on ALL requests in the current scope, not just the paginated results -->
+            <div class="stats-container">
+                <!-- Leave Requests -->
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div class="stat-icon primary">
+                            <i class="fas fa-calendar-day"></i>
                         </div>
-                        <div class="stat-value">${result.pagination.totalItems}</div>
-                        <div class="stat-label">Total Requests</div>
                     </div>
-
-                    <div class="stat-card">
-                        <div class="stat-card-header">
-                            <div class="stat-icon warning">
-                                <i class="fas fa-clock"></i>
-                            </div>
-                        </div>
-                        <div class="stat-value">
-                            <c:set var="pendingCount" value="0" />
-                            <c:choose>
-                                <c:when test="${result.groupedByDepartment}">
-                                    <c:forEach items="${result.requestsByDepartment}" var="deptEntry">
-                                        <c:forEach items="${deptEntry.value}" var="req">
-                                            <c:if test="${req.status == 'PENDING'}">
-                                                <c:set var="pendingCount" value="${pendingCount + 1}" />
-                                            </c:if>
-                                        </c:forEach>
-                                    </c:forEach>
-                                </c:when>
-                                <c:otherwise>
-                                    <c:forEach items="${result.requests}" var="req">
-                                        <c:if test="${req.status == 'PENDING'}">
-                                            <c:set var="pendingCount" value="${pendingCount + 1}" />
-                                        </c:if>
-                                    </c:forEach>
-                                </c:otherwise>
-                            </c:choose>
-                            ${pendingCount}
-                        </div>
-                        <div class="stat-label">Pending</div>
+                    <div class="stat-value">
+                        <c:choose>
+                            <c:when test="${not empty typeStatistics[6]}">
+                                ${typeStatistics[6]}
+                            </c:when>
+                            <c:otherwise>0</c:otherwise>
+                        </c:choose>
                     </div>
-
-                    <div class="stat-card">
-                        <div class="stat-card-header">
-                            <div class="stat-icon success">
-                                <i class="fas fa-check-circle"></i>
-                            </div>
-                        </div>
-                        <div class="stat-value">
-                            <c:set var="approvedCount" value="0" />
-                            <c:choose>
-                                <c:when test="${result.groupedByDepartment}">
-                                    <c:forEach items="${result.requestsByDepartment}" var="deptEntry">
-                                        <c:forEach items="${deptEntry.value}" var="req">
-                                            <c:if test="${req.status == 'APPROVED'}">
-                                                <c:set var="approvedCount" value="${approvedCount + 1}" />
-                                            </c:if>
-                                        </c:forEach>
-                                    </c:forEach>
-                                </c:when>
-                                <c:otherwise>
-                                    <c:forEach items="${result.requests}" var="req">
-                                        <c:if test="${req.status == 'APPROVED'}">
-                                            <c:set var="approvedCount" value="${approvedCount + 1}" />
-                                        </c:if>
-                                    </c:forEach>
-                                </c:otherwise>
-                            </c:choose>
-                            ${approvedCount}
-                        </div>
-                        <div class="stat-label">Approved</div>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="stat-card-header">
-                            <div class="stat-icon danger">
-                                <i class="fas fa-times-circle"></i>
-                            </div>
-                        </div>
-                        <div class="stat-value">
-                            <c:set var="rejectedCount" value="0" />
-                            <c:choose>
-                                <c:when test="${result.groupedByDepartment}">
-                                    <c:forEach items="${result.requestsByDepartment}" var="deptEntry">
-                                        <c:forEach items="${deptEntry.value}" var="req">
-                                            <c:if test="${req.status == 'REJECTED'}">
-                                                <c:set var="rejectedCount" value="${rejectedCount + 1}" />
-                                            </c:if>
-                                        </c:forEach>
-                                    </c:forEach>
-                                </c:when>
-                                <c:otherwise>
-                                    <c:forEach items="${result.requests}" var="req">
-                                        <c:if test="${req.status == 'REJECTED'}">
-                                            <c:set var="rejectedCount" value="${rejectedCount + 1}" />
-                                        </c:if>
-                                    </c:forEach>
-                                </c:otherwise>
-                            </c:choose>
-                            ${rejectedCount}
-                        </div>
-                        <div class="stat-label">Rejected</div>
-                    </div>
+                    <div class="stat-label">Leave Requests</div>
                 </div>
-            </c:if>
+
+                <!-- Overtime Requests -->
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div class="stat-icon warning">
+                            <i class="fas fa-business-time"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value">
+                        <c:choose>
+                            <c:when test="${not empty typeStatistics[7]}">
+                                ${typeStatistics[7]}
+                            </c:when>
+                            <c:otherwise>0</c:otherwise>
+                        </c:choose>
+                    </div>
+                    <div class="stat-label">Overtime</div>
+                </div>
+
+                <!-- Adjustment Requests -->
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div class="stat-icon info">
+                            <i class="fas fa-user-clock"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value">
+                        <c:choose>
+                            <c:when test="${not empty typeStatistics[8]}">
+                                ${typeStatistics[8]}
+                            </c:when>
+                            <c:otherwise>0</c:otherwise>
+                        </c:choose>
+                    </div>
+                    <div class="stat-label">Adjustment</div>
+                </div>
+
+                <!-- Recruitment Requests -->
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div class="stat-icon success">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value">
+                        <c:choose>
+                            <c:when test="${not empty typeStatistics[9]}">
+                                ${typeStatistics[9]}
+                            </c:when>
+                            <c:otherwise>0</c:otherwise>
+                        </c:choose>
+                    </div>
+                    <div class="stat-label">Recruitment</div>
+                </div>
+            </div>
 
             <!-- Filter Section -->
             <div class="card filter-section mb-4">

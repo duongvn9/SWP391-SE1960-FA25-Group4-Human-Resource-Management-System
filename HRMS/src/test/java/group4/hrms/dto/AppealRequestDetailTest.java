@@ -1,9 +1,11 @@
 package group4.hrms.dto;
 
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
-
 import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test cases for AppealRequestDetail JSON parsing.
@@ -14,9 +16,9 @@ class AppealRequestDetailTest {
     @Test
     void testParseEmptyAttendanceDates() {
         String json = "{\"detail_text\": \"test\", \"attendance_dates\": \"\"}";
-        
+
         AppealRequestDetail detail = AppealRequestDetail.fromJson(json);
-        
+
         assertNotNull(detail);
         assertEquals("test", detail.getReason());
         assertNotNull(detail.getAttendanceDates());
@@ -26,12 +28,12 @@ class AppealRequestDetailTest {
     @Test
     void testParseMultipleAttendanceDates() {
         String json = "{\"detail_text\": \"Missed check-in\", \"attendance_dates\": \"2025-10-20,2025-10-19\"}";
-        
+
         AppealRequestDetail detail = AppealRequestDetail.fromJson(json);
-        
+
         assertNotNull(detail);
         assertEquals("Missed check-in", detail.getReason());
-        
+
         List<String> dates = detail.getAttendanceDates();
         assertNotNull(dates);
         assertEquals(2, dates.size());
@@ -43,12 +45,12 @@ class AppealRequestDetailTest {
     void testParseMultipleAttendanceDatesWithDot() {
         // Database format uses dot as separator instead of comma
         String json = "{\"detail_text\": \"test\", \"attendance_dates\": \"2025-10-20.2025-10-19\"}";
-        
+
         AppealRequestDetail detail = AppealRequestDetail.fromJson(json);
-        
+
         assertNotNull(detail);
         assertEquals("test", detail.getReason());
-        
+
         List<String> dates = detail.getAttendanceDates();
         assertNotNull(dates);
         assertEquals(2, dates.size());
@@ -59,12 +61,12 @@ class AppealRequestDetailTest {
     @Test
     void testParseSingleAttendanceDate() {
         String json = "{\"detail_text\": \"Wrong clock-out time\", \"attendance_dates\": \"2025-10-20\"}";
-        
+
         AppealRequestDetail detail = AppealRequestDetail.fromJson(json);
-        
+
         assertNotNull(detail);
         assertEquals("Wrong clock-out time", detail.getReason());
-        
+
         List<String> dates = detail.getAttendanceDates();
         assertNotNull(dates);
         assertEquals(1, dates.size());
@@ -74,9 +76,9 @@ class AppealRequestDetailTest {
     @Test
     void testParseWithWhitespace() {
         String json = "{\"detail_text\": \"Appeal\", \"attendance_dates\": \"2025-10-20, 2025-10-19 , 2025-10-18\"}";
-        
+
         AppealRequestDetail detail = AppealRequestDetail.fromJson(json);
-        
+
         List<String> dates = detail.getAttendanceDates();
         assertNotNull(dates);
         assertEquals(3, dates.size());
@@ -97,9 +99,9 @@ class AppealRequestDetailTest {
             + "\"resolution_action\": \"Attendance corrected\", "
             + "\"submitted_date\": \"2025-10-21\""
             + "}";
-        
+
         AppealRequestDetail detail = AppealRequestDetail.fromJson(json);
-        
+
         assertNotNull(detail);
         assertEquals("Clock-in missed", detail.getReason());
         assertEquals(2, detail.getAttendanceDates().size());
@@ -115,9 +117,9 @@ class AppealRequestDetailTest {
         AppealRequestDetail detail = new AppealRequestDetail();
         detail.setReason("Test reason");
         detail.setAttendanceDates(List.of("2025-10-20"));
-        
+
         String str = detail.toString();
-        
+
         assertTrue(str.contains("Test reason"));
         assertTrue(str.contains("2025-10-20"));
     }

@@ -581,11 +581,11 @@ public class RequestDao extends BaseDao<Request, Long> {
         if (detailJson != null && !detailJson.trim().isEmpty()) {
             try {
                 request.setDetailJson(detailJson);
-                
+
                 // Pre-parse JSON based on request_type_id to trigger lazy loading
                 // This validates JSON format and caches the parsed object
                 Long requestTypeId = request.getRequestTypeId();
-                
+
                 if (requestTypeId != null) {
                     if (requestTypeId == 6L) {
                         // LEAVE_REQUEST
@@ -1495,6 +1495,119 @@ public class RequestDao extends BaseDao<Request, Long> {
         }
 
         return 0;
+    }
+
+    /**
+     * Count requests by request type for given filter criteria.
+     * Returns a map with request_type_id as key and count as value.
+     *
+     * This is used for statistics cards in request list page.
+     * The count respects all filter criteria (scope, status, date range, etc.)
+     * but counts ALL matching requests, not just the paginated subset.
+     *
+     * @param filter RequestListFilter containing all filter criteria
+     * @param targetUserIds List of user IDs to filter by (for scope filtering)
+     * @return Map of request_type_id -> count
+     * @throws RuntimeException if database error occurs
+     */
+    public java.util.Map<Long, Integer> countByRequestType(RequestListFilter filter, List<Long> targetUserIds) {
+        logger.debug("Counting requests by type with filters: filter={}, userIds={}", filter, targetUserIds);
+
+        java.util.Map<Long, Integer> typeCountMap = new java.util.HashMap<>();
+
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT r.request_type_id, COUNT(*) as count ");
+        sql.append("FROM ").append(TABLE_NAME).append(" r ");
+        sql.append("WHERE 1=1 ");
+
+        List<Object> params = new ArrayList<>();
+
+        // User scope filter
+        if (targetUserIds != null && !targetUserIds.isEmpty()) {
+            sql.append("AND r.created_by_user_id IN (");
+            for (int i = 0; i < targetUserIds.size(); i++) {
+                sql.append("?");
+                if (i < targetUserIds.size() - 1) {
+                    sql.append(", ");
+                }
+                params.add(targetUserIds.get(i));
+            }
+            sql.append(") ");
+        }
+
+        // Status filter
+        if (filter.hasStatusFilter()) {
+            sql.append("AND r.status = ? ");
+            params.add(filter.getStatus());
+        }
+
+        // Show cancelled toggle
+        if (!filter.isShowCancelled()) {
+            sql.append("AND r.status != 'CANCELLED' ");
+        }
+
+        // NOTE: We do NOT apply type filter here because we want counts for ALL types
+        // Type filter is only for the main request list, not for statistics
+
+        // Date range filter
+        if (filter.getFromDate() != null) {
+            sql.append("AND DATE(r.created_at) >= ? ");
+            params.add(filter.getFromDate().toString());
+        }
+        if (filter.getToDate() != null) {
+            sql.append("AND DATE(r.created_at) <= ? ");
+            params.add(filter.getToDate().toString());
+        }
+
+        // Employee filter
+        if (filter.hasEmployeeFilter()) {
+            sql.append("AND r.created_by_user_id = ? ");
+            params.add(filter.getEmployeeId());
+        }
+
+        // Search filter
+        if (filter.hasSearch()) {
+            sql.append("AND (r.title LIKE ? OR r.detail LIKE ?) ");
+            String searchPattern = "%" + filter.getSearchKeyword() + "%";
+            params.add(searchPattern);
+            params.add(searchPattern);
+        }
+
+        // Group by request type
+        sql.append("GROUP BY r.request_type_id");
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+
+            // Set parameters
+            for (int i = 0; i < params.size(); i++) {
+                Object param = params.get(i);
+                if (param instanceof Long) {
+                    stmt.setLong(i + 1, (Long) param);
+                } else if (param instanceof Integer) {
+                    stmt.setInt(i + 1, (Integer) param);
+                } else if (param instanceof String) {
+                    stmt.setString(i + 1, (String) param);
+                }
+            }
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Long typeId = rs.getLong("request_type_id");
+                    Integer count = rs.getInt("count");
+                    typeCountMap.put(typeId, count);
+                }
+            }
+
+            logger.debug("Request type counts: {}", typeCountMap);
+
+        } catch (SQLException e) {
+            logger.error("Database error counting requests by type. Filter: {}. SQL State: {}, Error Code: {}",
+                        filter, e.getSQLState(), e.getErrorCode(), e);
+            throw new RuntimeException("Error counting requests by type", e);
+        }
+
+        return typeCountMap;
     }
 
 }
