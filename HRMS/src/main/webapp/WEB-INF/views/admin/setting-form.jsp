@@ -45,7 +45,7 @@
                         <div class="mb-3">
                             <label for="name" class="form-label">Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="name" name="name" 
-                                   value="${setting != null ? setting.name : name}" >
+                                   value="${setting != null ? setting.name : name}" required>
                         </div>
 
                         <div class="mb-3">
@@ -59,7 +59,7 @@
                                 </c:when>
                                 <c:otherwise>
                                     <!-- Editable type dropdown when creating new -->
-                                    <select class="form-select" id="type" name="type" >
+                                    <select class="form-select" id="type" name="type" required>
                                         <option value="">-- Select Type --</option>
                                         <option value="Department" ${type == 'Department' ? 'selected' : ''}>Department</option>
                                         <option value="Position" ${type == 'Position' ? 'selected' : ''}>Position</option>
