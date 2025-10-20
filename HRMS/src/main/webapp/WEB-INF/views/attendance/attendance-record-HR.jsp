@@ -99,8 +99,7 @@
                         <button type="button" id="exportCSVBtn" class="btn btn-export">Export CSV</button> 
                         <button type="button" id="exportPDFBtn" class="btn btn-export">Export PDF</button> 
                         <button id="editBtn" class="btn btn-edit" onclick="enableEdit()">Edit</button> 
-                        <button id="submitBtn" class="btn btn-submit" onclick="submitChanges()">Submit</button> 
-                        <button id="deleteBtn" class="btn btn-delete" onclick="toggleDeleteMode()">Delete</button> 
+
                         <div class="switch-container">
                             <div class="toggle-switch">
                                 <input type="checkbox" id="switchInput">
@@ -108,18 +107,24 @@
                             </div>
                             <span id="sliderStatus" class="status-text">Unlocked</span>
                         </div>
-                    </div> 
+                    </div>
 
                     <form id="exportForm" class="export-form" action="${pageContext.request.contextPath}/attendance/record/HR" method="post"> 
                         <input type="hidden" name="exportType" id="exportType"> 
-                    </form> 
+                    </form>
+
+                    <c:if test="${not empty message or not empty error}">
+                        <div id="actionMessage" class="action-message" style="margin-top:10px;
+                             color: ${not empty message ? 'green' : 'red'};">
+                            <c:out value="${not empty message ? message : error}" />
+                        </div>
+                    </c:if>
 
                     <!-- ========== MAIN TABLE ========== --> 
                     <div class="table-wrapper">
                         <table id="attendanceTable" class="attendance-table" border="1" cellspacing="0" cellpadding="6"> 
                             <thead> 
                                 <tr> 
-                                    <th><input type="checkbox" onclick="selectAll(this)" /></th> 
                                     <th>Employee ID</th> 
                                     <th>Employee Name</th> 
                                     <th>Department</th> 
@@ -135,7 +140,6 @@
                             <tbody> 
                                 <c:forEach var="att" items="${attendanceList}"> 
                                     <tr class="attendance-row"> 
-                                        <td><input type="checkbox" class="row-checkbox" /></td> 
                                         <td>${att.userId}</td> 
                                         <td>${att.employeeName}</td> 
                                         <td>${att.department}</td> 
@@ -146,9 +150,18 @@
                                         <td><c:out value="${att.source}" /></td> 
                                         <td><c:out value="${att.period}" /></td> 
                                         <td class="edit-col" style="display:none;"> 
-                                            <button class="btn btn-delete-row">Delete</button> 
-                                        </td> 
-                                    </tr> 
+                                            <form class="actionForm" method="post" action="${pageContext.request.contextPath}/attendance/record/HR">
+                                                <input type="hidden" name="action" class="formAction">
+                                                <input type="hidden" name="userId" value="${att.userId}">
+                                                <input type="hidden" name="date" value="<c:out value='${att.date}'/>">
+                                                <input type="hidden" name="checkIn" value="<c:if test='${att.checkIn != null}'>${att.checkIn.toString().substring(0,5)}</c:if>">
+                                                <input type="hidden" name="checkOut" value="<c:if test='${att.checkOut != null}'>${att.checkOut.toString().substring(0,5)}</c:if>">
+
+                                                    <button type="button" class="btn btn-update-row" onclick="submitAction(this, 'update')">Update</button>
+                                                    <button type="button" class="btn btn-delete-row" onclick="submitAction(this, 'delete')">Delete</button>
+                                                </form>
+                                            </td>
+                                        </tr> 
                                 </c:forEach> 
                             </tbody> 
                         </table> 
@@ -188,6 +201,43 @@
                     </div>
 
                 </main> 
+            </div>
+        </div>
+
+        <div id="editModal" class="modal" style="display:none;">
+            <div class="modal-content">
+                <span class="close-btn" onclick="closeModal()">&times;</span>
+                <h3>Edit Attendance</h3>
+                <form id="editForm">
+                    <label for="modalCheckIn">Employee ID: </label>
+                    <input type="time" name="checkIn" id="modalCheckIn" required>
+                    
+                    <label for="modalCheckIn">Employee Name: </label>
+                    <input type="time" name="checkIn" id="modalCheckIn" required>
+                    
+                    <label for="modalCheckIn">Department: </label>
+                    <input type="time" name="checkIn" id="modalCheckIn" required>
+                    
+                    <label for="modalCheckIn">Date: </label>
+                    <input type="time" name="checkIn" id="modalCheckIn" required>
+                    
+                    <label for="modalCheckIn">Check-in: </label>
+                    <input type="time" name="checkIn" id="modalCheckIn" required>
+
+                    <label for="modalCheckOut">Check-out: </label>
+                    <input type="time" name="checkOut" id="modalCheckOut" required>
+
+                    <label for="modalStatus">Status: </label>
+                    <input type="text" name="status" id="modalStatus">
+
+                    <label for="modalSource">Source: </label>
+                    <input type="text" name="source" id="modalSource">
+                    
+                    <label for="modalSource">Period: </label>
+                    <input type="text" name="source" id="modalSource">
+
+                    <button type="button" onclick="submitEdit()">Save</button>
+                </form>
             </div>
         </div>
 

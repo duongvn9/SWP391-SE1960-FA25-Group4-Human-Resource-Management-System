@@ -12,10 +12,10 @@ public class AttendanceLogDto {
     private Long userId;
     private String employeeName;
     private String department;
-    
+
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
     private LocalDate date;
-    
+
     private LocalTime checkIn;
     private LocalTime checkOut;
     private String status;
