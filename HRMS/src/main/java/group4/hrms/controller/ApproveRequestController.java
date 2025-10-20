@@ -1,6 +1,14 @@
 package group4.hrms.controller;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.time.LocalDateTime;
+import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import group4.hrms.dao.RequestDao;
+import group4.hrms.model.Account;
 import group4.hrms.model.Request;
 import group4.hrms.model.User;
 import group4.hrms.util.RequestListPermissionHelper;
@@ -10,13 +18,6 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.time.LocalDateTime;
-import java.util.Optional;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Controller for approving/rejecting requests
@@ -51,15 +52,9 @@ public class ApproveRequestController extends HttpServlet {
             }
 
             User currentUser = (User) session.getAttribute("user");
-            if (currentUser == null) {
+            Account currentAccount = (Account) session.getAttribute("account");
+            if (currentUser == null || currentAccount == null) {
                 out.print("{\"success\": false, \"message\": \"User not logged in\"}");
-                return;
-            }
-
-            // Get account from session
-            group4.hrms.model.Account currentAccount = (group4.hrms.model.Account) session.getAttribute("account");
-            if (currentAccount == null) {
-                out.print("{\"success\": false, \"message\": \"Account not found in session\"}");
                 return;
             }
 
@@ -89,10 +84,15 @@ public class ApproveRequestController extends HttpServlet {
 
             Request req = requestOpt.get();
 
-            // Check if request is already processed
-            if (!"PENDING".equals(req.getStatus())) {
-                out.print("{\"success\": false, \"message\": \"This request has already been processed\"}");
-                return;
+            // Parse OT detail if exists (needed for permission check)
+            if (req.getDetailJson() != null && !req.getDetailJson().trim().isEmpty()) {
+                try {
+                    if (req.getDetailJson().contains("otDate")) {
+                        req.getOtDetail(); // This will parse and cache OT detail
+                    }
+                } catch (Exception e) {
+                    logger.warning("Error parsing OT detail for request " + requestId + ": " + e.getMessage());
+                }
             }
 
             // Get user's position for permission check
@@ -106,42 +106,53 @@ public class ApproveRequestController extends HttpServlet {
             }
 
             // Check permission
-            if (!RequestListPermissionHelper.canApproveRequest(currentUser, req, position)) {
+            if (!RequestListPermissionHelper.canApproveRequest(currentUser, req, position, currentAccount.getId())) {
                 out.print("{\"success\": false, \"message\": \"You do not have permission to approve/reject this request\"}");
                 return;
             }
 
             // Perform action
-            boolean success = false;
-            String message = "";
+            boolean success;
+            String message;
+            String reason = request.getParameter("reason");
 
             if ("approve".equals(action)) {
-                String reason = request.getParameter("reason");
+                // Only allow approving PENDING requests
+                if (!"PENDING".equals(req.getStatus())) {
+                    out.print("{\"success\": false, \"message\": \"Can only approve PENDING requests\"}");
+                    return;
+                }
 
                 req.setStatus("APPROVED");
-                req.setApprovedBy(currentAccount.getId());
-                req.setApprovedAt(LocalDateTime.now());
+                req.setCurrentApproverAccountId(currentAccount.getId());
+                req.setUpdatedAt(LocalDateTime.now());
                 // Store approval reason if provided
                 if (reason != null && !reason.trim().isEmpty()) {
-                    req.setRejectReason(reason); // Reuse this field for approval notes
+                    req.setApproveReason(reason);
                 } else {
-                    req.setRejectReason(null);
+                    req.setApproveReason(null);
                 }
                 Request updated = requestDao.update(req);
                 success = (updated != null);
                 message = success ? "Request approved successfully" : "Failed to approve request";
 
             } else if ("reject".equals(action)) {
-                String reason = request.getParameter("reason");
+                // Rejection reason is always required
                 if (reason == null || reason.trim().isEmpty()) {
                     out.print("{\"success\": false, \"message\": \"Rejection reason is required\"}");
                     return;
                 }
 
+                // Can reject PENDING or APPROVED requests (for manager override)
+                if (!"PENDING".equals(req.getStatus()) && !"APPROVED".equals(req.getStatus())) {
+                    out.print("{\"success\": false, \"message\": \"Can only reject PENDING or APPROVED requests\"}");
+                    return;
+                }
+
                 req.setStatus("REJECTED");
-                req.setApprovedBy(currentAccount.getId());
-                req.setApprovedAt(LocalDateTime.now());
-                req.setRejectReason(reason);
+                req.setCurrentApproverAccountId(currentAccount.getId());
+                req.setUpdatedAt(LocalDateTime.now());
+                req.setApproveReason(reason);
                 Request updated = requestDao.update(req);
                 success = (updated != null);
                 message = success ? "Request rejected successfully" : "Failed to reject request";

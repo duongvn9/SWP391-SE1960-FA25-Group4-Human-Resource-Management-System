@@ -1,16 +1,22 @@
 package group4.hrms.dao;
 
-import group4.hrms.model.RequestType;
-import group4.hrms.dto.RequestTypeDto;
-import group4.hrms.util.DatabaseUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import group4.hrms.dto.RequestTypeDto;
+import group4.hrms.model.RequestType;
+import group4.hrms.util.DatabaseUtil;
 
 /**
  * DAO cho RequestType - Loại yêu cầu/đơn từ
@@ -75,14 +81,11 @@ public class RequestTypeDao extends BaseDao<RequestType, Long> {
         "rt.created_at, rt.updated_at ";
 
     private static final String INSERT =
-        "INSERT INTO " + TABLE_NAME + " (name, code, description, category, requires_approval, " +
-        "requires_attachment, max_days, approval_workflow, is_active, created_at, updated_at) " +
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        "INSERT INTO " + TABLE_NAME + " (name, code, created_at) " +
+        "VALUES (?, ?, ?)";
 
     private static final String UPDATE =
-        "UPDATE " + TABLE_NAME + " SET name = ?, code = ?, description = ?, category = ?, " +
-        "requires_approval = ?, requires_attachment = ?, max_days = ?, approval_workflow = ?, " +
-        "is_active = ?, updated_at = ? WHERE id = ?";
+        "UPDATE " + TABLE_NAME + " SET name = ?, code = ? WHERE id = ?";
 
     private static final String DELETE = "DELETE FROM " + TABLE_NAME + " WHERE id = ?";
 
@@ -153,19 +156,10 @@ public class RequestTypeDao extends BaseDao<RequestType, Long> {
 
             LocalDateTime now = LocalDateTime.now();
             requestType.setCreatedAt(now);
-            requestType.setUpdatedAt(now);
 
             stmt.setString(1, requestType.getName());
             stmt.setString(2, requestType.getCode());
-            stmt.setString(3, requestType.getDescription());
-            stmt.setString(4, requestType.getCategory());
-            stmt.setBoolean(5, requestType.isRequiresApproval());
-            stmt.setBoolean(6, requestType.isRequiresAttachment());
-            stmt.setObject(7, requestType.getMaxDays());
-            stmt.setString(8, requestType.getApprovalWorkflow());
-            stmt.setBoolean(9, requestType.isActive());
-            stmt.setTimestamp(10, Timestamp.valueOf(requestType.getCreatedAt()));
-            stmt.setTimestamp(11, Timestamp.valueOf(requestType.getUpdatedAt()));
+            stmt.setTimestamp(3, Timestamp.valueOf(requestType.getCreatedAt()));
 
             int rowsAffected = stmt.executeUpdate();
 
@@ -191,8 +185,8 @@ public class RequestTypeDao extends BaseDao<RequestType, Long> {
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(UPDATE)) {
 
-            stmt.setString(1, requestType.getCode());
-            stmt.setString(2, requestType.getName());
+            stmt.setString(1, requestType.getName());
+            stmt.setString(2, requestType.getCode());
             stmt.setLong(3, requestType.getId());
 
             int rowsAffected = stmt.executeUpdate();

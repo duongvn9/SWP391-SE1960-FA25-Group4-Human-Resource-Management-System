@@ -1,242 +1,360 @@
-/* ============ Import Attendance Page ============ */
 :root {
-    --ia-primary: #4f46e5;
-    --ia-primary-700: #4338ca;
-    --ia-muted: #6c757d;
-    --ia-danger: #ef4444;
-    --ia-success: #10b981;
-    --ia-radius: 12px;
-    --ia-shadow-md: 0 10px 28px rgba(17, 24, 39, 0.1);
-    --ia-shadow-lg: 0 20px 40px rgba(17, 24, 39, 0.15);
+    --sidebar-width: 260px;
+    --sidebar-collapsed-width: 80px;
+    --header-height: 60px;
+    --primary-color: #0d6efd;
+    --primary-hover: #0b5ed7;
+    --secondary-color: #6c757d;
+    --bg-light: #f8f9fa;
+    --text-dark: #212529;
 }
 
-/* Page Layout */
-.import-attendance-page {
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    min-height: 100vh;
-    padding: 1.5rem;
-    font-family: sans-serif;
+/* --------------------------
+   Layout chung
+-------------------------- */
+body.import-attendance-page {
+    margin: 0;
+    font-family: "Segoe UI", Arial, sans-serif;
+    background-color: var(--bg-light);
+    color: var(--text-dark);
 }
 
+/* Main wrapper to contain sidebar and content area */
+.main-wrapper {
+    display: flex;
+    align-items: flex-start;
+}
+
+.content-area {
+    width: 100%;
+    padding: 28px 40px;
+    box-sizing: border-box;
+}
+
+/* Header */
+.top-navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: var(--header-height);
+    background: #fff;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+/* Sidebar */
+.sidebar {
+    position: fixed;
+    top: var(--header-height);
+    left: 0;
+    width: var(--sidebar-width);
+    height: calc(100vh - var(--header-height));
+    background-color: #fff;
+    border-right: 1px solid #dee2e6;
+    display: flex;
+    flex-direction: column;
+    transition: width 0.3s ease;
+    overflow-y: auto;
+}
+
+.sidebar.collapsed {
+    width: var(--sidebar-collapsed-width);
+}
+
+/* Main content */
+.main-content {
+    margin-top: var(--header-height);
+    margin-left: var(--sidebar-width);
+    padding: 30px 40px;
+    transition: margin-left 0.3s ease;
+}
+
+.sidebar.collapsed ~ .main-content {
+    margin-left: var(--sidebar-collapsed-width);
+}
+
+/* The page uses .main-wrapper + .content-area in JSP; keep compatibility */
+.sidebar.collapsed ~ .main-wrapper .content-area {
+    margin-left: var(--sidebar-collapsed-width);
+}
+
+/* Page title and header spacing */
 .page-title {
-    font-size: 1.75rem;
-    font-weight: 800;
-    color: #111827;
-    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0 0 18px 0;
+    color: var(--text-dark);
 }
 
-/* Tabs */
+/* --------------------------
+   Page title
+-------------------------- */
+.page-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+/* --------------------------
+   Tabs chung
+-------------------------- */
 .tab-header {
     display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
+    gap: 10px;
+    margin-bottom: 10px;
 }
 
 .tab-btn {
-    background: #fff;
-    border: 2px solid #e5e7eb;
-    border-radius: var(--ia-radius);
-    padding: 0.5rem 1rem;
-    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 6px 6px 0 0;
+    border: none;
     cursor: pointer;
+    background-color: #e9ecef;
     transition: all 0.2s ease;
 }
 
-.tab-btn:hover {
-    border-color: var(--ia-primary);
-    color: var(--ia-primary);
-}
-
 .tab-btn.active {
-    background: var(--ia-primary);
+    background-color: var(--primary-color);
     color: #fff;
 }
 
 /* Divider */
 .tab-divider {
+    margin: 0 0 20px 0;
     border: none;
-    border-top: 2px solid #e5e7eb;
-    margin-bottom: 1rem;
+    border-bottom: 1px solid #dee2e6;
 }
 
-/* Section Titles */
-.section-title {
-    font-size: 1.25rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
-    color: #111827;
-}
-
-/* File Upload */
-.file-upload {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-}
-
-.file-input {
-    border: 2px solid #e5e7eb;
-    border-radius: var(--ia-radius);
-    padding: 0.5rem 1rem;
-    background: #fff;
-    cursor: pointer;
-    transition: border-color 0.2s ease;
-}
-
-.file-input:hover {
-    border-color: var(--ia-primary);
-}
-
-.file-name {
-    font-size: 0.9rem;
-    color: var(--ia-muted);
-}
-
-/* Buttons */
-.btn {
-    border: none;
-    border-radius: var(--ia-radius);
-    padding: 0.6rem 1.2rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    margin-right: 0.5rem;
-}
-
-.btn-preview {
-    background: var(--ia-primary);
-    color: #fff;
-}
-
-.btn-preview:hover {
-    background: var(--ia-primary-700);
-}
-
-.btn-import {
-    background: #111827;
-    color: #fff;
-}
-
-.btn-import:hover {
-    opacity: 0.9;
-}
-
-/* Alerts */
-.alert {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1rem;
-    border-radius: var(--ia-radius);
-    font-weight: 500;
-    margin-top: 1rem;
-}
-
-.alert-error {
-    background: #fee2e2;
-    border-left: 4px solid var(--ia-danger);
-    color: #991b1b;
-}
-
-.alert-success {
-    background: #d1fae5;
-    border-left: 4px solid var(--ia-success);
-    color: #065f46;
-}
-
-/* Tables */
-.preview-data-table,
-.manual-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 1rem;
-}
-
-.preview-data-table th,
-.preview-data-table td,
-.manual-table th,
-.manual-table td {
-    border: 1px solid #e5e7eb;
-    padding: 0.5rem 0.75rem;
-    text-align: left;
-    font-size: 0.9rem;
-}
-
-.preview-data-table th,
-.manual-table th {
-    background: #f3f4f6;
-    font-weight: 600;
-}
-
-.preview-data-table tr:hover,
-.manual-table tr:hover {
-    background: #f9fafb;
-}
-
-/* Form Actions */
-.form-actions {
-    margin-top: 1rem;
-}
-
-/* Tabs Content */
-.tab-content {
+/* --------------------------
+   Tab content riêng
+-------------------------- */
+.upload-tab,
+.manual-tab {
     display: none;
-    padding: 1rem 0;
 }
 
-.tab-content.active {
+.upload-tab.active,
+.manual-tab.active {
     display: block;
 }
 
-/* Manual Table */
-.excel-table {
-    border-radius: var(--ia-radius);
-    overflow: hidden;
+/* --------------------------
+   Upload Tab
+-------------------------- */
+.upload-tab .form-group {
+    margin-bottom: 15px;
+}
+
+.upload-tab .form-label {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.upload-tab .form-control {
+    border-radius: 6px;
+    border: 1px solid #ced4da;
+    padding: 8px 10px;
+    width: 100%;
+}
+
+.upload-tab .form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(13,110,253,0.2);
+}
+
+.upload-tab .btn-primary,
+.upload-tab .btn-secondary {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    border: none;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+.upload-tab .btn-primary {
+    background-color: var(--primary-color);
+    color: #fff;
+}
+
+.upload-tab .btn-primary:hover {
+    background-color: var(--primary-hover);
+}
+
+.upload-tab .btn-secondary {
+    background-color: var(--secondary-color);
+    color: #fff;
+}
+
+.upload-tab .btn-secondary:hover {
+    background-color: #5c636a;
+}
+
+/* File upload custom style */
+.file-upload {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.file-input {
+    display: inline-block;
+    padding: 8px 12px;
+    border-radius: 6px;
     background: #fff;
-    box-shadow: var(--ia-shadow-md);
-    transition: box-shadow 0.3s ease, transform 0.3s ease;
+    border: 1px solid #ced4da;
+    cursor: pointer;
 }
 
-.excel-table:hover {
-    box-shadow: var(--ia-shadow-lg);
-    transform: translateY(-2px);
+#fileName {
+    margin: 0;
+    color: #6c757d;
+    font-size: 0.95rem;
 }
 
-.excel-table th,
-.excel-table td {
-    padding: 0.6rem 1rem;
-    font-size: 0.9rem;
-    border-bottom: 1px solid #e5e7eb;
+.form-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
+/* message styles */
+.form-message {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 6px;
+}
+.error-message { background: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
+.success-message { background: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
+
+/* Upload table */
+.upload-tab table.preview-data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.upload-tab table.preview-data-table th,
+.upload-tab table.preview-data-table td {
+    border: 1px solid #dee2e6;
+    padding: 8px;
+    text-align: left;
+}
+
+.upload-tab th.table-header {
+    background-color: #f1f1f1;
+}
+
+.upload-tab tr.data-row:nth-child(even) {
+    background-color: #fafafa;
+}
+
+/* --------------------------
+   Manual Tab
+-------------------------- */
+.manual-tab table.manual-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 15px;
+}
+
+.manual-tab table.manual-table th,
+.manual-tab table.manual-table td {
+    border: 1px solid #dee2e6;
+    padding: 8px;
+}
+
+.manual-tab .manual-cell {
+    min-width: 80px;
+}
+
+.manual-tab .btn-import {
+    padding: 8px 16px;
+    background-color: var(--primary-color);
+    color: #fff;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+}
+
+.manual-tab .btn-import:hover {
+    background-color: var(--primary-hover);
+}
+
+/* Manual table editable cells styling */
+.manual-table .manual-cell[contenteditable="true"] {
+    min-height: 34px;
+    padding: 6px 8px;
+    background: #fff;
+    border-radius: 4px;
+    outline: none;
+}
+
+.manual-table .manual-cell[contenteditable="true"]:focus {
+    box-shadow: 0 0 0 3px rgba(13,110,253,0.08);
+    border: 1px solid rgba(13,110,253,0.35);
+}
+
+/* --------------------------
+   Pagination chung
+-------------------------- */
+.pagination {
+    display: flex;
+    gap: 5px;
+    margin-top: 15px;
+}
+
+.page-btn {
+    padding: 5px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #333;
+}
+
+.page-btn.current-page {
+    background-color: var(--primary-color);
+    color: #fff;
+    border-color: var(--primary-color);
+}
+
+/* --------------------------
+   Responsive
+-------------------------- */
+@media (max-width: 992px) {
+    .main-content {
+        margin-left: 0;
+        padding: 20px;
+    }
+
+    /* On small screens the header may occupy more vertical space; ensure content is visible */
+    .main-wrapper {
+        margin-top: calc(var(--header-height) + 6px);
+    }
+
     .tab-header {
         flex-direction: column;
     }
 
-    .btn,
-    .btn-preview,
-    .btn-import {
+    .tab-btn {
         width: 100%;
-        margin-right: 0;
-        margin-bottom: 0.5rem;
     }
 
-    .section-title {
-        font-size: 1.1rem;
+    .sidebar {
+        position: relative;
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid #dee2e6;
     }
 
-    .page-title {
-        font-size: 1.5rem;
-    }
-
-    .preview-data-table th,
-    .preview-data-table td,
-    .manual-table th,
-    .manual-table td {
-        font-size: 0.85rem;
-        padding: 0.4rem 0.6rem;
+    .sidebar.collapsed {
+        width: 100%;
     }
 }

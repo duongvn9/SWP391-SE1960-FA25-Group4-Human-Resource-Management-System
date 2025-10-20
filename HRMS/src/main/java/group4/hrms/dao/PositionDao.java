@@ -293,28 +293,32 @@ public class PositionDao {
     }
     
     /**
-     * Đếm số users trong position
+     * Đếm số users có position này
+     * @param positionId ID của position
+     * @return Số lượng users
      */
     public int countUsers(Long positionId) {
-        logger.debug("Đếm users trong position ID: {}", positionId);
+        logger.debug("Counting users with position ID: {}", positionId);
+        
+        String sql = "SELECT COUNT(*) FROM users WHERE position_id = ?";
         
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(COUNT_USERS_IN_POSITION)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             
             stmt.setLong(1, positionId);
             
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     int count = rs.getInt(1);
-                    logger.debug("Position ID {} có {} users", positionId, count);
+                    logger.debug("Position ID {} has {} users", positionId, count);
                     return count;
                 }
                 return 0;
             }
             
         } catch (SQLException e) {
-            logger.error("Lỗi khi đếm users trong position ID {}: {}", positionId, e.getMessage(), e);
-            throw new RuntimeException("Lỗi khi đếm users", e);
+            logger.error("Error counting users with position ID {}: {}", positionId, e.getMessage(), e);
+            throw new RuntimeException("Error counting users", e);
         }
     }
     
@@ -398,33 +402,5 @@ public class PositionDao {
         }
     }
     
-    /**
-     * Đếm số users có position này
-     * @param positionId ID của position
-     * @return Số lượng users
-     */
-    public int countUsers(Long positionId) {
-        logger.debug("Counting users with position ID: {}", positionId);
-        
-        String sql = "SELECT COUNT(*) FROM users WHERE position_id = ?";
-        
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setLong(1, positionId);
-            
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    int count = rs.getInt(1);
-                    logger.debug("Position ID {} has {} users", positionId, count);
-                    return count;
-                }
-                return 0;
-            }
-            
-        } catch (SQLException e) {
-            logger.error("Error counting users with position ID {}: {}", positionId, e.getMessage(), e);
-            throw new RuntimeException("Error counting users", e);
-        }
-    }
+    
 }
