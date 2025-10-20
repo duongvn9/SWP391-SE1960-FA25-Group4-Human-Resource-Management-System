@@ -254,6 +254,29 @@ public class RequestListPermissionHelper {
             return request.isPending();
         }
 
+        // SPECIAL RULE: RECRUITMENT_REQUEST - Only HR/HRM can approve
+        // Department Manager CANNOT approve recruitment requests
+        if (request.getRequestTypeId() != null && request.getRequestTypeId() == 9L) {
+            if (position == null || position.getJobLevel() == null) {
+                return false;
+            }
+            int jobLevel = position.getJobLevel();
+
+            // Only HR_MANAGER (level 2) and HR_STAFF (level 3) can approve
+            // DEPT_MANAGER (level 4) and below CANNOT approve
+            if (jobLevel > JOB_LEVEL_HR_STAFF) {
+                return false;
+            }
+
+            // Cannot approve own request
+            if (user.getId().equals(request.getCreatedByUserId())) {
+                return false;
+            }
+
+            // Can approve PENDING requests
+            return request.isPending();
+        }
+
         // SPECIAL CASE: OT Request created by manager for employee
         // Check if this is an OT request with createdByManager flag
         // Only check OT detail if this is actually an OVERTIME_REQUEST (type_id=7)
