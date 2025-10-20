@@ -21,24 +21,9 @@ function showToast(message, type = "info") {
   container.appendChild(toast);
   setTimeout(() => toast.remove(), 3000);
 }
-document.getElementById("saveDraftBtn").addEventListener("click", function() {
-    const form = document.getElementById("recruitmentRequestForm");
-    
-    form.action = `${contextPath}/requests/save-draft`;
-    
-    // 3. Gửi form (bao gồm cả file đính kèm)
-    form.submit();
-});
-
 const urlParams = new URLSearchParams(window.location.search);
-if (urlParams.get("success") === "draft-saved") {
-  showToast("Draft saved successfully!", "success");
-}else if (urlParams.get("success") === "submitted") {
+if (urlParams.get("success") === "submitted") {
   showToast("Recruitment request submitted successfully!", "success");
 }
 
-document.getElementById("recruitmentRequestForm").addEventListener("submit", function(event) {
-    // Luôn đảm bảo action là /requests/create cho việc SUBMIT chính thức
-    // (Trong trường hợp người dùng nhấn SUBMIT REQUEST)
-    this.action = `${contextPath}/requests/create`;
-});
+// No automatic action override - form's action is set in the JSP
