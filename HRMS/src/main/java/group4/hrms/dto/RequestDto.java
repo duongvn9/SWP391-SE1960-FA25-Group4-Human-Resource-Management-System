@@ -13,6 +13,7 @@ public class RequestDto {
 
     private Long id;
     private Long userId;
+    private Long createdByAccountId;        // Account ID of creator (for manager-created requests)
     private String userName;                // Tên người tạo request
     private String userFullName;            // Họ tên đầy đủ
     private Long requestTypeId;
@@ -41,6 +42,17 @@ public class RequestDto {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    // UI helper fields for request list page
+    private String employeeCode;            // Employee code
+    private String departmentName;          // Department name
+    private String statusBadgeClass;        // CSS class for status badge
+    private boolean canUpdate;              // Can user update this request
+    private boolean canDelete;              // Can user delete this request
+    private boolean canApprove;             // Can user approve/reject this request
+    private String updateUrl;               // URL to update page
+    private String detailUrl;               // URL to detail page
+    private int attachmentCount;            // Number of attachments for this request
+
     // Constructors
     public RequestDto() {
     }
@@ -48,23 +60,32 @@ public class RequestDto {
     public RequestDto(Request request) {
         this.id = request.getId();
         this.userId = request.getUserId();
+        this.createdByAccountId = request.getCreatedByAccountId();
         this.requestTypeId = request.getRequestTypeId();
         this.title = request.getTitle();
         this.description = request.getDescription();
         this.detailJson = request.getDetailJson();
 
-        // Parse detail JSON based on request type
+        // Parse detail JSON based on content (not request type)
+        // Check JSON content to determine which detail type to parse
         if (this.detailJson != null && !this.detailJson.trim().isEmpty()) {
             try {
-                // Try to parse as LeaveRequestDetail first
-                this.leaveDetail = request.getLeaveDetail();
-            } catch (Exception e) {
-                // If fails, try OTRequestDetail
-                try {
+                // Check JSON content to determine type
+                if (this.detailJson.contains("leaveTypeCode") || this.detailJson.contains("startDate")) {
+                    this.leaveDetail = request.getLeaveDetail();
+                } else if (this.detailJson.contains("otDate") || this.detailJson.contains("otHours")) {
                     this.otDetail = request.getOtDetail();
-                } catch (Exception ex) {
-                    // Ignore parsing errors - detail will be null
+                } else {
+                    // Try both if unclear
+                    try {
+                        this.leaveDetail = request.getLeaveDetail();
+                    } catch (Exception e) {
+                        this.otDetail = request.getOtDetail();
+                    }
                 }
+            } catch (Exception e) {
+                // Ignore parsing errors - detail will be null
+                // Log at debug level if needed
             }
         }
 
@@ -93,6 +114,8 @@ public class RequestDto {
         Request request = new Request();
         request.setId(this.id);
         request.setUserId(this.userId);
+        request.setCreatedByAccountId(this.createdByAccountId);
+        request.setCreatedByUserId(this.userId); // Also set createdByUserId for consistency
         request.setRequestTypeId(this.requestTypeId);
         request.setTitle(this.title);
         request.setDescription(this.description);
@@ -125,6 +148,14 @@ public class RequestDto {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public Long getCreatedByAccountId() {
+        return createdByAccountId;
+    }
+
+    public void setCreatedByAccountId(Long createdByAccountId) {
+        this.createdByAccountId = createdByAccountId;
     }
 
     public String getUserName() {
@@ -336,6 +367,17 @@ public class RequestDto {
         this.approvedAt = approvedAt;
     }
 
+    /**
+     * Get approvedAt as java.util.Date for JSP fmt:formatDate compatibility
+     * @return Date object or null if approvedAt is null
+     */
+    public java.util.Date getApprovedAtAsDate() {
+        if (approvedAt == null) {
+            return null;
+        }
+        return java.util.Date.from(approvedAt.atZone(java.time.ZoneId.systemDefault()).toInstant());
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -344,8 +386,30 @@ public class RequestDto {
         this.createdAt = createdAt;
     }
 
+    /**
+     * Get createdAt as java.util.Date for JSP fmt:formatDate compatibility
+     * @return Date object or null if createdAt is null
+     */
+    public java.util.Date getCreatedAtAsDate() {
+        if (createdAt == null) {
+            return null;
+        }
+        return java.util.Date.from(createdAt.atZone(java.time.ZoneId.systemDefault()).toInstant());
+    }
+
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
+    }
+
+    /**
+     * Get updatedAt as java.util.Date for JSP fmt:formatDate compatibility
+     * @return Date object or null if updatedAt is null
+     */
+    public java.util.Date getUpdatedAtAsDate() {
+        if (updatedAt == null) {
+            return null;
+        }
+        return java.util.Date.from(updatedAt.atZone(java.time.ZoneId.systemDefault()).toInstant());
     }
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
@@ -425,5 +489,180 @@ public class RequestDto {
             default:
                 return priority;
         }
+    }
+
+    // Getters and Setters for UI helper fields
+    public String getEmployeeCode() {
+        return employeeCode;
+    }
+
+    public void setEmployeeCode(String employeeCode) {
+        this.employeeCode = employeeCode;
+    }
+
+    public String getDepartmentName() {
+        return departmentName;
+    }
+
+    public void setDepartmentName(String departmentName) {
+        this.departmentName = departmentName;
+    }
+
+    public String getStatusBadgeClass() {
+        return statusBadgeClass;
+    }
+
+    public void setStatusBadgeClass(String statusBadgeClass) {
+        this.statusBadgeClass = statusBadgeClass;
+    }
+
+    public boolean isCanUpdate() {
+        return canUpdate;
+    }
+
+    public void setCanUpdate(boolean canUpdate) {
+        this.canUpdate = canUpdate;
+    }
+
+    public boolean isCanDelete() {
+        return canDelete;
+    }
+
+    public void setCanDelete(boolean canDelete) {
+        this.canDelete = canDelete;
+    }
+
+    public boolean isCanApprove() {
+        return canApprove;
+    }
+
+    public void setCanApprove(boolean canApprove) {
+        this.canApprove = canApprove;
+    }
+
+    public String getUpdateUrl() {
+        return updateUrl;
+    }
+
+    public void setUpdateUrl(String updateUrl) {
+        this.updateUrl = updateUrl;
+    }
+
+    public String getDetailUrl() {
+        return detailUrl;
+    }
+
+    public void setDetailUrl(String detailUrl) {
+        this.detailUrl = detailUrl;
+    }
+
+    public int getAttachmentCount() {
+        return attachmentCount;
+    }
+
+    public void setAttachmentCount(int attachmentCount) {
+        this.attachmentCount = attachmentCount;
+    }
+
+    // Helper method to determine status badge CSS class
+    public void calculateStatusBadgeClass() {
+        if (status == null) {
+            this.statusBadgeClass = "bg-secondary";
+            return;
+        }
+        switch (status) {
+            case "PENDING":
+                this.statusBadgeClass = "bg-warning";
+                break;
+            case "APPROVED":
+                this.statusBadgeClass = "bg-success";
+                break;
+            case "REJECTED":
+                this.statusBadgeClass = "bg-danger";
+                break;
+            case "CANCELLED":
+                this.statusBadgeClass = "bg-secondary";
+                break;
+            default:
+                this.statusBadgeClass = "bg-secondary";
+        }
+    }
+
+    // Helper method to build update URL based on request type
+    public void buildUpdateUrl(String contextPath) {
+        if (requestTypeCode == null || id == null) {
+            this.updateUrl = null;
+            return;
+        }
+
+        String typeSegment;
+        if (requestTypeCode.startsWith("LEAVE_")) {
+            typeSegment = "leave";
+        } else if (requestTypeCode.startsWith("OT_")) {
+            typeSegment = "ot";
+        } else if (requestTypeCode.startsWith("ATTENDANCE_")) {
+            typeSegment = "attendance-appeal";
+        } else if (requestTypeCode.startsWith("RECRUITMENT_")) {
+            typeSegment = "recruitment";
+        } else {
+            typeSegment = "request";
+        }
+
+        this.updateUrl = contextPath + "/requests/" + typeSegment + "/" + id + "/edit";
+    }
+
+    // Helper method to build detail URL based on request type
+    public void buildDetailUrl(String contextPath) {
+        if (requestTypeCode == null || id == null) {
+            this.detailUrl = null;
+            return;
+        }
+
+        String typeSegment;
+        if (requestTypeCode.startsWith("LEAVE_")) {
+            typeSegment = "leave";
+        } else if (requestTypeCode.startsWith("OT_")) {
+            typeSegment = "ot";
+        } else if (requestTypeCode.startsWith("ATTENDANCE_")) {
+            typeSegment = "attendance-appeal";
+        } else if (requestTypeCode.startsWith("RECRUITMENT_")) {
+            typeSegment = "recruitment";
+        } else {
+            typeSegment = "request";
+        }
+
+        this.detailUrl = contextPath + "/requests/" + typeSegment + "/" + id;
+    }
+
+    // Helper method to check if request is cancelled
+    public boolean isCancelled() {
+        return "CANCELLED".equals(this.status);
+    }
+
+    /**
+     * Extract reason from detail JSON for export
+     * Tries to get reason from LeaveRequestDetail or OTRequestDetail
+     *
+     * @return Reason text or empty string if not found
+     */
+    public String getReasonFromDetail() {
+        // Try leave detail first
+        LeaveRequestDetail leave = getLeaveDetail();
+        if (leave != null && leave.getReason() != null && !leave.getReason().trim().isEmpty()) {
+            return leave.getReason();
+        }
+
+        // Try OT detail
+        OTRequestDetail ot = getOtDetail();
+        if (ot != null && ot.getReason() != null && !ot.getReason().trim().isEmpty()) {
+            return ot.getReason();
+        }
+
+        // Fallback to description field
+        if (description != null && !description.trim().isEmpty()) {
+            return description;
+        }
+
+        return "";
     }
 }

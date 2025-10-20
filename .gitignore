@@ -113,3 +113,7 @@ dist/
 # Application server logs
 catalina.out
 server.log
+
+# File uploads directory
+HRMS/uploads/
+!HRMS/uploads/README.md

@@ -1,187 +1,229 @@
-/* ============ Attendance Appeal Form (scoped) ============ */
+/* ==========================
+   Attendance Appeal Form Page
+   ========================== */
+
 :root {
-    --ap-primary: var(--primary-color, #4f46e5);
-    --ap-primary-700: var(--primary-700, #4338ca);
-    --ap-muted: var(--text-muted, #6b7280);
-    --ap-danger: #ef4444;
-    --ap-success: #10b981;
-    --ap-radius: 14px;
-    --ap-shadow-md: 0 10px 28px rgba(17, 24, 39, 0.1);
-    --ap-shadow-lg: 0 20px 40px rgba(17, 24, 39, 0.15);
+    --sidebar-width: 260px;
+    --primary-color: #0d6efd;
+    --secondary-color: #6c757d;
+    --danger-color: #dc3545;
+    --success-color: #198754;
+    --bg-light: #f8f9fa;
+    --text-dark: #212529;
 }
 
-/* Page background */
+/* --------------------------
+   Layout
+-------------------------- */
 body {
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    font-family: "Inter", sans-serif;
-    color: #111827;
+    font-family: "Segoe UI", Arial, sans-serif;
+    background-color: var(--bg-light);
+    color: var(--text-dark);
     margin: 0;
-    padding: 2rem;
+    padding: 0;
+    display: flex;
 }
 
-/* Title */
-.form-title {
-    font-size: 1.75rem;
-    font-weight: 800;
-    margin-bottom: 1.5rem;
-    color: #111827;
-    text-align: left;
-    background: linear-gradient(135deg, rgba(79, 70, 229, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
-    border-left: 4px solid var(--ap-primary);
-    padding: 1rem 1.25rem;
-    border-radius: var(--ap-radius);
+.main-content {
+    flex: 1;
+    margin-left: var(--sidebar-width);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
-/* Form container */
-.appeal-form {
+.content-area {
+    flex: 1;
+    padding: 30px 40px;
+}
+
+/* --------------------------
+   Page Head
+-------------------------- */
+.page-head {
+    border-bottom: 1px solid #dee2e6;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+}
+
+.page-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.page-subtitle {
+    font-size: 0.95rem;
+    color: #6c757d;
+    margin-top: 4px;
+}
+
+/* --------------------------
+   Card
+-------------------------- */
+.card {
     background: #fff;
-    border-radius: var(--ap-radius);
-    box-shadow: var(--ap-shadow-md);
-    padding: 2rem;
-    max-width: 720px;
-    margin: 0 auto;
-    transition: box-shadow 0.3s ease, transform 0.3s ease;
-}
-.appeal-form:hover {
-    box-shadow: var(--ap-shadow-lg);
-    transform: translateY(-2px);
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border: 1px solid #e5e5e5;
+    margin-top: 20px;
 }
 
-/* Form group */
-.form-group {
-    margin-bottom: 1.5rem;
+.card-header {
+    background-color: #f5f7fa;
+    border-bottom: 1px solid #dee2e6;
+    padding: 15px 20px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--text-dark);
 }
 
-/* Labels */
+.card-body {
+    padding: 25px 30px;
+}
+
+/* --------------------------
+   Form Elements
+-------------------------- */
 .form-label {
-    display: inline-flex;
-    align-items: center;
     font-weight: 600;
-    color: #111827;
-    margin-bottom: 0.5rem;
-}
-.form-label::after {
-    content: "";
+    color: var(--text-dark);
 }
 
-/* Inputs, textarea, select */
-.form-input,
-.form-textarea {
-    width: 100%;
-    border: 2px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 0.7rem 1rem;
-    font-size: 1rem;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-.form-input:hover,
-.form-textarea:hover {
-    border-color: #c7d2fe;
-}
-.form-input:focus,
-.form-textarea:focus {
-    border-color: var(--ap-primary);
-    box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--ap-primary), transparent 82%);
-    outline: none;
+.form-control {
+    border-radius: 6px;
+    border: 1px solid #ced4da;
+    padding: 8px 10px;
+    font-size: 0.95rem;
 }
 
-/* Textarea */
-.form-textarea {
-    resize: vertical;
-    min-height: 120px;
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.2);
 }
 
-/* Select from log button */
-.form-button {
-    background: var(--ap-primary);
-    color: #fff;
-    border: 0;
-    border-radius: 12px;
-    padding: 0.6rem 1.2rem;
-    font-weight: 600;
-    margin-top: 0.75rem;
-    margin-left: 0.5rem;
-    box-shadow: 0 6px 18px color-mix(in srgb, var(--ap-primary), transparent 70%);
-    transition: transform 0.15s, box-shadow 0.2s, background-color 0.2s;
-}
-.form-button:hover {
-    background: var(--ap-primary-700);
-    transform: translateY(-1px);
-    box-shadow: 0 10px 24px color-mix(in srgb, var(--ap-primary), transparent 60%);
+.form-text {
+    color: #6c757d;
+    font-size: 0.85rem;
+    margin-top: 4px;
 }
 
-/* Submit button */
-.form-submit {
-    background: var(--ap-success);
-    color: #fff;
-    border: 0;
-    border-radius: 12px;
-    padding: 0.8rem 1.5rem;
-    font-weight: 700;
-    cursor: pointer;
-    box-shadow: 0 6px 18px color-mix(in srgb, var(--ap-success), transparent 70%);
-    transition: transform 0.15s, box-shadow 0.2s, background-color 0.2s;
-}
-.form-submit:hover {
-    background: #059669;
-    transform: translateY(-1px);
-    box-shadow: 0 10px 24px color-mix(in srgb, var(--ap-success), transparent 60%);
-}
-.form-submit:disabled {
-    background: #9ca3af;
-    cursor: not-allowed;
-    box-shadow: none;
-}
-
-/* Message box */
-.form-message {
-    border-radius: 12px;
-    border-left: 4px solid;
-    padding: 1rem 1.25rem;
-    margin-top: 1.25rem;
+/* --------------------------
+   Buttons
+-------------------------- */
+.btn {
+    border-radius: 6px;
+    font-size: 0.95rem;
+    padding: 6px 14px;
     font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn:hover {
+    opacity: 0.9;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: #fff;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7;
+}
+
+.btn-secondary {
+    background-color: var(--secondary-color);
+    color: #fff;
+    border: none;
+}
+
+.btn-secondary:hover {
+    background-color: #5c636a;
+}
+
+.btn-outline-primary {
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    background: transparent;
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    color: #fff;
+}
+
+/* --------------------------
+   Alerts
+-------------------------- */
+.alert {
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
     display: flex;
     align-items: center;
-    animation: slideDown 0.3s ease;
-}
-.error-message {
-    background: linear-gradient(135deg, #fee2e2 0%, #fef2f2 100%);
-    color: #991b1b;
-    border-color: var(--ap-danger);
-}
-.success-message {
-    background: linear-gradient(135deg, #d1fae5 0%, #ecfdf5 100%);
-    color: #065f46;
-    border-color: var(--ap-success);
 }
 
-/* Animation */
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.alert i {
+    margin-right: 8px;
 }
 
-/* Responsive */
+.alert-warning {
+    background-color: #fff3cd;
+    border: 1px solid #ffeeba;
+    color: #856404;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+/* --------------------------
+   Textarea
+-------------------------- */
+textarea.form-control {
+    resize: vertical;
+}
+
+/* --------------------------
+   File Upload
+-------------------------- */
+input[type="file"].form-control {
+    padding: 4px;
+}
+
+.form-text span {
+    font-style: italic;
+}
+
+/* --------------------------
+   Footer
+-------------------------- */
+.dashboard-footer {
+    margin-top: auto;
+    padding: 15px 25px;
+    background: #fff;
+    border-top: 1px solid #e5e5e5;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+/* --------------------------
+   Responsive
+-------------------------- */
 @media (max-width: 768px) {
-    body {
-        padding: 1rem;
+    .content-area {
+        padding: 20px;
     }
-    .appeal-form {
-        padding: 1.25rem;
+
+    .page-title {
+        font-size: 1.25rem;
     }
-    .form-title {
-        font-size: 1.5rem;
-        padding: 0.85rem 1rem;
-    }
-    .form-button,
-    .form-submit {
-        width: 100%;
-        margin-left: 0;
+
+    .btn {
+        font-size: 0.9rem;
     }
 }

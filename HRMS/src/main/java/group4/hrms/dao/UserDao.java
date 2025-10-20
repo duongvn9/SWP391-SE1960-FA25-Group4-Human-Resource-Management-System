@@ -815,6 +815,74 @@ public class UserDao {
     }
 
     /**
+     * Find subordinate user IDs for a given manager based on department hierarchy and job level.
+     * This method is optimized for filtering requests by subordinate scope.
+     *
+     * Logic:
+     * - For DEPT_MANAGER (job_level 4): Returns users in same department with higher job_level (5 = STAFF)
+     * - For HR_STAFF/HR_MANAGER/ADMIN (job_level 1-3): Returns all users with higher job_level across all departments
+     * - Excludes the manager themselves
+     * - Only includes active users
+     *
+     * @param managerId User ID of the manager
+     * @return List of subordinate user IDs
+     */
+    public List<Long> findSubordinateUserIds(Long managerId) {
+        List<Long> subordinateIds = new ArrayList<>();
+
+        if (managerId == null) {
+            logger.warn("Manager ID is null, returning empty subordinate list");
+            return subordinateIds;
+        }
+
+        String query = """
+            SELECT u.id
+            FROM users u
+            JOIN positions p ON u.position_id = p.id
+            WHERE u.id != ?
+              AND u.status = 'active'
+              AND p.job_level > (
+                  SELECT p2.job_level
+                  FROM users u2
+                  JOIN positions p2 ON u2.position_id = p2.id
+                  WHERE u2.id = ?
+              )
+              AND (
+                  -- If manager is DEPT_MANAGER (job_level 4), only show same department
+                  (
+                      (SELECT p2.job_level FROM users u2 JOIN positions p2 ON u2.position_id = p2.id WHERE u2.id = ?) = 4
+                      AND u.department_id = (SELECT department_id FROM users WHERE id = ?)
+                  )
+                  OR
+                  -- If manager is HR/ADMIN (job_level 1-3), show all departments
+                  (SELECT p2.job_level FROM users u2 JOIN positions p2 ON u2.position_id = p2.id WHERE u2.id = ?) < 4
+              )
+            """;
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+
+            ps.setLong(1, managerId);
+            ps.setLong(2, managerId);
+            ps.setLong(3, managerId);
+            ps.setLong(4, managerId);
+            ps.setLong(5, managerId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    subordinateIds.add(rs.getLong("id"));
+                }
+            }
+
+            logger.info("Found {} subordinates for manager ID: {}", subordinateIds.size(), managerId);
+        } catch (SQLException e) {
+            logger.error("Error finding subordinate user IDs for manager ID: " + managerId, e);
+        }
+
+        return subordinateIds;
+    }
+
+    /**
      * Tìm users theo status
      *
      * @param status Status của user (active, inactive, terminated)

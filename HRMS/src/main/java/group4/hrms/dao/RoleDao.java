@@ -228,6 +228,36 @@ public class RoleDao {
     public boolean existsByCode(String code) {
         return findByCode(code).isPresent();
     }
+    
+    /**
+     * Đếm số users có role này
+     * @param roleId ID của role
+     * @return Số lượng users
+     */
+    public int countUsers(Long roleId) {
+        logger.debug("Counting users with role ID: {}", roleId);
+        
+        String sql = "SELECT COUNT(*) FROM users WHERE role_id = ?";
+        
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setLong(1, roleId);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    int count = rs.getInt(1);
+                    logger.debug("Role ID {} has {} users", roleId, count);
+                    return count;
+                }
+                return 0;
+            }
+            
+        } catch (SQLException e) {
+            logger.error("Error counting users with role ID {}: {}", roleId, e.getMessage(), e);
+            throw new RuntimeException("Error counting users", e);
+        }
+    }
 
     /**
      * Tìm role theo name

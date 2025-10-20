@@ -16,6 +16,7 @@ import java.util.Locale;
 public class EmploymentContractDto {
     private Long id;
     private Long userId;
+    private String username;           // Username from session or account
     private String userFullName;       // Join từ users
     private String contractNo;
     private String contractType;
@@ -109,7 +110,7 @@ public class EmploymentContractDto {
     }
     
     /**
-     * Format currency with thousand separator
+     * Format currency with thousand separator (without currency code)
      */
     private String formatCurrency(BigDecimal amount, String currency) {
         if (amount == null) {
@@ -120,9 +121,7 @@ public class EmploymentContractDto {
         formatter.setMinimumFractionDigits(2);
         formatter.setMaximumFractionDigits(2);
         
-        String formatted = formatter.format(amount);
-        String currencyCode = (currency != null && !currency.trim().isEmpty()) ? currency : "VND";
-        return formatted + " " + currencyCode;
+        return formatter.format(amount);
     }
     
     /**
@@ -197,6 +196,14 @@ public class EmploymentContractDto {
     
     public void setUserFullName(String userFullName) {
         this.userFullName = userFullName;
+    }
+    
+    public String getUsername() {
+        return username;
+    }
+    
+    public void setUsername(String username) {
+        this.username = username;
     }
     
     public String getContractNo() {
