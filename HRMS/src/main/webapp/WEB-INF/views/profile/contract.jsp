@@ -12,26 +12,144 @@
         body {
             margin: 0;
             padding: 0;
-            background-color: #f5f5f5;
+            background-color: #f8f9fa;
         }
-        .status-badge {
-            display: inline-block;
-            padding: 0.35em 0.65em;
-            font-size: 0.95rem;
+        
+        .main-content {
+            padding: 2rem 2rem 0 2rem;
+            min-height: calc(100vh - 64px);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .container-fluid {
+            flex: 1;
+        }
+        
+        .dashboard-footer {
+            margin-left: -2rem;
+            margin-right: -2rem;
+            margin-bottom: 0;
+        }
+        
+        .profile-container {
+            max-width: 100%;
+            background: white;
+            padding: 30px 50px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .profile-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .profile-header h2 {
+            color: #333;
+            font-weight: 600;
+            font-size: 1.5rem;
+            margin: 0;
+        }
+        
+        .profile-description {
+            background-color: #f8f9fa;
+            padding: 12px 15px;
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 25px;
+            font-style: italic;
+        }
+        
+        .contract-content {
+            /* Content styling */
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            min-height: 40px;
+        }
+        
+        .form-row.two-columns {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            min-height: 40px;
+        }
+        
+        .form-row.two-columns .form-label:first-child {
+            width: 150px;
+        }
+        
+        .form-row.two-columns .form-value:first-of-type {
+            flex: 0 0 calc(50% - 125px);
+            margin-right: 15px;
+        }
+        
+        .form-row.two-columns .form-label:nth-child(3) {
+            flex: 0 0 150px;
+            text-align: right;
+            padding-right: 15px;
+            white-space: nowrap;
+        }
+        
+        .form-row.two-columns .form-value:last-of-type {
+            flex: 1;
+        }
+        
+        .form-label {
+            width: 150px;
             font-weight: 500;
-            border-radius: 0.25rem;
+            color: #333;
+            margin: 0;
+            padding-right: 15px;
+            text-align: left;
+            flex-shrink: 0;
         }
-        .status-active {
-            background-color: #d1e7dd;
-            color: #0f5132;
+        
+        .form-value {
+            flex: 1;
+            padding: 8px 12px;
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            color: #495057;
         }
-        .status-expired {
-            background-color: #e2e3e5;
-            color: #41464b;
+        
+        .alert-info {
+            border-radius: 8px;
+            border: none;
+            background-color: #cfe2ff;
+            color: #084298;
         }
-        .status-terminated {
-            background-color: #f8d7da;
-            color: #842029;
+        
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .contract-page-header {
+                padding: 1rem;
+            }
+            
+            .contract-page-header h2 {
+                font-size: 1.15rem;
+            }
+            
+            .contract-card {
+                padding: 1.5rem;
+            }
         }
     </style>
 </head>
@@ -43,120 +161,92 @@
     <jsp:include page="../layout/sidebar.jsp" />
     
     <div class="main-content">
-        <div class="contract-page-wrap">
+        <div class="container-fluid">
             <c:choose>
                 <c:when test="${not empty contract}">
-                    <div class="contract-card mx-auto mt-5 mb-5">
-                        <!-- Title Centered -->
-                        <div class="text-center mb-4">
-                            <div class="contract-header-title mt-2">Employment Contract</div>
+                    <div class="profile-container">
+                        <!-- Profile Header -->
+                        <div class="profile-header">
+                            <h2>Employment Contract</h2>
+                            <p style="margin-top: 0.5rem; color: #666; font-size: 0.95rem;">Contract ID: <c:out value='${contract.id}'/></p>
                         </div>
-                        <form>
-                            <!-- Row 1: ID & User ID -->
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">ID</label>
-                                    <input type="text" class="form-control" value="<c:out value='${contract.id}'/>" readonly>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">User ID</label>
-                                    <input type="text" class="form-control" value="<c:out value='${contract.userId}'/>" readonly>
-                                </div>
+                        
+                        <div class="contract-content">
+                            <!-- Row 1: Full Name (Full Width) -->
+                            <div class="form-row">
+                                <label class="form-label">Full Name:</label>
+                                <div class="form-value"><c:out value='${contract.userFullName}'/></div>
                             </div>
                             
                             <!-- Row 2: Contract No & Contract Type -->
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">Contract No</label>
-                                    <input type="text" class="form-control" value="<c:out value='${contract.contractNo}'/>" readonly>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Contract Type</label>
-                                    <input type="text" class="form-control" value="<c:out value='${contract.contractTypeDisplay}'/>" readonly>
-                                </div>
+                            <div class="form-row two-columns">
+                                <label class="form-label">Contract No:</label>
+                                <div class="form-value"><c:out value='${contract.contractNo}'/></div>
+                                <label class="form-label">Contract Type:</label>
+                                <div class="form-value"><c:out value='${contract.contractTypeDisplay}'/></div>
                             </div>
                             
                             <!-- Row 3: Start Date & End Date -->
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">Start Date</label>
-                                    <input type="text" class="form-control" value="<c:out value='${contract.formattedStartDate}'/>" readonly>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">End Date</label>
-                                    <input type="text" class="form-control" value="<c:out value='${contract.formattedEndDate}'/>" readonly>
-                                </div>
+                            <div class="form-row two-columns">
+                                <label class="form-label">Start Date:</label>
+                                <div class="form-value"><c:out value='${contract.formattedStartDate}'/></div>
+                                <label class="form-label">End Date:</label>
+                                <div class="form-value"><c:out value='${contract.formattedEndDate}'/></div>
                             </div>
                             
                             <!-- Row 4: Base Salary & Currency -->
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">Base Salary</label>
-                                    <input type="text" class="form-control" value="<c:out value='${contract.formattedSalary}'/>" readonly>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Currency</label>
-                                    <input type="text" class="form-control" value="<c:out value='${contract.currency}'/>" readonly>
-                                </div>
+                            <div class="form-row two-columns">
+                                <label class="form-label">Base Salary:</label>
+                                <div class="form-value"><c:out value='${contract.formattedSalary}'/></div>
+                                <label class="form-label">Currency:</label>
+                                <div class="form-value"><c:out value='${contract.currency}'/></div>
                             </div>
                             
-                            <!-- Row 5: Status & File Path -->
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">Status</label>
-                                    <div class="mt-2">
-                                        <span class="status-badge status-${contract.statusColor}">
-                                            <c:out value="${contract.statusDisplay}"/>
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">File Path</label>
-                                    <input type="text" class="form-control" value="<c:out value='${contract.filePath}'/>" readonly>
-                                </div>
+                            <!-- Row 5: Note (Full Width) -->
+                            <div class="form-row">
+                                <label class="form-label">Note:</label>
+                                <div class="form-value"><c:out value="${contract.note}"/></div>
                             </div>
                             
-                            <!-- Note - Full Width -->
-                            <div class="mb-3">
-                                <label class="form-label">Note</label>
-                                <textarea class="form-control" rows="2" readonly><c:out value="${contract.note}"/></textarea>
-                            </div>
-                            
-                            <!-- Row 6: Created By & Created At -->
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">Created By Account ID</label>
-                                    <input type="text" class="form-control" value="<c:out value='${contract.createdByAccountId}'/>" readonly>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Created At</label>
-                                    <input type="text" class="form-control" value="<c:out value='${contract.formattedCreatedAt}'/>" readonly>
-                                </div>
-                            </div>
-                            
-                            <!-- Row 7: Updated At (single field) -->
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">Updated At</label>
-                                    <input type="text" class="form-control" value="<c:out value='${contract.formattedUpdatedAt}'/>" readonly>
+                            <!-- Row 6: File Path (Link) -->
+                            <div class="form-row">
+                                <label class="form-label">Contract File:</label>
+                                <div class="form-value">
+                                    <c:choose>
+                                        <c:when test="${not empty contract.filePath}">
+                                            <a href="${pageContext.request.contextPath}/<c:out value='${contract.filePath}'/>" 
+                                               target="_blank" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-file-pdf me-1"></i>
+                                            </a>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <span class="text-muted">No file available</span>
+                                        </c:otherwise>
+                                    </c:choose>
                                 </div>
                             </div>
-                        </form>
-                        
+                        </div>
                     </div>
                 </c:when>
                 <c:otherwise>
-                    <div class="container mt-5">
-                        <div class="alert alert-info text-center" role="alert">
-                            <i class="fas fa-info-circle me-2"></i>
-                            <c:out value="${message != null ? message : 'Không tìm thấy hợp đồng hiện tại'}"/>
+                    <div class="profile-container">
+                        <div class="profile-header">
+                            <h2>Employment Contract</h2>
+                        </div>
+                        <div class="contract-content">
+                            <div class="alert alert-info text-center" role="alert">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <c:out value="${message != null ? message : 'Không tìm thấy hợp đồng hiện tại'}"/>
+                            </div>
                         </div>
                     </div>
                 </c:otherwise>
             </c:choose>
         </div>
+        
+        <!-- Footer -->
+        <jsp:include page="../layout/dashboard-footer.jsp" />
     </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

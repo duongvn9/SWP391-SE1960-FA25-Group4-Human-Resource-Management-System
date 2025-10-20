@@ -72,6 +72,11 @@ public class ContractController extends HttpServlet {
             if (contractOpt.isPresent()) {
                 EmploymentContract contract = contractOpt.get();
                 EmploymentContractDto dto = convertToDto(contract);
+                
+                // Set username and full name from session
+                dto.setUsername(getUsernameFromSession(req));
+                dto.setUserFullName(getFullNameFromSession(req));
+                
                 req.setAttribute("contract", dto);
                 logger.info("Found active contract for user_id: {}", userId);
             } else {
@@ -115,6 +120,26 @@ public class ContractController extends HttpServlet {
     }
     
     /**
+     * Get username from session
+     */
+    private String getUsernameFromSession(HttpServletRequest req) {
+        String username = SessionUtil.getCurrentUsername(req);
+        return (username != null) ? username : "N/A";
+    }
+    
+    /**
+     * Get full name from session
+     */
+    private String getFullNameFromSession(HttpServletRequest req) {
+        HttpSession session = req.getSession(false);
+        if (session != null) {
+            String fullName = (String) session.getAttribute("userFullName");
+            return (fullName != null) ? fullName : "N/A";
+        }
+        return "N/A";
+    }
+    
+    /**
      * Format LocalDate to dd/MM/yyyy
      */
     private String formatDate(LocalDate date) {
@@ -137,7 +162,7 @@ public class ContractController extends HttpServlet {
     }
     
     /**
-     * Format currency with thousand separator
+     * Format currency with thousand separator (without currency code)
      */
     private String formatCurrency(BigDecimal amount, String currency) {
         if (amount == null) {
@@ -148,8 +173,7 @@ public class ContractController extends HttpServlet {
         formatter.setMinimumFractionDigits(2);
         formatter.setMaximumFractionDigits(2);
         
-        String formatted = formatter.format(amount);
-        return formatted + " " + (currency != null ? currency : "VND");
+        return formatter.format(amount);
     }
     
     /**
