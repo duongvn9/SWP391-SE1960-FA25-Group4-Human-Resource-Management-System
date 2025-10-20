@@ -352,7 +352,7 @@ public class UserDao {
         }
 
         try (Connection conn = DatabaseUtil.getConnection();
-                   PreparedStatement ps = conn.prepareStatement(DELETE_USER)) {
+                PreparedStatement ps = conn.prepareStatement(DELETE_USER)) {
 
             ps.setLong(1, id);
 
@@ -751,8 +751,10 @@ public class UserDao {
 
     /**
      * Get subordinates (employees with lower job_level) for a manager
-     * - If user is DEPT_MANAGER: only get employees in same department with lower job_level
-     * - If user is HR_MANAGER/HR_STAFF/ADMIN: get all employees with lower job_level across all departments
+     * - If user is DEPT_MANAGER: only get employees in same department with lower
+     * job_level
+     * - If user is HR_MANAGER/HR_STAFF/ADMIN: get all employees with lower
+     * job_level across all departments
      *
      * @param userId The manager's user ID
      * @return List of subordinate users
@@ -761,34 +763,34 @@ public class UserDao {
         List<User> subordinates = new ArrayList<>();
 
         String query = """
-            SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
-                   u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
-                   u.start_work_date, u.created_at, u.updated_at,
-                   d.name as department_name, p.name as position_name, p.job_level
-            FROM users u
-            LEFT JOIN departments d ON u.department_id = d.id
-            LEFT JOIN positions p ON u.position_id = p.id
-            WHERE u.id != ?
-              AND u.status = 'ACTIVE'
-              AND p.job_level > (
-                  SELECT p2.job_level
-                  FROM users u2
-                  JOIN positions p2 ON u2.position_id = p2.id
-                  WHERE u2.id = ?
-              )
-              AND (
-                  -- If manager is DEPT_MANAGER, only show same department
-                  (SELECT p2.code FROM users u2 JOIN positions p2 ON u2.position_id = p2.id WHERE u2.id = ?) = 'DEPT_MANAGER'
-                  AND u.department_id = (SELECT department_id FROM users WHERE id = ?)
-                  OR
-                  -- If manager is HR/ADMIN, show all departments
-                  (SELECT p2.code FROM users u2 JOIN positions p2 ON u2.position_id = p2.id WHERE u2.id = ?) IN ('ADMIN', 'HR_MANAGER', 'HR_STAFF')
-              )
-            ORDER BY d.name, p.job_level, u.full_name
-            """;
+                SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
+                       u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                       u.start_work_date, u.created_at, u.updated_at,
+                       d.name as department_name, p.name as position_name, p.job_level
+                FROM users u
+                LEFT JOIN departments d ON u.department_id = d.id
+                LEFT JOIN positions p ON u.position_id = p.id
+                WHERE u.id != ?
+                  AND u.status = 'ACTIVE'
+                  AND p.job_level > (
+                      SELECT p2.job_level
+                      FROM users u2
+                      JOIN positions p2 ON u2.position_id = p2.id
+                      WHERE u2.id = ?
+                  )
+                  AND (
+                      -- If manager is DEPT_MANAGER, only show same department
+                      (SELECT p2.code FROM users u2 JOIN positions p2 ON u2.position_id = p2.id WHERE u2.id = ?) = 'DEPT_MANAGER'
+                      AND u.department_id = (SELECT department_id FROM users WHERE id = ?)
+                      OR
+                      -- If manager is HR/ADMIN, show all departments
+                      (SELECT p2.code FROM users u2 JOIN positions p2 ON u2.position_id = p2.id WHERE u2.id = ?) IN ('ADMIN', 'HR_MANAGER', 'HR_STAFF')
+                  )
+                ORDER BY d.name, p.job_level, u.full_name
+                """;
 
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(query)) {
+                PreparedStatement ps = conn.prepareStatement(query)) {
 
             ps.setLong(1, userId);
             ps.setLong(2, userId);
@@ -894,5 +896,207 @@ public class UserDao {
             logger.error("Lỗi khi tìm users theo status {}: {}", status, e.getMessage(), e);
             throw new RuntimeException("Lỗi khi tìm users theo status", e);
         }
+    }
+
+    /**
+     * Tìm employee code lớn nhất trong hệ thống
+     * Dùng để auto-generate employee code mới
+     *
+     * @return Employee code lớn nhất (format: HExxxx) hoặc null nếu chưa có user
+     *         nào
+     */
+    public String findMaxEmployeeCode() {
+        logger.debug("Tìm employee code lớn nhất");
+
+        String sql = "SELECT employee_code FROM users WHERE employee_code LIKE 'HE%' ORDER BY employee_code DESC LIMIT 1";
+
+        try (Connection conn = DatabaseUtil.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+
+            if (rs.next()) {
+                String maxCode = rs.getString("employee_code");
+                logger.debug("Employee code lớn nhất: {}", maxCode);
+                return maxCode;
+            }
+
+            logger.debug("Chưa có employee code nào trong hệ thống");
+            return null;
+
+        } catch (SQLException e) {
+            logger.error("Lỗi khi tìm max employee code: {}", e.getMessage(), e);
+            throw new RuntimeException("Lỗi khi tìm max employee code", e);
+        }
+    }
+
+    /**
+     * Kiểm tra employee code đã tồn tại chưa
+     *
+     * @param employeeCode Employee code cần kiểm tra
+     * @return true nếu đã tồn tại, false nếu chưa
+     */
+    public boolean isEmployeeCodeExists(String employeeCode) {
+        if (employeeCode == null || employeeCode.trim().isEmpty()) {
+            return false;
+        }
+
+        logger.debug("Kiểm tra employee code tồn tại: {}", employeeCode);
+
+        String sql = "SELECT COUNT(*) FROM users WHERE employee_code = ?";
+
+        try (Connection conn = DatabaseUtil.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, employeeCode.trim());
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    boolean exists = rs.getInt(1) > 0;
+                    logger.debug("Employee code {} {} tồn tại", employeeCode, exists ? "đã" : "chưa");
+                    return exists;
+                }
+            }
+
+        } catch (SQLException e) {
+            logger.error("Lỗi khi kiểm tra employee code tồn tại: {}", e.getMessage(), e);
+            throw new RuntimeException("Lỗi khi kiểm tra employee code tồn tại", e);
+        }
+
+        return false;
+    }
+
+    /**
+     * Kiểm tra company email đã tồn tại chưa
+     *
+     * @param emailCompany Company email cần kiểm tra
+     * @return true nếu đã tồn tại, false nếu chưa
+     */
+    public boolean isCompanyEmailExists(String emailCompany) {
+        if (emailCompany == null || emailCompany.trim().isEmpty()) {
+            return false;
+        }
+
+        logger.debug("Kiểm tra company email tồn tại: {}", emailCompany);
+
+        String sql = "SELECT COUNT(*) FROM users WHERE email_company = ?";
+
+        try (Connection conn = DatabaseUtil.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, emailCompany.trim().toLowerCase());
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    boolean exists = rs.getInt(1) > 0;
+                    logger.debug("Company email {} {} tồn tại", emailCompany, exists ? "đã" : "chưa");
+                    return exists;
+                }
+            }
+
+        } catch (SQLException e) {
+            logger.error("Lỗi khi kiểm tra company email tồn tại: {}", e.getMessage(), e);
+            throw new RuntimeException("Lỗi khi kiểm tra company email tồn tại", e);
+        }
+
+        return false;
+    }
+
+    /**
+     * Kiểm tra phone đã tồn tại chưa
+     *
+     * @param phone Phone number cần kiểm tra
+     * @return true nếu đã tồn tại, false nếu chưa
+     */
+    public boolean isPhoneExists(String phone) {
+        if (phone == null || phone.trim().isEmpty()) {
+            return false;
+        }
+
+        logger.debug("Kiểm tra phone tồn tại: {}", phone);
+
+        String sql = "SELECT COUNT(*) FROM users WHERE phone = ?";
+
+        try (Connection conn = DatabaseUtil.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, phone.trim());
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    boolean exists = rs.getInt(1) > 0;
+                    logger.debug("Phone {} {} tồn tại", phone, exists ? "đã" : "chưa");
+                    return exists;
+                }
+            }
+
+        } catch (SQLException e) {
+            logger.error("Lỗi khi kiểm tra phone tồn tại: {}", e.getMessage(), e);
+            throw new RuntimeException("Lỗi khi kiểm tra phone tồn tại", e);
+        }
+
+        return false;
+    }
+
+    /**
+     * Tìm department manager hiện tại của một department
+     * Note: Simplified version - checks if any user in department has position with code 'DEPT_MANAGER'
+     *
+     * @param departmentId Department ID
+     * @return User là department manager hoặc null nếu không có
+     */
+    public Optional<User> findDepartmentManager(Long departmentId) {
+        if (departmentId == null) {
+            return Optional.empty();
+        }
+
+        logger.debug("Tìm department manager cho department ID: {}", departmentId);
+
+        // Simplified query - assumes position with code 'DEPT_MANAGER' or similar exists
+        String sql = """
+                SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
+                       u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                       u.start_work_date, u.created_at, u.updated_at,
+                       d.name as department_name,
+                FROM users u
+                LEFT JOIN departments d ON u.department_id = d.id
+                LEFT JOIN positions p ON u.position_id = p.id
+                WHERE u.department_id = ? 
+                  AND u.status = 'active'
+                  AND (p.code = 'DEPT_MANAGER' OR p.name LIKE '%Manager%' OR p.name LIKE '%Trưởng phòng%')
+                LIMIT 1
+                """;
+
+        try (Connection conn = DatabaseUtil.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setLong(1, departmentId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    User manager = mapResultSetToUser(rs);
+                    logger.debug("Tìm thấy department manager: {} cho department ID: {}", 
+                            manager.getFullName(), departmentId);
+                    return Optional.of(manager);
+                }
+            }
+
+            logger.debug("Không tìm thấy department manager cho department ID: {}", departmentId);
+            return Optional.empty();
+
+        } catch (SQLException e) {
+            logger.error("Lỗi khi tìm department manager: {}", e.getMessage(), e);
+            throw new RuntimeException("Lỗi khi tìm department manager", e);
+        }
+    }
+
+    /**
+     * Lưu user mới vào database
+     * Alias method for create() to match design document naming
+     *
+     * @param user User object cần lưu
+     * @return User đã được lưu với ID, hoặc empty nếu thất bại
+     */
+    public Optional<User> save(User user) {
+        return create(user);
     }
 }

@@ -18,46 +18,39 @@ public class RoleDao {
     private static final Logger logger = LoggerFactory.getLogger(RoleDao.class);
 
     // SQL queries
-    private static final String SELECT_ALL = 
-        "SELECT id, code, name, priority, is_system, created_at, updated_at FROM roles ORDER BY priority DESC";
-    
-    private static final String SELECT_BY_ID = 
-        "SELECT id, code, name, priority, is_system, created_at, updated_at FROM roles WHERE id = ?";
-    
-    private static final String SELECT_BY_CODE = 
-        "SELECT id, code, name, priority, is_system, created_at, updated_at FROM roles WHERE code = ?";
-    
-    private static final String INSERT_ROLE = 
-        "INSERT INTO roles (code, name, priority, is_system) VALUES (?, ?, ?, ?)";
-    
-    private static final String UPDATE_ROLE = 
-        "UPDATE roles SET name = ?, priority = ?, updated_at = GETUTCDATE() WHERE id = ?";
-    
-    private static final String DELETE_ROLE = 
-        "DELETE FROM roles WHERE id = ? AND is_system = 0";
-    
-    private static final String SELECT_SYSTEM_ROLES = 
-        "SELECT id, code, name, priority, is_system, created_at, updated_at FROM roles WHERE is_system = 1 ORDER BY priority DESC";
+    private static final String SELECT_ALL = "SELECT id, code, name, priority, is_system, created_at, updated_at FROM roles ORDER BY priority DESC";
+
+    private static final String SELECT_BY_ID = "SELECT id, code, name, priority, is_system, created_at, updated_at FROM roles WHERE id = ?";
+
+    private static final String SELECT_BY_CODE = "SELECT id, code, name, priority, is_system, created_at, updated_at FROM roles WHERE code = ?";
+
+    private static final String INSERT_ROLE = "INSERT INTO roles (code, name, priority, is_system) VALUES (?, ?, ?, ?)";
+
+    private static final String UPDATE_ROLE = "UPDATE roles SET name = ?, priority = ?, updated_at = GETUTCDATE() WHERE id = ?";
+
+    private static final String DELETE_ROLE = "DELETE FROM roles WHERE id = ? AND is_system = 0";
+
+    private static final String SELECT_SYSTEM_ROLES = "SELECT id, code, name, priority, is_system, created_at, updated_at FROM roles WHERE is_system = 1 ORDER BY priority DESC";
 
     /**
      * Lấy tất cả roles
      */
     public List<Role> findAll() {
         List<Role> roles = new ArrayList<>();
-        
+
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(SELECT_ALL);
-             ResultSet rs = ps.executeQuery()) {
-            
+                PreparedStatement ps = conn.prepareStatement(SELECT_ALL);
+                ResultSet rs = ps.executeQuery()) {
+
             while (rs.next()) {
                 roles.add(mapResultSetToRole(rs));
             }
-            
+
             logger.info("Tìm thấy {} roles", roles.size());
         } catch (SQLException e) {
             logger.error("Lỗi khi lấy danh sách roles", e);
         }
-        
+
         return roles;
     }
 
@@ -68,12 +61,12 @@ public class RoleDao {
         if (id == null) {
             return Optional.empty();
         }
-        
+
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(SELECT_BY_ID)) {
-            
+                PreparedStatement ps = conn.prepareStatement(SELECT_BY_ID)) {
+
             ps.setLong(1, id);
-            
+
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     Role role = mapResultSetToRole(rs);
@@ -84,7 +77,7 @@ public class RoleDao {
         } catch (SQLException e) {
             logger.error("Lỗi khi tìm role với ID: " + id, e);
         }
-        
+
         return Optional.empty();
     }
 
@@ -95,12 +88,12 @@ public class RoleDao {
         if (code == null || code.trim().isEmpty()) {
             return Optional.empty();
         }
-        
+
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(SELECT_BY_CODE)) {
-            
+                PreparedStatement ps = conn.prepareStatement(SELECT_BY_CODE)) {
+
             ps.setString(1, code.trim().toUpperCase());
-            
+
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     Role role = mapResultSetToRole(rs);
@@ -111,7 +104,7 @@ public class RoleDao {
         } catch (SQLException e) {
             logger.error("Lỗi khi tìm role với code: " + code, e);
         }
-        
+
         return Optional.empty();
     }
 
@@ -120,20 +113,20 @@ public class RoleDao {
      */
     public List<Role> findSystemRoles() {
         List<Role> roles = new ArrayList<>();
-        
+
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(SELECT_SYSTEM_ROLES);
-             ResultSet rs = ps.executeQuery()) {
-            
+                PreparedStatement ps = conn.prepareStatement(SELECT_SYSTEM_ROLES);
+                ResultSet rs = ps.executeQuery()) {
+
             while (rs.next()) {
                 roles.add(mapResultSetToRole(rs));
             }
-            
+
             logger.info("Tìm thấy {} system roles", roles.size());
         } catch (SQLException e) {
             logger.error("Lỗi khi lấy system roles", e);
         }
-        
+
         return roles;
     }
 
@@ -145,17 +138,17 @@ public class RoleDao {
             logger.warn("Dữ liệu role không hợp lệ để tạo mới");
             return Optional.empty();
         }
-        
+
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(INSERT_ROLE, Statement.RETURN_GENERATED_KEYS)) {
-            
+                PreparedStatement ps = conn.prepareStatement(INSERT_ROLE, Statement.RETURN_GENERATED_KEYS)) {
+
             ps.setString(1, role.getCode().trim().toUpperCase());
             ps.setString(2, role.getName().trim());
             ps.setInt(3, role.getPriority() != null ? role.getPriority().intValue() : 0);
             ps.setBoolean(4, role.getIsSystem() != null ? role.getIsSystem().booleanValue() : false);
-            
+
             int affectedRows = ps.executeUpdate();
-            
+
             if (affectedRows > 0) {
                 try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
@@ -168,7 +161,7 @@ public class RoleDao {
         } catch (SQLException e) {
             logger.error("Lỗi khi tạo role: " + role.getCode(), e);
         }
-        
+
         return Optional.empty();
     }
 
@@ -180,16 +173,16 @@ public class RoleDao {
             logger.warn("Dữ liệu role không hợp lệ để cập nhật");
             return false;
         }
-        
+
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(UPDATE_ROLE)) {
-            
+                PreparedStatement ps = conn.prepareStatement(UPDATE_ROLE)) {
+
             ps.setString(1, role.getName().trim());
             ps.setInt(2, role.getPriority() != null ? role.getPriority().intValue() : 0);
             ps.setLong(3, role.getId());
-            
+
             int affectedRows = ps.executeUpdate();
-            
+
             if (affectedRows > 0) {
                 logger.info("Cập nhật thành công role ID: {}", role.getId());
                 return true;
@@ -197,7 +190,7 @@ public class RoleDao {
         } catch (SQLException e) {
             logger.error("Lỗi khi cập nhật role ID: " + role.getId(), e);
         }
-        
+
         return false;
     }
 
@@ -208,14 +201,14 @@ public class RoleDao {
         if (id == null) {
             return false;
         }
-        
+
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(DELETE_ROLE)) {
-            
+                PreparedStatement ps = conn.prepareStatement(DELETE_ROLE)) {
+
             ps.setLong(1, id);
-            
+
             int affectedRows = ps.executeUpdate();
-            
+
             if (affectedRows > 0) {
                 logger.info("Xóa thành công role ID: {}", id);
                 return true;
@@ -225,7 +218,7 @@ public class RoleDao {
         } catch (SQLException e) {
             logger.error("Lỗi khi xóa role ID: " + id, e);
         }
-        
+
         return false;
     }
 
@@ -234,6 +227,49 @@ public class RoleDao {
      */
     public boolean existsByCode(String code) {
         return findByCode(code).isPresent();
+    }
+
+    /**
+     * Tìm role theo name
+     * Alias method for findByCode since roles are typically identified by code
+     * 
+     * @param name Role name or code
+     * @return Optional containing the role if found
+     */
+    public Optional<Role> findByName(String name) {
+        // Try to find by code first (most common case)
+        Optional<Role> roleByCode = findByCode(name);
+        if (roleByCode.isPresent()) {
+            return roleByCode;
+        }
+
+        // If not found by code, try to find by name
+        if (name == null || name.trim().isEmpty()) {
+            return Optional.empty();
+        }
+
+        logger.debug("Tìm role theo name: {}", name);
+
+        String sql = "SELECT id, code, name, priority, is_system, created_at, updated_at FROM roles WHERE name = ?";
+
+        try (Connection conn = DatabaseUtil.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, name.trim());
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Role role = mapResultSetToRole(rs);
+                    logger.debug("Tìm thấy role với name {}: {}", name, role.getCode());
+                    return Optional.of(role);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Lỗi khi tìm role với name: " + name, e);
+        }
+
+        logger.debug("Không tìm thấy role với name: {}", name);
+        return Optional.empty();
     }
 
     /**
@@ -246,17 +282,17 @@ public class RoleDao {
         role.setName(rs.getString("name"));
         role.setPriority(rs.getInt("priority"));
         role.setIsSystem(rs.getBoolean("is_system"));
-        
+
         Timestamp createdAt = rs.getTimestamp("created_at");
         if (createdAt != null) {
             role.setCreatedAt(createdAt.toLocalDateTime());
         }
-        
+
         Timestamp updatedAt = rs.getTimestamp("updated_at");
         if (updatedAt != null) {
             role.setUpdatedAt(updatedAt.toLocalDateTime());
         }
-        
+
         return role;
     }
 }
