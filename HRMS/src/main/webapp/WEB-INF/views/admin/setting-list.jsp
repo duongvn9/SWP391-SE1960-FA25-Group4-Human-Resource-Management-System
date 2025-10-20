@@ -35,27 +35,26 @@
                 </a>
             </div>
 
-            <c:if test="${param.success == 'create'}">
+            <!-- Success Messages -->
+            <c:if test="${not empty param.success}">
                 <div class="alert alert-success alert-dismissible fade show">
-                    Setting created successfully!
+                    <i class="fas fa-check-circle"></i> ${param.success}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             </c:if>
-            <c:if test="${param.success == 'update'}">
-                <div class="alert alert-success alert-dismissible fade show">
-                    Setting updated successfully!
+            
+            <!-- Info Messages -->
+            <c:if test="${not empty param.info}">
+                <div class="alert alert-info alert-dismissible fade show">
+                    <i class="fas fa-info-circle"></i> ${param.info}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             </c:if>
-            <c:if test="${param.success == 'delete'}">
-                <div class="alert alert-success alert-dismissible fade show">
-                    Setting deleted successfully!
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            </c:if>
-            <c:if test="${param.error != null}">
+            
+            <!-- Error Messages -->
+            <c:if test="${not empty param.error}">
                 <div class="alert alert-danger alert-dismissible fade show">
-                    Error: ${param.error}
+                    <i class="fas fa-exclamation-circle"></i> ${param.error}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             </c:if>
@@ -192,18 +191,25 @@
             }
         }
         
-        // Auto-dismiss success messages after 3 seconds
+        // Auto-dismiss success and info messages after 3 seconds
         window.addEventListener('DOMContentLoaded', function() {
             var successAlert = document.querySelector('.alert-success');
-            if (successAlert) {
-                setTimeout(function() {
-                    successAlert.style.transition = 'opacity 0.5s';
-                    successAlert.style.opacity = '0';
+            var infoAlert = document.querySelector('.alert-info');
+            
+            function dismissAlert(alert) {
+                if (alert) {
                     setTimeout(function() {
-                        successAlert.remove();
-                    }, 500);
-                }, 3000);
+                        alert.style.transition = 'opacity 0.5s';
+                        alert.style.opacity = '0';
+                        setTimeout(function() {
+                            alert.remove();
+                        }, 500);
+                    }, 3000);
+                }
             }
+            
+            dismissAlert(successAlert);
+            dismissAlert(infoAlert);
         });
     </script>
 </body>
