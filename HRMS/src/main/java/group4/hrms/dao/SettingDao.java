@@ -95,6 +95,28 @@ public class SettingDao {
     }
     
     /**
+     * Đếm số lượng users đang sử dụng setting này
+     * @param settingId ID của setting
+     * @param type Type của setting (Department, Position, Role)
+     * @return Số lượng users đang sử dụng
+     * @throws Exception nếu có lỗi database
+     */
+    public int countUsage(Long settingId, String type) throws Exception {
+        logger.debug("Counting usage for setting: ID={}, Type={}", settingId, type);
+        
+        switch (type) {
+            case "Department":
+                return departmentDao.countEmployees(settingId);
+            case "Position":
+                return positionDao.countUsers(settingId);
+            case "Role":
+                return roleDao.countUsers(settingId);
+            default:
+                throw new RuntimeException("Invalid setting type: " + type);
+        }
+    }
+    
+    /**
      * Xóa setting theo ID và Type
      */
     public boolean delete(Long settingId, String type) {

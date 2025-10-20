@@ -50,7 +50,7 @@ public class DepartmentDao {
         "SELECT id, name, head_account_id, created_at, updated_at " +
         "FROM departments " +
         "WHERE name = ?";
-    
+   
     /**
      * Tạo mới department
      */
@@ -262,27 +262,7 @@ public class DepartmentDao {
     /**
      * Đếm số employees trong department
      */
-    public int countEmployees(Long departmentId) {
-        logger.debug("Đếm employees trong department ID: {}", departmentId);
-
-        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(COUNT_EMPLOYEES_IN_DEPARTMENT)) {
-
-            stmt.setLong(1, departmentId);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    int count = rs.getInt(1);
-                    logger.debug("Department ID {} có {} employees", departmentId, count);
-                    return count;
-                }
-                return 0;
-            }
-
-        } catch (SQLException e) {
-            logger.error("Lỗi khi đếm employees trong department ID {}: {}", departmentId, e.getMessage(), e);
-            throw new RuntimeException("Lỗi khi đếm employees", e);
-        }
-    }
+    
 
     /**
      * Kiểm tra department có employees không
@@ -304,6 +284,36 @@ public class DepartmentDao {
     public boolean existsByNameAndNotId(String name, Long excludeId) {
         Optional<Department> dept = findByName(name);
         return dept.isPresent() && !dept.get().getId().equals(excludeId);
+    }
+    
+    /**
+     * Đếm số employees trong department
+     * @param departmentId ID của department
+     * @return Số lượng employees
+     */
+    public int countEmployees(Long departmentId) {
+        logger.debug("Counting employees in department ID: {}", departmentId);
+        
+        String sql = "SELECT COUNT(*) FROM users WHERE department_id = ?";
+        
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setLong(1, departmentId);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    int count = rs.getInt(1);
+                    logger.debug("Department ID {} has {} employees", departmentId, count);
+                    return count;
+                }
+                return 0;
+            }
+            
+        } catch (SQLException e) {
+            logger.error("Error counting employees in department ID {}: {}", departmentId, e.getMessage(), e);
+            throw new RuntimeException("Error counting employees", e);
+        }
     }
 
     // Helper methods

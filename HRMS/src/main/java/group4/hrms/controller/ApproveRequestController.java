@@ -84,14 +84,21 @@ public class ApproveRequestController extends HttpServlet {
 
             Request req = requestOpt.get();
 
-            // Parse OT detail if exists (needed for permission check)
+            // Parse request detail based on request_type_id (needed for permission check)
             if (req.getDetailJson() != null && !req.getDetailJson().trim().isEmpty()) {
                 try {
-                    if (req.getDetailJson().contains("otDate")) {
-                        req.getOtDetail(); // This will parse and cache OT detail
+                    Long requestTypeId = req.getRequestTypeId();
+                    if (requestTypeId != null) {
+                        if (requestTypeId == 7L) {
+                            req.getOtDetail(); // Parse OT detail for OVERTIME_REQUEST
+                        } else if (requestTypeId == 6L) {
+                            req.getLeaveDetail(); // Parse Leave detail for LEAVE_REQUEST
+                        } else if (requestTypeId == 8L) {
+                            req.getAppealDetail(); // Parse Appeal detail for ADJUSTMENT_REQUEST
+                        }
                     }
                 } catch (Exception e) {
-                    logger.warning("Error parsing OT detail for request " + requestId + ": " + e.getMessage());
+                    logger.warning("Error parsing request detail for request " + requestId + ": " + e.getMessage());
                 }
             }
 

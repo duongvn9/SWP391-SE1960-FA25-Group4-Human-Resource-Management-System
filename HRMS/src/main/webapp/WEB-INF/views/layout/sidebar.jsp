@@ -236,13 +236,36 @@
                     </ul>
                 </li>
 
+                <!-- Dropdown: Attendance -->
                 <li class="nav-item">
-                    <a href="${pageContext.request.contextPath}/attendance"
-                        class="nav-link ${param.currentPage == 'attendance' ? 'active' : ''}" data-tooltip="Attendance">
+                    <a href="#" class="nav-link sidebar-dropdown-toggle" data-target="attendance-submenu"
+                        aria-expanded="false" data-tooltip="Attendance">
                         <i class="fas fa-clock"></i><span>Attendance</span>
+                        <i class="fas fa-chevron-right dropdown-arrow"></i>
                     </a>
+                    <ul class="sidebar-submenu" id="attendance-submenu">
+                        <li>
+                            <a href="${pageContext.request.contextPath}/attendance/record/HR"
+                                class="nav-link ${param.currentPage == 'attendance-viewAll' ? 'active' : ''}">
+                                <i class="fas fa-list"></i><span>View All Attendance Records</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="${pageContext.request.contextPath}/attendance/record/emp"
+                                class="nav-link ${param.currentPage == 'attendance-viewMy' ? 'active' : ''}">
+                                <i class="fas fa-user-check"></i><span>View My Attendance Record</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="${pageContext.request.contextPath}/attendance/import"
+                                class="nav-link ${param.currentPage == 'attendance-import' ? 'active' : ''}">
+                                <i class="fas fa-file-import"></i><span>Import Attendance</span>
+                            </a>
+                        </li>
+                    </ul>
                 </li>
 
+                <!-- Payroll -->
                 <li class="nav-item">
                     <a href="${pageContext.request.contextPath}/payroll"
                         class="nav-link ${param.currentPage == 'payroll' ? 'active' : ''}" data-tooltip="Payroll">
@@ -289,8 +312,7 @@
                 <c:if test="${sessionScope.user != null && sessionScope.user.positionId == 6}">
                     <li class="nav-item">
                         <a href="${pageContext.request.contextPath}/settings"
-                            class="nav-link ${param.currentPage == 'settings' ? 'active' : ''}"
-                            data-tooltip="Settings">
+                            class="nav-link ${param.currentPage == 'settings' ? 'active' : ''}" data-tooltip="Settings">
                             <i class="fas fa-cog"></i><span>Settings</span>
                         </a>
                     </li>
@@ -315,13 +337,13 @@
 
                 <!-- Profile & Logout -->
                 <li class="nav-item mt-3">
-                    <a href="${pageContext.request.contextPath}/profile"
+                    <a href="${pageContext.request.contextPath}/user-profile"
                         class="nav-link ${param.currentPage == 'profile' ? 'active' : ''}" data-tooltip="Profile">
                         <i class="fas fa-user"></i><span>Profile</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="${pageContext.request.contextPath}/profile/change-password"
+                    <a href="${pageContext.request.contextPath}/user-profile/change-password"
                         class="nav-link ${param.currentPage == 'change-password' ? 'active' : ''}"
                         data-tooltip="Change Password">
                         <i class="fas fa-key"></i><span>Change Password</span>
@@ -387,7 +409,8 @@
                             const menu = document.getElementById(id);
                             const open = tg.getAttribute('aria-expanded') === 'true';
                             tg.setAttribute('aria-expanded', (!open).toString());
-                            if (menu) menu.classList.toggle('show', !open);
+                            if (menu)
+                                menu.classList.toggle('show', !open);
                         });
                     });
 

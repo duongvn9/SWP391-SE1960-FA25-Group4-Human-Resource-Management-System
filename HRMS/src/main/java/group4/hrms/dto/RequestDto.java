@@ -26,6 +26,7 @@ public class RequestDto {
     // Parsed detail objects (transient - not serialized)
     private transient LeaveRequestDetail leaveDetail;
     private transient OTRequestDetail otDetail;
+    private transient AppealRequestDetail appealDetail;
 
     private String status;
     private String statusDisplay;           // Hiển thị trạng thái tiếng Việt
@@ -66,22 +67,18 @@ public class RequestDto {
         this.description = request.getDescription();
         this.detailJson = request.getDetailJson();
 
-        // Parse detail JSON based on content (not request type)
-        // Check JSON content to determine which detail type to parse
-        if (this.detailJson != null && !this.detailJson.trim().isEmpty()) {
+        // Parse detail JSON based on request_type_id
+        if (this.detailJson != null && !this.detailJson.trim().isEmpty() && this.requestTypeId != null) {
             try {
-                // Check JSON content to determine type
-                if (this.detailJson.contains("leaveTypeCode") || this.detailJson.contains("startDate")) {
+                if (this.requestTypeId == 6L) {
+                    // LEAVE_REQUEST
                     this.leaveDetail = request.getLeaveDetail();
-                } else if (this.detailJson.contains("otDate") || this.detailJson.contains("otHours")) {
+                } else if (this.requestTypeId == 7L) {
+                    // OVERTIME_REQUEST
                     this.otDetail = request.getOtDetail();
-                } else {
-                    // Try both if unclear
-                    try {
-                        this.leaveDetail = request.getLeaveDetail();
-                    } catch (Exception e) {
-                        this.otDetail = request.getOtDetail();
-                    }
+                } else if (this.requestTypeId == 8L) {
+                    // ADJUSTMENT_REQUEST (Appeal)
+                    this.appealDetail = request.getAppealDetail();
                 }
             } catch (Exception e) {
                 // Ignore parsing errors - detail will be null
@@ -253,6 +250,33 @@ public class RequestDto {
             }
         }
         return otDetail;
+    }
+
+    /**
+     * Get parsed AppealRequestDetail from JSON
+     * Lazy-loads from detailJson if needed
+     *
+     * @return AppealRequestDetail object or null if detailJson is null
+     */
+    public AppealRequestDetail getAppealDetail() {
+        if (appealDetail == null && detailJson != null && !detailJson.trim().isEmpty()) {
+            try {
+                appealDetail = AppealRequestDetail.fromJson(detailJson);
+            } catch (Exception e) {
+                // Return null if parsing fails
+                return null;
+            }
+        }
+        return appealDetail;
+    }
+
+    /**
+     * Set AppealRequestDetail
+     *
+     * @param appealDetail AppealRequestDetail object to set
+     */
+    public void setAppealDetail(AppealRequestDetail appealDetail) {
+        this.appealDetail = appealDetail;
     }
 
     /**

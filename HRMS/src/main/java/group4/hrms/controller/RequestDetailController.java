@@ -149,13 +149,21 @@ public class RequestDetailController extends HttpServlet {
             // RequestDao.findById() may not parse JSON detail, so we manually trigger it
             if (requestEntity.getDetailJson() != null && !requestEntity.getDetailJson().trim().isEmpty()) {
                 try {
-                    // Trigger lazy parsing by calling getters
-                    if (requestEntity.getDetailJson().contains("otDate")) {
-                        requestEntity.getOtDetail(); // This will parse and cache OT detail
-                        logger.info("Parsed OT detail for request " + requestId + ". CreatedByManager="
-                            + (requestEntity.getOtDetail() != null && requestEntity.getOtDetail().getCreatedByManager()));
-                    } else if (requestEntity.getDetailJson().contains("leaveTypeCode")) {
-                        requestEntity.getLeaveDetail(); // This will parse and cache Leave detail
+                    // Trigger lazy parsing based on request_type_id
+                    Long requestTypeId = requestEntity.getRequestTypeId();
+                    if (requestTypeId != null) {
+                        if (requestTypeId == 7L) {
+                            // OVERTIME_REQUEST
+                            requestEntity.getOtDetail();
+                            logger.info("Parsed OT detail for request " + requestId + ". CreatedByManager="
+                                + (requestEntity.getOtDetail() != null && requestEntity.getOtDetail().getCreatedByManager()));
+                        } else if (requestTypeId == 6L) {
+                            // LEAVE_REQUEST
+                            requestEntity.getLeaveDetail();
+                        } else if (requestTypeId == 8L) {
+                            // ADJUSTMENT_REQUEST (Appeal)
+                            requestEntity.getAppealDetail();
+                        }
                     }
                 } catch (Exception e) {
                     logger.warning("Error parsing detail JSON for request " + requestId + ": " + e.getMessage());
