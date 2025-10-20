@@ -164,6 +164,44 @@ public class RequestListService {
         }
     }
 
+    /**
+     * Get request type statistics for current filter scope
+     * Returns counts for all request types regardless of pagination
+     *
+     * This is used for statistics cards in request list page.
+     * The counts respect all active filters but ignore the type filter
+     * (since we want counts for ALL types in the statistics).
+     *
+     * @param filter Filter criteria (scope, status, date range, etc.)
+     * @param currentUser Current logged-in user
+     * @param position User's position
+     * @return Map of request_type_id -> count
+     */
+    public Map<Long, Integer> getRequestTypeStatistics(RequestListFilter filter, User currentUser, Position position) {
+        logger.info(String.format("Getting request type statistics: userId=%d, scope=%s",
+                   currentUser.getId(), filter.getScope()));
+
+        try {
+            // 1. Determine actual scope
+            String actualScope = determineActualScope(filter.getScope(), position);
+
+            // 2. Get user IDs based on scope
+            List<Long> targetUserIds = getTargetUserIds(actualScope, currentUser);
+
+            // 3. Get counts by type from DAO
+            Map<Long, Integer> typeCounts = requestDao.countByRequestType(filter, targetUserIds);
+
+            logger.info(String.format("Request type statistics: %s", typeCounts));
+            return typeCounts;
+
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, String.format("Error getting request type statistics: userId=%d, scope=%s",
+                      currentUser.getId(), filter.getScope()), e);
+            // Return empty map on error instead of failing
+            return new java.util.HashMap<>();
+        }
+    }
+
     // ==================== Private Helper Methods ====================
 
     /**
