@@ -238,18 +238,18 @@ public class RequestListPermissionHelper {
                 return false;
             }
             int jobLevel = position.getJobLevel();
-            
+
             // Only HR_MANAGER (level 2) and HR_STAFF (level 3) can approve
             // DEPT_MANAGER (level 4) and below CANNOT approve
             if (jobLevel > JOB_LEVEL_HR_STAFF) {
                 return false;
             }
-            
+
             // Cannot approve own request
             if (user.getId().equals(request.getCreatedByUserId())) {
                 return false;
             }
-            
+
             // Can approve PENDING requests
             return request.isPending();
         }
@@ -433,7 +433,7 @@ public class RequestListPermissionHelper {
                     }
                 }
             }
-            
+
             // Check Appeal request (type_id=8)
             if (request.getRequestTypeId() != null && request.getRequestTypeId() == 8L
                 && request.getAppealDetail() != null) {

@@ -1,13 +1,14 @@
 package group4.hrms.dto;
 
+import java.util.Arrays;
+import java.util.List;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonSyntaxException;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.SerializedName;
-import java.util.List;
-import java.util.Arrays;
 
 /**
  * Data Transfer Object for Attendance Appeal Request details.
@@ -32,20 +33,20 @@ public class AppealRequestDetail {
     // Core fields
     @SerializedName(value = "attendanceDates", alternate = {"attendance_dates"})
     private List<String> attendanceDates;  // List of dates being disputed (format: "yyyy-MM-dd")
-    
+
     @SerializedName(value = "reason", alternate = {"detail_text"})
     private String reason;                 // Reason/explanation of the dispute (maps to detail_text in DB)
-    
+
     @SerializedName(value = "attachmentPath", alternate = {"attachment_path"})
     private String attachmentPath;         // Path to supporting document (optional)
 
     // HR/HRM review fields
     @SerializedName(value = "hrNotes", alternate = {"hr_notes"})
     private String hrNotes;                // Notes from HR during review
-    
+
     @SerializedName(value = "hrmNotes", alternate = {"hrm_notes"})
     private String hrmNotes;               // Notes from HRM during review
-    
+
     @SerializedName(value = "resolutionAction", alternate = {"resolution_action"})
     private String resolutionAction;       // Action taken to resolve the dispute
 
@@ -101,12 +102,12 @@ public class AppealRequestDetail {
         try {
             // Parse JSON to check format
             JsonObject jsonObject = JsonParser.parseString(json).getAsJsonObject();
-            
+
             // Check if attendance_dates is a string (comma-separated format: "2025-10-20,2025-10-19" or empty "")
             if (jsonObject.has("attendance_dates") && jsonObject.get("attendance_dates").isJsonPrimitive()) {
                 String datesString = jsonObject.get("attendance_dates").getAsString();
                 List<String> datesList;
-                
+
                 if (datesString != null && !datesString.trim().isEmpty()) {
                     // Support both comma and dot as separators: "2025-10-20,2025-10-19" or "2025-10-20.2025-10-19"
                     String[] datesArray = datesString.split("[,.]");
@@ -119,16 +120,16 @@ public class AppealRequestDetail {
                     // Empty string → empty list
                     datesList = new java.util.ArrayList<>();
                 }
-                
+
                 // Remove attendance_dates from JSON to avoid Gson parsing error
                 jsonObject.remove("attendance_dates");
-                
+
                 // Parse object and set dates manually
                 AppealRequestDetail detail = gson.fromJson(jsonObject.toString(), AppealRequestDetail.class);
                 detail.setAttendanceDates(datesList);
                 return detail;
             }
-            
+
             // Standard deserialization for modern format or if attendance_dates is already an array
             return gson.fromJson(json, AppealRequestDetail.class);
         } catch (JsonSyntaxException e) {
