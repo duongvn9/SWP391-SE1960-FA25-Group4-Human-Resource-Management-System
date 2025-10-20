@@ -46,11 +46,13 @@
                     <p class="page-subtitle">View and manage your requests</p>
                 </div>
                 <div class="d-flex gap-2">
-                    <!-- Export Button (HR only) -->
+                    <!-- Export to Excel Button (HR only) -->
                     <c:if test="${canExport}">
-                        <button class="btn btn-success" onclick="exportRequests()">
-                            <i class="fas fa-download me-1"></i> Export
-                        </button>
+                        <a href="${pageContext.request.contextPath}/requests/export?scope=${filter.scope}&type=${filter.requestTypeId}&status=${filter.status}&fromDate=${filter.fromDate}&toDate=${filter.toDate}&employeeId=${filter.employeeId}&search=${filter.searchKeyword}&format=excel" 
+                           class="btn btn-success"
+                           download>
+                            <i class="fas fa-file-excel me-1"></i> Export Excel
+                        </a>
                     </c:if>
                     <a href="${pageContext.request.contextPath}/requests/leave/create" class="btn btn-primary">
                         <i class="fas fa-plus me-1"></i> New Request
