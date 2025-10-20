@@ -13,6 +13,7 @@ public class RequestDto {
 
     private Long id;
     private Long userId;
+    private Long createdByAccountId;        // Account ID of creator (for manager-created requests)
     private String userName;                // Tên người tạo request
     private String userFullName;            // Họ tên đầy đủ
     private Long requestTypeId;
@@ -50,6 +51,7 @@ public class RequestDto {
     private boolean canApprove;             // Can user approve/reject this request
     private String updateUrl;               // URL to update page
     private String detailUrl;               // URL to detail page
+    private int attachmentCount;            // Number of attachments for this request
 
     // Constructors
     public RequestDto() {
@@ -58,23 +60,32 @@ public class RequestDto {
     public RequestDto(Request request) {
         this.id = request.getId();
         this.userId = request.getUserId();
+        this.createdByAccountId = request.getCreatedByAccountId();
         this.requestTypeId = request.getRequestTypeId();
         this.title = request.getTitle();
         this.description = request.getDescription();
         this.detailJson = request.getDetailJson();
 
-        // Parse detail JSON based on request type
+        // Parse detail JSON based on content (not request type)
+        // Check JSON content to determine which detail type to parse
         if (this.detailJson != null && !this.detailJson.trim().isEmpty()) {
             try {
-                // Try to parse as LeaveRequestDetail first
-                this.leaveDetail = request.getLeaveDetail();
-            } catch (Exception e) {
-                // If fails, try OTRequestDetail
-                try {
+                // Check JSON content to determine type
+                if (this.detailJson.contains("leaveTypeCode") || this.detailJson.contains("startDate")) {
+                    this.leaveDetail = request.getLeaveDetail();
+                } else if (this.detailJson.contains("otDate") || this.detailJson.contains("otHours")) {
                     this.otDetail = request.getOtDetail();
-                } catch (Exception ex) {
-                    // Ignore parsing errors - detail will be null
+                } else {
+                    // Try both if unclear
+                    try {
+                        this.leaveDetail = request.getLeaveDetail();
+                    } catch (Exception e) {
+                        this.otDetail = request.getOtDetail();
+                    }
                 }
+            } catch (Exception e) {
+                // Ignore parsing errors - detail will be null
+                // Log at debug level if needed
             }
         }
 
@@ -103,6 +114,8 @@ public class RequestDto {
         Request request = new Request();
         request.setId(this.id);
         request.setUserId(this.userId);
+        request.setCreatedByAccountId(this.createdByAccountId);
+        request.setCreatedByUserId(this.userId); // Also set createdByUserId for consistency
         request.setRequestTypeId(this.requestTypeId);
         request.setTitle(this.title);
         request.setDescription(this.description);
@@ -135,6 +148,14 @@ public class RequestDto {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public Long getCreatedByAccountId() {
+        return createdByAccountId;
+    }
+
+    public void setCreatedByAccountId(Long createdByAccountId) {
+        this.createdByAccountId = createdByAccountId;
     }
 
     public String getUserName() {
@@ -346,6 +367,17 @@ public class RequestDto {
         this.approvedAt = approvedAt;
     }
 
+    /**
+     * Get approvedAt as java.util.Date for JSP fmt:formatDate compatibility
+     * @return Date object or null if approvedAt is null
+     */
+    public java.util.Date getApprovedAtAsDate() {
+        if (approvedAt == null) {
+            return null;
+        }
+        return java.util.Date.from(approvedAt.atZone(java.time.ZoneId.systemDefault()).toInstant());
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -367,6 +399,17 @@ public class RequestDto {
 
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
+    }
+
+    /**
+     * Get updatedAt as java.util.Date for JSP fmt:formatDate compatibility
+     * @return Date object or null if updatedAt is null
+     */
+    public java.util.Date getUpdatedAtAsDate() {
+        if (updatedAt == null) {
+            return null;
+        }
+        return java.util.Date.from(updatedAt.atZone(java.time.ZoneId.systemDefault()).toInstant());
     }
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
@@ -511,6 +554,14 @@ public class RequestDto {
 
     public void setDetailUrl(String detailUrl) {
         this.detailUrl = detailUrl;
+    }
+
+    public int getAttachmentCount() {
+        return attachmentCount;
+    }
+
+    public void setAttachmentCount(int attachmentCount) {
+        this.attachmentCount = attachmentCount;
     }
 
     // Helper method to determine status badge CSS class

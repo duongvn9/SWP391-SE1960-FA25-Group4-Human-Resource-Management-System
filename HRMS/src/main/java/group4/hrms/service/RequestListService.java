@@ -1,22 +1,26 @@
 package group4.hrms.service;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import group4.hrms.dao.DepartmentDao;
 import group4.hrms.dao.RequestDao;
 import group4.hrms.dao.UserDao;
-import group4.hrms.dao.DepartmentDao;
+import group4.hrms.dto.PaginationMetadata;
 import group4.hrms.dto.RequestDto;
 import group4.hrms.dto.RequestListFilter;
 import group4.hrms.dto.RequestListResult;
-import group4.hrms.dto.PaginationMetadata;
-import group4.hrms.model.User;
 import group4.hrms.model.Position;
 import group4.hrms.model.Request;
-import group4.hrms.model.Department;
+import group4.hrms.model.User;
 import group4.hrms.util.RequestListPermissionHelper;
-
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 /**
  * Service for Request List functionality
@@ -47,13 +51,14 @@ public class RequestListService {
      * @param filter Filter criteria
      * @param currentUser Current logged-in user
      * @param position User's position (for permission checks)
+     * @param currentAccountId Current user's account ID (for permission checks)
      * @param contextPath Context path for building URLs
      * @return RequestListResult with filtered requests and pagination
      */
     public RequestListResult getRequestList(RequestListFilter filter, User currentUser,
-                                           Position position, String contextPath) {
-        logger.info(String.format("Getting request list: userId=%d, scope=%s, filter=%s",
-                   currentUser.getId(), filter.getScope(), filter));
+                                           Position position, Long currentAccountId, String contextPath) {
+        logger.info(String.format("Getting request list: userId=%d, accountId=%d, scope=%s, filter=%s",
+                   currentUser.getId(), currentAccountId, filter.getScope(), filter));
 
         try {
             // 1. Determine actual scope based on user permissions
@@ -75,7 +80,7 @@ public class RequestListService {
 
             // 6. Set UI helper fields for each request
             for (RequestDto request : requests) {
-                enrichRequestDto(request, currentUser, position, contextPath);
+                enrichRequestDto(request, currentUser, position, currentAccountId, contextPath);
             }
 
             // 7. Create pagination metadata
@@ -228,7 +233,7 @@ public class RequestListService {
      *
      * Requirement: 10
      */
-    private void enrichRequestDto(RequestDto dto, User currentUser, Position position, String contextPath) {
+    private void enrichRequestDto(RequestDto dto, User currentUser, Position position, Long currentAccountId, String contextPath) {
         // Set status badge CSS class
         dto.calculateStatusBadgeClass();
 
@@ -238,9 +243,20 @@ public class RequestListService {
 
         // Set permission flags
         Request request = dto.toEntity();
+
+        // CRITICAL: Ensure request has parsed detail objects for permission check
+        // dto.toEntity() creates a new Request but doesn't copy detail objects
+        // We need to manually set them from DTO
+        if (dto.getOtDetail() != null) {
+            request.setOtDetail(dto.getOtDetail());
+        }
+        if (dto.getLeaveDetail() != null) {
+            request.setLeaveDetail(dto.getLeaveDetail());
+        }
+
         dto.setCanUpdate(RequestListPermissionHelper.canUpdateRequest(currentUser, request));
         dto.setCanDelete(RequestListPermissionHelper.canDeleteRequest(currentUser, request));
-        dto.setCanApprove(RequestListPermissionHelper.canApproveRequest(currentUser, request, position));
+        dto.setCanApprove(RequestListPermissionHelper.canApproveRequest(currentUser, request, position, currentAccountId));
     }
 
     /**

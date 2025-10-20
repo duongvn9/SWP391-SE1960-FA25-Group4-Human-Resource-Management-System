@@ -116,7 +116,7 @@ public class RequestListController extends HttpServlet {
 
             // 5. Call service to get filtered requests
             String contextPath = request.getContextPath();
-            RequestListResult result = service.getRequestList(filter, user, position, contextPath);
+            RequestListResult result = service.getRequestList(filter, user, position, account.getId(), contextPath);
             logger.info("Retrieved request list: " + result);
 
             // 6. Load request types for filter dropdown

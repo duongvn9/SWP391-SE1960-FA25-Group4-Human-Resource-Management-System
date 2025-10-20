@@ -2,24 +2,30 @@
 package group4.hrms.controller;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import group4.hrms.dao.LeaveTypeDao;
 import group4.hrms.dao.RequestDao;
 import group4.hrms.dao.RequestTypeDao;
+import group4.hrms.exception.LeaveValidationException;
 import group4.hrms.model.Account;
+import group4.hrms.model.Attachment;
 import group4.hrms.model.User;
+import group4.hrms.service.AttachmentService;
 import group4.hrms.service.LeaveRequestService;
 import group4.hrms.service.LeaveRequestService.LeaveTypeRules;
-import group4.hrms.exception.LeaveValidationException;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.Part;
 
 /**
  * Controller for handling leave request operations.
@@ -34,6 +40,10 @@ import jakarta.servlet.http.HttpSession;
  * @version 1.0
  */
 @WebServlet("/requests/leave/create")
+@MultipartConfig(
+    maxFileSize = 5 * 1024 * 1024,       // 5MB per file
+    maxRequestSize = 25 * 1024 * 1024    // 25MB total request size
+)
 public class LeaveRequestController extends HttpServlet {
     private static final Logger logger = Logger.getLogger(LeaveRequestController.class.getName());
 
@@ -330,6 +340,91 @@ public class LeaveRequestController extends HttpServlet {
                     isHalfDay,
                     halfDayPeriod
                 );
+
+                logger.info("Leave request created successfully with ID: " + requestId);
+
+                // Handle attachments - both file uploads and external links
+                try {
+                    AttachmentService attachmentService = new AttachmentService();
+
+                    // Check attachment type: "file" or "link"
+                    String attachmentType = request.getParameter("attachmentType");
+
+                    if ("link".equals(attachmentType)) {
+                        // Handle Google Drive link
+                        String driveLink = request.getParameter("driveLink");
+
+                        if (driveLink != null && !driveLink.trim().isEmpty()) {
+                            logger.info(String.format("Processing Google Drive link for request ID: %d - URL: %s",
+                                requestId, driveLink));
+
+                            // Save external link to database
+                            Attachment linkAttachment = attachmentService.saveExternalLink(
+                                driveLink.trim(),
+                                requestId,
+                                "REQUEST",
+                                account.getId(),
+                                "Google Drive Link"
+                            );
+
+                            logger.info(String.format("Successfully saved external link attachment: id=%d",
+                                linkAttachment.getId()));
+                        }
+
+                    } else {
+                        // Handle file uploads (default)
+                        Collection<Part> fileParts = request.getParts().stream()
+                            .filter(part -> "attachments".equals(part.getName()) && part.getSize() > 0)
+                            .collect(Collectors.toList());
+
+                        if (!fileParts.isEmpty()) {
+                            logger.info(String.format("Processing %d file attachment(s) for request ID: %d",
+                                fileParts.size(), requestId));
+
+                            // Get upload base path - save to webapp/assets/img/Request/
+                            String uploadBasePath = getServletContext().getRealPath("/assets/img/Request");
+                            if (uploadBasePath == null) {
+                                // Fallback to system temp directory if realPath is not available
+                                uploadBasePath = System.getProperty("java.io.tmpdir");
+                                logger.warning("Using temp directory for uploads: " + uploadBasePath);
+                            } else {
+                                // Create directory if it doesn't exist
+                                java.io.File uploadDir = new java.io.File(uploadBasePath);
+                                if (!uploadDir.exists()) {
+                                    boolean created = uploadDir.mkdirs();
+                                    if (created) {
+                                        logger.info("Created upload directory: " + uploadBasePath);
+                                    } else {
+                                        logger.warning("Failed to create upload directory: " + uploadBasePath);
+                                    }
+                                }
+                            }
+
+                            // Save files to filesystem and database
+                            List<Attachment> attachments = attachmentService.saveFiles(
+                                fileParts,
+                                requestId,
+                                "REQUEST",
+                                account.getId(),
+                                uploadBasePath
+                            );
+
+                            logger.info(String.format("Successfully saved %d file attachment(s) for request ID: %d",
+                                attachments.size(), requestId));
+                        }
+                    }
+
+                } catch (Exception fileError) {
+                    // Attachment handling failed - log error and rollback the request creation
+                    logger.severe(String.format("Attachment handling failed for request ID: %d, error: %s",
+                        requestId, fileError.getMessage()));
+                    fileError.printStackTrace();
+
+                    // TODO: Implement transaction rollback - delete the created request
+                    // For now, we'll throw an exception to inform the user
+                    throw new Exception("Leave request was created but attachment handling failed. " +
+                        "Please contact IT support with request ID: " + requestId, fileError);
+                }
 
                 // Handle success: set success message attribute
                 request.setAttribute("success", "Leave request submitted successfully! Request ID: " + requestId);

@@ -1,0 +1,640 @@
+/* Request Detail Page Styles - Modern Design */
+
+/* Breadcrumb Styling */
+.breadcrumb {
+    background: transparent;
+    padding: 0;
+    margin-bottom: 0;
+    font-size: 0.9rem;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    content: "/";
+    color: #6c757d;
+}
+
+.breadcrumb-item a {
+    color: #6c757d;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.breadcrumb-item a:hover {
+    color: #0d6efd;
+}
+
+.breadcrumb-item.active {
+    color: #212529;
+    font-weight: 500;
+}
+
+/* Base styles for all screen sizes */
+.request-detail-container {
+    padding: 1.5rem;
+}
+
+.page-head {
+    margin-bottom: 1.5rem;
+}
+
+.page-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #212529;
+    margin-bottom: 0.5rem;
+}
+
+.page-subtitle {
+    color: #6c757d;
+    font-size: 0.9375rem;
+    margin-bottom: 0;
+}
+
+/* Modern gradient headers */
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+}
+
+.bg-gradient-success {
+    background: linear-gradient(135deg, #198754 0%, #146c43 100%);
+}
+
+.bg-gradient-danger {
+    background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%);
+}
+
+.bg-gradient-info {
+    background: linear-gradient(135deg, #0dcaf0 0%, #0aa2c0 100%);
+}
+
+/* Status Alert Banner */
+.alert-modern {
+    border-left: 4px solid currentColor;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+}
+
+.alert-modern .alert-icon {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.status-badge-large {
+    min-width: 120px;
+}
+
+.badge-lg {
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+}
+
+/* Info Section Styling */
+.info-section {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background: #f8f9fa;
+}
+
+.section-title {
+    font-weight: 600;
+    color: #495057;
+    border-bottom: 2px solid #dee2e6;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.info-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+}
+
+.info-value {
+    font-size: 1rem;
+    color: #212529;
+    font-weight: 500;
+}
+
+/* Attachment Grid Layout */
+.attachment-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+.attachment-card {
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    transition: all 0.3s ease;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.attachment-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.attachment-icon-wrapper {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+    margin: 0 auto;
+}
+
+.attachment-info {
+    text-align: center;
+}
+
+.attachment-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #212529;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.attachment-meta {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.attachment-actions {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+/* Timeline for Approval History */
+.timeline-item {
+    position: relative;
+    padding-left: 3rem;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.timeline-content {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+}
+
+.approval-info-card,
+.rejection-reason-card,
+.manager-notes-card,
+.approval-message-card {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background: #fff;
+}
+
+.request-info-card,
+.request-detail-card,
+.approval-history-card {
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.info-row {
+    display: flex;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #495057;
+    min-width: 150px;
+}
+
+.info-value {
+    color: #212529;
+    flex: 1;
+}
+
+/* Status badges */
+.status-badge {
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.25rem;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.status-pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-approved {
+    background-color: #d1e7dd;
+    color: #0f5132;
+}
+
+.status-rejected {
+    background-color: #f8d7da;
+    color: #842029;
+}
+
+/* Card shadows */
+.card.shadow-sm {
+    box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.075);
+}
+
+.card:hover {
+    transition: box-shadow 0.3s ease;
+}
+
+/* Action buttons */
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.btn-action {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.5rem 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+/* Attachment link */
+.attachment-link {
+    color: #0d6efd;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    min-height: 44px;
+}
+
+.attachment-link:hover {
+    text-decoration: underline;
+}
+
+/* Badge improvements */
+.badge {
+    font-weight: 500;
+    letter-spacing: 0.025em;
+}
+
+/* Tablet styles (768px - 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+    .request-detail-container {
+        padding: 1.25rem;
+    }
+
+    .page-header {
+        margin-bottom: 1.25rem;
+    }
+
+    .request-info-card,
+    .request-detail-card,
+    .approval-history-card {
+        margin-bottom: 1.25rem;
+    }
+
+    .card-body {
+        padding: 1.25rem;
+    }
+
+    .info-label {
+        min-width: 140px;
+    }
+
+    .action-buttons {
+        justify-content: flex-start;
+    }
+
+    .btn-action {
+        flex: 0 1 auto;
+    }
+}
+
+/* Mobile styles (max-width: 767px) */
+@media (max-width: 767px) {
+    .request-detail-container {
+        padding: 1rem;
+    }
+
+    .page-head {
+        margin-bottom: 1rem;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+    }
+
+    .page-head > div:last-child {
+        width: 100%;
+        margin-top: 1rem;
+    }
+
+    .page-title {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .page-subtitle {
+        font-size: 0.875rem;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Attachment grid on mobile */
+    .attachment-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Alert banner on mobile */
+    .alert-modern {
+        padding: 1rem;
+    }
+
+    .alert-modern .alert-icon {
+        width: 50px;
+        height: 50px;
+    }
+
+    .status-badge-large {
+        min-width: auto;
+    }
+
+    /* Info sections on mobile */
+    .info-section {
+        padding: 0.75rem;
+    }
+
+    /* Timeline on mobile */
+    .timeline-item {
+        padding-left: 2.5rem;
+    }
+
+    .timeline-marker {
+        width: 35px;
+        height: 35px;
+    }
+
+    .timeline-content {
+        padding: 1rem;
+    }
+
+    /* Stack cards vertically with reduced spacing */
+    .request-info-card,
+    .request-detail-card,
+    .approval-history-card {
+        margin-bottom: 1rem;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+
+    .card-header {
+        padding: 0.75rem 1rem;
+    }
+
+    .card-header h5 {
+        font-size: 1.125rem;
+        margin: 0;
+    }
+
+    /* Stack info rows vertically on mobile */
+    .info-row {
+        flex-direction: column;
+        padding: 0.5rem 0;
+    }
+
+    .info-label {
+        min-width: auto;
+        margin-bottom: 0.25rem;
+        font-size: 0.875rem;
+    }
+
+    .info-value {
+        font-size: 0.9375rem;
+    }
+
+    /* Full-width buttons on mobile */
+    .action-buttons {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .btn-action {
+        width: 100%;
+        min-height: 44px;
+        justify-content: center;
+    }
+
+    /* Buttons in page header */
+    .page-head .d-flex.gap-2 {
+        flex-direction: column;
+        gap: 0.75rem !important;
+        width: 100%;
+    }
+
+    .page-head .btn {
+        width: 100%;
+        min-height: 44px;
+    }
+
+    /* Breadcrumb adjustments for mobile */
+    .breadcrumb {
+        font-size: 0.875rem;
+        padding: 0.5rem 0;
+        margin-bottom: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .breadcrumb-item {
+        font-size: 0.875rem;
+    }
+
+    .breadcrumb-item + .breadcrumb-item::before {
+        padding-right: 0.25rem;
+        padding-left: 0.25rem;
+    }
+
+    /* Status badge adjustments */
+    .status-badge {
+        font-size: 0.875rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+    /* Attachment link - ensure adequate touch target */
+    .attachment-link {
+        padding: 0.75rem 0.5rem;
+        min-height: 44px;
+        font-size: 0.9375rem;
+    }
+
+    /* Modal adjustments for mobile */
+    .modal-dialog {
+        margin: 0.5rem;
+    }
+
+    .modal-body {
+        padding: 1rem;
+    }
+
+    .modal-footer {
+        padding: 0.75rem;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .modal-footer .btn {
+        width: 100%;
+        min-height: 44px;
+    }
+
+    /* Table responsiveness in detail sections */
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+
+    /* Reduce spacing in detail sections */
+    .detail-section {
+        padding: 0.75rem;
+    }
+
+    .detail-section .row {
+        margin-bottom: 0.5rem;
+    }
+
+    /* Stack columns vertically on mobile */
+    .row > [class*="col-"] {
+        margin-bottom: 1rem;
+    }
+
+    .row > [class*="col-"]:last-child {
+        margin-bottom: 0;
+    }
+
+    /* Adjust label and value spacing */
+    .mb-3 {
+        margin-bottom: 0.75rem !important;
+    }
+
+    .card .row .col-md-6 .mb-3:last-child {
+        margin-bottom: 0 !important;
+    }
+
+    /* Badge adjustments */
+    .badge {
+        font-size: 0.875rem;
+        padding: 0.375rem 0.75rem;
+    }
+
+    /* Alert adjustments */
+    .alert {
+        font-size: 0.9375rem;
+        padding: 0.75rem;
+    }
+}
+
+/* Extra small mobile devices (max-width: 575px) */
+@media (max-width: 575px) {
+    .request-detail-container {
+        padding: 0.75rem;
+    }
+
+    .page-title {
+        font-size: 1.25rem;
+    }
+
+    .page-subtitle {
+        font-size: 0.8125rem;
+    }
+
+    .card-body {
+        padding: 0.75rem;
+    }
+
+    .card-header {
+        padding: 0.5rem 0.75rem;
+    }
+
+    .card-header h5 {
+        font-size: 1rem;
+    }
+
+    /* Further reduce breadcrumb on very small screens */
+    .breadcrumb {
+        font-size: 0.8125rem;
+        padding: 0.375rem 0;
+    }
+
+    .breadcrumb-item {
+        font-size: 0.8125rem;
+    }
+
+    /* Ensure buttons remain touch-friendly */
+    .btn-action {
+        min-height: 48px;
+        font-size: 0.9375rem;
+    }
+
+    .attachment-link {
+        min-height: 48px;
+    }
+}
+
+/* Print styles */
+@media print {
+    .action-buttons,
+    .breadcrumb,
+    .btn-action {
+        display: none;
+    }
+
+    .request-detail-container {
+        padding: 0;
+    }
+
+    .card {
+        box-shadow: none;
+        border: 1px solid #dee2e6;
+        page-break-inside: avoid;
+    }
+}

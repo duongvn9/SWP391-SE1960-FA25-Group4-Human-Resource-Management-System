@@ -5,7 +5,6 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Optional;
@@ -969,9 +968,18 @@ public class OTRequestService {
                     continue; // Not a leave request
                 }
 
+                // Validate leave dates
+                String startDate = leaveDetail.getStartDate();
+                String endDate = leaveDetail.getEndDate();
+                if (startDate == null || startDate.isEmpty() || endDate == null || endDate.isEmpty()) {
+                    logger.warning(String.format("Leave request has null/empty dates: requestId=%d, userId=%d",
+                                  request.getId(), userId));
+                    continue; // Skip invalid leave request
+                }
+
                 // Parse leave date range
-                LocalDate leaveStart = LocalDate.parse(leaveDetail.getStartDate().substring(0, 10));
-                LocalDate leaveEnd = LocalDate.parse(leaveDetail.getEndDate().substring(0, 10));
+                LocalDate leaveStart = LocalDate.parse(startDate.substring(0, 10));
+                LocalDate leaveEnd = LocalDate.parse(endDate.substring(0, 10));
 
                 // Check if OT date falls within leave period
                 if (date.isBefore(leaveStart) || date.isAfter(leaveEnd)) {

@@ -1,6 +1,8 @@
 package group4.hrms.service;
 
 import java.sql.SQLException;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
@@ -10,22 +12,20 @@ import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import group4.hrms.dao.RequestDao;
-import group4.hrms.dao.RequestTypeDao;
-import group4.hrms.dao.LeaveTypeDao;
 import group4.hrms.dao.HolidayDao;
 import group4.hrms.dao.LeaveBalanceDao;
+import group4.hrms.dao.LeaveTypeDao;
+import group4.hrms.dao.RequestDao;
+import group4.hrms.dao.RequestTypeDao;
+import group4.hrms.dto.HalfDayConflict;
 import group4.hrms.dto.LeaveRequestDetail;
-import group4.hrms.model.Request;
-import group4.hrms.model.RequestType;
-import group4.hrms.model.LeaveType;
-import group4.hrms.util.RequestTypeInitializer;
+import group4.hrms.dto.ValidationResult;
 import group4.hrms.exception.LeaveValidationException;
 import group4.hrms.exception.ValidationErrorMessage;
-import group4.hrms.dto.ValidationResult;
-import group4.hrms.dto.HalfDayConflict;
-import java.time.LocalDate;
-import java.time.DayOfWeek;
+import group4.hrms.model.LeaveType;
+import group4.hrms.model.Request;
+import group4.hrms.model.RequestType;
+import group4.hrms.util.RequestTypeInitializer;
 
 /**
  * LeaveRequestService - Pure Database Approach
@@ -548,9 +548,19 @@ public class LeaveRequestService {
             throw new IllegalArgumentException("Reason cannot exceed 1000 characters (current: " + reason.length() + ")");
         }
 
-        // Validate day count is positive
+        // Validate day count is positive (after excluding weekends and holidays)
         if (dayCount <= 0) {
-            throw new IllegalArgumentException("Number of leave days must be greater than 0");
+            String errorMessage = "The selected date range contains no working days. ";
+            if (isHalfDay != null && isHalfDay) {
+                errorMessage += "Half-day leave can only be requested on working days (Monday-Friday, excluding holidays).";
+            } else {
+                errorMessage += String.format(
+                    "All dates from %s to %s fall on weekends or holidays. " +
+                    "Please select a date range that includes at least one working day.",
+                    startDate.toLocalDate(), endDate.toLocalDate()
+                );
+            }
+            throw new IllegalArgumentException(errorMessage);
         }
 
         // Requirement 4.7: Validate duration does not exceed max_days limit
@@ -613,7 +623,8 @@ public class LeaveRequestService {
     }
 
     /**
-     * Calculate working days (excluding weekends)
+     * Calculate working days (excluding weekends and holidays)
+     * Requirement: Count only actual working days for leave duration
      */
     private int calculateWorkingDays(LocalDateTime start, LocalDateTime end) {
         int workingDays = 0;
@@ -621,14 +632,33 @@ public class LeaveRequestService {
         LocalDateTime endDate = end.truncatedTo(ChronoUnit.DAYS);
 
         while (!current.isAfter(endDate)) {
+            LocalDate currentDate = current.toLocalDate();
+
             // Monday = 1, Sunday = 7
-            int dayOfWeek = current.getDayOfWeek().getValue();
-            if (dayOfWeek >= 1 && dayOfWeek <= 5) { // Monday to Friday
-                workingDays++;
+            DayOfWeek dayOfWeek = currentDate.getDayOfWeek();
+
+            // Check if it's a weekday (Monday to Friday)
+            if (dayOfWeek.getValue() >= 1 && dayOfWeek.getValue() <= 5) {
+                // Check if it's NOT a holiday
+                try {
+                    boolean isHoliday = holidayDao.isHoliday(currentDate);
+                    if (!isHoliday) {
+                        workingDays++;
+                    } else {
+                        logger.fine(String.format("Skipping holiday: %s", currentDate));
+                    }
+                } catch (Exception e) {
+                    // If can't check holiday, count as working day (fail-safe)
+                    logger.log(Level.WARNING, String.format("Error checking holiday for %s, counting as working day", currentDate), e);
+                    workingDays++;
+                }
             }
+
             current = current.plusDays(1);
         }
 
+        logger.fine(String.format("Calculated %d working days between %s and %s (excluding weekends and holidays)",
+                    workingDays, start.toLocalDate(), end.toLocalDate()));
         return workingDays;
     }
 
