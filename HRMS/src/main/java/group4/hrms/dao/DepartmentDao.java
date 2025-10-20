@@ -50,7 +50,7 @@ public class DepartmentDao {
         "SELECT id, name, head_account_id, created_at, updated_at " +
         "FROM departments " +
         "WHERE name = ?";
-    
+   
     /**
      * Tạo mới department
      */

@@ -1,30 +1,28 @@
-document.addEventListener("DOMContentLoaded", function () {
-    const dateInput = document.getElementById("attendanceDate");
-    const logBtn = document.getElementById("selectFromLogDates"); // đảm bảo ID trùng với HTML
-    const selectedLogDates = document.getElementById("selectedLogDates");
-    
-    if (!dateInput || !logBtn || !selectedLogDates)
-        return;
-    
-    // Chọn ngày đơn → xóa ngày từ log
-    dateInput.addEventListener("change", () => {
-        if (dateInput.value) {
-            selectedLogDates.value = ""; // clear log dates
+document.addEventListener("DOMContentLoaded", () => {
+    const selectedDates = new Set();
+    const dateInput = document.getElementById('attendanceDate');
+    const addBtn = document.getElementById('addDateBtn');
+    const selectedListDiv = document.getElementById('selectedDatesList');
+    const hiddenInput = document.getElementById('selectedLogDates');
+
+    addBtn.addEventListener('click', () => {
+        const date = dateInput.value;
+        if (!date)
+            return; // nếu chưa chọn ngày thì bỏ qua
+        if (selectedDates.has(date)) {
+            alert("Date already selected!");
+            return;
         }
+
+        selectedDates.add(date);
+
+        // Tạo badge hiển thị ngày đã chọn
+        const span = document.createElement('span');
+        span.textContent = date;
+        span.classList.add('badge', 'bg-primary', 'me-1', 'mb-1');
+        selectedListDiv.appendChild(span);
+
+        // Cập nhật hidden input
+        hiddenInput.value = Array.from(selectedDates).join(',');
     });
-    
-    // Chọn từ log → xóa ngày đơn, chuyển trang thẳng
-    logBtn.addEventListener("click", () => {
-        dateInput.value = ""; // clear single date
-        window.location.href = "http://localhost:9999/HRMS/attendance/record/emp";
-    });
-    
-    // Hàm gọi từ trang log để gán các ngày đã chọn
-    window.setSelectedLogDates = function (dates) {
-        if (Array.isArray(dates)) {
-            selectedLogDates.value = dates.join(",");
-        } else {
-            selectedLogDates.value = "";
-        }
-    };
 });

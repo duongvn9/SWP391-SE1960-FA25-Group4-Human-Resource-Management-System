@@ -6,6 +6,7 @@ import group4.hrms.util.DatabaseUtil;
 
 import java.sql.*;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -187,34 +188,32 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
     //Tìm toàn hộ bản ghi theo định dạng frontend
     public List<AttendanceLogDto> findAllForOverview(int offset, int limit, boolean paged) throws SQLException {
         StringBuilder sql = new StringBuilder("""
-            SELECT
-              u.id AS employee_id,
-              u.employee_code AS employee_code,
-              u.full_name AS employee_name,
-              d.name AS department_name,
-              DATE(al.checked_at) AS work_date,
-              MIN(CASE WHEN al.check_type = 'IN'  THEN al.checked_at END)  AS check_in,
-              MAX(CASE WHEN al.check_type = 'OUT' THEN al.checked_at END)  AS check_out,
-              COALESCE(
-                MIN(CASE WHEN al.check_type = 'IN'  THEN al.note END),
-                MAX(CASE WHEN al.check_type = 'OUT' THEN al.note END),
-                'No Records'
-              ) AS status,
-              GROUP_CONCAT(DISTINCT al.source SEPARATOR ', ') AS source,
-              tp.name AS period_name
-            FROM attendance_logs al
-            JOIN users u ON al.user_id = u.id
-            LEFT JOIN departments d ON u.department_id = d.id
-            LEFT JOIN timesheet_periods tp ON al.period_id = tp.id
-            GROUP BY
-              u.id,
-              u.employee_code,
-              u.full_name,
-              d.name,
-              tp.name,
-              DATE(al.checked_at)
-            ORDER BY DATE(al.checked_at) DESC, u.full_name
-        """);
+    SELECT
+      u.id AS employee_id,
+      u.employee_code AS employee_code,
+      u.full_name AS employee_name,
+      d.name AS department_name,
+      DATE(al.checked_at) AS work_date,
+      MIN(CASE WHEN al.check_type = 'IN' THEN al.checked_at END) AS check_in,
+      MAX(CASE WHEN al.check_type = 'OUT' THEN al.checked_at END) AS check_out,
+      COALESCE(
+        MIN(CASE WHEN al.check_type = 'IN' THEN al.note END),
+        MAX(CASE WHEN al.check_type = 'OUT' THEN al.note END),
+        'No Records'
+      ) AS status,
+      GROUP_CONCAT(DISTINCT al.source SEPARATOR ', ') AS source,
+      tp.name AS period_name
+    FROM attendance_logs al
+    JOIN users u ON al.user_id = u.id
+    LEFT JOIN departments d ON u.department_id = d.id
+    LEFT JOIN timesheet_periods tp ON al.period_id = tp.id
+""");
+
+        // Gộp theo user + ngày, không lấy al.id
+        sql.append("""
+    GROUP BY u.id, u.employee_code, u.full_name, d.name, tp.name, DATE(al.checked_at)
+    ORDER BY DATE(al.checked_at) DESC, u.full_name
+""");
 
         if (paged) {
             sql.append(" LIMIT ? OFFSET ?");
@@ -232,6 +231,8 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     AttendanceLogDto dto = new AttendanceLogDto();
+
+                    // Không set dto.setId nữa
                     dto.setUserId(rs.getLong("employee_id"));
                     dto.setEmployeeName(rs.getString("employee_name"));
                     dto.setDepartment(rs.getString("department_name"));
@@ -252,6 +253,7 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                 }
             }
         }
+
         return results;
     }
 
@@ -286,28 +288,30 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
         }
 
         StringBuilder sql = new StringBuilder("""
-            SELECT
-                u.id AS user_id,
-                u.full_name AS employee_name,
-                d.name AS department_name,
-                DATE(al.checked_at) AS work_date,
-                MIN(CASE WHEN al.check_type = 'IN'  THEN al.checked_at END) AS check_in,
-                MAX(CASE WHEN al.check_type = 'OUT' THEN al.checked_at END) AS check_out,
-                COALESCE(
-                    MIN(CASE WHEN al.check_type = 'IN'  THEN al.note END),
-                    MAX(CASE WHEN al.check_type = 'OUT' THEN al.note END),
-                    'No Records'
-                ) AS status,
-                GROUP_CONCAT(DISTINCT al.source SEPARATOR ', ') AS source,
-                tp.name AS period_name
-            FROM attendance_logs al
-            JOIN users u ON al.user_id = u.id
-            LEFT JOIN departments d ON u.department_id = d.id
-            LEFT JOIN timesheet_periods tp ON al.period_id = tp.id
-            WHERE al.user_id = ?
-            GROUP BY u.id, u.full_name, d.name, DATE(al.checked_at), tp.name
-            ORDER BY DATE(al.checked_at) DESC
-            """);
+    SELECT
+        u.id AS user_id,
+        u.full_name AS employee_name,
+        d.name AS department_name,
+        DATE(al.checked_at) AS work_date,
+        MIN(CASE WHEN al.check_type='IN' THEN al.checked_at END) AS check_in,
+        MAX(CASE WHEN al.check_type='OUT' THEN al.checked_at END) AS check_out,
+        COALESCE(
+            MIN(CASE WHEN al.check_type='IN' THEN al.note END),
+            MAX(CASE WHEN al.check_type='OUT' THEN al.note END),
+            'No Records'
+        ) AS status,
+        GROUP_CONCAT(DISTINCT al.source SEPARATOR ', ') AS source,
+        tp.name AS period_name
+    FROM attendance_logs al
+    JOIN users u ON al.user_id = u.id
+    LEFT JOIN departments d ON u.department_id = d.id
+    LEFT JOIN timesheet_periods tp ON al.period_id = tp.id
+    WHERE al.user_id = ?
+""");
+
+        // GROUP BY theo ngày của user, không lấy al.id
+        sql.append(" GROUP BY DATE(al.checked_at), u.id, u.full_name, d.name, tp.name");
+        sql.append(" ORDER BY DATE(al.checked_at) DESC");
 
         if (paged) {
             sql.append(" LIMIT ? OFFSET ?");
@@ -327,6 +331,8 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     AttendanceLogDto dto = new AttendanceLogDto();
+
+                    // Không set dto.setId nữa
                     dto.setUserId(rs.getLong("user_id"));
                     dto.setEmployeeName(rs.getString("employee_name"));
                     dto.setDepartment(rs.getString("department_name"));
@@ -380,26 +386,26 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
     ) throws SQLException {
 
         StringBuilder sql = new StringBuilder("""
-            SELECT
-                u.id AS employee_id,
-                u.full_name AS employee_name,
-                d.name AS department_name,
-                DATE(al.checked_at) AS work_date,
-                MIN(CASE WHEN al.check_type = 'IN'  THEN al.checked_at END) AS check_in,
-                MAX(CASE WHEN al.check_type = 'OUT' THEN al.checked_at END) AS check_out,
-                COALESCE(
-                    MIN(CASE WHEN al.check_type = 'IN'  THEN al.note END),
-                    MAX(CASE WHEN al.check_type = 'OUT' THEN al.note END),
-                    'No Records'
-                ) AS status,
-                GROUP_CONCAT(DISTINCT al.source SEPARATOR ', ') AS source,
-                tp.name AS period_name
-            FROM attendance_logs al
-            LEFT JOIN timesheet_periods tp ON al.period_id = tp.id
-            LEFT JOIN users u ON al.user_id = u.id
-            LEFT JOIN departments d ON u.department_id = d.id
-            WHERE 1=1
-        """);
+    SELECT
+        u.id AS employee_id,
+        u.full_name AS employee_name,
+        d.name AS department_name,
+        DATE(al.checked_at) AS work_date,
+        MIN(CASE WHEN al.check_type='IN' THEN al.checked_at END) AS check_in,
+        MAX(CASE WHEN al.check_type='OUT' THEN al.checked_at END) AS check_out,
+        COALESCE(
+            MIN(CASE WHEN al.check_type='IN' THEN al.note END),
+            MAX(CASE WHEN al.check_type='OUT' THEN al.note END),
+            'No Records'
+        ) AS status,
+        GROUP_CONCAT(DISTINCT al.source SEPARATOR ', ') AS source,
+        tp.name AS period_name
+    FROM attendance_logs al
+    LEFT JOIN users u ON al.user_id = u.id
+    LEFT JOIN departments d ON u.department_id = d.id
+    LEFT JOIN timesheet_periods tp ON al.period_id = tp.id
+    WHERE 1=1
+""");
 
         List<Object> params = new ArrayList<>();
 
@@ -427,23 +433,26 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
             sql.append(" AND DATE(al.checked_at) <= ?");
             params.add(Date.valueOf(endDate));
         }
+
         if (status != null && !status.isEmpty()) {
             sql.append(" AND al.note = ?");
             params.add(status);
         }
+
         if (source != null && !source.isEmpty()) {
             sql.append(" AND al.source = ?");
             params.add(source);
         }
+
         if (periodId != null) {
             sql.append(" AND al.period_id = ?");
             params.add(periodId);
         }
 
         sql.append("""
-            GROUP BY u.id, u.full_name, d.name, DATE(al.checked_at), tp.name
-            ORDER BY DATE(al.checked_at) DESC
-        """);
+    GROUP BY u.id, DATE(al.checked_at), u.full_name, d.name, tp.name
+    ORDER BY DATE(al.checked_at) DESC
+""");
 
         if (paged) {
             sql.append(" LIMIT ? OFFSET ?");
@@ -492,6 +501,7 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                 }
             }
         }
+
         return results;
     }
 
@@ -595,6 +605,37 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                 save(log);
             } catch (SQLException e) {
             }
+        }
+    }
+
+    public boolean deleteAttendance(Long userId, LocalDate date, LocalTime checkIn, LocalTime checkOut) throws SQLException {
+        if (userId == null || date == null) {
+            return false;
+        }
+
+        String sql = """
+        DELETE FROM attendance_logs
+        WHERE user_id = ?
+          AND (
+                (check_type = 'IN' AND checked_at = ?)
+                OR
+                (check_type = 'OUT' AND checked_at = ?)
+              )
+    """;
+
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, userId);
+
+            // Tạo timestamp đầy đủ cho IN và OUT
+            Timestamp checkInTs = (checkIn != null) ? Timestamp.valueOf(date.atTime(checkIn)) : null;
+            Timestamp checkOutTs = (checkOut != null) ? Timestamp.valueOf(date.atTime(checkOut)) : null;
+
+            stmt.setTimestamp(2, checkInTs);
+            stmt.setTimestamp(3, checkOutTs);
+
+            int affected = stmt.executeUpdate();
+            return affected > 0;
         }
     }
 }
