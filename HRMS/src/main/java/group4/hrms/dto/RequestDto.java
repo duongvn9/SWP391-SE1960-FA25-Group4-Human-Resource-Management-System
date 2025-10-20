@@ -27,6 +27,7 @@ public class RequestDto {
     private transient LeaveRequestDetail leaveDetail;
     private transient OTRequestDetail otDetail;
     private transient AppealRequestDetail appealDetail;
+    private transient RecruitmentDetailsDto recruitmentDetail;
 
     private String status;
     private String statusDisplay;           // Hiển thị trạng thái tiếng Việt
@@ -79,6 +80,9 @@ public class RequestDto {
                 } else if (this.requestTypeId == 8L) {
                     // ADJUSTMENT_REQUEST (Appeal)
                     this.appealDetail = request.getAppealDetail();
+                } else if (this.requestTypeId == 9L) {
+                    // RECRUITMENT_REQUEST
+                    this.recruitmentDetail = request.getRecruitmentDetail();
                 }
             } catch (Exception e) {
                 // Ignore parsing errors - detail will be null
@@ -277,6 +281,33 @@ public class RequestDto {
      */
     public void setAppealDetail(AppealRequestDetail appealDetail) {
         this.appealDetail = appealDetail;
+    }
+
+    /**
+     * Get parsed RecruitmentDetailsDto from JSON
+     * Lazy-loads from detailJson if needed
+     *
+     * @return RecruitmentDetailsDto object or null if detailJson is null
+     */
+    public RecruitmentDetailsDto getRecruitmentDetail() {
+        if (recruitmentDetail == null && detailJson != null && !detailJson.trim().isEmpty()) {
+            try {
+                recruitmentDetail = RecruitmentDetailsDto.fromJson(detailJson);
+            } catch (Exception e) {
+                // Return null if parsing fails
+                return null;
+            }
+        }
+        return recruitmentDetail;
+    }
+
+    /**
+     * Set RecruitmentDetailsDto
+     *
+     * @param recruitmentDetail RecruitmentDetailsDto object to set
+     */
+    public void setRecruitmentDetail(RecruitmentDetailsDto recruitmentDetail) {
+        this.recruitmentDetail = recruitmentDetail;
     }
 
     /**
