@@ -27,6 +27,13 @@ public class SettingListController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         
+        // E3: Check session timeout
+        if (request.getSession(false) == null) {
+            logger.warn("Session expired");
+            response.sendRedirect(request.getContextPath() + "/login?message=Session expired. Please login again");
+            return;
+        }
+        
         logger.info("Display Setting List");
         
         // Get filter parameters

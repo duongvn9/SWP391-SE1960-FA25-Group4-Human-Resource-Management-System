@@ -25,6 +25,14 @@ public class SettingCreateController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
+        
+        // E3: Check session timeout
+        if (request.getSession(false) == null) {
+            logger.warn("Session expired");
+            response.sendRedirect(request.getContextPath() + "/login?message=Session expired. Please login again");
+            return;
+        }
+        
         logger.info("Hiển thị form tạo Setting");
         request.getRequestDispatcher("/WEB-INF/views/admin/setting-form.jsp").forward(request, response);
     }
@@ -37,14 +45,6 @@ public class SettingCreateController extends HttpServlet {
         if (request.getSession(false) == null) {
             logger.warn("Session expired");
             response.sendRedirect(request.getContextPath() + "/login?message=Session expired. Please login again");
-            return;
-        }
-        
-        // E4: Check authorization (Admin only)
-        String userRole = (String) request.getSession().getAttribute("userRole");
-        if (userRole == null || !userRole.equalsIgnoreCase("ADMIN")) {
-            logger.warn("Unauthorized access attempt by role: {}", userRole);
-            response.sendRedirect(request.getContextPath() + "/access-denied");
             return;
         }
         
@@ -129,18 +129,10 @@ public class SettingCreateController extends HttpServlet {
             settingDao.create(setting);
             
             logger.info("Setting created successfully: {} - {}", type, name);
-            response.sendRedirect(request.getContextPath() + "/settings?success=Setting created successfully");
+            response.sendRedirect(request.getContextPath() + "/settings?success=" + 
+                java.net.URLEncoder.encode("Setting created successfully", "UTF-8"));
             
-        } catch (java.sql.SQLException e) {
-            // E2: Database connection error
-            logger.error("Database error while creating Setting", e);
-            request.setAttribute("errorMessage", "Database error. Please try again later");
-            request.setAttribute("name", name);
-            request.setAttribute("type", type);
-            request.setAttribute("value", value);
-            request.setAttribute("priority", priorityStr);
-            request.getRequestDispatcher("/WEB-INF/views/admin/setting-form.jsp").forward(request, response);
-        } catch (Exception e) {
+        }catch (Exception e) {
             logger.error("Error creating Setting", e);
             request.setAttribute("errorMessage", "An error occurred: " + e.getMessage());
             request.setAttribute("name", name);
@@ -149,5 +141,7 @@ public class SettingCreateController extends HttpServlet {
             request.setAttribute("priority", priorityStr);
             request.getRequestDispatcher("/WEB-INF/views/admin/setting-form.jsp").forward(request, response);
         }
+        // E2: Database connection error
+        
     }
 }

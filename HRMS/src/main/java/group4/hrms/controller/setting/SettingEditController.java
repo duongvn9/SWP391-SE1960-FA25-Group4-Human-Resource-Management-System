@@ -15,31 +15,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Controller for editing Settings
- * Use Case: Edit Setting
- * 
- * Flow:
- * 1. Admin clicks Edit button on Setting List
- * 2. System validates session and authorization
- * 3. System retrieves setting data by ID and Type
- * 4. System displays Edit Form pre-filled with data
- * 5. Admin modifies data and submits
- * 6. System validates input (required fields, duplicate name, priority format)
- * 7. System updates setting and timestamp
- * 8. System redirects to list with success message
- * 
- * Error Scenarios:
- * E1: Validation Error (missing required fields, duplicate name, invalid priority)
- * E2: Database connection error
- * E3: Session timeout
- * E4: Unauthorized access (non-admin)
- * E7: Invalid priority format
- * 
- * Alternative Flows:
- * A2: Duplicate name check (if name changed)
- * A4: Setting not found
- */
+
 @WebServlet("/settings/edit")
 public class SettingEditController extends HttpServlet {
     
@@ -51,18 +27,9 @@ public class SettingEditController extends HttpServlet {
             throws ServletException, IOException {
         
         // E3: Check session timeout
-        HttpSession session = request.getSession(false);
-        if (session == null) {
+        if (request.getSession(false) == null) {
             logger.warn("Session expired");
             response.sendRedirect(request.getContextPath() + "/login?message=Session expired. Please login again");
-            return;
-        }
-        
-        // E4: Check authorization (Admin only)
-        String userRole = (String) session.getAttribute("userRole");
-        if (userRole == null || !userRole.equalsIgnoreCase("ADMIN")) {
-            logger.warn("Unauthorized access attempt by role: {}", userRole);
-            response.sendRedirect(request.getContextPath() + "/access-denied");
             return;
         }
         
@@ -106,18 +73,9 @@ public class SettingEditController extends HttpServlet {
             throws ServletException, IOException {
         
         // E3: Check session timeout
-        HttpSession session = request.getSession(false);
-        if (session == null) {
+        if (request.getSession(false) == null) {
             logger.warn("Session expired");
             response.sendRedirect(request.getContextPath() + "/login?message=Session expired. Please login again");
-            return;
-        }
-        
-        // E4: Check authorization (Admin only)
-        String userRole = (String) session.getAttribute("userRole");
-        if (userRole == null || !userRole.equalsIgnoreCase("ADMIN")) {
-            logger.warn("Unauthorized access attempt by role: {}", userRole);
-            response.sendRedirect(request.getContextPath() + "/access-denied");
             return;
         }
         
@@ -153,7 +111,7 @@ public class SettingEditController extends HttpServlet {
                 return;
             }
             
-            // E7: Validate priority if provided
+            
             Integer priority = null;
             if (priorityStr != null && !priorityStr.trim().isEmpty()) {
                 try {
@@ -173,7 +131,7 @@ public class SettingEditController extends HttpServlet {
             String typeToFind = oldType != null ? oldType : newType;
             Optional<Setting> currentSettingOpt = settingDao.findById(id, typeToFind);
             if (currentSettingOpt.isEmpty()) {
-                // A4: Setting not found
+               
                 response.sendRedirect(request.getContextPath() + "/settings?error=Setting not found");
                 return;
             }
@@ -201,7 +159,7 @@ public class SettingEditController extends HttpServlet {
                 }
             }
             
-            // Prevent type change (as per requirement)
+            // Prevent type change 
             if (!currentSetting.getType().equals(newType)) {
                 logger.warn("Attempt to change setting type from {} to {}", currentSetting.getType(), newType);
                 request.setAttribute("errorMessage", "Setting type cannot be changed");
@@ -210,7 +168,36 @@ public class SettingEditController extends HttpServlet {
                 return;
             }
             
-            // Normal update (type unchanged)
+            // A3: Check if no changes were made
+            boolean hasChanges = false;
+            
+            if (!currentSetting.getName().equals(name)) {
+                hasChanges = true;
+            }
+            
+            // Check value changes (handle null cases)
+            String currentValue = currentSetting.getValue();
+            if ((currentValue == null && value != null && !value.isEmpty()) ||
+                (currentValue != null && !currentValue.equals(value))) {
+                hasChanges = true;
+            }
+            
+            // Check priority changes (handle null cases)
+            Integer currentPriority = currentSetting.getPriority();
+            if ((currentPriority == null && priority != null) ||
+                (currentPriority != null && !currentPriority.equals(priority))) {
+                hasChanges = true;
+            }
+            
+            // A3: No changes made
+            if (!hasChanges) {
+                logger.info("No changes detected for Setting ID: {}", id);
+                response.sendRedirect(request.getContextPath() + "/settings?info=" + 
+                    java.net.URLEncoder.encode("No changes have been made", "UTF-8"));
+                return;
+            }
+            
+            // Normal update (type unchanged, has changes)
             Setting setting = new Setting();
             setting.setId(id);
             setting.setName(name);
@@ -223,18 +210,19 @@ public class SettingEditController extends HttpServlet {
             logger.info("Successfully updated Setting ID: {}", id);
             
             // Step 7-8: Update setting and timestamp
-            response.sendRedirect(request.getContextPath() + "/settings?success=Setting updated successfully");
+            response.sendRedirect(request.getContextPath() + "/settings?success=" + 
+                java.net.URLEncoder.encode("Setting updated successfully", "UTF-8"));
             
-        } catch (java.sql.SQLException e) {
-            // E2: Database connection error
-            logger.error("Database error while updating Setting", e);
-            response.sendRedirect(request.getContextPath() + "/settings?error=Database error. Please try again later");
-        } catch (NumberFormatException e) {
+        }catch (NumberFormatException e) {
             logger.warn("Invalid ID format: {}", idParam);
-            response.sendRedirect(request.getContextPath() + "/settings?error=Invalid ID");
-        } catch (Exception e) {
+            response.sendRedirect(request.getContextPath() + "/settings?error=" + 
+                java.net.URLEncoder.encode("Invalid ID", "UTF-8"));
+        }
+        // E2: Database connection error
+         catch (Exception e) {
             logger.error("Error updating Setting", e);
-            response.sendRedirect(request.getContextPath() + "/settings?error=An error occurred: " + e.getMessage());
+            response.sendRedirect(request.getContextPath() + "/settings?error=" + 
+                java.net.URLEncoder.encode("An error occurred: " + e.getMessage(), "UTF-8"));
         }
     }
 }
