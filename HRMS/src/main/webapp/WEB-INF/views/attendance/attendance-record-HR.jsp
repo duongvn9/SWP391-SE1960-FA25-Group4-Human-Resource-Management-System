@@ -151,17 +151,21 @@
                                         <td><c:out value="${att.period}" /></td> 
                                         <td class="edit-col" style="display:none;"> 
                                             <form class="actionForm" method="post" action="${pageContext.request.contextPath}/attendance/record/HR">
-                                                <input type="hidden" name="action" class="formAction">
                                                 <input type="hidden" name="userId" value="${att.userId}">
-                                                <input type="hidden" name="date" value="<c:out value='${att.date}'/>">
-                                                <input type="hidden" name="checkIn" value="<c:if test='${att.checkIn != null}'>${att.checkIn.toString().substring(0,5)}</c:if>">
-                                                <input type="hidden" name="checkOut" value="<c:if test='${att.checkOut != null}'>${att.checkOut.toString().substring(0,5)}</c:if>">
-
-                                                    <button type="button" class="btn btn-update-row" onclick="submitAction(this, 'update')">Update</button>
-                                                    <button type="button" class="btn btn-delete-row" onclick="submitAction(this, 'delete')">Delete</button>
-                                                </form>
-                                            </td>
-                                        </tr> 
+                                                <input type="hidden" name="employeeName" value="${att.employeeName}">
+                                                <input type="hidden" name="department" value="${att.department}">
+                                                <input type="hidden" name="date" value="${att.date}">
+                                                <input type="hidden" name="checkIn" value="${att.checkIn}">
+                                                <input type="hidden" name="checkOut" value="${att.checkOut}">
+                                                <input type="hidden" name="status" value="${att.status}">
+                                                <input type="hidden" name="source" value="${att.source}">
+                                                <input type="hidden" name="period" value="${att.period}">
+                                                <input type="hidden" class="formAction" name="action" value="">
+                                                <button type="button" class="btn btn-update-row" onclick="submitAction(this, 'update')">Update</button>
+                                                <button type="button" class="btn btn-delete-row" onclick="submitAction(this, 'delete')">Delete</button>
+                                            </form>
+                                        </td>
+                                    </tr> 
                                 </c:forEach> 
                             </tbody> 
                         </table> 
@@ -208,35 +212,38 @@
             <div class="modal-content">
                 <span class="close-btn" onclick="closeModal()">&times;</span>
                 <h3>Edit Attendance</h3>
-                <form id="editForm">
-                    <label for="modalCheckIn">Employee ID: </label>
-                    <input type="time" name="checkIn" id="modalCheckIn" required>
-                    
-                    <label for="modalCheckIn">Employee Name: </label>
-                    <input type="time" name="checkIn" id="modalCheckIn" required>
-                    
-                    <label for="modalCheckIn">Department: </label>
-                    <input type="time" name="checkIn" id="modalCheckIn" required>
-                    
-                    <label for="modalCheckIn">Date: </label>
-                    <input type="time" name="checkIn" id="modalCheckIn" required>
-                    
-                    <label for="modalCheckIn">Check-in: </label>
-                    <input type="time" name="checkIn" id="modalCheckIn" required>
 
-                    <label for="modalCheckOut">Check-out: </label>
-                    <input type="time" name="checkOut" id="modalCheckOut" required>
+                <form id="editForm" method="post">
+                    <input type="hidden" name="action" value="update">
 
-                    <label for="modalStatus">Status: </label>
-                    <input type="text" name="status" id="modalStatus">
+                    <label for="modalEmpId">Employee ID:</label>
+                    <input type="text" name="userIdUpdate" id="modalEmpId" readonly>
 
-                    <label for="modalSource">Source: </label>
-                    <input type="text" name="source" id="modalSource">
-                    
-                    <label for="modalSource">Period: </label>
-                    <input type="text" name="source" id="modalSource">
+                    <label for="modalEmpName">Employee Name:</label>
+                    <input type="text" name="employeeNameUpdate" id="modalEmpName" readonly>
 
-                    <button type="button" onclick="submitEdit()">Save</button>
+                    <label for="modalDepartment">Department:</label>
+                    <input type="text" name="departmentUpdate" id="modalDepartment" readonly>
+
+                    <label for="modalDate">Date:</label>
+                    <input type="date" name="dateUpdate" id="modalDate" required>
+
+                    <label for="modalCheckIn">Check-in:</label>
+                    <input type="time" name="checkInUpdate" id="modalCheckIn" required>
+
+                    <label for="modalCheckOut">Check-out:</label>
+                    <input type="time" name="checkOutUpdate" id="modalCheckOut" required>
+
+                    <label for="modalStatus">Status:</label>
+                    <input type="text" name="statusUpdate" id="modalStatus" required>
+
+                    <label for="modalSource">Source:</label>
+                    <input type="text" name="sourceUpdate" id="modalSource" readonly>
+
+                    <label for="modalPeriod">Period:</label>
+                    <input type="text" name="periodUpdate" id="modalPeriod" readonly>
+
+                    <button type="button" onclick="submitEdit()">💾 Save</button>
                 </form>
             </div>
         </div>

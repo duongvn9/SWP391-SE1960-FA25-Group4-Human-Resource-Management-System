@@ -4,6 +4,8 @@ import group4.hrms.dao.AttendanceLogDao;
 import group4.hrms.dao.DepartmentDao;
 import group4.hrms.dao.TimesheetPeriodDao;
 import group4.hrms.dto.AttendanceLogDto;
+import group4.hrms.model.AttendanceLog;
+import group4.hrms.service.AttendanceMapper;
 import group4.hrms.service.ExportService;
 import group4.hrms.util.PaginationUtil;
 import java.io.IOException;
@@ -129,7 +131,6 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             LocalDate endDate = parseDate(endDateStr);
             Long periodId = parseLongSafe(periodIdStr);
 
-            // --- Xử lý delete ---
             if ("delete".equalsIgnoreCase(action)) {
                 String userIdStr = req.getParameter("userId");
                 String dateStr = req.getParameter("date");
@@ -159,7 +160,38 @@ public class AttendanceRecordHRServlet extends HttpServlet {
                 }
             }
 
-            // --- Xử lý reset ---
+            if ("update".equalsIgnoreCase(action)) {
+                Long userIdStr = Long.valueOf(req.getParameter("userIdUpdate"));
+                String employeeNameStr = req.getParameter("employeeNameUpdate");
+                String departmentStr = req.getParameter("departmentUpdate");
+                String dateStr = req.getParameter("dateUpdate");
+                String checkInStr = req.getParameter("checkInUpdate");
+                String checkOutStr = req.getParameter("checkOutUpdate");
+                String statusStr = req.getParameter("statusUpdate");
+                String sourceStr = req.getParameter("sourceUpdate");
+                String periodStr = req.getParameter("periodUpdate");
+
+                AttendanceLogDto record = new AttendanceLogDto();
+                record.setUserId(userIdStr);
+                record.setEmployeeName(employeeNameStr);
+                record.setDepartment(departmentStr);
+                record.setDate(LocalDate.parse(dateStr));
+                record.setCheckIn(LocalTime.parse(checkInStr));
+                record.setCheckOut(LocalTime.parse(checkOutStr));
+                record.setStatus(statusStr);
+                record.setSource(sourceStr);
+                record.setPeriod(periodStr);
+
+                List<AttendanceLog> logs = AttendanceMapper.convertDtoToEntity(record);
+                boolean success = attendanceLogDao.saveAttendanceLogs(logs);
+
+                if (success) {
+                    req.setAttribute("message", "Record updated successfully!");
+                } else {
+                    req.setAttribute("error", "Failed to update record.");
+                }
+            }
+
             if ("reset".equalsIgnoreCase(action)) {
                 employeeKeyword = "";
                 department = "";
@@ -176,7 +208,7 @@ public class AttendanceRecordHRServlet extends HttpServlet {
 
             if (exportType != null && !exportType.isEmpty()) {
                 List<AttendanceLogDto> filteredRecords = attendanceLogDao.findByFilter(
-                        null, 
+                        null,
                         employeeKeyword,
                         department,
                         startDate,

@@ -1,105 +1,104 @@
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
     const toggle = document.getElementById("switchInput");
     const status = document.getElementById("sliderStatus");
     const exportForm = document.getElementById("exportForm");
     const exportTypeInput = document.getElementById("exportType");
+    const editBtn = document.getElementById("editBtn");
 
-    // --- Toggle switch --- //
-    function sendToggleStatus(state) {
-        fetch(`${window.location.origin}/attendance/toggleStatus`, {// endpoint riêng
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({status: state})
-        })
-                .then(res => res.json())
-                .then(data => console.log('Toggle status response:', data))
-                .catch(err => console.error('Error sending toggle status:', err));
+    const sendToggleStatus = async (state) => {
+        try {
+            const res = await fetch(`${window.location.origin}/attendance/toggleStatus`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({status: state})
+            });
+            const data = await res.json();
+            console.log("Toggle status response:", data);
+        } catch (err) {
+            console.error("Error sending toggle status:", err);
+        }
+    };
+
+    if (toggle) {
+        toggle.addEventListener("change", () => {
+            const currentState = toggle.checked ? "Locked" : "Unlocked";
+            status.textContent = currentState;
+            sendToggleStatus(currentState);
+        });
     }
 
-    toggle.addEventListener("change", function () {
-        const currentState = toggle.checked ? "Locked" : "Unlocked";
-        status.textContent = currentState;
-        sendToggleStatus(currentState); // chỉ gửi khi click
-    });
-
-    // --- Import button --- //
-    window.importAttendance = function () {
+    window.importAttendance = () => {
         window.location.href = `${window.location.origin}/attendance/import`;
     };
 
-    // --- Export buttons --- //
-    const exportButtons = [
+    [
         {id: "exportXLSBtn", type: "xls"},
         {id: "exportCSVBtn", type: "csv"},
         {id: "exportPDFBtn", type: "pdf"}
-    ];
-
-    exportButtons.forEach(btn => {
+    ].forEach(btn => {
         const element = document.getElementById(btn.id);
         if (element) {
-            element.addEventListener("click", function () {
+            element.addEventListener("click", () => {
+                if (!exportForm || !exportTypeInput)
+                    return;
                 exportTypeInput.value = btn.type;
-                exportForm.submit(); // POST riêng
+                exportForm.submit();
             });
         }
     });
 
-    // --- Enable/disable edit columns --- //
-    window.enableEdit = function () {
-        const editCols = document.querySelectorAll('.edit-col');
-        const editBtn = document.getElementById('editBtn');
-        const isEditing = editBtn.classList.toggle('active');
+    window.enableEdit = () => {
+        const editCols = document.querySelectorAll(".edit-col");
+        const isEditing = editBtn.classList.toggle("active");
 
         editCols.forEach(col => {
-            col.style.display = isEditing ? '' : 'none';
+            col.style.display = isEditing ? "" : "none";
         });
 
-        editBtn.textContent = isEditing ? 'Done' : 'Edit';
+        editBtn.textContent = isEditing ? "Done" : "Edit";
     };
 
-    // --- Submit Update/Delete action --- //
-    window.submitAction = function (btn, actionType) {
-        const form = btn.closest('form');
-        form.querySelector('.formAction').value = actionType;
+    window.submitAction = (btn, actionType) => {
+        const form = btn.closest("form");
+        if (!form)
+            return;
+        const actionInput = form.querySelector(".formAction");
+        if (actionInput)
+            actionInput.value = actionType;
 
-        if (actionType === 'update') {
+        if (actionType === "update") {
             openEditModalFromForm(form);
-        } else if (actionType === 'delete') {
-            form.submit(); // POST xóa
+        } else if (actionType === "delete") {
+            if (confirm("Are you sure you want to delete this record?")) {
+                form.submit();
+            }
         }
     };
 
-    // --- Modal edit --- //
-    function openEditModalFromForm(form) {
-        document.getElementById('modalAttendanceId').value = form.querySelector('[name="attendanceId"]') ? form.querySelector('[name="attendanceId"]').value : '';
-        document.getElementById('modalCheckIn').value = form.querySelector('[name="checkIn"]').value;
-        document.getElementById('modalCheckOut').value = form.querySelector('[name="checkOut"]').value;
-        document.getElementById('modalStatus').value = form.querySelector('[name="status"]').value;
-        document.getElementById('modalSource').value = form.querySelector('[name="source"]').value;
+    const openEditModalFromForm = (form) => {
+        const getVal = (name) => form.querySelector(`[name="${name}"]`)?.value || "";
 
-        document.getElementById('editModal').style.display = 'flex';
-    }
+        document.getElementById("modalEmpId").value = getVal("userId");
+        document.getElementById("modalEmpName").value = getVal("employeeName");
+        document.getElementById("modalDepartment").value = getVal("department");
+        document.getElementById("modalDate").value = getVal("date");
+        document.getElementById("modalCheckIn").value = getVal("checkIn");
+        document.getElementById("modalCheckOut").value = getVal("checkOut");
+        document.getElementById("modalStatus").value = getVal("status");
+        document.getElementById("modalSource").value = getVal("source");
+        document.getElementById("modalPeriod").value = getVal("period");
 
-
-    window.closeModal = function () {
-        document.getElementById('editModal').style.display = 'none';
+        document.getElementById("editModal").style.display = "flex";
     };
 
-    window.submitEdit = function () {
-        const form = document.getElementById('editForm');
-        const formData = new FormData(form);
+    window.closeModal = () => {
+        document.getElementById("editModal").style.display = "none";
+    };
 
-        fetch(`${window.location.origin}/attendance/record/HR`, {
-            method: 'POST',
-            body: formData
-        }).then(res => {
-            if (res.ok) {
-                alert('Updated successfully');
-                closeModal();
-                location.reload();
-            } else {
-                alert('Update failed');
-            }
-        });
+    window.submitEdit = () => {
+        const form = document.getElementById("editForm");
+        form.action = "http://localhost:9999/HRMS/attendance/record/HR";
+        form.method = "POST";
+        form.submit(); 
     };
 });

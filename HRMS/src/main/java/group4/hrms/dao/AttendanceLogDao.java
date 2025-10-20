@@ -599,13 +599,17 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
         return 0;
     }
 
-    public void saveAttendanceLogs(List<AttendanceLog> logs) {
+    public boolean saveAttendanceLogs(List<AttendanceLog> logs) {
+        boolean allSuccess = true;
+
         for (AttendanceLog log : logs) {
             try {
                 save(log);
             } catch (SQLException e) {
+                allSuccess = false;
             }
         }
+        return allSuccess;
     }
 
     public boolean deleteAttendance(Long userId, LocalDate date, LocalTime checkIn, LocalTime checkOut) throws SQLException {
