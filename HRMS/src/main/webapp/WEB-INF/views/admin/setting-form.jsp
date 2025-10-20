@@ -87,9 +87,9 @@
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-save"></i> ${setting != null ? 'Update' : 'Create'}
                             </button>
-                            <a href="${pageContext.request.contextPath}/settings" class="btn btn-secondary">
+                            <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#cancelModal">
                                 <i class="fas fa-times"></i> Cancel
-                            </a>
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -99,6 +99,25 @@
 
         <!-- Footer -->
         <jsp:include page="../layout/dashboard-footer.jsp" />
+    </div>
+
+    <!-- Cancel Confirmation Modal -->
+    <div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cancelModalLabel">Confirm Cancel</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to cancel? Any unsaved changes will be lost.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, Continue Editing</button>
+                    <a href="${pageContext.request.contextPath}/settings" class="btn btn-primary">Yes, Cancel</a>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 </html>
