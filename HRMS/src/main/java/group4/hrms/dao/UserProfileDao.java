@@ -211,6 +211,32 @@ public class UserProfileDao {
     }
 
     /**
+     * Kiểm tra phone có tồn tại cho user khác không
+     */
+    public boolean isPhoneExistsForOtherUser(String phone, Long currentUserId) {
+        String sql = "SELECT COUNT(*) FROM users WHERE phone = ? AND id != ?";
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, phone);
+            stmt.setLong(2, currentUserId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+
+            return false;
+
+        } catch (SQLException e) {
+            logger.error("Error checking phone existence", e);
+            throw new RuntimeException("Database error", e);
+        }
+    }
+
+    /**
      * Map ResultSet to UserProfile object
      */
     private UserProfile mapResultSetToUserProfile(ResultSet rs) throws SQLException {

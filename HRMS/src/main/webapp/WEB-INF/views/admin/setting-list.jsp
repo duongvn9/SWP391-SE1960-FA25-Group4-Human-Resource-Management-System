@@ -120,8 +120,8 @@
                                                 <i class="fas fa-edit"></i> Edit
                                             </a>
                                             <button type="button" class="btn btn-sm btn-danger btn-action" 
-                                                    data-id="${setting.id}" data-type="${setting.type}" data-name="${setting.name}"
-                                                    onclick="confirmDelete(this)">
+                                                    data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                                    data-id="${setting.id}" data-type="${setting.type}" data-name="${setting.name}">
                                                 <i class="fas fa-trash"></i> Delete
                                             </button>
                                         </td>
@@ -169,27 +169,48 @@
         <jsp:include page="../layout/dashboard-footer.jsp" />
     </div>
 
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete "<strong id="deleteItemName"></strong>"?</p>
+                    <p class="text-danger mb-0">This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <form id="deleteForm" method="post" action="${pageContext.request.contextPath}/settings/delete" style="display: none;">
         <input type="hidden" name="id" id="deleteId">
         <input type="hidden" name="type" id="deleteType">
     </form>
 
     <script>
-        function confirmDelete(btn) {
-            var id = btn.getAttribute('data-id');
-            var type = btn.getAttribute('data-type');
-            var name = btn.getAttribute('data-name');
+        // Handle delete modal
+        var deleteModal = document.getElementById('deleteModal');
+        deleteModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            var id = button.getAttribute('data-id');
+            var type = button.getAttribute('data-type');
+            var name = button.getAttribute('data-name');
             
-            // Confirmation dialog as per use case
-            var message = 'Are you sure you want to delete "' + name + '"?\n\n' +
-                         'This action cannot be undone.';
-            
-            if (confirm(message)) {
-                document.getElementById('deleteId').value = id;
-                document.getElementById('deleteType').value = type;
-                document.getElementById('deleteForm').submit();
-            }
-        }
+            document.getElementById('deleteItemName').textContent = name;
+            document.getElementById('deleteId').value = id;
+            document.getElementById('deleteType').value = type;
+        });
+        
+        document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+            document.getElementById('deleteForm').submit();
+        });
         
         // Auto-dismiss success and info messages after 3 seconds
         window.addEventListener('DOMContentLoaded', function() {
