@@ -18,7 +18,7 @@ A comprehensive web-based Human Resource Management System built with Java EE te
 - [Contributing](#contributing)
 - [License](#license)
 
-## 🎯 Overview
+## Overview
 
 The HRMS is a full-featured human resource management system that provides comprehensive solutions for managing employees, attendance, leave requests, overtime, payroll, and recruitment processes. The system is built with enterprise-grade security, role-based access control, and modern web technologies.
 
@@ -33,7 +33,7 @@ The HRMS is a full-featured human resource management system that provides compr
 - **Google OAuth Integration** for secure authentication
 - **Responsive Web Interface** built with JSP and modern CSS
 
-## ✨ Features
+## Features
 
 ### 🔐 Authentication & Authorization
 - **Multi-factor Authentication** with Google OAuth2 integration
@@ -92,7 +92,7 @@ The HRMS is a full-featured human resource management system that provides compr
 - **Audit Logging** for all system activities
 - **Backup & Recovery** capabilities
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 ### Backend Technologies
 - **Java 17** - Core programming language
@@ -124,7 +124,7 @@ The HRMS is a full-featured human resource management system that provides compr
 - **Lunar Calendar Library** - Vietnamese holiday calculations
 - **Apache HttpClient** - HTTP client for external APIs
 
-## 📋 Prerequisites
+## Prerequisites
 
 Before running the application, ensure you have the following installed:
 
@@ -134,7 +134,7 @@ Before running the application, ensure you have the following installed:
 - **Apache Tomcat 10+** (or compatible servlet container)
 - **Git** (for version control)
 
-## 🚀 Installation
+## Installation
 
 ### 1. Clone the Repository
 ```bash
@@ -199,7 +199,7 @@ pagination.default.size=20
 pagination.max.size=100
 ```
 
-## 🎮 Usage: updating....
+## Usage: updating....
 
 ### Starting the Application
 1. Start MySQL database service
@@ -235,7 +235,7 @@ pagination.max.size=100
 4. **Manage Employee** information
 5. **Configure System** settings
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 HRMS/
@@ -260,42 +260,68 @@ HRMS/
 └── docs/                    # Documentation
 ```
 
-## 🗄️ Database Schema
+## Database Schema
 
-The system uses a comprehensive database schema with the following key tables:
+The system uses a comprehensive database schema with 25+ tables organized into logical modules:
 
-### Core Tables
+### 🔐 Authentication & Authorization
 - **accounts** - User authentication and login information
-- **users** - Employee profile information
-- **departments** - Organizational structure
-- **positions** - Job positions and roles
-- **roles** - System roles (ADMIN, HRM, HR, MANAGER, EMPLOYEE, GUEST)
-- **features** - System features and permissions
-
-### Attendance & Time Management
-- **attendance_logs** - Daily attendance records
-- **timesheet_periods** - Payroll periods
-- **ot_policies** - Overtime calculation policies
-- **holiday_calendar** - Company holidays
-
-### Leave Management
-- **leave_types** - Different types of leave
-- **leave_balances** - Employee leave balances
-- **leave_ledger** - Leave transaction history
-- **requests** - All types of requests (leave, OT, appeals)
-
-### Payroll & Compensation
-- **salary_history** - Employee salary records
-- **payslips** - Monthly payslip data
-- **employment_contracts** - Contract information
-
-### RBAC (Role-Based Access Control)
+- **auth_identities** - OAuth provider identities (Google, Local)
+- **auth_local_credentials** - Local password credentials with BCrypt hashing
+- **roles** - System roles (ADMIN, HR_MANAGER, HR_STAFF, DEPT_MANAGER, EMPLOYEE, GUEST)
+- **features** - System features and permissions (70+ features)
 - **role_features** - Role-permission mappings
-- **account_features** - Account-specific permissions
-- **department_features** - Department-specific permissions
+- **account_features** - Account-specific permission overrides
+- **account_roles** - Account-role assignments with audit trail
+- **department_features** - Department-specific permission overrides
 - **position_roles** - Position-role mappings
 
-## 📚 API Documentation
+### 👥 Employee Management
+- **users** - Employee profile information and personal details
+- **departments** - Organizational structure and hierarchy
+- **positions** - Job positions and levels
+- **employment_contracts** - Employment contract details and salary information
+- **salary_history** - Employee salary change history
+
+### ⏰ Attendance & Time Management
+- **attendance_logs** - Daily check-in/check-out records
+- **timesheet_periods** - Payroll periods with lock/unlock functionality
+- **ot_policies** - Overtime calculation policies and rules (JSON configuration)
+- **holiday_calendar** - Company holiday calendars by year
+- **holidays** - Public holidays and substitute days with OT multipliers
+
+### 🏖️ Leave Management
+- **leave_types** - Different types of leave (Annual, Personal, Sick, Maternity, Unpaid, etc.)
+- **leave_balances** - Employee leave balances by year and type
+- **leave_ledger** - Leave transaction history and balance changes
+
+### 📝 Request Management System
+- **requests** - Unified request system for all request types
+- **request_types** - Request type definitions (Leave, OT, Adjustment, Recruitment, etc.)
+- **request_transitions** - Request status change audit trail
+- **attachments** - File attachments and external links for requests
+
+### 🎯 Recruitment Management
+- **job_postings** - Job posting details and requirements
+- **applications** - Candidate applications and documents
+
+### 💰 Payroll Management
+- **payslips** - Monthly payslip data with detailed breakdowns (JSON)
+
+### ⚙️ System Administration
+- **system_parameters** - System configuration parameters (JSON-based)
+- **audit_events** - System audit trail for security and compliance
+- **outbox_messages** - Event-driven messaging for notifications (JSON)
+
+### 📊 Database Features
+- **UTF8MB4 Unicode** support for Vietnamese characters
+- **JSON columns** for flexible data storage (OT policies, request details, payslip breakdowns)
+- **Comprehensive foreign keys** with CASCADE and SET NULL constraints
+- **Audit trails** with created_at/updated_at timestamps
+- **Unique constraints** for data integrity
+- **Indexes** for performance optimization
+
+## API Documentation
 
 Updating...
 
@@ -323,7 +349,7 @@ The project includes comprehensive test coverage for:
 ### Test Data
 Test data is automatically seeded using H2 in-memory database for testing scenarios.
 
-## 🤝 Contributing
+## Contributing
 
 ### Development Guidelines
 1. **Code Style**: Follow Google Java Style Guide
@@ -345,17 +371,17 @@ Test data is automatically seeded using H2 in-memory database for testing scenar
 - **Unit Tests**: Minimum 80% code coverage
 - **Integration Tests**: All critical workflows tested
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 📞 Support
+## Support
 
 For support and questions:
 - **Email**: ngocduongvu9999@gmail.com
 - **Documentation**: [Project Wiki](https://github.com/duongvn9/SWP391-SE1960-FA25-Group4-Human-Resource-Management-System/blob/main/README.md)
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **FPT University** - Academic support and guidance
 - **Team 4 Members** - duongvn9, updating....
