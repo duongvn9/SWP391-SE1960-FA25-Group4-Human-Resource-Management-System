@@ -23,7 +23,7 @@ public class AccountDao {
     // SQL queries
     private static final String INSERT_ACCOUNT = "INSERT INTO accounts (user_id, username, email_login, status, failed_attempts, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
-    private static final String UPDATE_ACCOUNT = "UPDATE accounts SET username = ?, email_login = ?, status = ?, updated_at = ? WHERE id = ?";
+    private static final String UPDATE_ACCOUNT = "UPDATE accounts SET username = ?, email_login = ?, status = ?, last_login_at = ?, updated_at = ? WHERE id = ?";
 
     private static final String DELETE_ACCOUNT = "DELETE FROM accounts WHERE id = ?";
 
@@ -93,8 +93,16 @@ public class AccountDao {
             stmt.setString(1, account.getUsername());
             stmt.setString(2, account.getEmailLogin());
             stmt.setString(3, account.getStatus());
-            stmt.setTimestamp(4, Timestamp.valueOf(now));
-            stmt.setLong(5, account.getId());
+
+            // Set last_login_at (can be null)
+            if (account.getLastLoginAt() != null) {
+                stmt.setTimestamp(4, Timestamp.valueOf(account.getLastLoginAt()));
+            } else {
+                stmt.setNull(4, Types.TIMESTAMP);
+            }
+
+            stmt.setTimestamp(5, Timestamp.valueOf(now));
+            stmt.setLong(6, account.getId());
 
             int affectedRows = stmt.executeUpdate();
 
@@ -282,11 +290,20 @@ public class AccountDao {
         sql.append("SELECT a.id, a.username, a.email_login, a.user_id, a.status, a.last_login_at, ");
         sql.append("u.full_name as user_full_name, ");
         sql.append("d.name as department_name, ");
-        sql.append("p.name as position_name ");
+        sql.append("p.name as position_name, ");
+        sql.append("r.name as role_name, r.code as role_code, r.priority as role_priority ");
         sql.append("FROM accounts a ");
         sql.append("INNER JOIN users u ON a.user_id = u.id ");
         sql.append("LEFT JOIN departments d ON u.department_id = d.id ");
         sql.append("LEFT JOIN positions p ON u.position_id = p.id ");
+        // Get highest priority role for this account
+        sql.append("LEFT JOIN (");
+        sql.append("  SELECT ar.account_id, r.id, r.name, r.code, r.priority ");
+        sql.append("  FROM account_roles ar ");
+        sql.append("  INNER JOIN roles r ON ar.role_id = r.id ");
+        sql.append("  WHERE ar.account_id IN (SELECT id FROM accounts) ");
+        sql.append("  ORDER BY r.priority DESC ");
+        sql.append(") r ON r.account_id = a.id ");
         sql.append("WHERE 1=1 ");
 
         // Build dynamic WHERE clauses
@@ -546,6 +563,14 @@ public class AccountDao {
             dto.setLastLoginAt(lastLogin.toLocalDateTime());
         }
 
+        // Role information (highest priority role)
+        dto.setRoleName(rs.getString("role_name"));
+        dto.setRoleCode(rs.getString("role_code"));
+        int rolePriority = rs.getInt("role_priority");
+        if (!rs.wasNull()) {
+            dto.setRolePriority(rolePriority);
+        }
+
         return dto;
     }
 
@@ -664,7 +689,17 @@ public class AccountDao {
                 }
             }
             logger.error("Error creating account with password: {}", e.getMessage(), e);
-            throw new RuntimeException("Error creating account with password", e);
+
+            // Provide more specific error message
+            String errorMsg = "Error creating account with password: " + e.getMessage();
+            if (e.getMessage() != null) {
+                if (e.getMessage().contains("Duplicate entry")) {
+                    errorMsg = "Duplicate entry: " + e.getMessage();
+                } else if (e.getMessage().contains("foreign key constraint")) {
+                    errorMsg = "Invalid user ID or foreign key constraint violation";
+                }
+            }
+            throw new RuntimeException(errorMsg, e);
         } finally {
             if (conn != null) {
                 try {
@@ -675,5 +710,15 @@ public class AccountDao {
                 }
             }
         }
+    }
+
+    /**
+     * Save account (alias for create method)
+     * 
+     * @param account Account to save
+     * @return Created account
+     */
+    public Account save(Account account) {
+        return create(account);
     }
 }

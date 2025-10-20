@@ -815,12 +815,15 @@ public class UserDao {
     }
 
     /**
-     * Find subordinate user IDs for a given manager based on department hierarchy and job level.
+     * Find subordinate user IDs for a given manager based on department hierarchy
+     * and job level.
      * This method is optimized for filtering requests by subordinate scope.
      *
      * Logic:
-     * - For DEPT_MANAGER (job_level 4): Returns users in same department with higher job_level (5 = STAFF)
-     * - For HR_STAFF/HR_MANAGER/ADMIN (job_level 1-3): Returns all users with higher job_level across all departments
+     * - For DEPT_MANAGER (job_level 4): Returns users in same department with
+     * higher job_level (5 = STAFF)
+     * - For HR_STAFF/HR_MANAGER/ADMIN (job_level 1-3): Returns all users with
+     * higher job_level across all departments
      * - Excludes the manager themselves
      * - Only includes active users
      *
@@ -836,31 +839,31 @@ public class UserDao {
         }
 
         String query = """
-            SELECT u.id
-            FROM users u
-            JOIN positions p ON u.position_id = p.id
-            WHERE u.id != ?
-              AND u.status = 'active'
-              AND p.job_level > (
-                  SELECT p2.job_level
-                  FROM users u2
-                  JOIN positions p2 ON u2.position_id = p2.id
-                  WHERE u2.id = ?
-              )
-              AND (
-                  -- If manager is DEPT_MANAGER (job_level 4), only show same department
-                  (
-                      (SELECT p2.job_level FROM users u2 JOIN positions p2 ON u2.position_id = p2.id WHERE u2.id = ?) = 4
-                      AND u.department_id = (SELECT department_id FROM users WHERE id = ?)
+                SELECT u.id
+                FROM users u
+                JOIN positions p ON u.position_id = p.id
+                WHERE u.id != ?
+                  AND u.status = 'active'
+                  AND p.job_level > (
+                      SELECT p2.job_level
+                      FROM users u2
+                      JOIN positions p2 ON u2.position_id = p2.id
+                      WHERE u2.id = ?
                   )
-                  OR
-                  -- If manager is HR/ADMIN (job_level 1-3), show all departments
-                  (SELECT p2.job_level FROM users u2 JOIN positions p2 ON u2.position_id = p2.id WHERE u2.id = ?) < 4
-              )
-            """;
+                  AND (
+                      -- If manager is DEPT_MANAGER (job_level 4), only show same department
+                      (
+                          (SELECT p2.job_level FROM users u2 JOIN positions p2 ON u2.position_id = p2.id WHERE u2.id = ?) = 4
+                          AND u.department_id = (SELECT department_id FROM users WHERE id = ?)
+                      )
+                      OR
+                      -- If manager is HR/ADMIN (job_level 1-3), show all departments
+                      (SELECT p2.job_level FROM users u2 JOIN positions p2 ON u2.position_id = p2.id WHERE u2.id = ?) < 4
+                  )
+                """;
 
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(query)) {
+                PreparedStatement ps = conn.prepareStatement(query)) {
 
             ps.setLong(1, managerId);
             ps.setLong(2, managerId);
@@ -1107,7 +1110,8 @@ public class UserDao {
 
     /**
      * Tìm department manager hiện tại của một department
-     * Note: Simplified version - checks if any user in department has position with code 'DEPT_MANAGER'
+     * Note: Simplified version - checks if any user in department has position with
+     * code 'DEPT_MANAGER'
      *
      * @param departmentId Department ID
      * @return User là department manager hoặc null nếu không có
@@ -1119,18 +1123,18 @@ public class UserDao {
 
         logger.debug("Tìm department manager cho department ID: {}", departmentId);
 
-        // Simplified query - assumes position with code 'DEPT_MANAGER' or similar exists
+        // Find user with "Department Manager" position in the specified department
         String sql = """
                 SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
                        u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
                        u.start_work_date, u.created_at, u.updated_at,
-                       d.name as department_name,
+                       d.name as department_name, p.name as position_name
                 FROM users u
                 LEFT JOIN departments d ON u.department_id = d.id
                 LEFT JOIN positions p ON u.position_id = p.id
-                WHERE u.department_id = ? 
+                WHERE u.department_id = ?
                   AND u.status = 'active'
-                  AND (p.code = 'DEPT_MANAGER' OR p.name LIKE '%Manager%' OR p.name LIKE '%Trưởng phòng%')
+                  AND p.name = 'Department Manager'
                 LIMIT 1
                 """;
 
@@ -1142,7 +1146,7 @@ public class UserDao {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     User manager = mapResultSetToUser(rs);
-                    logger.debug("Tìm thấy department manager: {} cho department ID: {}", 
+                    logger.debug("Tìm thấy department manager: {} cho department ID: {}",
                             manager.getFullName(), departmentId);
                     return Optional.of(manager);
                 }
@@ -1166,5 +1170,130 @@ public class UserDao {
      */
     public Optional<User> save(User user) {
         return create(user);
+    }
+
+    /**
+     * Tìm user theo ID và trả về UserDetailDto
+     * 
+     * @param id User ID
+     * @return UserDetailDto hoặc null nếu không tìm thấy
+     */
+    public group4.hrms.dto.UserDetailDto findByIdAsDto(Long id) {
+        if (id == null) {
+            return null;
+        }
+
+        String sql = """
+                SELECT u.id, u.employee_code, u.full_name, u.phone, u.email_company,
+                       u.department_id, u.position_id, u.status,
+                       u.date_joined, u.start_work_date, u.created_at, u.updated_at,
+                       d.name as department_name, p.name as position_name
+                FROM users u
+                LEFT JOIN departments d ON u.department_id = d.id
+                LEFT JOIN positions p ON u.position_id = p.id
+                WHERE u.id = ?
+                """;
+
+        try (Connection conn = DatabaseUtil.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setLong(1, id);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new group4.hrms.dto.UserDetailDto(rs);
+                }
+            }
+
+            logger.debug("Không tìm thấy user với ID: {}", id);
+            return null;
+
+        } catch (SQLException e) {
+            logger.error("Lỗi khi tìm user detail với ID: {}", id, e);
+            return null;
+        }
+    }
+
+    /**
+     * Tìm users theo position ID
+     * 
+     * @param positionId Position ID
+     * @return List of users with the specified position
+     */
+    public List<User> findByPositionId(Long positionId) {
+        logger.debug("Tìm users theo position ID: {}", positionId);
+
+        String sql = """
+                SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
+                       u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                       u.start_work_date, u.created_at, u.updated_at,
+                       d.name as department_name, p.name as position_name
+                FROM users u
+                LEFT JOIN departments d ON u.department_id = d.id
+                LEFT JOIN positions p ON u.position_id = p.id
+                WHERE u.position_id = ? AND u.status = 'active'
+                ORDER BY u.created_at DESC
+                """;
+
+        List<User> users = new ArrayList<>();
+
+        try (Connection conn = DatabaseUtil.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setLong(1, positionId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    users.add(mapResultSetToUser(rs));
+                }
+            }
+
+            logger.debug("Tìm thấy {} users với position ID: {}", users.size(), positionId);
+            return users;
+
+        } catch (SQLException e) {
+            logger.error("Lỗi khi tìm users theo position ID: {}", positionId, e);
+            return users;
+        }
+    }
+
+    /**
+     * Tìm users chưa có account (active users without any account)
+     * 
+     * @return List of users without accounts
+     */
+    public List<User> findUsersWithoutAccount() {
+        logger.debug("Tìm users chưa có account");
+
+        String sql = """
+                SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
+                       u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                       u.start_work_date, u.created_at, u.updated_at,
+                       d.name as department_name, p.name as position_name
+                FROM users u
+                LEFT JOIN departments d ON u.department_id = d.id
+                LEFT JOIN positions p ON u.position_id = p.id
+                WHERE u.status = 'active'
+                  AND u.id NOT IN (SELECT user_id FROM accounts)
+                ORDER BY u.created_at DESC
+                """;
+
+        List<User> users = new ArrayList<>();
+
+        try (Connection conn = DatabaseUtil.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                users.add(mapResultSetToUser(rs));
+            }
+
+            logger.debug("Tìm thấy {} users chưa có account", users.size());
+            return users;
+
+        } catch (SQLException e) {
+            logger.error("Lỗi khi tìm users chưa có account: {}", e.getMessage(), e);
+            return users;
+        }
     }
 }

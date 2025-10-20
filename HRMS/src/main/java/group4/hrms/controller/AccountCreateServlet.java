@@ -1,8 +1,11 @@
 package group4.hrms.controller;
 
 import group4.hrms.dao.AccountDao;
+import group4.hrms.dao.AccountRoleDao;
+import group4.hrms.dao.RoleDao;
 import group4.hrms.dao.UserDao;
 import group4.hrms.model.Account;
+import group4.hrms.model.Role;
 import group4.hrms.model.User;
 import group4.hrms.util.SessionUtil;
 import jakarta.servlet.ServletException;
@@ -48,11 +51,33 @@ public class AccountCreateServlet extends HttpServlet {
         }
 
         try {
-            // Lấy danh sách users để chọn (chỉ users đang active)
-            List<User> users = userDao.findByStatus("active");
+            // Check if userId is provided in query parameter (for pre-fill from user card)
+            String userIdParam = request.getParameter("userId");
+            List<User> users;
+
+            if (userIdParam != null && !userIdParam.trim().isEmpty()) {
+                // Khi click từ user card → chỉ hiển thị users chưa có account
+                users = userDao.findUsersWithoutAccount();
+                try {
+                    Long preSelectedUserId = Long.parseLong(userIdParam);
+                    request.setAttribute("preSelectedUserId", preSelectedUserId);
+                    logger.info("Pre-selecting user ID: {} for account creation", preSelectedUserId);
+                } catch (NumberFormatException e) {
+                    logger.warn("Invalid userId parameter: {}", userIdParam);
+                }
+            } else {
+                // Khi click "Add New Account" → hiển thị TẤT CẢ users (active)
+                users = userDao.findByStatus("active");
+                logger.info("Loading all active users for account creation");
+            }
+
+            // Lấy danh sách roles để chọn
+            RoleDao roleDao = new RoleDao();
+            List<Role> roles = roleDao.findAll();
 
             // Set attributes
             request.setAttribute("users", users);
+            request.setAttribute("roles", roles);
             request.setAttribute("currentPage", "account-create");
 
             // Forward to JSP
@@ -92,6 +117,7 @@ public class AccountCreateServlet extends HttpServlet {
             String emailLogin = request.getParameter("emailLogin");
             String password = request.getParameter("password");
             String confirmPassword = request.getParameter("confirmPassword");
+            String roleIdStr = request.getParameter("roleId");
 
             // Validate required fields
             if (userIdStr == null || userIdStr.trim().isEmpty()) {
@@ -138,6 +164,9 @@ public class AccountCreateServlet extends HttpServlet {
                 return;
             }
 
+            // Note: A user can have multiple accounts with different roles
+            // No need to check for existing accounts
+
             // Determine email login - use company email if not provided
             String finalEmailLogin = (emailLogin != null && !emailLogin.trim().isEmpty())
                     ? emailLogin.trim()
@@ -165,6 +194,16 @@ public class AccountCreateServlet extends HttpServlet {
                 return;
             }
 
+            // Parse roleId (optional)
+            Long roleId = null;
+            if (roleIdStr != null && !roleIdStr.trim().isEmpty()) {
+                try {
+                    roleId = Long.parseLong(roleIdStr);
+                } catch (NumberFormatException e) {
+                    logger.warn("Invalid role ID format: {}", roleIdStr);
+                }
+            }
+
             // Create new account with hashed password
             Account createdAccount = accountDao.createWithPassword(
                     userId,
@@ -176,6 +215,20 @@ public class AccountCreateServlet extends HttpServlet {
                     createdAccount.getUsername(),
                     SessionUtil.getCurrentUsername(request));
 
+            // Assign role if provided
+            if (roleId != null) {
+                AccountRoleDao accountRoleDao = new AccountRoleDao();
+                boolean roleAssigned = accountRoleDao.assignRole(createdAccount.getId(), roleId);
+
+                if (roleAssigned) {
+                    logger.info("Role ID {} assigned to account {} successfully",
+                            roleId, createdAccount.getId());
+                } else {
+                    logger.warn("Failed to assign role ID {} to account {}",
+                            roleId, createdAccount.getId());
+                }
+            }
+
             // Set success message
             session.setAttribute("successMessage",
                     "Account created successfully for " + user.getFullName());
@@ -185,7 +238,26 @@ public class AccountCreateServlet extends HttpServlet {
 
         } catch (Exception e) {
             logger.error("Error creating account: {}", e.getMessage(), e);
-            session.setAttribute("errorMessage", "Error creating account. Please try again.");
+
+            // Provide more specific error message
+            String errorMessage = "An error occurred while creating account. Please try again.";
+            if (e.getMessage() != null) {
+                if (e.getMessage().contains("Duplicate entry")) {
+                    if (e.getMessage().contains("username")) {
+                        errorMessage = "Username already exists. Please choose another one.";
+                    } else if (e.getMessage().contains("email")) {
+                        errorMessage = "Email already exists. Please use another email.";
+                    } else {
+                        errorMessage = "This account information already exists in the system.";
+                    }
+                } else if (e.getMessage().contains("foreign key constraint")) {
+                    errorMessage = "Invalid user selection. Please select a valid user.";
+                } else if (e.getMessage().contains("password")) {
+                    errorMessage = "Error processing password. Please try again.";
+                }
+            }
+
+            session.setAttribute("errorMessage", errorMessage);
             response.sendRedirect(request.getContextPath() + "/employees/accounts/create");
         }
     }
