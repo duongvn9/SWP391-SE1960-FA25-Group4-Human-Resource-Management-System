@@ -130,7 +130,7 @@ public class RequestDao extends BaseDao<Request, Long> {
             = "SELECT r.id, r.request_type_id, r.title, r.detail, r.created_by_account_id, "
             + "r.created_by_user_id, r.department_id, r.status, r.current_approver_account_id, "
             + "r.approve_reason, r.created_at, r.updated_at, "
-            + "u.username, u.full_name, u.employee_code, "
+            + "u.full_name, u.employee_code, "
             + "rt.name as request_type_name, rt.code as request_type_code, "
             + "d.name as department_name, "
             + "approver_user.full_name as approver_name, "
@@ -581,12 +581,29 @@ public class RequestDao extends BaseDao<Request, Long> {
         if (detailJson != null && !detailJson.trim().isEmpty()) {
             try {
                 request.setDetailJson(detailJson);
-                // Pre-parse JSON to validate it (will be cached in Request object)
-                // This triggers lazy loading and validates JSON format
-                if (detailJson.contains("leaveTypeCode")) {
-                    request.getLeaveDetail(); // Trigger parsing for leave requests
-                } else if (detailJson.contains("otDate")) {
-                    request.getOtDetail(); // Trigger parsing for OT requests
+                
+                // Pre-parse JSON based on request_type_id to trigger lazy loading
+                // This validates JSON format and caches the parsed object
+                Long requestTypeId = request.getRequestTypeId();
+                
+                if (requestTypeId != null) {
+                    if (requestTypeId == 6L) {
+                        // LEAVE_REQUEST
+                        logger.debug("Request ID {} is LEAVE request (type_id=6), parsing LeaveRequestDetail", request.getId());
+                        request.getLeaveDetail();
+                    } else if (requestTypeId == 7L) {
+                        // OVERTIME_REQUEST
+                        logger.debug("Request ID {} is OT request (type_id=7), parsing OTRequestDetail", request.getId());
+                        request.getOtDetail();
+                    } else if (requestTypeId == 8L) {
+                        // ADJUSTMENT_REQUEST (Appeal)
+                        logger.debug("Request ID {} is APPEAL request (type_id=8), parsing AppealRequestDetail", request.getId());
+                        request.getAppealDetail();
+                    } else {
+                        logger.debug("Request ID {} has type_id={}, no detail parsing needed", request.getId(), requestTypeId);
+                    }
+                } else {
+                    logger.warn("Request ID {} has null request_type_id, cannot determine detail type", request.getId());
                 }
             } catch (Exception e) {
                 logger.warn("JSON parsing error for request id={}: {}. Detail JSON: {}. Setting detail to null.",

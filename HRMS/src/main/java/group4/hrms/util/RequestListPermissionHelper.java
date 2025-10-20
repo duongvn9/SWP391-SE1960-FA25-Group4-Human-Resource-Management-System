@@ -231,21 +231,43 @@ public class RequestListPermissionHelper {
             return false;
         }
 
+        // SPECIAL RULE: ADJUSTMENT_REQUEST (Appeal) - Only HR/HRM can approve
+        // Department Manager CANNOT approve appeal requests
+        if (request.getRequestTypeId() != null && request.getRequestTypeId() == 8L) {
+            if (position == null || position.getJobLevel() == null) {
+                return false;
+            }
+            int jobLevel = position.getJobLevel();
+            
+            // Only HR_MANAGER (level 2) and HR_STAFF (level 3) can approve
+            // DEPT_MANAGER (level 4) and below CANNOT approve
+            if (jobLevel > JOB_LEVEL_HR_STAFF) {
+                return false;
+            }
+            
+            // Cannot approve own request
+            if (user.getId().equals(request.getCreatedByUserId())) {
+                return false;
+            }
+            
+            // Can approve PENDING requests
+            return request.isPending();
+        }
+
         // SPECIAL CASE: OT Request created by manager for employee
         // Check if this is an OT request with createdByManager flag
+        // Only check OT detail if this is actually an OVERTIME_REQUEST (type_id=7)
         boolean isOTCreatedByManager = false;
-        if (request.getOtDetail() != null
-            && request.getOtDetail().getCreatedByManager() != null
-            && request.getOtDetail().getCreatedByManager()) {
-            isOTCreatedByManager = true;
-            System.out.println("[DEBUG] OT created by manager detected. RequestId=" + request.getId()
-                + ", createdByUserId=" + request.getCreatedByUserId()
-                + ", createdByAccountId=" + request.getCreatedByAccountId()
-                + ", currentUserId=" + user.getId());
-        } else {
-            System.out.println("[DEBUG] NOT OT created by manager. RequestId=" + request.getId()
-                + ", otDetail=" + request.getOtDetail()
-                + ", createdByManager=" + (request.getOtDetail() != null ? request.getOtDetail().getCreatedByManager() : "null"));
+        if (request.getRequestTypeId() != null && request.getRequestTypeId() == 7L) {
+            if (request.getOtDetail() != null
+                && request.getOtDetail().getCreatedByManager() != null
+                && request.getOtDetail().getCreatedByManager()) {
+                isOTCreatedByManager = true;
+                System.out.println("[DEBUG] OT created by manager detected. RequestId=" + request.getId()
+                    + ", createdByUserId=" + request.getCreatedByUserId()
+                    + ", createdByAccountId=" + request.getCreatedByAccountId()
+                    + ", currentUserId=" + user.getId());
+            }
         }
 
         // If OT created by manager for employee, employee can approve it
@@ -391,22 +413,34 @@ public class RequestListPermissionHelper {
             java.time.LocalDate today = java.time.LocalDate.now();
             java.time.LocalDate effectiveDate = null;
 
-            // Check OT request
-            if (request.getOtDetail() != null) {
+            // Check OT request (type_id=7)
+            if (request.getRequestTypeId() != null && request.getRequestTypeId() == 7L
+                && request.getOtDetail() != null) {
                 String otDateStr = request.getOtDetail().getOtDate();
                 if (otDateStr != null && !otDateStr.isEmpty()) {
                     effectiveDate = java.time.LocalDate.parse(otDateStr);
                 }
             }
 
-            // Check Leave request
-            if (request.getLeaveDetail() != null) {
+            // Check Leave request (type_id=6)
+            if (request.getRequestTypeId() != null && request.getRequestTypeId() == 6L
+                && request.getLeaveDetail() != null) {
                 String startDateStr = request.getLeaveDetail().getStartDate();
                 if (startDateStr != null && !startDateStr.isEmpty()) {
                     // Extract date part (yyyy-MM-dd) if datetime format
                     if (startDateStr.length() >= 10) {
                         effectiveDate = java.time.LocalDate.parse(startDateStr.substring(0, 10));
                     }
+                }
+            }
+            
+            // Check Appeal request (type_id=8)
+            if (request.getRequestTypeId() != null && request.getRequestTypeId() == 8L
+                && request.getAppealDetail() != null) {
+                java.util.List<String> attendanceDates = request.getAppealDetail().getAttendanceDates();
+                if (attendanceDates != null && !attendanceDates.isEmpty()) {
+                    // Use the first attendance date as effective date
+                    effectiveDate = java.time.LocalDate.parse(attendanceDates.get(0));
                 }
             }
 

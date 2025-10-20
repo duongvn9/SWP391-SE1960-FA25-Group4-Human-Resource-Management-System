@@ -156,45 +156,6 @@ function deleteRequest(requestId) {
 }
 
 /**
- * Export requests to Excel or CSV format
- * Exports all requests matching current filters
- */
-function exportRequests() {
-    const format = prompt('Enter format (excel or csv):', 'excel');
-
-    if (!format) {
-        return; // User cancelled
-    }
-
-    // Validate format
-    if (format.toLowerCase() !== 'excel' && format.toLowerCase() !== 'csv') {
-        showMessage('Invalid format. Please enter "excel" or "csv".', 'error');
-        return;
-    }
-
-    // Get current URL and preserve all filter parameters
-    const currentUrl = new URL(window.location.href);
-    const contextPath = getContextPath();
-
-    // Build export URL with all current filters
-    const exportUrl = new URL(contextPath + '/requests/export', window.location.origin);
-
-    // Copy all search parameters from current URL
-    currentUrl.searchParams.forEach((value, key) => {
-        exportUrl.searchParams.set(key, value);
-    });
-
-    // Add format parameter
-    exportUrl.searchParams.set('format', format.toLowerCase());
-
-    // Show loading message
-    showMessage('Preparing export... Please wait.', 'info');
-
-    // Trigger download
-    window.location.href = exportUrl.toString();
-}
-
-/**
  * Get the application context path
  * @returns {string} The context path
  */
@@ -356,14 +317,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         });
-    }
-
-    // Handle export button click
-    const exportButton = document.querySelector('button[onclick*="exportRequests"]');
-    if (exportButton) {
-        // Remove inline onclick and use event listener instead
-        exportButton.removeAttribute('onclick');
-        exportButton.addEventListener('click', exportRequests);
     }
 
     // Enhance table row clicks for better UX
