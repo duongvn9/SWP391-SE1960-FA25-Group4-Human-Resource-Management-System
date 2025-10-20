@@ -24,6 +24,7 @@ import jakarta.servlet.http.HttpSession;
  * @version 1.0
  * @deprecated Use RequestListController instead
  */
+@Deprecated
 @WebServlet("/requests/list/old")
 public class RequestListControllerOld extends HttpServlet {
     private static final Logger logger = Logger.getLogger(RequestListControllerOld.class.getName());

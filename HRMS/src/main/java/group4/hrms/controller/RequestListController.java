@@ -4,11 +4,17 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.google.gson.Gson;
+
 import group4.hrms.dao.DepartmentDao;
 import group4.hrms.dao.RequestDao;
 import group4.hrms.dao.RequestTypeDao;
@@ -119,6 +125,10 @@ public class RequestListController extends HttpServlet {
             RequestListResult result = service.getRequestList(filter, user, position, account.getId(), contextPath);
             logger.info("Retrieved request list: " + result);
 
+            // 5.1. Get request type statistics (for statistics cards)
+            Map<Long, Integer> typeStatistics = service.getRequestTypeStatistics(filter, user, position);
+            logger.info("Retrieved type statistics: " + typeStatistics);
+
             // 6. Load request types for filter dropdown
             RequestTypeDao requestTypeDao = new RequestTypeDao();
             List<RequestType> requestTypes = requestTypeDao.findAll();
@@ -137,6 +147,7 @@ public class RequestListController extends HttpServlet {
             request.setAttribute("availableScopes", availableScopes);
             request.setAttribute("requestTypes", requestTypes);
             request.setAttribute("canExport", RequestListPermissionHelper.canExport(position));
+            request.setAttribute("typeStatistics", typeStatistics);
 
             logger.info("Forwarding to request-list.jsp...");
             // 9. Forward to JSP view

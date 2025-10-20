@@ -34,5 +34,32 @@ public class FileUploadUtil {
 
         return folder + "/" + newFileName;
     }
+
+    /**
+     * Upload a single Part (used when multiple file inputs share same name)
+     * Returns stored relative path or null
+     */
+    public static String uploadPart(Part part, String folder, HttpServletRequest request) throws IOException {
+        if (part == null || part.getSize() == 0) return null;
+
+        // Max size 5MB per file (enforced at UI level too)
+        long maxBytes = 5L * 1024L * 1024L;
+        if (part.getSize() > maxBytes) {
+            throw new IOException("File too large: " + part.getSubmittedFileName());
+        }
+
+        String fileName = Paths.get(part.getSubmittedFileName()).getFileName().toString();
+        String ext = fileName.contains(".") ? fileName.substring(fileName.lastIndexOf('.')) : "";
+        String newFileName = UUID.randomUUID() + ext;
+
+        String uploadDir = request.getServletContext().getRealPath("/") + folder;
+        File dir = new File(uploadDir);
+        if (!dir.exists()) dir.mkdirs();
+
+        File file = new File(dir, newFileName);
+        part.write(file.getAbsolutePath());
+
+        return folder + "/" + newFileName;
+    }
 }
 
