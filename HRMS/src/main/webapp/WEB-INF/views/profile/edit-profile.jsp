@@ -192,7 +192,7 @@
             </c:if>
 
             <!-- Profile Form (Editable fields only) -->
-            <form method="post" action="${pageContext.request.contextPath}/user-profile/update">
+            <form method="post" action="${pageContext.request.contextPath}/user-profile/update" autocomplete="off">
                 <!-- CSRF Token -->
                 <input type="hidden" name="_csrf_token" value="${csrfToken}">
                 
@@ -204,8 +204,8 @@
                     <label class="form-label">Full Name: </label>
                     <div class="form-input-wrapper">
                         <input type="text" name="fullName" class="form-control" value="${profile.fullName}" 
-                               maxlength="100" pattern="^[a-zA-ZÀ-ỹ\s]+$"
-                               title="Full name can only contain letters and spaces (no numbers or special characters)">
+                               pattern="^[a-zA-ZÀ-ỹ\s]+$" maxlength="100"
+                               title="Full name can only contain letters and spaces">
                     </div>
                 </div>
 
@@ -214,7 +214,7 @@
                     <label class="form-label">Phone Number: </label>
                     <div class="form-input-wrapper">
                         <input type="text" name="phone" class="form-control" value="${profile.phone}" 
-                               pattern="^[0-9]{10,11}$" placeholder="10-11 digits"
+                               pattern="^[0-9]{10,11}$" placeholder="10-11 digits" autocomplete="off"
                                title="Phone number must be 10-11 digits">
                     </div>
                 </div>
@@ -222,10 +222,9 @@
                 <!-- Date of Birth & Hometown -->
                 <div class="form-row two-columns">
                     <label class="form-label">Date of Birth: </label>
-                    <input type="date" name="dob" class="form-control" value="${profile.dob}" 
-                           min="1900-01-01" max="${java.time.LocalDate.now()}">
+                    <input type="date" name="dob" class="form-control" value="${profile.dob}">
                     <label class="label-inline">Hometown:</label>
-                    <input type="text" name="hometown" class="form-control" value="${profile.hometown}" maxlength="50">
+                    <input type="text" name="hometown" class="form-control" value="${profile.hometown}">
                 </div>
 
                 <!-- Gender -->
@@ -253,7 +252,7 @@
                     <label class="form-label">Citizen ID (CCCD): </label>
                     <div class="form-input-wrapper">
                         <input type="text" name="cccd" class="form-control" value="${profile.cccd}" 
-                               pattern="^[0-9]{12}$" placeholder="12 digits"
+                               pattern="^[0-9]{12}$" placeholder="12 digits" autocomplete="off"
                                title="CCCD must be exactly 12 digits">
                     </div>
                 </div>
@@ -261,11 +260,9 @@
                 <!-- CCCD Issued Date & Place -->
                 <div class="form-row two-columns">
                     <label class="form-label">CCCD Issued Date: </label>
-                    <input type="date" name="cccdIssuedDate" class="form-control" value="${profile.cccdIssuedDate}" 
-                           max="${java.time.LocalDate.now()}">
+                    <input type="date" name="cccdIssuedDate" class="form-control" value="${profile.cccdIssuedDate}">
                     <label class="label-inline">Issued Place: </label>
-                    <input type="text" name="cccdIssuedPlace" class="form-control" value="${profile.cccdIssuedPlace}" 
-                           maxlength="100" placeholder="e.g., Cuc canh sat">
+                    <input type="text" name="cccdIssuedPlace" class="form-control" value="${profile.cccdIssuedPlace}" placeholder="e.g., Cuc canh sat">
                 </div>
 
                 <!-- Country -->
@@ -288,8 +285,7 @@
                 <div class="form-row">
                     <label class="form-label">Address Line 1: </label>
                     <div class="form-input-wrapper">
-                        <input type="text" name="addressLine1" class="form-control" value="${profile.addressLine1}" 
-                               maxlength="100" placeholder="e.g., Phu Thuong, Tay Ho, Ha Noi">
+                        <input type="text" name="addressLine1" class="form-control" value="${profile.addressLine1}" placeholder="e.g., Phu Thuong, Tay Ho, Ha Noi">
                     </div>
                 </div>
 
@@ -297,25 +293,23 @@
                 <div class="form-row">
                     <label class="form-label">Address Line 2:</label>
                     <div class="form-input-wrapper">
-                        <input type="text" name="addressLine2" class="form-control" value="${profile.addressLine2}" maxlength="100">
+                        <input type="text" name="addressLine2" class="form-control" value="${profile.addressLine2}">
                     </div>
                 </div>
 
                 <!-- City & State -->
                 <div class="form-row two-columns">
                     <label class="form-label">City: </label>
-                    <input type="text" name="city" class="form-control" value="${profile.city}" maxlength="50">
+                    <input type="text" name="city" class="form-control" value="${profile.city}">
                     <label class="label-inline">State:</label>
-                    <input type="text" name="state" class="form-control" value="${profile.state}" maxlength="50">
+                    <input type="text" name="state" class="form-control" value="${profile.state}">
                 </div>
 
                 <!-- Postal Code -->
                 <div class="form-row">
                     <label class="form-label">Postal Code:</label>
                     <div class="form-input-wrapper">
-                        <input type="text" name="postalCode" class="form-control" value="${profile.postalCode}" 
-                               pattern="^[0-9]{5,10}$" placeholder="5-10 digits"
-                               title="Postal code must be 5-10 digits">
+                        <input type="text" name="postalCode" class="form-control" value="${profile.postalCode}" placeholder="5-10 digits">
                     </div>
                 </div>
 
@@ -324,7 +318,7 @@
                     <button type="submit" class="btn btn-primary btn-save">
                         <i class="fa-solid fa-floppy-disk me-2"></i>Save
                     </button>
-                    <button type="button" class="btn btn-secondary btn-save ms-3" onclick="confirmCancel()">
+                    <button type="button" class="btn btn-secondary btn-save ms-3" data-bs-toggle="modal" data-bs-target="#cancelModal">
                         <i class="fa-solid fa-xmark me-2"></i>Cancel
                     </button>
                 </div>
@@ -338,13 +332,26 @@
         
     </div>
 
+    <!-- Cancel Confirmation Modal -->
+    <div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cancelModalLabel">Confirm Cancel</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to cancel changes? Any unsaved changes will be lost.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, Continue Editing</button>
+                    <a href="${pageContext.request.contextPath}/user-profile" class="btn btn-primary">Yes, Cancel Changes</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-            // Alt Flow 2: Cancel with confirmation
-            function confirmCancel() {
-                if (confirm('Are you sure you want to cancel changes?')) {
-                    window.location.href = '${pageContext.request.contextPath}/user-profile';
-                }
-            }
             
             // Track form changes to warn user
             let formChanged = false;
@@ -369,15 +376,18 @@
             form.addEventListener('submit', (e) => {
                 formChanged = false;
                 
+                // Debug: Log form values before submit
+                const phoneValue = document.querySelector('input[name="phone"]').value;
+                const cccdValue = document.querySelector('input[name="cccd"]').value;
+                console.log('=== FORM SUBMIT DEBUG ===');
+                console.log('Phone value:', phoneValue);
+                console.log('CCCD value:', cccdValue);
+                console.log('========================');
+                
                 // No client-side validation - all validation done on server side
                 // Errors will be displayed in the form
                 return true;
             });
-            
-            // Set max date for date inputs to today
-            const today = new Date().toISOString().split('T')[0];
-            document.querySelector('input[name="dob"]').setAttribute('max', today);
-            document.querySelector('input[name="cccdIssuedDate"]').setAttribute('max', today);
         </script>
     </body>
 

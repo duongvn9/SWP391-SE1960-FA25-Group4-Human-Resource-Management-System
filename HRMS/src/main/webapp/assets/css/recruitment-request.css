@@ -1,145 +1,99 @@
-/* ===============================
-   Recruitment Request Page Styles
-   Author: ADMIN
-   Created: Oct 9, 2025
-================================= */
-
+:root {
+    --rr-primary: #4f46e5;
+    --rr-secondary: #6b7280;
+    --rr-bg: #f9fafc;
+}
 
 body {
-    background-color: #f8f9fc;
-    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    color: #333;
+    background-color: var(--rr-bg);
+    font-family: "Inter", sans-serif;
 }
 
-/* Wrapper chung */
-.dashboard-wrapper {
-    display: flex;
-    min-height: 100vh;
-}
-.dashboard-footer {
-    background: linear-gradient(to right, #ffffff, #f8f9fb);
-    padding: 1.5rem 2rem;
-    border-top: 2px solid #e3e8ef;
-    margin-top: auto;
-    color: #6b7280;
-    font-size: 0.9rem;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.03);
-    width: 100%;
-}
-
-/* Main content */
-.main-content {
-    flex-grow: 1;
-    background-color: #fff;
-    padding-bottom: 40px;
-    transition: all 0.3s ease;
-}
-
-/* Card chính */
 .card {
-    background: #ffffff;
-    border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     border: none;
+    border-radius: 1rem;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+    background: #fff;
 }
 
-/* Tiêu đề */
 .card-title {
-    font-weight: 600;
-    color: #2c3e50;
-    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--rr-primary);
+    font-size: 1.4rem;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
 }
 
-.card-title::before {
-    content: "";
-    width: 4px;
-    height: 20px;
-    background-color: #007bff;
-    border-radius: 4px;
-}
-
-/* Form input */
 .form-label {
     font-weight: 500;
-    color: #555;
+    color: #374151;
 }
 
-.form-control {
-    border-radius: 10px;
-    border: 1px solid #dcdfe3;
-    transition: all 0.2s ease-in-out;
+.form-label i {
+    color: var(--rr-primary);
+    margin-right: 6px;
+}
+
+.form-control, .form-select {
+    border-radius: 0.75rem;
+    border: 1px solid #d1d5db;
     box-shadow: none;
+    transition: 0.2s;
 }
 
-.form-control:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 0 0.15rem rgba(0, 123, 255, 0.25);
-}
-
-/* Textarea */
-textarea.form-control {
-    resize: vertical;
-}
-
-/* Buttons */
-.btn {
-    border-radius: 10px;
-    padding: 10px 20px;
-    font-weight: 500;
-    transition: all 0.25s ease-in-out;
+.form-control:focus, .form-select:focus {
+    border-color: var(--rr-primary);
+    box-shadow: 0 0 0 0.2rem rgba(79,70,229,0.25);
 }
 
 .btn-primary {
-    background-color: #007bff;
+    background-color: var(--rr-primary);
     border: none;
+    border-radius: 0.75rem;
+    transition: all 0.2s ease;
 }
 
 .btn-primary:hover {
-    background-color: #0069d9;
+    background-color: #4338ca;
     transform: translateY(-1px);
 }
 
-.btn-secondary {
-    background-color: #6c757d;
-    border: none;
+.btn-light {
+    border-radius: 0.75rem;
 }
 
-.btn-secondary:hover {
-    background-color: #5a6268;
-    transform: translateY(-1px);
+.summary-card {
+    border-left: 4px solid var(--rr-primary);
 }
 
-/* Container spacing */
-.container-fluid {
-    max-width: 900px;
+.summary-card h6 {
+    color: var(--rr-primary);
+    font-weight: 600;
 }
 
-/* File input style */
-input[type="file"].form-control {
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.35rem 0;
+    border-bottom: 1px dashed #e5e7eb;
+    font-size: 0.9rem;
+}
+
+.summary-item span:first-child {
+    color: #374151;
+}
+
+.summary-item span:last-child {
+    font-weight: 600;
+    color: var(--rr-primary);
+}
+
+.file-input {
     padding: 6px;
+    border-radius: 0.75rem;
 }
-
-/* Responsive */
-@media (max-width: 768px) {
-    .card-title {
-        font-size: 1.1rem;
-    }
-
-    .btn {
-        width: 100%;
-    }
-
-    .d-flex.gap-2 {
-        flex-direction: column;
-    }
-}
-
-/* Thêm hiệu ứng nhẹ khi hover vào card */
-.card:hover {
-    transform: translateY(-2px);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+#jobSummary {
+    resize: vertical;
+    min-height: 100px;
 }
