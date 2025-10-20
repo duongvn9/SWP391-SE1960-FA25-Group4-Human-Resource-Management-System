@@ -16,6 +16,9 @@ public class AccountListDto {
     private String positionName;
     private String status;
     private LocalDateTime lastLoginAt;
+    private String roleName;
+    private String roleCode;
+    private Integer rolePriority;
 
     // Constructors
     public AccountListDto() {
@@ -108,6 +111,30 @@ public class AccountListDto {
         this.lastLoginAt = lastLoginAt;
     }
 
+    public String getRoleName() {
+        return roleName;
+    }
+
+    public void setRoleName(String roleName) {
+        this.roleName = roleName;
+    }
+
+    public String getRoleCode() {
+        return roleCode;
+    }
+
+    public void setRoleCode(String roleCode) {
+        this.roleCode = roleCode;
+    }
+
+    public Integer getRolePriority() {
+        return rolePriority;
+    }
+
+    public void setRolePriority(Integer rolePriority) {
+        this.rolePriority = rolePriority;
+    }
+
     @Override
     public String toString() {
         return "AccountListDto{" +
@@ -120,6 +147,9 @@ public class AccountListDto {
                 ", positionName='" + positionName + '\'' +
                 ", status='" + status + '\'' +
                 ", lastLoginAt=" + lastLoginAt +
+                ", roleName='" + roleName + '\'' +
+                ", roleCode='" + roleCode + '\'' +
+                ", rolePriority=" + rolePriority +
                 '}';
     }
 }

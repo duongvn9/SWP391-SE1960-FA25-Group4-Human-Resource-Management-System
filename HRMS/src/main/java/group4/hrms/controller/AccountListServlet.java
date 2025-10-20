@@ -1,9 +1,13 @@
 package group4.hrms.controller;
 
 import group4.hrms.dao.AccountDao;
+import group4.hrms.dao.RoleDao;
+import group4.hrms.dao.UserDao;
 import group4.hrms.dto.AccountListDto;
 import group4.hrms.model.Department;
 import group4.hrms.model.Position;
+import group4.hrms.model.Role;
+import group4.hrms.model.User;
 import group4.hrms.util.DropdownCacheUtil;
 import group4.hrms.util.SessionUtil;
 import jakarta.servlet.ServletException;
@@ -27,6 +31,7 @@ public class AccountListServlet extends HttpServlet {
     private static final Logger logger = LoggerFactory.getLogger(AccountListServlet.class);
 
     private final AccountDao accountDao = new AccountDao();
+    private final UserDao userDao = new UserDao();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -109,10 +114,20 @@ public class AccountListServlet extends HttpServlet {
             List<Department> departments = DropdownCacheUtil.getCachedDepartments(getServletContext());
             List<Position> positions = DropdownCacheUtil.getCachedPositions(getServletContext());
 
+            // Fetch users without account (for quick create card)
+            List<User> usersWithoutAccount = userDao.findUsersWithoutAccount();
+            logger.info("Found {} users without account", usersWithoutAccount.size());
+
+            // Fetch roles for edit modal
+            RoleDao roleDao = new RoleDao();
+            List<Role> roles = roleDao.findAll();
+
             // Set attributes for JSP
             request.setAttribute("accounts", accountDtos);
             request.setAttribute("departments", departments);
             request.setAttribute("positions", positions);
+            request.setAttribute("roles", roles);
+            request.setAttribute("usersWithoutAccount", usersWithoutAccount);
             request.setAttribute("currentPage", page);
             request.setAttribute("pageSize", pageSize);
             request.setAttribute("totalPages", totalPages);

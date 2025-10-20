@@ -38,7 +38,10 @@ public class SessionUtil {
         HttpSession session = request.getSession(true);
 
         // Configure session
-        session.setMaxInactiveInterval(ConfigUtil.getSessionTimeout());
+        int timeout = ConfigUtil.getSessionTimeout();
+        session.setMaxInactiveInterval(timeout);
+
+        logger.info("Creating session with timeout: {} seconds ({} minutes)", timeout, timeout / 60);
 
         // Set user information (primitive values for backward compatibility)
         session.setAttribute(ACCOUNT_ID_KEY, account.getId());
@@ -62,8 +65,8 @@ public class SessionUtil {
             session.setAttribute(USER_ROLES_KEY, "ADMIN");
         }
 
-        logger.info("Created session for user: {} (ID: {}), isAdmin: {}", account.getUsername(), account.getId(),
-                isAdmin);
+        logger.info("Created session for user: {} (ID: {}), Session ID: {}, isAdmin: {}",
+                account.getUsername(), account.getId(), session.getId(), isAdmin);
     }
 
     /**
