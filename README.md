@@ -165,7 +165,7 @@ mvn package
 cp target/HRMS-1.0-SNAPSHOT.war $TOMCAT_HOME/webapps/
 ```
 
-## ⚙️ Configuration
+## Configuration
 
 ### Database Configuration
 Update `src/main/resources/db.properties`:
@@ -199,12 +199,9 @@ pagination.default.size=20
 pagination.max.size=100
 ```
 
-## Usage: updating....
+## Usage
+### updating....
 
-### Starting the Application
-1. Start MySQL database service
-2. Start Apache Tomcat server
-3. Navigate to `http://localhost:8080/HRMS`
 
 ### Default Login Credentials
 - **Admin**: 
@@ -325,7 +322,7 @@ The system uses a comprehensive database schema with 25+ tables organized into l
 
 Updating...
 
-## 🧪 Testing
+## Testing
 
 ### Running Tests
 ```bash
