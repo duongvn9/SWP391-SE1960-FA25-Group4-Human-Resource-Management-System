@@ -11,28 +11,33 @@ package group4.hrms.dto;
 import java.io.Serializable;
 
 import com.google.gson.Gson;
+import java.util.List;
 
 public class RecruitmentDetailsDto implements Serializable {
 
     // Sử dụng Gson instance để thực hiện Serialization/Deserialization
     private static final Gson GSON = new Gson();
 
-    // Thuộc tính chi tiết được lưu trong JSON (match với DB structure)
+    // Thuộc tính chi tiết được lưu trong JSON
     private String positionCode;
     private String positionName;
-    private String jobLevel; // SENIOR, JUNIOR, MID_LEVEL, etc. (String in DB, not Integer)
+    private String jobLevel; // JUNIOR, MIDDLE, SENIOR
     private Integer quantity;
-    private String jobType; // FULL_TIME, PART_TIME, CONTRACT, etc. (stored as "jobType" in DB)
+    private String jobType; // Full-time, Part-time, etc.
     private String recruitmentReason;
-    private Double minSalary; // Minimum salary
-    private Double maxSalary; // Maximum salary
-    private String salaryType; // GROSS, NET
-    private String jobSummary; // Job description
-    private String workingLocation; // Working location (separate field)
-    private String attachmentPath; // File attachment path
-
-    // Computed fields for display (not stored in DB)
-    private transient String budgetSalaryRange; // Formatted salary range for display
+    private Double minSalary;
+    private Double maxSalary;
+    private String salaryType;
+    private String jobSummary; // Tóm tắt công việc (dùng cho mô tả)
+    private String attachmentPath; // Đường dẫn file đính kèm hoặc link
+    private List<String> attachments; // Danh sách file đính kèm (nếu có)
+    public List<String> getAttachments() {
+        return attachments;
+    }
+    public void setAttachments(List<String> attachments) {
+        this.attachments = attachments;
+    }
+    private String workingLocation; // e.g. Ho Chi Minh, Hanoi; required
 
     // --- Phương thức tiện ích JSON (GSON HELPERS) ---
     public String toJson() {
@@ -88,9 +93,29 @@ public class RecruitmentDetailsDto implements Serializable {
     public String getJobType() {
         return jobType;
     }
-
     public void setJobType(String jobType) {
         this.jobType = jobType;
+    }
+
+    public Double getMinSalary() {
+        return minSalary;
+    }
+    public void setMinSalary(Double minSalary) {
+        this.minSalary = minSalary;
+    }
+
+    public Double getMaxSalary() {
+        return maxSalary;
+    }
+    public void setMaxSalary(Double maxSalary) {
+        this.maxSalary = maxSalary;
+    }
+
+    public String getSalaryType() {
+        return salaryType;
+    }
+    public void setSalaryType(String salaryType) {
+        this.salaryType = salaryType;
     }
 
     public String getRecruitmentReason() {
@@ -101,29 +126,7 @@ public class RecruitmentDetailsDto implements Serializable {
         this.recruitmentReason = recruitmentReason;
     }
 
-    public Double getMinSalary() {
-        return minSalary;
-    }
-
-    public void setMinSalary(Double minSalary) {
-        this.minSalary = minSalary;
-    }
-
-    public Double getMaxSalary() {
-        return maxSalary;
-    }
-
-    public void setMaxSalary(Double maxSalary) {
-        this.maxSalary = maxSalary;
-    }
-
-    public String getSalaryType() {
-        return salaryType;
-    }
-
-    public void setSalaryType(String salaryType) {
-        this.salaryType = salaryType;
-    }
+    // budgetSalaryRange đã bỏ, không dùng nữa
 
     public String getJobSummary() {
         return jobSummary;
@@ -131,14 +134,6 @@ public class RecruitmentDetailsDto implements Serializable {
 
     public void setJobSummary(String jobSummary) {
         this.jobSummary = jobSummary;
-    }
-
-    public String getWorkingLocation() {
-        return workingLocation;
-    }
-
-    public void setWorkingLocation(String workingLocation) {
-        this.workingLocation = workingLocation;
     }
 
     public String getAttachmentPath() {
@@ -149,21 +144,61 @@ public class RecruitmentDetailsDto implements Serializable {
         this.attachmentPath = attachmentPath;
     }
 
-    /**
-     * Get formatted salary range for display.
-     * Computes from minSalary, maxSalary, and salaryType if not already set.
-     */
-    public String getBudgetSalaryRange() {
-        if (budgetSalaryRange == null && minSalary != null && maxSalary != null) {
-            String formattedMin = String.format("%,.0f", minSalary);
-            String formattedMax = String.format("%,.0f", maxSalary);
-            String type = (salaryType != null) ? salaryType : "";
-            budgetSalaryRange = formattedMin + " - " + formattedMax + " VND (" + type + ")";
-        }
-        return budgetSalaryRange;
+    public String getWorkingLocation() {
+        return workingLocation;
     }
 
-    public void setBudgetSalaryRange(String budgetSalaryRange) {
-        this.budgetSalaryRange = budgetSalaryRange;
+    public void setWorkingLocation(String workingLocation) {
+        this.workingLocation = workingLocation;
     }
+
+        /**
+         * Validate required fields for recruitment request detail
+         * @throws IllegalArgumentException if validation fails
+         */
+        public void validate() {
+            // Position code is optional for recruitment request
+            if (positionName == null || positionName.trim().isEmpty()) {
+                throw new IllegalArgumentException("Position name is required");
+            }
+            if (jobLevel == null || jobLevel.trim().isEmpty()) {
+                throw new IllegalArgumentException("Job level is required");
+            }
+            if (!jobLevel.matches("JUNIOR|MIDDLE|SENIOR")) {
+                throw new IllegalArgumentException("Job level must be JUNIOR, MIDDLE, or SENIOR");
+            }
+            if (quantity == null || quantity <= 0) {
+                throw new IllegalArgumentException("Quantity must be greater than 0");
+            }
+            if (jobType == null || jobType.trim().isEmpty()) {
+                throw new IllegalArgumentException("Job type is required");
+            }
+            if (recruitmentReason == null || recruitmentReason.trim().isEmpty()) {
+                throw new IllegalArgumentException("Recruitment reason is required");
+            }
+            if (recruitmentReason.length() > 1000) {
+                throw new IllegalArgumentException("Recruitment reason cannot exceed 1000 characters");
+            }
+            // minSalary, maxSalary, salaryType: optional, không kiểm tra
+            if (jobSummary == null || jobSummary.trim().isEmpty()) {
+                throw new IllegalArgumentException("Job summary is required");
+            }
+            if (jobSummary.length() > 2000) {
+                throw new IllegalArgumentException("Job summary cannot exceed 2000 characters");
+            }
+            if (workingLocation == null || workingLocation.trim().isEmpty()) {
+                throw new IllegalArgumentException("Working location is required");
+            }
+            // Validate salary values if provided
+            if (minSalary != null && minSalary < 0d) {
+                throw new IllegalArgumentException("Minimum salary must be a non-negative number");
+            }
+            if (maxSalary != null && maxSalary < 0d) {
+                throw new IllegalArgumentException("Maximum salary must be a non-negative number");
+            }
+            if (minSalary != null && maxSalary != null && minSalary > maxSalary) {
+                throw new IllegalArgumentException("Minimum salary cannot be greater than maximum salary");
+            }
+            // attachmentPath: optional, không kiểm tra
+        }
 }
