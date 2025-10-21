@@ -6,6 +6,7 @@ import group4.hrms.dao.UserDao;
 import group4.hrms.model.Attachment;
 import group4.hrms.model.Request;
 import group4.hrms.model.User;
+import group4.hrms.util.SessionUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -127,6 +128,13 @@ public class AppealRequestServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        Long userId = (Long) req.getSession().getAttribute(SessionUtil.USER_ID_KEY);
+
+        if (userId == null) {
+            resp.sendRedirect(req.getContextPath() + "/login");
+            return;
+        }
+        
         Long requestTypeId = 8L;
         req.setAttribute("requestTypeId", requestTypeId);
         req.getRequestDispatcher("/WEB-INF/views/requests/appeal-form.jsp").forward(req, resp);

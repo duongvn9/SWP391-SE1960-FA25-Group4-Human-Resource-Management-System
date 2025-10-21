@@ -23,6 +23,7 @@ import group4.hrms.model.TimesheetPeriod;
 import group4.hrms.model.User;
 import group4.hrms.service.AttendanceMapper;
 import group4.hrms.service.AttendanceService;
+import group4.hrms.util.SessionUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -41,6 +42,13 @@ public class ImportAttendanceServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        Long userId = (Long) req.getSession().getAttribute(SessionUtil.USER_ID_KEY);
+
+        if (userId == null) {
+            resp.sendRedirect(req.getContextPath() + "/login");
+            return;
+        }
+        
         String action = req.getParameter("action");
         if ("Preview".equalsIgnoreCase(action)) {
             int page = 1;
@@ -182,7 +190,7 @@ public class ImportAttendanceServlet extends HttpServlet {
             req.getSession().setAttribute("previewLogsAll", logsDto);
 
             if ("Preview".equalsIgnoreCase(action)) {
-                int page = 1; 
+                int page = 1;
                 String pageParam = req.getParameter("page");
                 if (pageParam != null) {
                     try {
@@ -195,7 +203,7 @@ public class ImportAttendanceServlet extends HttpServlet {
                     }
                 }
 
-                int recordsPerPage = 10; 
+                int recordsPerPage = 10;
                 int totalLogs = logsDto.size();
                 int totalPages = (int) Math.ceil((double) totalLogs / recordsPerPage);
 
