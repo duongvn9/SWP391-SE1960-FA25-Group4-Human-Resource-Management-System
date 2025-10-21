@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const tabId = btn.id.replace("-btn", "");
         btn.addEventListener("click", () => showTab(tabId));
     });
-    
+
     showTab("upload");
 });
 
@@ -112,6 +112,18 @@ document.addEventListener("DOMContentLoaded", function () {
         const dateRegex = /^([0-2]?[0-9]|3[01])\/(0?[1-9]|1[0-2])\/\d{4}$/; // dd/MM/yyyy
         const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/; // H:mm or HH:mm
 
+        // Kiểm tra xem có hàng nào có dữ liệu không
+        const hasData = rows.some(row => {
+            return Array.from(row.querySelectorAll("td")).some(cell => cell.innerText.trim() !== "");
+        });
+
+        if (!hasData) {
+            feedback.style.display = "block";
+            feedback.style.color = "red";
+            feedback.innerHTML = "The table is empty. Please fill in at least one row.";
+            return; // dừng submit
+        }
+
         rows.forEach((row, index) => {
             const cells = row.querySelectorAll("td");
             const rowNum = index + 1;
@@ -122,28 +134,31 @@ document.addEventListener("DOMContentLoaded", function () {
             const checkOut = cells[3]?.innerText.trim();
             const status = cells[4]?.innerText.trim();
 
-            // Validate trống
+            // Nếu hàng hoàn toàn trống, bỏ qua
+            const isRowEmpty = !employeeId && !dateStr && !checkIn && !checkOut && !status;
+            if (isRowEmpty)
+                return;
+
+            // Validate từng ô riêng lẻ, chỉ những ô cần thiết trên hàng có dữ liệu
             if (!employeeId)
                 errors.push(`Row ${rowNum}: Employee ID cannot be empty.`);
             if (!dateStr)
                 errors.push(`Row ${rowNum}: Date cannot be empty.`);
+            else if (!dateRegex.test(dateStr))
+                errors.push(`Row ${rowNum}: Date must be in dd/MM/yyyy format.`);
+
             if (!checkIn)
                 errors.push(`Row ${rowNum}: Check-in cannot be empty.`);
+            else if (!timeRegex.test(checkIn))
+                errors.push(`Row ${rowNum}: Check-in must be in H:mm format.`);
+
             if (!checkOut)
                 errors.push(`Row ${rowNum}: Check-out cannot be empty.`);
+            else if (!timeRegex.test(checkOut))
+                errors.push(`Row ${rowNum}: Check-out must be in H:mm format.`);
+
             if (!status)
                 errors.push(`Row ${rowNum}: Status cannot be empty.`);
-
-            if (dateStr && !dateRegex.test(dateStr)) {
-                errors.push(`Row ${rowNum}: Date must be in dd/MM/yyyy format.`);
-            }
-
-            if (checkIn && !timeRegex.test(checkIn)) {
-                errors.push(`Row ${rowNum}: Check-in must be in H:mm format.`);
-            }
-            if (checkOut && !timeRegex.test(checkOut)) {
-                errors.push(`Row ${rowNum}: Check-out must be in H:mm format.`);
-            }
 
             data.push({
                 employeeId,

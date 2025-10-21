@@ -9,12 +9,14 @@ public class AttendanceLog {
 
     private Long id;
     private Long userId;
-    private String checkType; 
+    private String checkType;
     private LocalDateTime checkedAt;
     private String source;
     private String note;
     private Long periodId;
     private LocalDateTime createdAt;
+
+    private LocalDateTime checkedAtNew;
 
     public AttendanceLog() {
     }
@@ -39,6 +41,14 @@ public class AttendanceLog {
         this.note = note;
         this.periodId = periodId;
         this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getCheckedAtNew() {
+        return checkedAtNew;
+    }
+
+    public void setCheckedAtNew(LocalDateTime checkedAtNew) {
+        this.checkedAtNew = checkedAtNew;
     }
 
     public Long getId() {
@@ -116,6 +126,7 @@ public class AttendanceLog {
                 + ", note='" + note + '\''
                 + ", periodId=" + periodId
                 + ", createdAt=" + createdAt
+                + ", checkAtNew=" + checkedAtNew
                 + '}';
     }
 }

@@ -409,7 +409,7 @@
                     }
 
                     /* Responsive Design */
-                    @media (max-width: 1023px) {
+                    @media(max-width: 1023px) {
                         .table .last-login-col {
                             display: none;
                         }
@@ -737,7 +737,7 @@
                                                                                     data-action="reset-password"
                                                                                     title="Reset Password"
                                                                                     style="background-color: #6c757d;
-                                                                                color: #fff;">
+                                                                                    color: #fff;">
                                                                                 <i class="fas fa-key"></i>
                                                                             </button>
                                                                         </c:if>
