@@ -23,6 +23,7 @@ public class JobPosting {
     private String requirements;            // Yêu cầu ứng viên
     private String benefits;                // Quyền lợi
     private String location;                // Địa điểm làm việc
+    private Integer minExperienceYears;     // Số năm kinh nghiệm tối thiểu
     private BigDecimal minSalary;           // Mức lương tối thiểu
     private BigDecimal maxSalary;           // Mức lương tối đa
     private String salaryType;              // Loại lương (GROSS, NET, NEGOTIABLE)
@@ -30,14 +31,15 @@ public class JobPosting {
     private LocalDate startDate;            // Ngày bắt đầu làm việc dự kiến
     private String status;                  // DRAFT, PUBLISHED, CLOSED, CANCELLED
     private String priority;                // Mức độ ưu tiên (LOW, MEDIUM, HIGH, URGENT)
-    private boolean isRemote;               // Có thể làm việc từ xa không
-    private boolean isFlexible;             // Thời gian làm việc linh hoạt
     private String workingHours;            // Giờ làm việc
     private String contactEmail;            // Email liên hệ
     private String contactPhone;            // Số điện thoại liên hệ
     private Long createdBy;                 // Người tạo
     private Long createdByAccountId;        // ID account người tạo (from DB)
     private Long approvedBy;                // Người duyệt
+    private Long approvedByAccountId;       // account id của người duyệt
+    private Long publishedByAccountId;      // account id của người publish
+    private String rejectedReason;          // Lý do bị từ chối
     private LocalDateTime approvedAt;       // Thời gian duyệt
     private LocalDateTime publishedAt;      // Thời gian đăng tuyển
     private LocalDateTime createdAt;        // Thời gian tạo
@@ -55,8 +57,6 @@ public class JobPosting {
         this.level = "JUNIOR";
         this.status = "DRAFT";
         this.priority = "MEDIUM";
-        this.isRemote = false;
-        this.isFlexible = false;
         this.salaryType = "GROSS";
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
@@ -166,6 +166,14 @@ public class JobPosting {
     public void setLocation(String location) {
         this.location = location;
     }
+
+    public Integer getMinExperienceYears() {
+        return minExperienceYears;
+    }
+
+    public void setMinExperienceYears(Integer minExperienceYears) {
+        this.minExperienceYears = minExperienceYears;
+    }
     
     public BigDecimal getMinSalary() {
         return minSalary;
@@ -223,22 +231,6 @@ public class JobPosting {
         this.priority = priority;
     }
     
-    public boolean isRemote() {
-        return isRemote;
-    }
-    
-    public void setRemote(boolean remote) {
-        isRemote = remote;
-    }
-    
-    public boolean isFlexible() {
-        return isFlexible;
-    }
-    
-    public void setFlexible(boolean flexible) {
-        isFlexible = flexible;
-    }
-    
     public String getWorkingHours() {
         return workingHours;
     }
@@ -286,6 +278,30 @@ public class JobPosting {
     public void setApprovedBy(Long approvedBy) {
         this.approvedBy = approvedBy;
     }
+
+    public Long getApprovedByAccountId() {
+        return approvedByAccountId;
+    }
+
+    public void setApprovedByAccountId(Long approvedByAccountId) {
+        this.approvedByAccountId = approvedByAccountId;
+    }
+
+    public Long getPublishedByAccountId() {
+        return publishedByAccountId;
+    }
+
+    public void setPublishedByAccountId(Long publishedByAccountId) {
+        this.publishedByAccountId = publishedByAccountId;
+    }
+
+    public String getRejectedReason() {
+        return rejectedReason;
+    }
+
+    public void setRejectedReason(String rejectedReason) {
+        this.rejectedReason = rejectedReason;
+    }
     
     public LocalDateTime getApprovedAt() {
         return approvedAt;
@@ -320,60 +336,51 @@ public class JobPosting {
     }
     
     // Business methods
-    public boolean isDraft() {
-        return "DRAFT".equals(this.status);
+    // Status helpers for new approval flow
+    public boolean isPending() {
+        return "PENDING".equals(this.status);
     }
-    
+
+    public boolean isApproved() {
+        return "APPROVED".equals(this.status);
+    }
+
+    public boolean isRejected() {
+        return "REJECTED".equals(this.status);
+    }
+
     public boolean isPublished() {
         return "PUBLISHED".equals(this.status);
     }
-    
-    public boolean isClosed() {
-        return "CLOSED".equals(this.status);
-    }
-    
-    public boolean isCancelled() {
-        return "CANCELLED".equals(this.status);
-    }
-    
-    public boolean isFullTime() {
-        return "FULL_TIME".equals(this.jobType);
-    }
-    
-    public boolean isPartTime() {
-        return "PART_TIME".equals(this.jobType);
-    }
-    
-    public boolean isContract() {
-        return "CONTRACT".equals(this.jobType);
-    }
-    
-    public boolean isIntern() {
-        return "INTERN".equals(this.jobType);
-    }
-    
+
     public boolean isActive() {
         return isPublished() && !isExpired();
     }
-    
+
     public boolean isExpired() {
         return applicationDeadline != null && LocalDate.now().isAfter(applicationDeadline);
     }
-    
+
+    /**
+     * Only allow edit when status is PENDING (HR can edit before HRM approval)
+     */
     public boolean canBeEdited() {
-        return isDraft();
+        return isPending();
     }
-    
+
+    /**
+     * Only allow publish when status is APPROVED (HRM can publish)
+     */
     public boolean canBePublished() {
-        return isDraft();
+        return isApproved();
     }
-    
+
     public boolean canBeClosed() {
         return isPublished();
     }
     
     /**
-     * Số ngày còn lại để ứng tuyển
+     * Days left to apply
      */
     public long getDaysUntilDeadline() {
         if (applicationDeadline != null) {
@@ -383,17 +390,17 @@ public class JobPosting {
     }
     
     /**
-     * Lấy thông tin mức lương để hiển thị
+     * Get salary range for display (English)
      */
     public String getSalaryRange() {
         if (minSalary != null && maxSalary != null) {
-            return String.format("%,.0f - %,.0f VNĐ", minSalary, maxSalary);
+            return String.format("%,.0f - %,.0f VND", minSalary, maxSalary);
         } else if (minSalary != null) {
-            return String.format("Từ %,.0f VNĐ", minSalary);
+            return String.format("From %,.0f VND", minSalary);
         } else if (maxSalary != null) {
-            return String.format("Tối đa %,.0f VNĐ", maxSalary);
+            return String.format("Up to %,.0f VND", maxSalary);
         } else {
-            return "Thương lượng";
+            return "Negotiable";
         }
     }
     
@@ -405,6 +412,8 @@ public class JobPosting {
                 ", code='" + code + '\'' +
                 ", departmentId=" + departmentId +
                 ", positionId=" + positionId +
+                ", jobType='" + jobType + '\'' +
+                ", level='" + level + '\'' +
                 ", numberOfPositions=" + numberOfPositions +
                 ", status='" + status + '\'' +
                 ", applicationDeadline=" + applicationDeadline +

@@ -213,6 +213,24 @@ public class RequestDetailController extends HttpServlet {
                         } else {
                             logger.warning("Failed to parse OT detail for request " + requestId + " - detail is null");
                         }
+                    } else if ("ADJUSTMENT_REQUEST".equals(requestDto.getRequestTypeCode())) {
+                        // Parse Appeal/Adjustment request detail
+                        group4.hrms.dto.AppealRequestDetail appealDetail = requestDto.getAppealDetail();
+                        if (appealDetail != null) {
+                            request.setAttribute("appealDetail", appealDetail);
+                            logger.info("Successfully parsed appeal detail for request " + requestId);
+                        } else {
+                            logger.warning("Failed to parse appeal detail for request " + requestId + " - detail is null");
+                        }
+                    } else if ("RECRUITMENT_REQUEST".equals(requestDto.getRequestTypeCode())) {
+                        // Parse Recruitment request detail
+                        group4.hrms.dto.RecruitmentDetailsDto recruitmentDetail = requestDto.getRecruitmentDetail();
+                        if (recruitmentDetail != null) {
+                            request.setAttribute("recruitmentDetail", recruitmentDetail);
+                            logger.info("Successfully parsed recruitment detail for request " + requestId);
+                        } else {
+                            logger.warning("Failed to parse recruitment detail for request " + requestId + " - detail is null");
+                        }
                     }
                 }
             } catch (Exception e) {
