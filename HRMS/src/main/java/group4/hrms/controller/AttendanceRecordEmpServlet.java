@@ -7,6 +7,7 @@ import java.io.IOException;
 
 import group4.hrms.dao.AttendanceLogDao;
 import group4.hrms.dto.AttendanceLogDto;
+import group4.hrms.model.TimesheetPeriod;
 import group4.hrms.util.SessionUtil;
 
 import jakarta.servlet.ServletException;
@@ -47,31 +48,48 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
 
             LocalDate startDate;
             LocalDate endDate;
-            Long periodId = null;
+            Long selectedPeriodId = null;
+            TimesheetPeriod selectedPeriod = null;
 
             if ("reset".equalsIgnoreCase(action)) {
-                LocalDate now = LocalDate.now();
-                startDate = now.withDayOfMonth(1);
-                endDate = now.withDayOfMonth(now.lengthOfMonth());
+                // Lấy kỳ công hiện tại
+                selectedPeriod = tDAO.findCurrentPeriod();
+                if (selectedPeriod != null) {
+                    selectedPeriodId = selectedPeriod.getId();
+                    startDate = selectedPeriod.getStartDate();
+                    endDate = selectedPeriod.getEndDate();
+                } else {
+                    LocalDate now = LocalDate.now();
+                    startDate = now.withDayOfMonth(1);
+                    endDate = now.withDayOfMonth(now.lengthOfMonth());
+                }
+
+                // Reset các filter khác
                 employeeKeyword = "";
                 department = "";
                 status = "";
                 source = "";
-                periodIdStr = "";
             } else {
+                // Nhánh dùng filter từ request, giữ null nếu param rỗng
                 startDate = (startDateStr != null && !startDateStr.isEmpty()) ? LocalDate.parse(startDateStr) : null;
                 endDate = (endDateStr != null && !endDateStr.isEmpty()) ? LocalDate.parse(endDateStr) : null;
-            }
 
-            if (periodIdStr != null && !periodIdStr.isEmpty()) {
-                try {
-                    periodId = Long.valueOf(periodIdStr);
-                } catch (NumberFormatException e) {
-                    periodId = null;
+                if (periodIdStr != null && !periodIdStr.isEmpty()) {
+                    try {
+                        selectedPeriodId = Long.valueOf(periodIdStr);
+                        selectedPeriod = tDAO.findById(selectedPeriodId).orElse(null);
+                    } catch (NumberFormatException e) {
+                        selectedPeriodId = null;
+                        selectedPeriod = null;
+                    }
+                } else {
+                    selectedPeriodId = null;
+                    selectedPeriod = null;
                 }
             }
 
-            if (exportType != null) {
+            // Xử lý export
+            if (exportType != null && !exportType.isEmpty()) {
                 List<AttendanceLogDto> filteredRecords = dao.findByFilter(
                         userId,
                         employeeKeyword,
@@ -80,7 +98,7 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
                         endDate,
                         status,
                         source,
-                        periodId,
+                        selectedPeriodId,
                         Integer.MAX_VALUE,
                         0,
                         false
@@ -89,6 +107,7 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
                 return;
             }
 
+            // Lấy danh sách attendance
             List<AttendanceLogDto> attendanceList = dao.findByFilter(
                     userId,
                     employeeKeyword,
@@ -97,7 +116,7 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
                     endDate,
                     status,
                     source,
-                    periodId,
+                    selectedPeriodId,
                     recordsPerPage,
                     offset,
                     true
@@ -111,23 +130,26 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
                     endDate,
                     status,
                     source,
-                    periodId
+                    selectedPeriodId
             );
             int totalPages = PaginationUtil.calculateTotalPages(totalRecords, recordsPerPage);
 
+            // Set attribute cho JSP
             req.setAttribute("attendanceList", attendanceList);
             req.setAttribute("periodList", tDAO.findAll());
             req.setAttribute("employeeKeyword", employeeKeyword);
             req.setAttribute("department", department);
             req.setAttribute("startDate", (startDate != null) ? startDate.toString() : "");
             req.setAttribute("endDate", (endDate != null) ? endDate.toString() : "");
-            req.setAttribute("status", status);
-            req.setAttribute("source", source);
-            req.setAttribute("selectedPeriod", periodId);
+            req.setAttribute("status", status != null ? status : "");
+            req.setAttribute("source", source != null ? source : "");
+            req.setAttribute("selectedPeriodId", selectedPeriodId); // dùng cho <select>
+            req.setAttribute("selectedPeriod", selectedPeriod);     // dùng cho toggle nếu cần
             req.setAttribute("currentPage", currentPage);
             req.setAttribute("totalPages", totalPages);
 
             req.getRequestDispatcher("/WEB-INF/views/attendance/attendance-record-emp.jsp").forward(req, resp);
+
         } catch (SQLException ex) {
             Logger.getLogger(AttendanceRecordEmpServlet.class.getName()).log(Level.SEVERE, null, ex);
             throw new ServletException(ex);
@@ -138,6 +160,12 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
             Long userId = (Long) req.getSession().getAttribute(SessionUtil.USER_ID_KEY);
+
+            if (userId == null) {
+                resp.sendRedirect(req.getContextPath() + "/login");
+                return;
+            }
+
             int recordsPerPage = 10;
             int currentPage = PaginationUtil.getCurrentPage(req);
             int offset = (currentPage - 1) * recordsPerPage;
@@ -150,32 +178,54 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
 
             LocalDate startDate;
             LocalDate endDate;
-            Long periodId = null;
+            Long selectedPeriodId = null;
+            TimesheetPeriod selectedPeriod = null;
 
-            if (startDateStr == null || startDateStr.isEmpty() || endDateStr == null || endDateStr.isEmpty()) {
-                LocalDate now = LocalDate.now();
-                startDate = now.withDayOfMonth(1);
-                endDate = now.withDayOfMonth(now.lengthOfMonth());
-            } else {
-                startDate = LocalDate.parse(startDateStr);
-                endDate = LocalDate.parse(endDateStr);
-            }
-
+            // ===== Xác định kỳ công =====
             if (periodIdStr != null && !periodIdStr.isEmpty()) {
                 try {
-                    periodId = Long.valueOf(periodIdStr);
+                    selectedPeriodId = Long.valueOf(periodIdStr);
+                    selectedPeriod = tDAO.findById(selectedPeriodId).orElse(null);
                 } catch (NumberFormatException e) {
-                    periodId = null;
+                    selectedPeriodId = null;
+                }
+            }
+
+            if (selectedPeriodId == null) {
+                // Nếu chưa có kỳ công filter, lấy kỳ công hiện tại
+                selectedPeriod = tDAO.findCurrentPeriod();
+                if (selectedPeriod != null) {
+                    selectedPeriodId = selectedPeriod.getId();
+                    startDate = selectedPeriod.getStartDate();
+                    endDate = selectedPeriod.getEndDate();
+                } else {
+                    // Fallback nếu không có kỳ công hiện tại
+                    LocalDate now = LocalDate.now();
+                    startDate = now.withDayOfMonth(1);
+                    endDate = now.withDayOfMonth(now.lengthOfMonth());
+                }
+            } else {
+                // Nếu đã có periodId từ filter, ưu tiên start/end từ request nếu có
+                if (startDateStr != null && !startDateStr.isEmpty() && endDateStr != null && !endDateStr.isEmpty()) {
+                    startDate = LocalDate.parse(startDateStr);
+                    endDate = LocalDate.parse(endDateStr);
+                } else if (selectedPeriod != null) {
+                    startDate = selectedPeriod.getStartDate();
+                    endDate = selectedPeriod.getEndDate();
+                } else {
+                    LocalDate now = LocalDate.now();
+                    startDate = now.withDayOfMonth(1);
+                    endDate = now.withDayOfMonth(now.lengthOfMonth());
                 }
             }
 
             List<AttendanceLogDto> attendanceList = dao.findByFilter(
-                    userId, null, null, startDate, endDate, status, source, periodId,
+                    userId, null, null, startDate, endDate, status, source, selectedPeriodId,
                     recordsPerPage, offset, true
             );
 
             int totalRecords = dao.countByFilter(
-                    userId, null, null, startDate, endDate, status, source, periodId
+                    userId, null, null, startDate, endDate, status, source, selectedPeriodId
             );
             int totalPages = PaginationUtil.calculateTotalPages(totalRecords, recordsPerPage);
 
@@ -183,13 +233,15 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
             req.setAttribute("periodList", tDAO.findAll());
             req.setAttribute("startDate", startDate.toString());
             req.setAttribute("endDate", endDate.toString());
-            req.setAttribute("status", status);
-            req.setAttribute("source", source);
-            req.setAttribute("selectedPeriod", periodId);
+            req.setAttribute("status", status != null ? status : "");
+            req.setAttribute("source", source != null ? source : "");
+            req.setAttribute("selectedPeriodId", selectedPeriodId); // dùng cho <select>
+            req.setAttribute("selectedPeriod", selectedPeriod);     // dùng cho toggle lock/unlock
             req.setAttribute("currentPage", currentPage);
             req.setAttribute("totalPages", totalPages);
 
             req.getRequestDispatcher("/WEB-INF/views/attendance/attendance-record-emp.jsp").forward(req, resp);
+
         } catch (SQLException ex) {
             Logger.getLogger(AttendanceRecordEmpServlet.class.getName()).log(Level.SEVERE, null, ex);
             throw new ServletException(ex);

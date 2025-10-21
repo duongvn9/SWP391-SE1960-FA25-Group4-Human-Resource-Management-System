@@ -1,9 +1,12 @@
 package group4.hrms.controller;
 
+import group4.hrms.dao.AttachmentDao;
 import group4.hrms.dao.RequestDao;
 import group4.hrms.dao.UserDao;
+import group4.hrms.model.Attachment;
 import group4.hrms.model.Request;
 import group4.hrms.model.User;
+import group4.hrms.util.SessionUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -17,7 +20,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @WebServlet("/requests/appeal/create")
 @MultipartConfig
@@ -27,18 +33,18 @@ public class AppealRequestServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         RequestDao requestDao = new RequestDao();
         UserDao uDao = new UserDao();
+        AttachmentDao attachmentDao = new AttachmentDao();
 
         try {
             Long accountId = (Long) req.getSession().getAttribute("accountId");
             Long userId = (Long) req.getSession().getAttribute("userId");
 
-            // Lấy các field từ form
             String title = req.getParameter("title");
             String detailText = req.getParameter("detail");
             String selectedLogDatesStr = req.getParameter("selected_log_dates");
             Long requestTypeId = Long.valueOf(req.getParameter("request_type_id"));
+            String userAttachmentLink = req.getParameter("attachmentLink");
 
-            // Tạo Request object
             Request request = new Request();
             request.setRequestTypeId(requestTypeId);
             request.setTitle(title);
@@ -50,7 +56,6 @@ public class AppealRequestServlet extends HttpServlet {
             request.setStatus("PENDING");
             request.setCreatedAt(LocalDateTime.now());
 
-            // Xử lý file upload nếu có
             String uploadedFileLink = null;
             Part filePart = req.getPart("attachment");
             if (filePart != null && filePart.getSize() > 0) {
@@ -59,7 +64,6 @@ public class AppealRequestServlet extends HttpServlet {
                 String ext = originalName.contains(".") ? originalName.substring(originalName.lastIndexOf('.')) : "";
                 String serverFileName = uuid + ext;
 
-                // Thư mục lưu file ngoài WAR
                 Path uploadDir = Paths.get("C:/HRMS_uploads");
                 if (!Files.exists(uploadDir)) {
                     Files.createDirectories(uploadDir);
@@ -70,11 +74,9 @@ public class AppealRequestServlet extends HttpServlet {
                     Files.copy(in, filePath, StandardCopyOption.REPLACE_EXISTING);
                 }
 
-                // Link download qua servlet
                 uploadedFileLink = "/downloads/" + serverFileName;
             }
 
-            // Tạo JSON detail
             StringBuilder detailJsonBuilder = new StringBuilder();
             detailJsonBuilder.append("{");
             detailJsonBuilder.append("\"attendance_dates\":\"").append(escapeJson(selectedLogDatesStr)).append("\"");
@@ -84,17 +86,36 @@ public class AppealRequestServlet extends HttpServlet {
             if (uploadedFileLink != null) {
                 detailJsonBuilder.append(",\"attachment_link\":\"").append(escapeJson(uploadedFileLink)).append("\"");
             }
+            if (userAttachmentLink != null && !userAttachmentLink.isEmpty()) {
+                detailJsonBuilder.append(",\"user_attachment_link\":\"").append(escapeJson(userAttachmentLink)).append("\"");
+            }
             detailJsonBuilder.append("}");
             request.setDetailJson(detailJsonBuilder.toString());
 
-            // Lưu request vào DB
             requestDao.save(request);
 
-            // Redirect về danh sách requests
-            req.getRequestDispatcher("/WEB-INF/views/requests/appeal-form.jsp").forward(req, resp);
+            if (userAttachmentLink != null && !userAttachmentLink.isEmpty()) {
+                Attachment attachment = new Attachment();
+                attachment.setOwnerType("REQUEST");                  // liên kết với request
+                attachment.setOwnerId(request.getId());              // ID của request vừa lưu
+                attachment.setOriginalName("Google drive link");      // tên hiển thị
+                attachment.setAttachmentType("LINK");               // đánh dấu đây là link
+                attachment.setExternalUrl(userAttachmentLink);      // lưu link thực tế
+                attachment.setPath("");                            // không có file path
+                attachment.setSizeBytes(0L);                         // không có file
+                attachment.setUploadedByAccountId(accountId);       // ai thêm link
+                attachment.setCreatedAt(LocalDateTime.now());       // thời gian tạo
+                attachment.setContentType("External/link");
+                attachment.setChecksumSha256(null);
 
+                attachmentDao.save(attachment);
+            }
+            req.setAttribute("success", "Create appeal attendance request successfully!");
+            req.getRequestDispatcher("/WEB-INF/views/requests/appeal-form.jsp").forward(req, resp);
         } catch (ServletException | IOException | NumberFormatException ex) {
             throw new ServletException(ex);
+        } catch (SQLException ex) {
+            Logger.getLogger(AppealRequestServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -107,6 +128,13 @@ public class AppealRequestServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        Long userId = (Long) req.getSession().getAttribute(SessionUtil.USER_ID_KEY);
+
+        if (userId == null) {
+            resp.sendRedirect(req.getContextPath() + "/login");
+            return;
+        }
+        
         Long requestTypeId = 8L;
         req.setAttribute("requestTypeId", requestTypeId);
         req.getRequestDispatcher("/WEB-INF/views/requests/appeal-form.jsp").forward(req, resp);
