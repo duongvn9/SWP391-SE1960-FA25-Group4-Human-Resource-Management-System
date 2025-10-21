@@ -1,11 +1,8 @@
 package group4.hrms.controller;
 
 import group4.hrms.dao.AccountDao;
-import group4.hrms.dao.AccountRoleDao;
-import group4.hrms.dao.RoleDao;
 import group4.hrms.dao.UserDao;
 import group4.hrms.model.Account;
-import group4.hrms.model.Role;
 import group4.hrms.model.User;
 import group4.hrms.util.SessionUtil;
 import jakarta.servlet.ServletException;
@@ -40,7 +37,7 @@ public class AccountCreateServlet extends HttpServlet {
             throws ServletException, IOException {
 
         // Check authorization - Chỉ ADMIN mới được tạo account
-        if (!SessionUtil.hasRole(request, "ADMIN")) {
+        if (!group4.hrms.util.PermissionUtil.canCreateAccount(request)) {
             logger.warn("Unauthorized access attempt to create account page");
             HttpSession session = request.getSession(false);
             if (session != null) {
@@ -71,13 +68,8 @@ public class AccountCreateServlet extends HttpServlet {
                 logger.info("Loading all active users for account creation");
             }
 
-            // Lấy danh sách roles để chọn
-            RoleDao roleDao = new RoleDao();
-            List<Role> roles = roleDao.findAll();
-
             // Set attributes
             request.setAttribute("users", users);
-            request.setAttribute("roles", roles);
             request.setAttribute("currentPage", "account-create");
 
             // Forward to JSP
@@ -103,7 +95,7 @@ public class AccountCreateServlet extends HttpServlet {
         HttpSession session = request.getSession(false);
 
         // Check authorization
-        if (!SessionUtil.hasRole(request, "ADMIN")) {
+        if (!group4.hrms.util.PermissionUtil.canCreateAccount(request)) {
             logger.warn("Unauthorized attempt to create account");
             session.setAttribute("errorMessage", "You don't have permission to create accounts");
             response.sendRedirect(request.getContextPath() + "/employees/accounts");
@@ -117,7 +109,6 @@ public class AccountCreateServlet extends HttpServlet {
             String emailLogin = request.getParameter("emailLogin");
             String password = request.getParameter("password");
             String confirmPassword = request.getParameter("confirmPassword");
-            String roleIdStr = request.getParameter("roleId");
 
             // Validate required fields
             if (userIdStr == null || userIdStr.trim().isEmpty()) {
@@ -194,17 +185,8 @@ public class AccountCreateServlet extends HttpServlet {
                 return;
             }
 
-            // Parse roleId (optional)
-            Long roleId = null;
-            if (roleIdStr != null && !roleIdStr.trim().isEmpty()) {
-                try {
-                    roleId = Long.parseLong(roleIdStr);
-                } catch (NumberFormatException e) {
-                    logger.warn("Invalid role ID format: {}", roleIdStr);
-                }
-            }
-
             // Create new account with hashed password
+            // Note: Permissions will be determined by the user's position, not by role
             Account createdAccount = accountDao.createWithPassword(
                     userId,
                     username.trim(),
@@ -214,20 +196,6 @@ public class AccountCreateServlet extends HttpServlet {
             logger.info("Account created successfully: {} by user: {}",
                     createdAccount.getUsername(),
                     SessionUtil.getCurrentUsername(request));
-
-            // Assign role if provided
-            if (roleId != null) {
-                AccountRoleDao accountRoleDao = new AccountRoleDao();
-                boolean roleAssigned = accountRoleDao.assignRole(createdAccount.getId(), roleId);
-
-                if (roleAssigned) {
-                    logger.info("Role ID {} assigned to account {} successfully",
-                            roleId, createdAccount.getId());
-                } else {
-                    logger.warn("Failed to assign role ID {} to account {}",
-                            roleId, createdAccount.getId());
-                }
-            }
 
             // Set success message
             session.setAttribute("successMessage",

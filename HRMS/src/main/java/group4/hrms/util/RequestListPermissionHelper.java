@@ -107,7 +107,7 @@ public class RequestListPermissionHelper {
      * - Must be the owner of the request
      * - Request must be APPROVED or REJECTED (not PENDING or CANCELLED)
      *
-     * @param user Current user
+     * @param user    Current user
      * @param request Request to check
      * @return true if user can delete the request, false otherwise
      */
@@ -131,7 +131,7 @@ public class RequestListPermissionHelper {
      * - Must be the owner of the request
      * - Request must be PENDING
      *
-     * @param user Current user
+     * @param user    Current user
      * @param request Request to check
      * @return true if user can update the request, false otherwise
      */
@@ -156,8 +156,8 @@ public class RequestListPermissionHelper {
      * - Managers (DEPT_MANAGER or above) can view subordinate requests
      * - HR staff (HR_STAFF or above) can view all requests
      *
-     * @param user Current user
-     * @param request Request to check
+     * @param user     Current user
+     * @param request  Request to check
      * @param position User's position
      * @return true if user can view the request, false otherwise
      */
@@ -185,7 +185,8 @@ public class RequestListPermissionHelper {
 
         // Department managers can view subordinate requests
         // This would require checking if the request creator is a subordinate
-        // For now, we allow DEPT_MANAGER to view (subordinate check should be done in service layer)
+        // For now, we allow DEPT_MANAGER to view (subordinate check should be done in
+        // service layer)
         if (jobLevel == JOB_LEVEL_DEPT_MANAGER) {
             return true;
         }
@@ -197,14 +198,18 @@ public class RequestListPermissionHelper {
      * Check if a user can approve/reject a specific request.
      * Rules:
      * - Must NOT be the creator of the request (cannot approve own request)
-     * - SPECIAL CASE: If manager created OT request for employee, employee CAN approve
-     * - Request must be PENDING OR APPROVED (HR can re-approve, manager can override reject)
-     * - User must be a manager (DEPT_MANAGER or above) OR be the employee for whom request was created
-     * - If request is APPROVED, only HR_STAFF or above can re-approve (OR manager who created it can reject)
+     * - SPECIAL CASE: If manager created OT request for employee, employee CAN
+     * approve
+     * - Request must be PENDING OR APPROVED (HR can re-approve, manager can
+     * override reject)
+     * - User must be a manager (DEPT_MANAGER or above) OR be the employee for whom
+     * request was created
+     * - If request is APPROVED, only HR_STAFF or above can re-approve (OR manager
+     * who created it can reject)
      * - Request must NOT be in effect yet (effective date > today)
      *
-     * @param user Current user
-     * @param request Request to check
+     * @param user     Current user
+     * @param request  Request to check
      * @param position User's position
      * @return true if user can approve/reject the request, false otherwise
      */
@@ -215,10 +220,11 @@ public class RequestListPermissionHelper {
     /**
      * Check if a user can approve/reject a specific request (with accountId).
      *
-     * @param user Current user
-     * @param request Request to check
-     * @param position User's position
-     * @param currentAccountId Current user's account ID (optional, for checking creator)
+     * @param user             Current user
+     * @param request          Request to check
+     * @param position         User's position
+     * @param currentAccountId Current user's account ID (optional, for checking
+     *                         creator)
      * @return true if user can approve/reject the request, false otherwise
      */
     public static boolean canApproveRequest(User user, Request request, Position position, Long currentAccountId) {
@@ -283,13 +289,13 @@ public class RequestListPermissionHelper {
         boolean isOTCreatedByManager = false;
         if (request.getRequestTypeId() != null && request.getRequestTypeId() == 7L) {
             if (request.getOtDetail() != null
-                && request.getOtDetail().getCreatedByManager() != null
-                && request.getOtDetail().getCreatedByManager()) {
+                    && request.getOtDetail().getCreatedByManager() != null
+                    && request.getOtDetail().getCreatedByManager()) {
                 isOTCreatedByManager = true;
                 System.out.println("[DEBUG] OT created by manager detected. RequestId=" + request.getId()
-                    + ", createdByUserId=" + request.getCreatedByUserId()
-                    + ", createdByAccountId=" + request.getCreatedByAccountId()
-                    + ", currentUserId=" + user.getId());
+                        + ", createdByUserId=" + request.getCreatedByUserId()
+                        + ", createdByAccountId=" + request.getCreatedByAccountId()
+                        + ", currentUserId=" + user.getId());
             }
         }
 
@@ -336,16 +342,16 @@ public class RequestListPermissionHelper {
             Long creatorAccountId = request.getCreatedByAccountId();
 
             System.out.println("[DEBUG] Manager-created OT check: requestId=" + request.getId()
-                + ", currentApprover=" + currentApprover
-                + ", creatorAccountId=" + creatorAccountId
-                + ", currentAccountId=" + currentAccountId
-                + ", currentUserJobLevel=" + jobLevel);
+                    + ", currentApprover=" + currentApprover
+                    + ", creatorAccountId=" + creatorAccountId
+                    + ", currentAccountId=" + currentAccountId
+                    + ", currentUserJobLevel=" + jobLevel);
 
             // Rule 1: Cannot override your own decision
             if (currentAccountId != null && currentApprover != null
-                && currentAccountId.equals(currentApprover)) {
+                    && currentAccountId.equals(currentApprover)) {
                 System.out.println("[DEBUG] User is the last approver (accountId=" + currentAccountId
-                    + "), cannot override own decision");
+                        + "), cannot override own decision");
                 return false;
             }
 
@@ -356,25 +362,29 @@ public class RequestListPermissionHelper {
             }
 
             // Rule 3: Check if current approver is a manager (not employee)
-            // If currentApprover != creatorAccountId and != employee, it means a manager has already reviewed
+            // If currentApprover != creatorAccountId and != employee, it means a manager
+            // has already reviewed
             // We need to query the approver's job level to compare
             if (currentApprover != null && !currentApprover.equals(creatorAccountId)) {
                 // Try to get approver's job level
                 Integer approverJobLevel = getJobLevelFromAccountId(currentApprover);
 
                 System.out.println("[DEBUG] Previous approver jobLevel=" + approverJobLevel
-                    + ", current user jobLevel=" + jobLevel);
+                        + ", current user jobLevel=" + jobLevel);
 
                 if (approverJobLevel != null) {
-                    // Only allow override if current user has HIGHER authority (lower job level number)
+                    // Only allow override if current user has HIGHER authority (lower job level
+                    // number)
                     if (jobLevel >= approverJobLevel) {
-                        System.out.println("[DEBUG] User job level is not higher than previous approver, cannot override");
+                        System.out.println(
+                                "[DEBUG] User job level is not higher than previous approver, cannot override");
                         return false;
                     }
                 }
             }
 
-            // Rule 4: Allow override if user is creator (manager who made the request) or superior
+            // Rule 4: Allow override if user is creator (manager who made the request) or
+            // superior
             // Creator can override employee's approval (first override ONLY)
             if (currentAccountId != null && currentAccountId.equals(creatorAccountId)) {
                 // Double check: Creator has NOT already approved
@@ -399,7 +409,7 @@ public class RequestListPermissionHelper {
 
             // Cannot override your own decision
             if (currentAccountId != null && currentApprover != null
-                && currentAccountId.equals(currentApprover)) {
+                    && currentAccountId.equals(currentApprover)) {
                 return false;
             }
 
@@ -438,7 +448,7 @@ public class RequestListPermissionHelper {
 
             // Check OT request (type_id=7)
             if (request.getRequestTypeId() != null && request.getRequestTypeId() == 7L
-                && request.getOtDetail() != null) {
+                    && request.getOtDetail() != null) {
                 String otDateStr = request.getOtDetail().getOtDate();
                 if (otDateStr != null && !otDateStr.isEmpty()) {
                     effectiveDate = java.time.LocalDate.parse(otDateStr);
@@ -447,7 +457,7 @@ public class RequestListPermissionHelper {
 
             // Check Leave request (type_id=6)
             if (request.getRequestTypeId() != null && request.getRequestTypeId() == 6L
-                && request.getLeaveDetail() != null) {
+                    && request.getLeaveDetail() != null) {
                 String startDateStr = request.getLeaveDetail().getStartDate();
                 if (startDateStr != null && !startDateStr.isEmpty()) {
                     // Extract date part (yyyy-MM-dd) if datetime format
@@ -459,7 +469,7 @@ public class RequestListPermissionHelper {
 
             // Check Appeal request (type_id=8)
             if (request.getRequestTypeId() != null && request.getRequestTypeId() == 8L
-                && request.getAppealDetail() != null) {
+                    && request.getAppealDetail() != null) {
                 java.util.List<String> attendanceDates = request.getAppealDetail().getAttendanceDates();
                 if (attendanceDates != null && !attendanceDates.isEmpty()) {
                     // Use the first attendance date as effective date

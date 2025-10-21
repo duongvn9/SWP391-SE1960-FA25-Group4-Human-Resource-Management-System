@@ -214,176 +214,198 @@
                 </li>
 
                 <!-- Dropdown: Employee Management -->
-                <li class="nav-item">
-                    <a href="#" class="nav-link sidebar-dropdown-toggle" data-target="employee-submenu"
-                        aria-expanded="false" data-tooltip="Employee Management">
-                        <i class="fas fa-users"></i><span>Employee Management</span>
-                        <i class="fas fa-chevron-right dropdown-arrow"></i>
-                    </a>
-                    <ul class="sidebar-submenu" id="employee-submenu">
-                        <li>
-                            <a href="${pageContext.request.contextPath}/employees/users"
-                                class="nav-link ${param.currentPage == 'user-list' ? 'active' : ''}">
-                                <i class="fas fa-user"></i><span>User List</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="${pageContext.request.contextPath}/employees/accounts"
-                                class="nav-link ${param.currentPage == 'account-list' ? 'active' : ''}">
-                                <i class="fas fa-user-shield"></i><span>Account List</span>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-
-                <!-- Admin Only -->
-                <c:if test="${sessionScope.userRole == 'ADMIN' || sessionScope.userRole == 'Admin'}">
+                <% if (group4.hrms.util.PermissionUtil.canViewUserList(request) ||
+                    group4.hrms.util.PermissionUtil.canViewAccountList(request)) { %>
                     <li class="nav-item">
-                        <a href="${pageContext.request.contextPath}/admin/accounts"
-                            class="nav-link ${param.currentPage == 'accounts' ? 'active' : ''}"
-                            data-tooltip="Account Management">
-                            <i class="fas fa-user-shield"></i><span>Account Management</span>
+                        <a href="#" class="nav-link sidebar-dropdown-toggle" data-target="employee-submenu"
+                            aria-expanded="false" data-tooltip="Employee Management">
+                            <i class="fas fa-users"></i><span>Employee Management</span>
+                            <i class="fas fa-chevron-right dropdown-arrow"></i>
                         </a>
+                        <ul class="sidebar-submenu" id="employee-submenu">
+                            <% if (group4.hrms.util.PermissionUtil.canViewUserList(request)) { %>
+                                <li>
+                                    <a href="${pageContext.request.contextPath}/employees/users"
+                                        class="nav-link ${param.currentPage == 'user-list' ? 'active' : ''}">
+                                        <i class="fas fa-user"></i><span>User List</span>
+                                    </a>
+                                </li>
+                                <% } %>
+                                    <% if (group4.hrms.util.PermissionUtil.canViewAccountList(request)) { %>
+                                        <li>
+                                            <a href="${pageContext.request.contextPath}/employees/accounts"
+                                                class="nav-link ${param.currentPage == 'account-list' ? 'active' : ''}">
+                                                <i class="fas fa-user-shield"></i><span>Account List</span>
+                                            </a>
+                                        </li>
+                                        <% } %>
+                        </ul>
                     </li>
-                    <li class="nav-item">
-                        <a href="${pageContext.request.contextPath}/reports"
-                            class="nav-link ${param.currentPage == 'reports' ? 'active' : ''}" data-tooltip="Reports">
-                            <i class="fas fa-chart-bar"></i><span>Reports</span>
-                        </a>
-                    </li>
-                </c:if>
-                <!-- Dropdown: Attendance -->
-                <li class="nav-item">
-                    <a href="#" class="nav-link sidebar-dropdown-toggle" data-target="attendance-submenu"
-                        aria-expanded="false" data-tooltip="Attendance">
-                        <i class="fas fa-clock"></i><span>Attendance</span>
-                        <i class="fas fa-chevron-right dropdown-arrow"></i>
-                    </a>
-                    <ul class="sidebar-submenu" id="attendance-submenu">
-                        <li>
-                            <a href="${pageContext.request.contextPath}/attendance/record/HR"
-                                class="nav-link ${param.currentPage == 'attendance-viewAll' ? 'active' : ''}">
-                                <i class="fas fa-list"></i><span>View All Attendance Records</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="${pageContext.request.contextPath}/attendance/record/emp"
-                                class="nav-link ${param.currentPage == 'attendance-viewMy' ? 'active' : ''}">
-                                <i class="fas fa-user-check"></i><span>View My Attendance Record</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="${pageContext.request.contextPath}/attendance/import"
-                                class="nav-link ${param.currentPage == 'attendance-import' ? 'active' : ''}">
-                                <i class="fas fa-file-import"></i><span>Import Attendance</span>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
+                    <% } %>
 
-                <!-- Payroll -->
-                <li class="nav-item">
-                    <a href="${pageContext.request.contextPath}/payroll"
-                        class="nav-link ${param.currentPage == 'payroll' ? 'active' : ''}" data-tooltip="Payroll">
-                        <i class="fas fa-money-bill-wave"></i><span>Payroll</span>
-                    </a>
-                </li>
-
-                <!-- Dropdown: Requests -->
-                <li class="nav-item">
-                    <a href="#" class="nav-link sidebar-dropdown-toggle" data-target="requests-submenu"
-                        aria-expanded="false" data-tooltip="Requests">
-                        <i class="fas fa-clipboard-list"></i><span>Requests</span>
-                        <i class="fas fa-chevron-right dropdown-arrow"></i>
-                    </a>
-                    <ul class="sidebar-submenu" id="requests-submenu">
-                        <li>
-                            <a href="${pageContext.request.contextPath}/requests"
-                                class="nav-link ${param.currentPage == 'request-list' ? 'active' : ''}">
-                                <i class="fas fa-list"></i><span>Request List</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="${pageContext.request.contextPath}/requests/leave/create"
-                                class="nav-link ${param.currentPage == 'leave-request' ? 'active' : ''}">
-                                <i class="fas fa-calendar-times"></i><span>Leave Request</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="${pageContext.request.contextPath}/requests/ot/create"
-                                class="nav-link ${param.currentPage == 'ot-request' ? 'active' : ''}">
-                                <i class="fas fa-business-time"></i><span>OT Request</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="${pageContext.request.contextPath}/requests/appeal/create"
-                                class="nav-link ${param.currentPage == 'appeal-request' ? 'active' : ''}">
-                                <i class="fas fa-exclamation-circle"></i><span>Attendance Appeal</span>
-                            </a>
-                        </li>
-                        <!-- Recruitment request - Dept Manager only -->
-                        <c:if test="${sessionScope.user != null && sessionScope.user.positionId == 9}">
-                            <li>
-                            <a href="${pageContext.request.contextPath}/requests/recruitment/create"
-                                class="nav-link ${param.currentPage == 'appeal-request' ? 'active' : ''}">
-                                <i class="fas fa-exclamation-circle"></i><span>Recruitment request</span>
-                            </a>
-                        </li>
+                        <!-- Admin Only -->
+                        <c:if test="${sessionScope.userRole == 'ADMIN' || sessionScope.userRole == 'Admin'}">
+                            <li class="nav-item">
+                                <a href="${pageContext.request.contextPath}/admin/accounts"
+                                    class="nav-link ${param.currentPage == 'accounts' ? 'active' : ''}"
+                                    data-tooltip="Account Management">
+                                    <i class="fas fa-user-shield"></i><span>Account Management</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="${pageContext.request.contextPath}/reports"
+                                    class="nav-link ${param.currentPage == 'reports' ? 'active' : ''}"
+                                    data-tooltip="Reports">
+                                    <i class="fas fa-chart-bar"></i><span>Reports</span>
+                                </a>
+                            </li>
                         </c:if>
-                    </ul>
-                </li>
-                <!-- Job Management - HR Staff (8) and HRM Manager (7) only -->
-                    <c:if test="${sessionScope.user != null && (sessionScope.user.positionId == 7 || sessionScope.user.positionId == 8)}">
-                        <li class="nav-item">
-                            <a href="#" class="nav-link sidebar-dropdown-toggle" data-target="job-management-submenu"
-                                aria-expanded="false" data-tooltip="Job Management">
-                                <i class="fas fa-briefcase"></i><span>Job Management</span>
-                                <i class="fas fa-chevron-right dropdown-arrow"></i>
-                            </a>
-                            <ul class="sidebar-submenu" id="job-management-submenu">
-                                <li>
-                                    <a href="${pageContext.request.contextPath}/job-postings"
-                                        class="nav-link ${param.currentPage == 'job-postings' ? 'active' : ''}">
-                                        <i class="fas fa-list"></i><span>Job Postings</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="${pageContext.request.contextPath}/job-postings/create"
-                                        class="nav-link ${param.currentPage == 'create-job-posting' ? 'active' : ''}">
-                                        <i class="fas fa-plus-circle"></i><span>Create Job Posting</span>
-                                    </a>
-                                </li>
-                                <c:if test="${sessionScope.user.positionId == 7}">
+
+                        <!-- Dropdown: Attendance (Hidden for Admin) -->
+                        <c:if test="${not isAdminPosition}">
+                            <li class="nav-item">
+                                <a href="#" class="nav-link sidebar-dropdown-toggle" data-target="attendance-submenu"
+                                    aria-expanded="false" data-tooltip="Attendance">
+                                    <i class="fas fa-clock"></i><span>Attendance</span>
+                                    <i class="fas fa-chevron-right dropdown-arrow"></i>
+                                </a>
+                                <ul class="sidebar-submenu" id="attendance-submenu">
                                     <li>
-                                        <a href="${pageContext.request.contextPath}/recruitment-approval"
-                                            class="nav-link ${param.currentPage == 'recruitment-approval' ? 'active' : ''}">
-                                            <i class="fas fa-check-circle"></i><span>Recruitment Approval</span>
+                                        <a href="${pageContext.request.contextPath}/attendance/record/HR"
+                                            class="nav-link ${param.currentPage == 'attendance-viewAll' ? 'active' : ''}">
+                                            <i class="fas fa-list"></i><span>View All Attendance Records</span>
                                         </a>
                                     </li>
-                                </c:if>
-                            </ul>
+                                    <li>
+                                        <a href="${pageContext.request.contextPath}/attendance/record/emp"
+                                            class="nav-link ${param.currentPage == 'attendance-viewMy' ? 'active' : ''}">
+                                            <i class="fas fa-user-check"></i><span>View My Attendance
+                                                Record</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="${pageContext.request.contextPath}/attendance/import"
+                                            class="nav-link ${param.currentPage == 'attendance-import' ? 'active' : ''}">
+                                            <i class="fas fa-file-import"></i><span>Import Attendance</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <!-- Payroll (Hidden for Admin) -->
+                            <li class="nav-item">
+                                <a href="${pageContext.request.contextPath}/payroll"
+                                    class="nav-link ${param.currentPage == 'payroll' ? 'active' : ''}"
+                                    data-tooltip="Payroll">
+                                    <i class="fas fa-money-bill-wave"></i><span>Payroll</span>
+                                </a>
+                            </li>
+
+                            <!-- Dropdown: Requests (Hidden for Admin) -->
+                            <li class="nav-item">
+                                <a href="#" class="nav-link sidebar-dropdown-toggle" data-target="requests-submenu"
+                                    aria-expanded="false" data-tooltip="Requests">
+                                    <i class="fas fa-clipboard-list"></i><span>Requests</span>
+                                    <i class="fas fa-chevron-right dropdown-arrow"></i>
+                                </a>
+                                <ul class="sidebar-submenu" id="requests-submenu">
+                                    <li>
+                                        <a href="${pageContext.request.contextPath}/requests"
+                                            class="nav-link ${param.currentPage == 'request-list' ? 'active' : ''}">
+                                            <i class="fas fa-list"></i><span>Request List</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="${pageContext.request.contextPath}/requests/leave/create"
+                                            class="nav-link ${param.currentPage == 'leave-request' ? 'active' : ''}">
+                                            <i class="fas fa-calendar-times"></i><span>Leave Request</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="${pageContext.request.contextPath}/requests/ot/create"
+                                            class="nav-link ${param.currentPage == 'ot-request' ? 'active' : ''}">
+                                            <i class="fas fa-business-time"></i><span>OT Request</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="${pageContext.request.contextPath}/requests/appeal/create"
+                                            class="nav-link ${param.currentPage == 'appeal-request' ? 'active' : ''}">
+                                            <i class="fas fa-exclamation-circle"></i><span>Attendance
+                                                Appeal</span>
+                                        </a>
+                                    </li>
+                                    <!-- Recruitment request - Dept Manager only -->
+                                    <c:if test="${sessionScope.user != null && sessionScope.user.positionId == 9}">
+                                        <li>
+                                            <a href="${pageContext.request.contextPath}/requests/recruitment/create"
+                                                class="nav-link ${param.currentPage == 'appeal-request' ? 'active' : ''}">
+                                                <i class="fas fa-exclamation-circle"></i><span>Recruitment
+                                                    request</span>
+                                            </a>
+                                        </li>
+                                    </c:if>
+                                </ul>
+                            </li>
+                        </c:if>
+
+                        <!-- Job Management - HR Staff (8) and HRM Manager (7) only -->
+                        <c:if
+                            test="${sessionScope.user != null && (sessionScope.user.positionId == 7 || sessionScope.user.positionId == 8)}">
+                            <li class="nav-item">
+                                <a href="#" class="nav-link sidebar-dropdown-toggle"
+                                    data-target="job-management-submenu" aria-expanded="false"
+                                    data-tooltip="Job Management">
+                                    <i class="fas fa-briefcase"></i><span>Job Management</span>
+                                    <i class="fas fa-chevron-right dropdown-arrow"></i>
+                                </a>
+                                <ul class="sidebar-submenu" id="job-management-submenu">
+                                    <li>
+                                        <a href="${pageContext.request.contextPath}/job-postings"
+                                            class="nav-link ${param.currentPage == 'job-postings' ? 'active' : ''}">
+                                            <i class="fas fa-list"></i><span>Job Postings</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="${pageContext.request.contextPath}/job-postings/create"
+                                            class="nav-link ${param.currentPage == 'create-job-posting' ? 'active' : ''}">
+                                            <i class="fas fa-plus-circle"></i><span>Create Job
+                                                Posting</span>
+                                        </a>
+                                    </li>
+                                    <c:if test="${sessionScope.user.positionId == 7}">
+                                        <li>
+                                            <a href="${pageContext.request.contextPath}/recruitment-approval"
+                                                class="nav-link ${param.currentPage == 'recruitment-approval' ? 'active' : ''}">
+                                                <i class="fas fa-check-circle"></i><span>Recruitment
+                                                    Approval</span>
+                                            </a>
+                                        </li>
+                                    </c:if>
+                                </ul>
+                            </li>
+                        </c:if>
+
+                        <!-- Settings - Admin Only (position_id = 6) -->
+                        <c:if test="${sessionScope.user != null && sessionScope.user.positionId == 6}">
+                            <li class="nav-item">
+                                <a href="${pageContext.request.contextPath}/settings"
+                                    class="nav-link ${param.currentPage == 'settings' ? 'active' : ''}"
+                                    data-tooltip="Settings">
+                                    <i class="fas fa-cog"></i><span>Settings</span>
+                                </a>
+                            </li>
+                        </c:if>
+
+
+
+                        <!-- Profile & Logout -->
+                        <li class="nav-item mt-3">
+                            <a href="${pageContext.request.contextPath}/user-profile"
+                                class="nav-link ${param.currentPage == 'profile' ? 'active' : ''}"
+                                data-tooltip="Profile">
+                                <i class="fas fa-user"></i><span>Profile</span>
+                            </a>
                         </li>
-                    </c:if>
-
-                <!-- Settings - Admin Only (position_id = 6) -->
-                <c:if test="${sessionScope.user != null && sessionScope.user.positionId == 6}">
-                    <li class="nav-item">
-                        <a href="${pageContext.request.contextPath}/settings"
-                            class="nav-link ${param.currentPage == 'settings' ? 'active' : ''}" data-tooltip="Settings">
-                            <i class="fas fa-cog"></i><span>Settings</span>
-                        </a>
-                    </li>
-                </c:if>
-
-
-
-                <!-- Profile & Logout -->
-                <li class="nav-item mt-3">
-                    <a href="${pageContext.request.contextPath}/user-profile"
-                        class="nav-link ${param.currentPage == 'profile' ? 'active' : ''}" data-tooltip="Profile">
-                        <i class="fas fa-user"></i><span>Profile</span>
-                    </a>
-                </li>
             </ul>
         </nav>
 
