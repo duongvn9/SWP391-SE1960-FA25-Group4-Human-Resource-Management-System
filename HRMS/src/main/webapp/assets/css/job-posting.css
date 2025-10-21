@@ -1,0 +1,176 @@
+/* Job posting specific styles */
+.required::after {
+    content: " *";
+    color: #dc3545;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    font-weight: 500;
+}
+
+/* Status badge colors - match Bootstrap's theme */
+.badge.bg-warning {
+    color: #000;
+}
+
+/* Table improvements */
+.table td {
+    vertical-align: middle;
+}
+
+/* Add hover effect to clickable rows */
+tr[data-href] {
+    cursor: pointer;
+}
+
+tr[data-href]:hover {
+    background-color: rgba(0,0,0,.075) !important;
+}
+
+/* Improve spacing in filter form */
+.filter-form .form-group {
+    margin-bottom: 1rem;
+}
+
+/* Make action buttons in table more compact */
+.table .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* Make sure buttons don't wrap in action column */
+.table .text-nowrap .btn {
+    margin: 0 2px;
+}
+
+/* Style for the job title links */
+.table a.text-decoration-none {
+    color: #0d6efd;
+    font-weight: 500;
+}
+
+.table a.text-decoration-none:hover {
+    text-decoration: underline !important;
+}
+
+/* Job code styling */
+.table small.text-muted {
+    font-size: 0.75rem;
+}
+
+/* Improve modal dialogs */
+.modal-body textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Responsive table improvements */
+@media (max-width: 768px) {
+    /* Stack table on mobile */
+    .table-responsive {
+        border: 0;
+    }
+    
+    .table thead {
+        display: none;
+    }
+    
+    .table tr {
+        display: block;
+        margin-bottom: 1rem;
+        border: 1px solid #dee2e6;
+    }
+    
+    .table td {
+        display: block;
+        text-align: right;
+        padding: 0.5rem;
+        border: none;
+    }
+    
+    .table td::before {
+        content: attr(data-label);
+        float: left;
+        font-weight: bold;
+    }
+    
+    /* Adjust button positioning */
+    .table td:last-child {
+        text-align: center;
+        background-color: rgba(0,0,0,.03);
+        padding: 1rem;
+    }
+}
+
+/* Filter card improvements */
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,.075);
+}
+
+/* Pagination improvements */
+.pagination {
+    margin-bottom: 0;
+}
+
+.page-link:focus {
+    box-shadow: 0 0 0 0.25rem rgba(13,110,253,.25);
+}
+
+/* Alert improvements */
+.alert {
+    margin-bottom: 1.5rem;
+}
+
+.alert-dismissible .btn-close {
+    padding: 0.75rem 1rem;
+}
+
+/* Modal improvements */
+.modal-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.modal-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+}
+
+/* Button improvements */
+.btn i {
+    margin-right: 0.25rem;
+}
+
+.btn-outline-secondary:hover {
+    color: #fff;
+}
+
+/* Custom styling for salary inputs */
+input[type="number"].form-control {
+    text-align: right;
+}
+
+/* Validation styling */
+.form-control.is-invalid,
+.form-select.is-invalid {
+    background-image: none;
+    padding-right: 0.75rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .btn-lg {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    .btn-lg + .btn-lg {
+        margin-left: 0 !important;
+    }
+}
+
+/* Custom styling for textareas */
+textarea.form-control {
+    resize: vertical;
+    min-height: 100px;
+}
