@@ -1,360 +1,365 @@
+/* Scoped styles for Import Attendance page */
 :root {
-    --sidebar-width: 260px;
-    --sidebar-collapsed-width: 80px;
-    --header-height: 60px;
-    --primary-color: #0d6efd;
-    --primary-hover: #0b5ed7;
-    --secondary-color: #6c757d;
-    --bg-light: #f8f9fa;
-    --text-dark: #212529;
+    --ia-sidebar-width: 260px; /* fallback if sidebar variable missing */
+    --ia-header-h: 64px; /* fallback header height */
+    --ia-gap: 12px;
+    --ia-primary: #4f46e5;
+    --ia-muted: #6c757d;
+    --ia-bg: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    --ia-radius: 10px;
 }
 
-/* --------------------------
-   Layout chung
--------------------------- */
-body.import-attendance-page {
-    margin: 0;
-    font-family: "Segoe UI", Arial, sans-serif;
-    background-color: var(--bg-light);
-    color: var(--text-dark);
+/* Ensure main content accounts for fixed sidebar & header when this CSS is loaded on its page */
+.import-attendance-page .main-content {
+    /* Do not override layout (margin-left/min-height/display) which is controlled by sidebar.jsp
+       Keep only top padding so header spacing remains correct for this page. */
+    padding-top: calc(var(--header-h, var(--ia-header-h)) + var(--ia-gap));
 }
 
-/* Main wrapper to contain sidebar and content area */
-.main-wrapper {
+/* When sidebar collapsed, page should still display correctly */
+body.sidebar-collapsed .import-attendance-page .main-content {
+    margin-left: 70px;
+}
+
+/* Content area */
+.import-attendance-page .content-area {
+    background: var(--ia-bg);
+    padding: 1.25rem;
+    border-radius: var(--ia-radius);
+}
+
+.import-attendance-page .page-title {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+/* Tab header */
+.import-attendance-page .tab-header {
     display: flex;
-    align-items: flex-start;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 0.5rem;
 }
 
-.content-area {
-    width: 100%;
-    padding: 28px 40px;
-    box-sizing: border-box;
+.import-attendance-page .tab-btn {
+    border: 0;
+    background: transparent;
+    padding: 0.5rem 0.9rem;
+    border-radius: 0.6rem;
+    font-weight: 600;
+    color: var(--ia-muted);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, transform 0.08s ease;
 }
 
-/* Header */
-.top-navbar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: var(--header-height);
+.import-attendance-page .tab-btn.active,
+.import-attendance-page .tab-btn[aria-selected="true"] {
+    background: rgba(79, 70, 229, 0.08);
+    color: var(--ia-primary);
+    transform: translateY(-1px);
+}
+
+.import-attendance-page .tab-divider {
+    border: 0;
+    height: 1px;
+    background: rgba(15, 23, 42, 0.06);
+    margin: 0.75rem 0 1rem 0;
+}
+
+/* Tab content base */
+.import-attendance-page .tab-content {
+    display: none; /* toggled by JS */
     background: #fff;
-    border-bottom: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+}
+
+/* Upload tab specific */
+.import-attendance-page .upload-tab .section-title {
+    margin-bottom: 0.75rem;
+    font-size: 1.1rem;
+    color: #0f172a;
+}
+
+.import-attendance-page .upload-form .form-group {
+    margin-bottom: 0.75rem;
+}
+
+.import-attendance-page .file-upload {
     display: flex;
     align-items: center;
-    padding: 0 20px;
-    z-index: 1000;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    gap: 0.75rem;
+    background: #f8fafc;
+    padding: 0.5rem;
+    border-radius: 8px;
+    border: 1px dashed rgba(15, 23, 42, 0.06);
 }
 
-/* Sidebar */
-.sidebar {
-    position: fixed;
-    top: var(--header-height);
-    left: 0;
-    width: var(--sidebar-width);
-    height: calc(100vh - var(--header-height));
-    background-color: #fff;
-    border-right: 1px solid #dee2e6;
-    display: flex;
-    flex-direction: column;
-    transition: width 0.3s ease;
-    overflow-y: auto;
+.import-attendance-page .file-input {
+    flex: 0 0 auto;
 }
 
-.sidebar.collapsed {
-    width: var(--sidebar-collapsed-width);
-}
-
-/* Main content */
-.main-content {
-    margin-top: var(--header-height);
-    margin-left: var(--sidebar-width);
-    padding: 30px 40px;
-    transition: margin-left 0.3s ease;
-}
-
-.sidebar.collapsed ~ .main-content {
-    margin-left: var(--sidebar-collapsed-width);
-}
-
-/* The page uses .main-wrapper + .content-area in JSP; keep compatibility */
-.sidebar.collapsed ~ .main-wrapper .content-area {
-    margin-left: var(--sidebar-collapsed-width);
-}
-
-/* Page title and header spacing */
-.page-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin: 0 0 18px 0;
-    color: var(--text-dark);
-}
-
-/* --------------------------
-   Page title
--------------------------- */
-.page-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin-bottom: 20px;
-}
-
-/* --------------------------
-   Tabs chung
--------------------------- */
-.tab-header {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 10px;
-}
-
-.tab-btn {
-    padding: 8px 16px;
-    border-radius: 6px 6px 0 0;
-    border: none;
-    cursor: pointer;
-    background-color: #e9ecef;
-    transition: all 0.2s ease;
-}
-
-.tab-btn.active {
-    background-color: var(--primary-color);
-    color: #fff;
-}
-
-/* Divider */
-.tab-divider {
-    margin: 0 0 20px 0;
-    border: none;
-    border-bottom: 1px solid #dee2e6;
-}
-
-/* --------------------------
-   Tab content riêng
--------------------------- */
-.upload-tab,
-.manual-tab {
-    display: none;
-}
-
-.upload-tab.active,
-.manual-tab.active {
-    display: block;
-}
-
-/* --------------------------
-   Upload Tab
--------------------------- */
-.upload-tab .form-group {
-    margin-bottom: 15px;
-}
-
-.upload-tab .form-label {
-    font-weight: 600;
-    margin-bottom: 4px;
-}
-
-.upload-tab .form-control {
-    border-radius: 6px;
-    border: 1px solid #ced4da;
-    padding: 8px 10px;
-    width: 100%;
-}
-
-.upload-tab .form-control:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px rgba(13,110,253,0.2);
-}
-
-.upload-tab .btn-primary,
-.upload-tab .btn-secondary {
-    padding: 8px 16px;
-    border-radius: 6px;
-    font-size: 0.95rem;
-    border: none;
-    cursor: pointer;
-    margin-right: 10px;
-}
-
-.upload-tab .btn-primary {
-    background-color: var(--primary-color);
-    color: #fff;
-}
-
-.upload-tab .btn-primary:hover {
-    background-color: var(--primary-hover);
-}
-
-.upload-tab .btn-secondary {
-    background-color: var(--secondary-color);
-    color: #fff;
-}
-
-.upload-tab .btn-secondary:hover {
-    background-color: #5c636a;
-}
-
-/* File upload custom style */
-.file-upload {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.file-input {
-    display: inline-block;
-    padding: 8px 12px;
-    border-radius: 6px;
-    background: #fff;
-    border: 1px solid #ced4da;
-    cursor: pointer;
-}
-
-#fileName {
+.import-attendance-page .file-upload .form-text {
     margin: 0;
-    color: #6c757d;
-    font-size: 0.95rem;
+    color: var(--ia-muted);
+    font-size: 0.9rem;
 }
 
-.form-button {
+.import-attendance-page .btn-group {
+    margin-top: 0.75rem;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.import-attendance-page .form-button {
+    padding: 0.5rem 0.9rem;
+    border-radius: 0.5rem;
+    border: 0;
+    cursor: pointer;
+}
+
+.import-attendance-page .btn-primary {
+    background: var(--ia-primary);
+    color: #fff;
+}
+
+.import-attendance-page .btn-secondary {
+    background: #eef2ff;
+    color: var(--ia-primary);
+}
+
+/* Messages */
+.import-attendance-page .form-message {
+    margin-top: 0.75rem;
+    padding: 0.6rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.95rem;
+}
+.import-attendance-page .error-message {
+    background: #fff5f5;
+    border: 1px solid #fecaca;
+    color: #9f1239;
+}
+.import-attendance-page .success-message {
+    background: #ecfdf5;
+    border: 1px solid #bbf7d0;
+    color: #065f46;
+}
+
+/* Preview table */
+.import-attendance-page .preview-data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    background: #fff;
+    overflow: auto;
+}
+.import-attendance-page .preview-data-table th,
+.import-attendance-page .preview-data-table td {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+    text-align: left;
+    font-size: 1rem; /* slightly larger for preview */
+}
+.import-attendance-page .preview-data-table thead tr {
+    background: linear-gradient(
+        90deg,
+        rgba(79, 70, 229, 0.06),
+        rgba(139, 92, 246, 0.03)
+        );
+}
+
+.import-attendance-page .preview-pagination {
+    display: flex;
+    gap: 0.35rem;
+    align-items: center;
+    justify-content: center; /* centered per request */
+    margin-top: 0.75rem;
+}
+.import-attendance-page .preview-pagination a,
+.import-attendance-page .preview-pagination span {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    padding: 0.35rem 0.55rem;
+    border-radius: 0.35rem;
+    background: #fff;
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    color: #0f172a;
+    text-decoration: none;
 }
 
-/* message styles */
-.form-message {
-    margin-top: 12px;
-    padding: 10px 12px;
-    border-radius: 6px;
-}
-.error-message { background: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
-.success-message { background: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
-
-/* Upload table */
-.upload-tab table.preview-data-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
-}
-
-.upload-tab table.preview-data-table th,
-.upload-tab table.preview-data-table td {
-    border: 1px solid #dee2e6;
-    padding: 8px;
-    text-align: left;
-}
-
-.upload-tab th.table-header {
-    background-color: #f1f1f1;
-}
-
-.upload-tab tr.data-row:nth-child(even) {
-    background-color: #fafafa;
-}
-
-/* --------------------------
-   Manual Tab
--------------------------- */
-.manual-tab table.manual-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 15px;
-}
-
-.manual-tab table.manual-table th,
-.manual-tab table.manual-table td {
-    border: 1px solid #dee2e6;
-    padding: 8px;
-}
-
-.manual-tab .manual-cell {
-    min-width: 80px;
-}
-
-.manual-tab .btn-import {
-    padding: 8px 16px;
-    background-color: var(--primary-color);
+/* Current page highlight */
+.import-attendance-page .preview-pagination .current-page {
+    background: var(--ia-primary);
     color: #fff;
+    border-color: var(--ia-primary);
+    box-shadow: 0 4px 10px rgba(79,70,229,0.12);
+}
+
+/* Ensure header dropdown appears above content */
+.top-navbar .dropdown-menu {
+    z-index: 2000; /* above top-navbar and other content */
+}
+
+.dropdown-menu.show {
+    display: block; /* ensure shown state if toggled manually */
+}
+
+/* Manual tab specific */
+.import-attendance-page .manual-tab .section-title {
+    margin-bottom: 0.75rem;
+    font-size: 1.1rem;
+}
+
+/* Bảng to hơn, scroll ngang nếu cần */
+.import-attendance-page .excel-table {
+    width: 300%;                  /* bảng gấp đôi chiều ngang */
+    max-width: none;              /* không giới hạn */
+    border-collapse: collapse;
+    overflow-x: auto;             /* cuộn ngang nếu quá rộng */
+    background: #fff;
     border-radius: 6px;
-    border: none;
+
+    height: 130%;                 /* dài hơn 30% so với ban đầu */
+    margin: 0 auto;               /* căn giữa bảng trong vùng chứa */
+    display: block;               /* để margin auto hoạt động */
+}
+
+/* Ô và header rõ ràng hơn */
+.import-attendance-page .excel-table th,
+.import-attendance-page .excel-table td {
+    padding: 0.75rem 1rem;                       /* tăng padding */
+    border: 1px solid rgba(15, 23, 42, 0.15);   /* viền rõ hơn */
+    font-size: 1rem;                             /* chữ to hơn */
+    text-align: center;                           /* canh giữa chữ */
+}
+
+/* Header nổi bật hơn */
+.import-attendance-page .excel-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    border-bottom: 2px solid rgba(15, 23, 42, 0.2);
+}
+
+/* Hàng trong tbody */
+.import-attendance-page .manual-table tbody tr.manual-row td {
+    min-width: 140px;        /* ô rộng hơn */
+    vertical-align: middle;
+}
+
+/* Ô editable */
+.import-attendance-page .manual-table td.manual-cell {
+    padding: 0.75rem 1rem;                   /* padding lớn hơn */
+    outline: none;
+    cursor: text;
+    white-space: nowrap;
+    border: 1px solid rgba(15, 23, 42, 0.15); /* viền rõ */
+}
+
+/* Focus/selected */
+.import-attendance-page .manual-table td.manual-cell:focus,
+.import-attendance-page .manual-table td.manual-cell.selected {
+    box-shadow: inset 0 0 0 2px rgba(79, 70, 229, 0.06);
+    background: rgba(79, 70, 229, 0.02);
+}
+
+.import-attendance-page .manual-btn-wrapper {
+    margin-top: 0.75rem;
+}
+.import-attendance-page .btn-import {
+    background: var(--ia-primary);
+    color: #fff;
+    border: 0;
+    padding: 0.5rem 0.85rem;
+    border-radius: 0.5rem;
     cursor: pointer;
 }
 
-.manual-tab .btn-import:hover {
-    background-color: var(--primary-hover);
+.import-attendance-page .feedback-message {
+    display: none;
+    margin-top: 0.5rem;
+    font-weight: 600;
 }
 
-/* Manual table editable cells styling */
-.manual-table .manual-cell[contenteditable="true"] {
-    min-height: 34px;
-    padding: 6px 8px;
-    background: #fff;
-    border-radius: 4px;
-    outline: none;
+/* Small helpers */
+.import-attendance-page .form-label {
+    font-weight: 600;
 }
 
-.manual-table .manual-cell[contenteditable="true"]:focus {
-    box-shadow: 0 0 0 3px rgba(13,110,253,0.08);
-    border: 1px solid rgba(13,110,253,0.35);
-}
-
-/* --------------------------
-   Pagination chung
--------------------------- */
-.pagination {
-    display: flex;
-    gap: 5px;
-    margin-top: 15px;
-}
-
-.page-btn {
-    padding: 5px 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    text-decoration: none;
-    color: #333;
-}
-
-.page-btn.current-page {
-    background-color: var(--primary-color);
-    color: #fff;
-    border-color: var(--primary-color);
-}
-
-/* --------------------------
-   Responsive
--------------------------- */
-@media (max-width: 992px) {
-    .main-content {
+/* Responsive: stack and collapse margins for small screens */
+@media (max-width: 768px) {
+    .import-attendance-page .main-content {
         margin-left: 0;
-        padding: 20px;
+        padding-top: calc(var(--header-h, 56px) + 8px);
     }
-
-    /* On small screens the header may occupy more vertical space; ensure content is visible */
-    .main-wrapper {
-        margin-top: calc(var(--header-height) + 6px);
-    }
-
-    .tab-header {
+    .import-attendance-page .tab-header {
         flex-direction: column;
+        align-items: stretch;
+    }
+    .import-attendance-page .tab-btn {
+        width: 100%;
+        text-align: left;
+    }
+    .import-attendance-page .preview-pagination {
+        justify-content: center;
+    }
+    .import-attendance-page .file-upload {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .import-attendance-page .file-upload .form-text {
+        font-size: 0.85rem;
+    }
+}
+
+/* Accessibility focus ring */
+.import-attendance-page .tab-btn:focus,
+.import-attendance-page .form-button:focus,
+.import-attendance-page .btn-import:focus {
+    outline: 3px solid rgba(79, 70, 229, 0.12);
+    outline-offset: 2px;
+}
+
+/* Ensure heavy tables don't overflow header/sidebar stack */
+.import-attendance-page .preview-data-table,
+.import-attendance-page .excel-table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+}
+
+/* Desktop-specific: ensure content is shifted by sidebar width so sidebar doesn't overlay on first load */
+@media (min-width: 769px) {
+    /* When body has preload marker, apply margin-left immediately to avoid FOUC */
+    body.ia-preload .import-attendance-page .main-content {
+        margin-left: var(--sidebar-width, 260px);
     }
 
-    .tab-btn {
-        width: 100%;
+    .import-attendance-page .main-content {
+        margin-left: var(--sidebar-width, 260px);
+        transition: margin-left .28s ease;
     }
 
-    .sidebar {
-        position: relative;
-        width: 100%;
-        height: auto;
-        border-right: none;
-        border-bottom: 1px solid #dee2e6;
+    /* When collapsed, ensure main content shifts to the collapsed width (higher specificity) */
+    body.sidebar-collapsed .import-attendance-page .main-content {
+        margin-left: 70px;
     }
 
-    .sidebar.collapsed {
-        width: 100%;
+    /* Ensure sidebar is not translated off-canvas on desktop even if .show or .collapsed classes present */
+    .import-attendance-page #sidebar {
+        transform: none !important;
+        position: fixed;
+        left: 0;
+        top: 0;
+        transition: width .28s ease, transform .25s ease;
     }
+}
+
+/* Small print */
+.import-attendance-page small.helper {
+    color: var(--ia-muted);
 }

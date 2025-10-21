@@ -4,24 +4,20 @@
     <head>
         <title>Import Attendance</title>
         <jsp:include page="../layout/head.jsp">
-            <jsp:param name="pageTitle" value="attendance-record-emp" />
+            <jsp:param name="pageTitle" value="Import Attendance - HRMS" />
+            <jsp:param name="pageCss" value="import-attendance.css" />
         </jsp:include>
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/import-attendance.css" />
-        <script src="${pageContext.request.contextPath}/assets/js/import-attendance.js"></script>
     </head>
     <body class="import-attendance-page">
-        <!-- Header -->
-        <jsp:include page="../layout/dashboard-header.jsp">
-            <jsp:param name="pageTitle" value="attendance-record-emp" />
+        <jsp:include page="../layout/sidebar.jsp">
+            <jsp:param name="currentPage" value="attendance-record-emp" />
         </jsp:include>
 
-        <!-- Main wrapper: sidebar + content -->
-        <div class="main-wrapper">
-            <jsp:include page="../layout/sidebar.jsp">
-                <jsp:param name="currentPage" value="attendance-record-emp" />
-            </jsp:include>
+        <!-- Main wrapper: header + content -->
+        <div class="main-content" id="main-content">
+            <jsp:include page="../layout/dashboard-header.jsp" />
 
-            <div class="content-area main-content">
+            <div class="content-area">
                 <h2 class="page-title">Import Attendance</h2>
 
                 <!-- Tabs -->
@@ -156,5 +152,80 @@
                 </div>
             </div>
         </div>
+        <script>// Sidebar toggle: find common toggle buttons and wire collapse behavior so CSS margin changes apply
+            document.addEventListener('DOMContentLoaded', function () {
+                const sidebar = document.getElementById('sidebar') || document.querySelector('.sidebar');
+                const toggles = Array.from(document.querySelectorAll('.toggle-sidebar, .sidebar-toggle, #sidebarToggle, [data-toggle="sidebar"]'));
+                if (toggles.length > 0) {
+                    toggles.forEach(t => t.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            document.body.classList.toggle('sidebar-collapsed');
+                            if (sidebar)
+                                sidebar.classList.toggle('collapsed');
+                        }));
+                }
+
+                // If no toggle found, but sidebar exists, expose a small helper so other scripts can toggle it
+                if (!window.toggleSidebar && sidebar) {
+                    window.toggleSidebar = function () {
+                        document.body.classList.toggle('sidebar-collapsed');
+                        sidebar.classList.toggle('collapsed');
+                    };
+                }
+
+                // Fix: header dropdown anchors (href="#") may be intercepted by global smooth-scroll handlers
+                // Prevent navigation to '#' and toggle Bootstrap dropdown programmatically instead.
+                try {
+                    document.querySelectorAll('a[data-bs-toggle="dropdown"]').forEach(function (el) {
+                        el.addEventListener('click', function (e) {
+                            // Stop other handlers (e.g., global smooth-scroll) from changing the URL
+                            e.preventDefault();
+                            e.stopPropagation();
+                            // Use Bootstrap API to toggle the dropdown
+                            if (typeof bootstrap !== 'undefined' && bootstrap.Dropdown) {
+                                var inst = bootstrap.Dropdown.getOrCreateInstance(el);
+                                inst.toggle();
+                            } else {
+                                // Fallback: toggle .show class on the next sibling menu
+                                var menu = el.nextElementSibling;
+                                if (menu && menu.classList)
+                                    menu.classList.toggle('show');
+                            }
+                        });
+                    });
+                } catch (ex) {
+                    // silent
+                }
+            });
+        </script>
+        <script>
+            (function () {
+                document.addEventListener('DOMContentLoaded', function () {
+                    const dropdowns = document.querySelectorAll('.nav-item.dropdown');
+
+                    dropdowns.forEach(drop => {
+                        const toggle = drop.querySelector('.dropdown-toggle');
+                        const menu = drop.querySelector('.dropdown-menu');
+
+                        if (!toggle || !menu)
+                            return;
+
+                        // click vào toggle để mở/đóng menu
+                        toggle.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            menu.classList.toggle('show');
+                        });
+
+                        // click ngoài dropdown thì đóng menu
+                        document.addEventListener('click', function (e) {
+                            if (!drop.contains(e.target)) {
+                                menu.classList.remove('show');
+                            }
+                        });
+                    });
+                });
+            })();
+        </script>
+        <script src="${pageContext.request.contextPath}/assets/js/import-attendance.js"></script>
     </body>
 </html>

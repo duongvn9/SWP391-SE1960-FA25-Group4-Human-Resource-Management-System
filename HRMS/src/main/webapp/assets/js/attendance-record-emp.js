@@ -3,13 +3,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const hiddenInput = document.getElementById('selectedLogDates');
     const selectedRecords = new Set();
 
-    // Hàm cập nhật số lượng hiển thị
     function updateSelectedCount() {
         if (selectedCountSpan)
             selectedCountSpan.textContent = selectedRecords.size;
     }
 
-    // Khởi tạo từ hidden nếu có dữ liệu cũ
     if (hiddenInput.value) {
         hiddenInput.value.split(',').forEach(v => {
             if (v)
@@ -18,7 +16,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     updateSelectedCount();
 
-    // Hàm gắn sự kiện checkbox
     function bindCheckboxes() {
         document.querySelectorAll('input[name="record_checkbox"]').forEach(cb => {
             cb.addEventListener('change', function () {
@@ -33,16 +30,13 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Gọi bind lần đầu
     bindCheckboxes();
 
-    // Khi submit filter hoặc pagination
     const filterForm = document.getElementById('filterForm');
     filterForm.addEventListener('submit', function () {
         hiddenInput.value = Array.from(selectedRecords).join(',');
     });
 
-    // Submit sang trang khác
     const submitBtn = document.getElementById('selectLogOkBtn');
     if (submitBtn) {
         submitBtn.addEventListener('click', function () {
@@ -59,7 +53,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Export buttons
     ["XLS", "CSV", "PDF"].forEach(type => {
         const btn = document.getElementById(`export${type}Btn`);
         if (btn) {

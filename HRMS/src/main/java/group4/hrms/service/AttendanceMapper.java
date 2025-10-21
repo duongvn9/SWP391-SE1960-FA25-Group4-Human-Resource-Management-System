@@ -53,4 +53,46 @@ public class AttendanceMapper {
         }
         return entities;
     }
+
+    public static List<AttendanceLog> convertDtoToEntity(AttendanceLogDto dto) throws SQLException {
+        List<AttendanceLog> entities = new ArrayList<>();
+        if (dto == null) {
+            return entities;
+        }
+
+        TimesheetPeriodDao periodDao = new TimesheetPeriodDao();
+        Optional<Long> periodIdOpt = Optional.empty();
+
+        if (dto.getPeriod() != null) {
+            periodIdOpt = periodDao.findIdByName(dto.getPeriod());
+        }
+
+        Long periodId = periodIdOpt.orElse(null);
+
+        if (dto.getCheckIn() != null && dto.getDate() != null) {
+            AttendanceLog checkInLog = new AttendanceLog();
+            checkInLog.setUserId(dto.getUserId());
+            checkInLog.setCheckType("IN");
+            checkInLog.setCheckedAt(LocalDateTime.of(dto.getDate(), dto.getCheckIn()));
+            checkInLog.setNote(dto.getStatus());
+            checkInLog.setSource(dto.getSource());
+            checkInLog.setNote(dto.getStatus());
+            checkInLog.setPeriodId(periodId);
+            entities.add(checkInLog);
+        }
+
+        if (dto.getCheckOut() != null && dto.getDate() != null) {
+            AttendanceLog checkOutLog = new AttendanceLog();
+            checkOutLog.setUserId(dto.getUserId());
+            checkOutLog.setCheckType("OUT");
+            checkOutLog.setCheckedAt(LocalDateTime.of(dto.getDate(), dto.getCheckOut()));
+            checkOutLog.setNote(dto.getStatus());
+            checkOutLog.setSource(dto.getSource());
+            checkOutLog.setNote(dto.getStatus());
+            checkOutLog.setPeriodId(periodId);
+            entities.add(checkOutLog);
+        }
+
+        return entities;
+    }
 }
