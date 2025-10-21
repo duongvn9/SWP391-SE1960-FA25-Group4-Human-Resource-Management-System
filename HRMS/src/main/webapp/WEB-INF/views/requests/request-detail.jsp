@@ -318,21 +318,31 @@
                                         <jsp:include page="sections/ot-detail-section.jsp" />
                                     </c:when>
 
-                                    <%-- Other Request Types (RECRUITMENT, ATTENDANCE_APPEAL, etc.) --%>
-                                        <c:otherwise>
-                                            <div class="card mb-4">
-                                                <div class="card-header bg-info text-white">
-                                                    <h5 class="mb-0"><i class="fas fa-list-alt me-2"></i>Request Details
-                                                    </h5>
-                                                </div>
-                                                <div class="card-body">
-                                                    <div class="alert alert-info mb-0" role="alert">
-                                                        <i class="fas fa-info-circle me-2"></i>
-                                                        Detailed information not available for this request type.
+                                    <%-- Appeal/Adjustment Request Details --%>
+                                        <c:when test="${requestDto.requestTypeCode == 'ADJUSTMENT_REQUEST'}">
+                                            <jsp:include page="sections/appeal-detail-section.jsp" />
+                                        </c:when>
+
+                                        <%-- Recruitment Request Details --%>
+                                            <c:when test="${requestDto.requestTypeCode == 'RECRUITMENT_REQUEST'}">
+                                                <jsp:include page="sections/recruitment-detail-section.jsp" />
+                                            </c:when>
+
+                                            <%-- Other Request Types --%>
+                                                <c:otherwise>
+                                                    <div class="card mb-4">
+                                                        <div class="card-header bg-info text-white">
+                                                            <h5 class="mb-0"><i class="fas fa-list-alt me-2"></i>Request Details
+                                                            </h5>
+                                                        </div>
+                                                        <div class="card-body">
+                                                            <div class="alert alert-info mb-0" role="alert">
+                                                                <i class="fas fa-info-circle me-2"></i>
+                                                                Detailed information not available for this request type.
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </div>
-                                        </c:otherwise>
+                                                </c:otherwise>
                         </c:choose>
 
                         <!-- Attachments Section -->

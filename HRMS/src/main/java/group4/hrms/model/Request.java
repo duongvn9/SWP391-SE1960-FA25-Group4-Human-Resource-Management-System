@@ -2,6 +2,7 @@ package group4.hrms.model;
 
 import java.time.LocalDateTime;
 
+import group4.hrms.dto.AppealRequestDetail;
 import group4.hrms.dto.LeaveRequestDetail;
 import group4.hrms.dto.OTRequestDetail;
 import group4.hrms.dto.RecruitmentDetailsDto;
@@ -29,6 +30,7 @@ public class Request {
     private transient LeaveRequestDetail leaveDetail;
     private transient OTRequestDetail otDetail;
     private transient RecruitmentDetailsDto recruitmentDetail;
+    private transient AppealRequestDetail appealDetail;
     // Deprecated fields - kept for backward compatibility but should not be used
     @Deprecated
     private Long userId; // Use createdByUserId instead
@@ -114,6 +116,7 @@ public class Request {
         // Clear cached details when JSON changes
         this.leaveDetail = null;
         this.otDetail = null;
+        this.appealDetail = null;
     }
 
     public Long getCreatedByAccountId() {
@@ -232,6 +235,42 @@ public class Request {
      */
     public void setOtDetail(OTRequestDetail detail) {
         this.otDetail = detail;
+        this.detailJson = (detail != null) ? detail.toJson() : null;
+    }
+
+    /**
+     * Get parsed AppealRequestDetail from JSON
+     * Lazy-loads from detailJson if needed
+     *
+     * @return AppealRequestDetail object or null if detailJson is null
+     */
+    public AppealRequestDetail getAppealDetail() {
+        if (appealDetail == null && detailJson != null && !detailJson.trim().isEmpty()) {
+            try {
+                System.out.println("[DEBUG] Parsing AppealRequestDetail for request ID: " + this.id);
+                System.out.println("[DEBUG] JSON content: " + detailJson);
+                appealDetail = AppealRequestDetail.fromJson(detailJson);
+                System.out.println("[DEBUG] Parsed successfully: " + appealDetail);
+            } catch (Exception e) {
+                // If parsing as appeal detail fails, it might be another detail type
+                System.err.println("[ERROR] Failed to parse AppealRequestDetail for request ID: " + this.id);
+                System.err.println("[ERROR] JSON: " + detailJson);
+                System.err.println("[ERROR] Exception: " + e.getMessage());
+                e.printStackTrace();
+                return null;
+            }
+        }
+        return appealDetail;
+    }
+
+    /**
+     * Set AppealRequestDetail and automatically serialize to JSON
+     * Sets both appealDetail and detailJson fields
+     *
+     * @param detail AppealRequestDetail object to set
+     */
+    public void setAppealDetail(AppealRequestDetail detail) {
+        this.appealDetail = detail;
         this.detailJson = (detail != null) ? detail.toJson() : null;
     }
 

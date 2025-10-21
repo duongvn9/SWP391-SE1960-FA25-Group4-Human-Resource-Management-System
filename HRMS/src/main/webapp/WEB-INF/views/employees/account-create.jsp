@@ -14,6 +14,170 @@
                 href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
                 rel="stylesheet" />
             <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
+            <style>
+                /* Fix layout to prevent overlap with sidebar */
+                .main-content {
+                    margin-left: 260px;
+                    min-height: 100vh;
+                    display: flex;
+                    flex-direction: column;
+                    transition: margin-left 0.3s ease;
+                }
+
+                body.sidebar-collapsed .main-content {
+                    margin-left: 70px;
+                }
+
+                @media (max-width: 768px) {
+                    .main-content {
+                        margin-left: 0;
+                    }
+                }
+
+                .content-area {
+                    flex: 1 1 auto;
+                    padding: 2rem;
+                    background-color: #f8f9fa;
+                }
+
+                /* Page Header */
+                .page-header {
+                    background: #fff;
+                    padding: 1.5rem;
+                    border-radius: 10px;
+                    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+                    margin-bottom: 1.5rem;
+                }
+
+                .breadcrumb {
+                    background: transparent;
+                    padding: 0;
+                    margin-bottom: 0.5rem;
+                }
+
+                .breadcrumb-item+.breadcrumb-item::before {
+                    content: "›";
+                    color: #6c757d;
+                }
+
+                .breadcrumb-item a {
+                    color: #667eea;
+                    text-decoration: none;
+                }
+
+                .breadcrumb-item.active {
+                    color: #6c757d;
+                }
+
+                /* Form Card */
+                .form-card {
+                    background: #fff;
+                    border-radius: 10px;
+                    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+                    overflow: hidden;
+                }
+
+                .form-card .card-header {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: #fff;
+                    padding: 1rem 1.5rem;
+                    border: none;
+                }
+
+                .form-card .card-body {
+                    padding: 2rem;
+                }
+
+                /* Form styling */
+                .form-label {
+                    display: block;
+                    margin-bottom: 0.5rem;
+                    font-weight: 500;
+                    color: #495057;
+                }
+
+                .form-label.required::after {
+                    content: " *";
+                    color: #dc3545;
+                }
+
+                .form-control {
+                    width: 100%;
+                    padding: 0.75rem;
+                    border: 1px solid #ced4da;
+                    border-radius: 6px;
+                    font-size: 0.95rem;
+                    transition: border-color 0.2s ease;
+                }
+
+                .form-control:focus {
+                    outline: none;
+                    border-color: #667eea;
+                    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+                }
+
+                .text-muted {
+                    font-size: 0.875rem;
+                    color: #6c757d;
+                }
+
+                .select2-user-option {
+                    padding: 0.25rem 0;
+                }
+
+                /* Alert styling */
+                .alert {
+                    border-radius: 6px;
+                    margin-bottom: 1.5rem;
+                }
+
+                /* Button styling */
+                .btn {
+                    padding: 0.75rem 1.5rem;
+                    border-radius: 6px;
+                    font-size: 0.95rem;
+                    font-weight: 500;
+                    border: none;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                }
+
+                .btn-primary {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: #fff;
+                }
+
+                .btn-primary:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+                }
+
+                .btn-secondary {
+                    background-color: #6c757d;
+                    color: #fff;
+                }
+
+                .btn-secondary:hover {
+                    background-color: #5a6268;
+                }
+
+                /* Responsive Design */
+                @media (max-width: 768px) {
+                    .form-card .card-body {
+                        padding: 1.5rem;
+                    }
+
+                    .page-header .d-flex {
+                        flex-direction: column;
+                        gap: 1rem;
+                        align-items: stretch !important;
+                    }
+
+                    .btn {
+                        width: 100%;
+                    }
+                }
+            </style>
         </head>
 
         <body>
@@ -29,22 +193,16 @@
 
                 <!-- Page Content -->
                 <div class="content-area">
-                    <!-- Breadcrumb -->
-                    <nav aria-label="breadcrumb" class="mb-3">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a
-                                    href="${pageContext.request.contextPath}/dashboard">Dashboard</a></li>
-                            <li class="breadcrumb-item"><a
-                                    href="${pageContext.request.contextPath}/employees/accounts">Account List</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Create Account</li>
-                        </ol>
-                    </nav>
-
                     <!-- Page Header -->
-                    <div class="mb-4">
-                        <h2 class="mb-0">
-                            <i class="fas fa-user-plus me-2"></i>Create New Account
-                        </h2>
+                    <div class="page-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h2 class="mb-0">
+                                <i class="fas fa-user-plus me-2"></i>Create New Account
+                            </h2>
+                            <a href="${pageContext.request.contextPath}/employees/accounts" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Account List
+                            </a>
+                        </div>
                     </div>
 
                     <!-- Error/Success Messages -->
@@ -67,7 +225,10 @@
                     </c:if>
 
                     <!-- Create Account Form -->
-                    <div class="card shadow-sm">
+                    <div class="form-card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-user-plus me-2"></i>Account Information</h5>
+                        </div>
                         <div class="card-body">
                             <form action="${pageContext.request.contextPath}/employees/accounts/create" method="post"
                                 id="createAccountForm">
@@ -81,7 +242,8 @@
                                         <option value="">-- Search and select user --</option>
                                         <c:forEach var="user" items="${users}">
                                             <option value="${user.id}" data-employee-code="${user.employeeCode}"
-                                                data-email="${user.emailCompany}">
+                                                data-email="${user.emailCompany}" ${preSelectedUserId !=null &&
+                                                preSelectedUserId==user.id ? 'selected' : '' }>
                                                 ${user.fullName} (${user.employeeCode})
                                                 <c:if test="${not empty user.emailCompany}">
                                                     - ${user.emailCompany}
@@ -124,6 +286,22 @@
                                     </div>
                                 </div>
 
+                                <!-- Role Selection -->
+                                <div class="mb-3">
+                                    <label for="roleId" class="form-label required">
+                                        <i class="fas fa-user-tag me-1"></i>Role
+                                    </label>
+                                    <select class="form-select" id="roleId" name="roleId" required>
+                                        <option value="">-- Select role --</option>
+                                        <c:forEach var="role" items="${roles}">
+                                            <option value="${role.id}">
+                                                ${role.name} (${role.code})
+                                            </option>
+                                        </c:forEach>
+                                    </select>
+                                    <small class="text-muted">Select the role for this account</small>
+                                </div>
+
                                 <div class="row">
                                     <!-- Password -->
                                     <div class="col-md-6 mb-3">
@@ -147,11 +325,8 @@
                                 </div>
 
                                 <!-- Form Actions -->
-                                <div class="d-flex justify-content-end gap-2 mt-4">
-                                    <a href="${pageContext.request.contextPath}/employees/accounts"
-                                        class="btn btn-secondary">
-                                        <i class="fas fa-times me-2"></i>Cancel
-                                    </a>
+                                <div class="d-flex justify-content-end gap-2 mt-4 pt-3"
+                                    style="border-top: 1px solid #dee2e6;">
                                     <button type="submit" class="btn btn-primary">
                                         <i class="fas fa-save me-2"></i>Create Account
                                     </button>
@@ -178,6 +353,21 @@
                         templateSelection: formatUserSelection,
                         matcher: customMatcher
                     });
+
+                    // Auto-fill if user is pre-selected
+                    const selectedUserId = $('#userId').val();
+                    if (selectedUserId) {
+                        const selectedOption = $('#userId option:selected');
+                        const employeeCode = selectedOption.data('employee-code');
+                        const email = selectedOption.data('email');
+
+                        if (employeeCode) {
+                            document.getElementById('username').value = employeeCode.toLowerCase();
+                        }
+                        if (email) {
+                            document.getElementById('emailCompany').value = email;
+                        }
+                    }
 
                     // Custom format for dropdown options
                     function formatUser(user) {

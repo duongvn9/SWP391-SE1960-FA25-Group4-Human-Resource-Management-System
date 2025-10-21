@@ -35,6 +35,13 @@ public class ProfileController extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         
+        // E2: Check session timeout
+        if (req.getSession(false) == null) {
+            logger.warn("Session expired");
+            resp.sendRedirect(req.getContextPath() + "/login?message=Session expired. Please login again");
+            return;
+        }
+        
         String path = req.getServletPath();
         logger.debug("GET {} - Loading user profile page", path);
         
@@ -142,32 +149,39 @@ public class ProfileController extends HttpServlet {
             
             logger.info("Updating profile for user_id: {}, username: {}", 
                 currentProfile.getUserId(), username);
-            logger.debug("Update data: {}", dto);
+            logger.info("=== DEBUG INFO ===");
+            logger.info("Phone from request: '{}'", req.getParameter("phone"));
+            logger.info("Phone in DTO: '{}'", dto.getPhone());
+            logger.info("Phone in DB: '{}'", currentProfile.getPhone());
+            logger.info("CCCD from request: '{}'", req.getParameter("cccd"));
+            logger.info("CCCD in DTO: '{}'", dto.getCccd());
+            logger.info("CCCD in DB: '{}'", currentProfile.getCccd());
+            logger.info("==================");
             
-            // Alt Flow 1: Check if there are any changes
-            if (!hasChanges(currentProfile, dto)) {
-                logger.info("No changes detected for user_id: {}", currentProfile.getUserId());
-                req.getSession().setAttribute("successMessage", "No information has been changed.");
-                resp.sendRedirect(req.getContextPath() + "/user-profile/edit");
-                return;
-            }
-            
-            // Validate DTO
-            if (!dto.validate()) {
+            // Validate DTO first
+            boolean isValid = dto.validate();
+            logger.info("Validation result: {}", isValid);
+            if (!isValid) {
                 logger.warn("Validation failed: {}", dto.getErrors());
                 req.setAttribute("error", String.join(", ", dto.getErrors()));
-                req.setAttribute("profile", currentProfile);
+                // Set profile with user's input (not DB values) to show what they entered
+                UserProfile profileWithInput = createProfileFromDto(currentProfile, dto);
+                req.setAttribute("profile", profileWithInput);
                 req.setAttribute("csrfToken", generateCsrfToken());
+                logger.info("Forwarding back to edit page with errors");
                 req.getRequestDispatcher("/WEB-INF/views/profile/edit-profile.jsp").forward(req, resp);
                 return;
             }
+            
+            logger.info("Validation passed, continuing to update...");
             
             // Validate: Cannot clear existing data (cannot set to empty if already has value)
             String clearFieldError = validateNoClearingData(currentProfile, dto);
             if (clearFieldError != null) {
                 logger.warn("Attempt to clear existing data: {}", clearFieldError);
                 req.setAttribute("error", clearFieldError);
-                req.setAttribute("profile", currentProfile);
+                UserProfile profileWithInput = createProfileFromDto(currentProfile, dto);
+                req.setAttribute("profile", profileWithInput);
                 req.setAttribute("csrfToken", generateCsrfToken());
                 req.getRequestDispatcher("/WEB-INF/views/profile/edit-profile.jsp").forward(req, resp);
                 return;
@@ -178,21 +192,33 @@ public class ProfileController extends HttpServlet {
                 if (userProfileDao.isCccdExistsForOtherUser(dto.getCccd(), currentProfile.getUserId())) {
                     logger.warn("CCCD already exists: {}", dto.getCccd());
                     req.setAttribute("error", "CCCD already exists");
-                    req.setAttribute("profile", currentProfile);
+                    UserProfile profileWithInput = createProfileFromDto(currentProfile, dto);
+                    req.setAttribute("profile", profileWithInput);
                     req.setAttribute("csrfToken", generateCsrfToken());
                     req.getRequestDispatcher("/WEB-INF/views/profile/edit-profile.jsp").forward(req, resp);
                     return;
                 }
             }
             
-            if (userProfileDao.isEmailExistsForOtherUser(dto.getEmailCompany(), currentProfile.getUserId())) {
-                logger.warn("Email already exists: {}", dto.getEmailCompany());
-                req.setAttribute("error", "Email already exists");
-                req.setAttribute("profile", currentProfile);
-                req.setAttribute("csrfToken", generateCsrfToken());
-                req.getRequestDispatcher("/WEB-INF/views/profile/edit-profile.jsp").forward(req, resp);
-                return;
+            if (dto.getPhone() != null && !dto.getPhone().trim().isEmpty()) {
+                if (userProfileDao.isPhoneExistsForOtherUser(dto.getPhone(), currentProfile.getUserId())) {
+                    logger.warn("Phone number already exists: {}", dto.getPhone());
+                    req.setAttribute("error", "Phone number already exists");
+                    UserProfile profileWithInput = createProfileFromDto(currentProfile, dto);
+                    req.setAttribute("profile", profileWithInput);
+                    req.setAttribute("csrfToken", generateCsrfToken());
+                    req.getRequestDispatcher("/WEB-INF/views/profile/edit-profile.jsp").forward(req, resp);
+                    return;
+                }
             }
+            
+            
+             if (!hasChanges(currentProfile, dto)) {
+                 logger.info("No changes detected for user_id: {}", currentProfile.getUserId());
+                 req.getSession().setAttribute("successMessage", "No information has been changed.");
+                 resp.sendRedirect(req.getContextPath() + "/user-profile/edit");
+                 return;
+             }
             
             // Update profile
             UserProfile updatedProfile = new UserProfile();
@@ -218,7 +244,7 @@ public class ProfileController extends HttpServlet {
             if (success) {
                 logger.info("Profile updated successfully for user_id: {}", currentProfile.getUserId());
                 req.getSession().setAttribute("successMessage", "Profile updated successfully");
-                resp.sendRedirect(req.getContextPath() + "/user-profile/edit"); // Stay on edit page
+                resp.sendRedirect(req.getContextPath() + "/user-profile/edit");
             } else {
                 logger.error("Failed to update profile for user_id: {}", currentProfile.getUserId());
                 req.setAttribute("error", "Failed to update profile");
@@ -384,5 +410,51 @@ public class ProfileController extends HttpServlet {
      */
     private boolean hasValue(String str) {
         return str != null && !str.trim().isEmpty();
+    }
+    
+    /**
+     * Create a UserProfile object from DTO (for displaying user input on error)
+     * Keeps non-editable fields from current profile, updates editable fields from DTO
+     */
+    private UserProfile createProfileFromDto(UserProfile current, UserProfileDto dto) {
+        UserProfile profile = new UserProfile();
+        
+        // Copy non-editable fields from current profile
+        profile.setUserId(current.getUserId());
+        profile.setEmployeeCode(current.getEmployeeCode());
+        profile.setDepartmentId(current.getDepartmentId());
+        profile.setDepartmentName(current.getDepartmentName());
+        profile.setPositionId(current.getPositionId());
+        profile.setPositionName(current.getPositionName());
+        profile.setStatus(current.getStatus());
+        profile.setDateJoined(current.getDateJoined());
+        profile.setDateLeft(current.getDateLeft());
+        profile.setStartWorkDate(current.getStartWorkDate());
+        profile.setAccountId(current.getAccountId());
+        profile.setUsername(current.getUsername());
+        profile.setEmailLogin(current.getEmailLogin());
+        profile.setAccountStatus(current.getAccountStatus());
+        profile.setLastLoginAt(current.getLastLoginAt());
+        profile.setCreatedAt(current.getCreatedAt());
+        profile.setUpdatedAt(current.getUpdatedAt());
+        
+        // Set editable fields from DTO (user's input)
+        profile.setFullName(dto.getFullName());
+        profile.setDob(dto.getDob());
+        profile.setGender(dto.getGender());
+        profile.setHometown(dto.getHometown());
+        profile.setCccd(dto.getCccd());
+        profile.setCccdIssuedDate(dto.getCccdIssuedDate());
+        profile.setCccdIssuedPlace(dto.getCccdIssuedPlace());
+        profile.setEmailCompany(dto.getEmailCompany());
+        profile.setPhone(dto.getPhone());
+        profile.setAddressLine1(dto.getAddressLine1());
+        profile.setAddressLine2(dto.getAddressLine2());
+        profile.setCity(dto.getCity());
+        profile.setState(dto.getState());
+        profile.setPostalCode(dto.getPostalCode());
+        profile.setCountry(dto.getCountry());
+        
+        return profile;
     }
 }

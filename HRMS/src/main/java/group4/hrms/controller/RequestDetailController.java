@@ -149,13 +149,21 @@ public class RequestDetailController extends HttpServlet {
             // RequestDao.findById() may not parse JSON detail, so we manually trigger it
             if (requestEntity.getDetailJson() != null && !requestEntity.getDetailJson().trim().isEmpty()) {
                 try {
-                    // Trigger lazy parsing by calling getters
-                    if (requestEntity.getDetailJson().contains("otDate")) {
-                        requestEntity.getOtDetail(); // This will parse and cache OT detail
-                        logger.info("Parsed OT detail for request " + requestId + ". CreatedByManager="
-                            + (requestEntity.getOtDetail() != null && requestEntity.getOtDetail().getCreatedByManager()));
-                    } else if (requestEntity.getDetailJson().contains("leaveTypeCode")) {
-                        requestEntity.getLeaveDetail(); // This will parse and cache Leave detail
+                    // Trigger lazy parsing based on request_type_id
+                    Long requestTypeId = requestEntity.getRequestTypeId();
+                    if (requestTypeId != null) {
+                        if (requestTypeId == 7L) {
+                            // OVERTIME_REQUEST
+                            requestEntity.getOtDetail();
+                            logger.info("Parsed OT detail for request " + requestId + ". CreatedByManager="
+                                + (requestEntity.getOtDetail() != null && requestEntity.getOtDetail().getCreatedByManager()));
+                        } else if (requestTypeId == 6L) {
+                            // LEAVE_REQUEST
+                            requestEntity.getLeaveDetail();
+                        } else if (requestTypeId == 8L) {
+                            // ADJUSTMENT_REQUEST (Appeal)
+                            requestEntity.getAppealDetail();
+                        }
                     }
                 } catch (Exception e) {
                     logger.warning("Error parsing detail JSON for request " + requestId + ": " + e.getMessage());
@@ -204,6 +212,24 @@ public class RequestDetailController extends HttpServlet {
                             logger.info("Successfully parsed OT detail for request " + requestId);
                         } else {
                             logger.warning("Failed to parse OT detail for request " + requestId + " - detail is null");
+                        }
+                    } else if ("ADJUSTMENT_REQUEST".equals(requestDto.getRequestTypeCode())) {
+                        // Parse Appeal/Adjustment request detail
+                        group4.hrms.dto.AppealRequestDetail appealDetail = requestDto.getAppealDetail();
+                        if (appealDetail != null) {
+                            request.setAttribute("appealDetail", appealDetail);
+                            logger.info("Successfully parsed appeal detail for request " + requestId);
+                        } else {
+                            logger.warning("Failed to parse appeal detail for request " + requestId + " - detail is null");
+                        }
+                    } else if ("RECRUITMENT_REQUEST".equals(requestDto.getRequestTypeCode())) {
+                        // Parse Recruitment request detail
+                        group4.hrms.dto.RecruitmentDetailsDto recruitmentDetail = requestDto.getRecruitmentDetail();
+                        if (recruitmentDetail != null) {
+                            request.setAttribute("recruitmentDetail", recruitmentDetail);
+                            logger.info("Successfully parsed recruitment detail for request " + requestId);
+                        } else {
+                            logger.warning("Failed to parse recruitment detail for request " + requestId + " - detail is null");
                         }
                     }
                 }
