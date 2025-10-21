@@ -9,6 +9,7 @@ package group4.hrms.dto;
  * @author HieuTrung
  */
 import java.io.Serializable;
+import java.util.List;
 
 import com.google.gson.Gson;
 
@@ -30,6 +31,7 @@ public class RecruitmentDetailsDto implements Serializable {
     private String jobSummary; // Job description
     private String workingLocation; // Working location (separate field)
     private String attachmentPath; // File attachment path
+    private List<String> attachments; // Danh sách file đính kèm (nếu có)
 
     // Computed fields for display (not stored in DB)
     private transient String budgetSalaryRange; // Formatted salary range for display
@@ -149,6 +151,14 @@ public class RecruitmentDetailsDto implements Serializable {
         this.attachmentPath = attachmentPath;
     }
 
+    public List<String> getAttachments() {
+        return attachments;
+    }
+
+    public void setAttachments(List<String> attachments) {
+        this.attachments = attachments;
+    }
+
     /**
      * Get formatted salary range for display.
      * Computes from minSalary, maxSalary, and salaryType if not already set.
@@ -165,5 +175,55 @@ public class RecruitmentDetailsDto implements Serializable {
 
     public void setBudgetSalaryRange(String budgetSalaryRange) {
         this.budgetSalaryRange = budgetSalaryRange;
+    }
+
+    /**
+     * Validate required fields for recruitment request detail
+     * @throws IllegalArgumentException if validation fails
+     */
+    public void validate() {
+        // Position code is optional for recruitment request
+        if (positionName == null || positionName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Position name is required");
+        }
+        if (jobLevel == null || jobLevel.trim().isEmpty()) {
+            throw new IllegalArgumentException("Job level is required");
+        }
+        if (!jobLevel.matches("JUNIOR|MIDDLE|SENIOR")) {
+            throw new IllegalArgumentException("Job level must be JUNIOR, MIDDLE, or SENIOR");
+        }
+        if (quantity == null || quantity <= 0) {
+            throw new IllegalArgumentException("Quantity must be greater than 0");
+        }
+        if (jobType == null || jobType.trim().isEmpty()) {
+            throw new IllegalArgumentException("Job type is required");
+        }
+        if (recruitmentReason == null || recruitmentReason.trim().isEmpty()) {
+            throw new IllegalArgumentException("Recruitment reason is required");
+        }
+        if (recruitmentReason.length() > 1000) {
+            throw new IllegalArgumentException("Recruitment reason cannot exceed 1000 characters");
+        }
+        // minSalary, maxSalary, salaryType: optional, không kiểm tra
+        if (jobSummary == null || jobSummary.trim().isEmpty()) {
+            throw new IllegalArgumentException("Job summary is required");
+        }
+        if (jobSummary.length() > 2000) {
+            throw new IllegalArgumentException("Job summary cannot exceed 2000 characters");
+        }
+        if (workingLocation == null || workingLocation.trim().isEmpty()) {
+            throw new IllegalArgumentException("Working location is required");
+        }
+        // Validate salary values if provided
+        if (minSalary != null && minSalary < 0d) {
+            throw new IllegalArgumentException("Minimum salary must be a non-negative number");
+        }
+        if (maxSalary != null && maxSalary < 0d) {
+            throw new IllegalArgumentException("Maximum salary must be a non-negative number");
+        }
+        if (minSalary != null && maxSalary != null && minSalary > maxSalary) {
+            throw new IllegalArgumentException("Minimum salary cannot be greater than maximum salary");
+        }
+        // attachmentPath: optional, không kiểm tra
     }
 }

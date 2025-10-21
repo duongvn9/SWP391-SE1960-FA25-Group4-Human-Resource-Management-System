@@ -21,11 +21,11 @@ public class AttendanceLogDto {
     private String status;
     private String source;
     private String period;
+    private boolean isLocked;
 
     public AttendanceLogDto() {
     }
 
-    // -------- Getter & Setter --------
     public Long getUserId() {
         return userId;
     }
@@ -110,7 +110,14 @@ public class AttendanceLogDto {
         return checkOut != null ? checkOut.toString().substring(0, 5) : "";
     }
 
-    // -------- toString() để debug --------
+    public boolean isIsLocked() {
+        return isLocked;
+    }
+
+    public void setIsLocked(boolean isLocked) {
+        this.isLocked = isLocked;
+    }
+
     @Override
     public String toString() {
         return "AttendanceLogDto{"
@@ -123,6 +130,7 @@ public class AttendanceLogDto {
                 + ", status='" + status + '\''
                 + ", source='" + source + '\''
                 + ", period='" + period + '\''
+                + ", isLocked='" + isLocked + '\''
                 + '}';
     }
 }

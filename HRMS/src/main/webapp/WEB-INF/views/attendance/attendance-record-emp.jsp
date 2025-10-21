@@ -13,9 +13,7 @@
     </head>
     <body class="attendance-page">
         <div class="page-wrapper">
-            <jsp:include page="../layout/dashboard-header.jsp">
-                <jsp:param name="pageTitle" value="attendance-record-emp" />
-            </jsp:include>
+            <jsp:include page="../layout/dashboard-header.jsp" />
 
             <div class="main-container">
                 <jsp:include page="../layout/sidebar.jsp">
@@ -60,7 +58,7 @@
                             <select id="periodSelect" name="periodSelect" class="filter-select">
                                 <option value="">-- All Periods --</option>
                                 <c:forEach var="p" items="${periodList}">
-                                    <option value="${p.id}" ${selectedPeriod == p.id ? 'selected' : ''}>${p.name}</option>
+                                    <option value="${p.id}" ${selectedPeriodId == p.id ? 'selected' : ''}>${p.name}</option>
                                 </c:forEach>
                             </select>
                         </div>
@@ -84,7 +82,7 @@
                         <input type="hidden" name="endDate" id="exportEndDate" value="${endDate}">
                         <input type="hidden" name="status" id="exportStatus" value="${status}">
                         <input type="hidden" name="source" id="exportSource" value="${source}">
-                        <input type="hidden" name="periodSelect" id="exportPeriodSelect" value="${selectedPeriod}">
+                        <input type="hidden" name="periodSelect" id="exportPeriodSelect" value="${selectedPeriodId}">
                     </form>
 
                     <!-- Export / Submit Buttons -->
@@ -170,3 +168,34 @@
                 </main>
             </div>
         </div>
+        <script>
+            (function () {
+                document.addEventListener('DOMContentLoaded', function () {
+                    // accept either elements with .nav-item.dropdown or any .dropdown inside .nav-right
+                    const dropdowns = document.querySelectorAll('.nav-item.dropdown, .nav-right .dropdown');
+
+                    dropdowns.forEach(drop => {
+                        const toggle = drop.querySelector('.dropdown-toggle');
+                        const menu = drop.querySelector('.dropdown-menu');
+
+                        if (!toggle || !menu)
+                            return;
+
+                        // click vào toggle để mở/đóng menu
+                        toggle.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            menu.classList.toggle('show');
+                        });
+
+                        // click ngoài dropdown thì đóng menu
+                        document.addEventListener('click', function (e) {
+                            if (!drop.contains(e.target)) {
+                                menu.classList.remove('show');
+                            }
+                        });
+                    });
+                });
+            })();
+        </script>
+    </body>
+</html>

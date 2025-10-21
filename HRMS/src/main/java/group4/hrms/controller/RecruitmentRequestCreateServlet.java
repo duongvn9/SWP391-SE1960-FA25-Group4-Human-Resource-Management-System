@@ -52,8 +52,40 @@ public class RecruitmentRequestCreateServlet extends HttpServlet {
         */
 
         try {
-            // 1. UPLOAD FILE và LẤY PATH
-            String attachmentPath = FileUploadUtil.uploadFile(req, "attachment", "uploads/recruitments");
+            // 1. HANDLE ATTACHMENT: could be multiple files or a drive link
+            String attachmentType = req.getParameter("attachmentType"); // 'file' or 'link'
+            String attachmentPath = null;
+            java.util.List<String> attachmentsList = null;
+            if ("link".equals(attachmentType)) {
+                String driveLink = req.getParameter("driveLink");
+                if (driveLink != null && !driveLink.trim().isEmpty()) {
+                    attachmentPath = driveLink.trim();
+                } else {
+                    req.setAttribute("error", "Please provide a Google Drive link or switch to Upload File.");
+                    req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
+                    return;
+                }
+            } else {
+                attachmentsList = new java.util.ArrayList<>();
+                try {
+                    for (jakarta.servlet.http.Part p : req.getParts()) {
+                        if (p.getName().equals("attachments") && p.getSize() > 0) {
+                            String stored = FileUploadUtil.uploadPart(p, "uploads/recruitments", req);
+                            if (stored != null) {
+                                attachmentsList.add(stored);
+                            }
+                        }
+                    }
+                } catch (Exception ex) {
+                    throw new ServletException("Failed to upload attachments: " + ex.getMessage(), ex);
+                }
+                if (!attachmentsList.isEmpty()) {
+                    // attachmentPath lưu JSON array
+                    attachmentPath = new com.google.gson.Gson().toJson(attachmentsList);
+                } else {
+                    attachmentPath = null;
+                }
+            }
 
             // 2. GÁN DỮ LIỆU VÀO OBJECT CHI TIẾT (RecruitmentDetailsDto)
             RecruitmentDetailsDto details = new RecruitmentDetailsDto();
@@ -111,6 +143,7 @@ public class RecruitmentRequestCreateServlet extends HttpServlet {
             details.setJobSummary(req.getParameter("jobSummary"));
             details.setWorkingLocation(req.getParameter("workingLocation"));
             details.setAttachmentPath(attachmentPath);
+            details.setAttachments(attachmentsList);
 
             // Basic validation (since validate() method is removed)
             if (details.getPositionName() == null || details.getPositionName().trim().isEmpty()) {
@@ -183,8 +216,12 @@ public class RecruitmentRequestCreateServlet extends HttpServlet {
             requestDao.save(request);
 
             sendNotificationToHRAndHRM(req, request);
-            // Redirect back to dashboard after successful submission
-            res.sendRedirect(req.getContextPath() + "/dashboard?success=submitted");
+            // Truyền thông báo thành công và forward về trang create
+            String successText = "Recruitment request submitted successfully! Request ID: " + request.getId();
+            // Keep backward-compatible attribute name and also set 'success' which the JSP now expects
+            req.setAttribute("successMessage", successText);
+            req.setAttribute("success", successText);
+            req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
 
         } catch (Exception e) {
             System.err.println("Error in RecruitmentRequestCreateServlet: " + e.getMessage());

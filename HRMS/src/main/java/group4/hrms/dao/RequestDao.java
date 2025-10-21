@@ -1013,47 +1013,7 @@ public class RequestDao extends BaseDao<Request, Long> {
         return requests;
     }
 
-    /**
-     * Lấy danh sách yêu cầu tuyển dụng nháp (DRAFT) của 1 user
-     */
-    public List<Request> findDraftsByUserId(Long userId) {
-        List<Request> drafts = new ArrayList<>();
-        String sql = "SELECT * FROM " + getTableName()
-                + " WHERE created_by_user_id = ? AND status = 'DRAFT' ORDER BY updated_at DESC";
-        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setLong(1, userId);
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    drafts.add(mapResultSetToEntity(rs));
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Error finding draft requests for userId " + userId, e);
-        }
-        return drafts;
-    }
-
-    public List<RequestDto> findDraftsByUserIdWithDetails(Long userId) {
-        List<RequestDto> drafts = new ArrayList<>();
-        String sql = SELECT_WITH_DETAILS + " WHERE r.created_by_user_id = ? AND r.status = 'DRAFT' ORDER BY r.created_at DESC";
-
-        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setLong(1, userId);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    drafts.add(mapResultSetToDto(rs));
-                }
-            }
-
-        } catch (SQLException e) {
-            logger.error("Error finding draft requests with details for user id: {}", userId, e);
-            throw new RuntimeException("Error finding draft requests with details for user id: " + userId, e);
-        }
-
-        return drafts;
-    }
+    
 
     public List<Request> findPendingRecruitmentRequests() {
         List<Request> list = new ArrayList<>();
