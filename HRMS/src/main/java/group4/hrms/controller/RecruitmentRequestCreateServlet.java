@@ -92,14 +92,31 @@ public class RecruitmentRequestCreateServlet extends HttpServlet {
             details.setPositionCode(req.getParameter("positionCode"));
             details.setPositionName(req.getParameter("positionName"));
 
-            // Lấy job level trực tiếp từ select box
-            details.setJobLevel(req.getParameter("jobLevel"));
-            details.setQuantity(Integer.parseInt(req.getParameter("quantity")));
+            // Parse jobLevel as String (DB stores as String: SENIOR, JUNIOR, etc.)
+            String jobLevel = req.getParameter("jobLevel");
+            details.setJobLevel(jobLevel);
+
+            // Parse quantity
+            String quantityStr = req.getParameter("quantity");
+            if (quantityStr != null && !quantityStr.trim().isEmpty()) {
+                try {
+                    details.setQuantity(Integer.parseInt(quantityStr.trim()));
+                } catch (NumberFormatException nfe) {
+                    req.setAttribute("error", "Invalid quantity: must be a number");
+                    req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
+                    return;
+                }
+            }
+
+            // Set jobType (FULL_TIME, PART_TIME, CONTRACT, etc.)
             details.setJobType(req.getParameter("jobType"));
             details.setRecruitmentReason(req.getParameter("recruitmentReason"));
+
+            // Parse salary fields separately (stored as individual fields in DB)
             String minSalaryRaw = req.getParameter("minSalary");
             String maxSalaryRaw = req.getParameter("maxSalary");
-            // If user provided salary inputs, ensure they are numeric
+            String salaryType = req.getParameter("salaryType");
+
             if (minSalaryRaw != null && !minSalaryRaw.trim().isEmpty()) {
                 try {
                     details.setMinSalary(Double.parseDouble(minSalaryRaw.trim()));
@@ -108,8 +125,6 @@ public class RecruitmentRequestCreateServlet extends HttpServlet {
                     req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
                     return;
                 }
-            } else {
-                details.setMinSalary(null);
             }
 
             if (maxSalaryRaw != null && !maxSalaryRaw.trim().isEmpty()) {
@@ -120,30 +135,33 @@ public class RecruitmentRequestCreateServlet extends HttpServlet {
                     req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
                     return;
                 }
-            } else {
-                details.setMaxSalary(null);
             }
-            details.setSalaryType(req.getParameter("salaryType"));
+
+            details.setSalaryType(salaryType);
+
+            // Set job summary and working location as separate fields
             details.setJobSummary(req.getParameter("jobSummary"));
+            details.setWorkingLocation(req.getParameter("workingLocation"));
             details.setAttachmentPath(attachmentPath);
             details.setAttachments(attachmentsList);
-            details.setWorkingLocation(req.getParameter("workingLocation"));
-    
-            
-                // VALIDATION chi tiết
-                try {
-                    details.validate();
-                } catch (IllegalArgumentException ve) {
-                    req.setAttribute("error", "Invalid recruitment details: " + ve.getMessage());
-                    req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
-                    return;
-                }
+
+            // Basic validation (since validate() method is removed)
+            if (details.getPositionName() == null || details.getPositionName().trim().isEmpty()) {
+                req.setAttribute("error", "Position name is required");
+                req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
+                return;
+            }
+            if (details.getQuantity() == null || details.getQuantity() <= 0) {
+                req.setAttribute("error", "Quantity must be greater than 0");
+                req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
+                return;
+            }
 
             // 3. TẠO REQUEST CHÍNH VÀ GÁN JSON
             Request request = new Request();
 
-            Long accountId = (Long) session.getAttribute("accountId"); 
-            Long userId = (Long) session.getAttribute("userId");       
+            Long accountId = (Long) session.getAttribute("accountId");
+            Long userId = (Long) session.getAttribute("userId");
 
             // Kiểm tra tính hợp lệ của ID (Thêm bước an toàn)
             if (accountId == null || userId == null) {
@@ -174,7 +192,7 @@ public class RecruitmentRequestCreateServlet extends HttpServlet {
             } catch (Exception e) {
                 throw new ServletException("Error handling RequestType: " + e.getMessage(), e);
             }
-            
+
             request.setRequestTypeId(requestTypeId);
             request.setTitle(req.getParameter("jobTitle")); // Tiêu đề chính
 
