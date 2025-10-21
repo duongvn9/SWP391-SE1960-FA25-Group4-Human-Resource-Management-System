@@ -26,7 +26,6 @@ public class AttendanceLogDto {
     public AttendanceLogDto() {
     }
 
-    // -------- Getter & Setter --------
     public Long getUserId() {
         return userId;
     }
@@ -119,7 +118,6 @@ public class AttendanceLogDto {
         this.isLocked = isLocked;
     }
 
-    // -------- toString() để debug --------
     @Override
     public String toString() {
         return "AttendanceLogDto{"

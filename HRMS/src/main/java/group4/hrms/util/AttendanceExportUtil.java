@@ -29,15 +29,12 @@ import org.apache.poi.ss.usermodel.Workbook;
 public class AttendanceExportUtil {
 
     public static void exportAttendanceCSV(OutputStream out, List<AttendanceLogDto> list) throws IOException {
-        // Ghi BOM UTF-8 để Excel nhận tiếng Việt đúng
         out.write(new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF});
 
         try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8), true)) {
-            // Header
             writer.println("Employee ID,Employee Name,Department,Date,Check-in,Check-out,Status,Source,Period");
 
             for (AttendanceLogDto dto : list) {
-                // Dùng escape nếu có dấu phẩy hoặc ký tự đặc biệt
                 writer.printf("%d,%s,%s,%s,%s,%s,%s,%s,%s%n",
                         dto.getUserId(),
                         escapeCsv(safe(dto.getEmployeeName())),
@@ -53,7 +50,6 @@ public class AttendanceExportUtil {
         }
     }
 
-    // Hàm escape giá trị có dấu phẩy, dấu nháy kép
     private static String escapeCsv(String value) {
         if (value.contains(",") || value.contains("\"") || value.contains("\n")) {
             value = value.replace("\"", "\"\""); // double quotes
@@ -62,7 +58,6 @@ public class AttendanceExportUtil {
         return value;
     }
 
-    // Hàm safe null
     private static String safe(Object obj) {
         return obj == null ? "" : obj.toString();
     }
@@ -101,7 +96,7 @@ public class AttendanceExportUtil {
     }
 
     public static void exportAttendancePDF(OutputStream out, List<AttendanceLogDto> list) throws IOException {
-        Document document = new Document(PageSize.A4.rotate()); // ngang để vừa bảng
+        Document document = new Document(PageSize.A4.rotate());
         try {
             PdfWriter.getInstance(document, out);
             document.open();

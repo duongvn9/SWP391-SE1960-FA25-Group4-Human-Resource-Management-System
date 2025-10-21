@@ -35,7 +35,6 @@ document.addEventListener("DOMContentLoaded", () => {
             periodIdInput.value = periodId;
             lockForm.appendChild(periodIdInput);
 
-            // clone filter hiện tại
             const filterForm = document.getElementById("filterForm");
             if (filterForm) {
                 const filterNames = ["employeeKeyword", "department", "startDate", "endDate", "status", "source", "periodSelect"];

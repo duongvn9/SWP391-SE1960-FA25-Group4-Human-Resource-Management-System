@@ -37,7 +37,6 @@ public class TimesheetPeriodDao extends BaseDao<TimesheetPeriod, Long> {
             period.setEndDate(endDate.toLocalDate());
         }
 
-        // is_locked là BOOLEAN trong DB → lấy kiểu boolean
         period.setIsLocked(rs.getBoolean("is_locked"));
 
         Long lockedBy = rs.getLong("locked_by");
@@ -90,7 +89,7 @@ public class TimesheetPeriodDao extends BaseDao<TimesheetPeriod, Long> {
         if (period.getIsLocked() != null) {
             stmt.setBoolean(4, period.getIsLocked());
         } else {
-            stmt.setBoolean(4, false); // mặc định "open"
+            stmt.setBoolean(4, false); 
         }
 
         if (period.getLockedBy() != null) {

@@ -19,7 +19,6 @@ public class AttendanceLog {
     public AttendanceLog() {
     }
 
-    // Constructor không có id (thường dùng khi insert mới)
     public AttendanceLog(Long userId, String checkType, LocalDateTime checkedAt,
             String source, String note, Long periodId) {
         this.userId = userId;
@@ -30,7 +29,6 @@ public class AttendanceLog {
         this.periodId = periodId;
     }
 
-    // Constructor đầy đủ (thường dùng khi đọc dữ liệu từ DB)
     public AttendanceLog(Long id, Long userId, String checkType, LocalDateTime checkedAt,
             String source, String note, Long periodId, LocalDateTime createdAt) {
         this.id = id;
@@ -43,7 +41,6 @@ public class AttendanceLog {
         this.createdAt = createdAt;
     }
 
-    // Getters và Setters
     public Long getId() {
         return id;
     }
