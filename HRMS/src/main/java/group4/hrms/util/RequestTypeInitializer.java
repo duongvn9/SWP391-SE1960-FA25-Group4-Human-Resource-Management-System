@@ -1,11 +1,10 @@
 package group4.hrms.util;
 
-import group4.hrms.dao.RequestTypeDao;
-import group4.hrms.model.RequestType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.SQLException;
+import group4.hrms.dao.RequestTypeDao;
+import group4.hrms.model.RequestType;
 
 /**
  * Utility class to initialize request types in the database
@@ -21,13 +20,7 @@ public class RequestTypeInitializer {
         this.requestTypeDao = requestTypeDao;
     }
 
-    /**
-     * Ensures LEAVE_REQUEST type exists in the database
-     * Creates it if it doesn't exist
-     *
-     * @return The LEAVE_REQUEST RequestType
-     * @throws RuntimeException if unable to create or retrieve the request type
-     */
+
     public RequestType ensureLeaveRequestTypeExists() {
         try {
             // Try to find existing LEAVE_REQUEST
