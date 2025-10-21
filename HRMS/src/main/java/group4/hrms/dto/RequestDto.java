@@ -520,8 +520,6 @@ public class RequestDto {
                 return "Đã duyệt";
             case "REJECTED":
                 return "Từ chối";
-            case "CANCELLED":
-                return "Đã hủy";
             default:
                 return status;
         }
@@ -622,24 +620,21 @@ public class RequestDto {
     // Helper method to determine status badge CSS class
     public void calculateStatusBadgeClass() {
         if (status == null) {
-            this.statusBadgeClass = "bg-secondary";
+            this.statusBadgeClass = "bg-secondary text-white";
             return;
         }
         switch (status) {
             case "PENDING":
-                this.statusBadgeClass = "bg-warning";
+                this.statusBadgeClass = "bg-warning text-dark";
                 break;
             case "APPROVED":
-                this.statusBadgeClass = "bg-success";
+                this.statusBadgeClass = "bg-success text-white";
                 break;
             case "REJECTED":
-                this.statusBadgeClass = "bg-danger";
-                break;
-            case "CANCELLED":
-                this.statusBadgeClass = "bg-secondary";
+                this.statusBadgeClass = "bg-danger text-white";
                 break;
             default:
-                this.statusBadgeClass = "bg-secondary";
+                this.statusBadgeClass = "bg-secondary text-white";
         }
     }
 
@@ -689,17 +684,6 @@ public class RequestDto {
         this.detailUrl = contextPath + "/requests/" + typeSegment + "/" + id;
     }
 
-    // Helper method to check if request is cancelled
-    public boolean isCancelled() {
-        return "CANCELLED".equals(this.status);
-    }
-
-    /**
-     * Extract reason from detail JSON for export
-     * Tries to get reason from LeaveRequestDetail or OTRequestDetail
-     *
-     * @return Reason text or empty string if not found
-     */
     public String getReasonFromDetail() {
         // Try leave detail first
         LeaveRequestDetail leave = getLeaveDetail();
