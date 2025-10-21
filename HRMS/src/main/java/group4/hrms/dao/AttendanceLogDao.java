@@ -228,7 +228,6 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
     LEFT JOIN timesheet_periods tp ON al.period_id = tp.id
 """);
 
-        // Gộp theo user + ngày, không lấy al.id
         sql.append("""
     GROUP BY u.id, u.employee_code, u.full_name, d.name, tp.name, DATE(al.checked_at)
     ORDER BY DATE(al.checked_at) DESC, u.full_name
@@ -328,7 +327,6 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
     WHERE al.user_id = ?
 """);
 
-        // GROUP BY theo ngày của user, không lấy al.id
         sql.append(" GROUP BY DATE(al.checked_at), u.id, u.full_name, d.name, tp.name");
         sql.append(" ORDER BY DATE(al.checked_at) DESC");
 

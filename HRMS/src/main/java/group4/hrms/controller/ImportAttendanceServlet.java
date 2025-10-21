@@ -89,11 +89,10 @@ public class ImportAttendanceServlet extends HttpServlet {
                 String manualDataJson = req.getParameter("manualData");
                 List<AttendanceLogDto> manualLogs = new ArrayList<>();
 
-                // Chỉ parse JSON thành DTO, không validate backend nữa
                 if (manualDataJson != null && !manualDataJson.trim().isEmpty()) {
                     manualDataJson = manualDataJson.trim();
                     if (manualDataJson.startsWith("[") && manualDataJson.endsWith("]")) {
-                        manualDataJson = manualDataJson.substring(1, manualDataJson.length() - 1); // bỏ dấu [ ]
+                        manualDataJson = manualDataJson.substring(1, manualDataJson.length() - 1); 
                         String[] records = manualDataJson.split("\\},\\{");
                         for (String r : records) {
                             r = r.replace("{", "").replace("}", "");
@@ -182,7 +181,6 @@ public class ImportAttendanceServlet extends HttpServlet {
             Logger.getLogger(ImportAttendanceServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        // ====== Xử lý upload file Excel cũ ======
         try {
             Path tempFilePath = handleFileUpload(req);
             List<AttendanceLogDto> logsDto = AttendanceService.readExcel(tempFilePath);

@@ -96,15 +96,15 @@ public class AppealRequestServlet extends HttpServlet {
 
             if (userAttachmentLink != null && !userAttachmentLink.isEmpty()) {
                 Attachment attachment = new Attachment();
-                attachment.setOwnerType("REQUEST");                  // liên kết với request
-                attachment.setOwnerId(request.getId());              // ID của request vừa lưu
-                attachment.setOriginalName("Google drive link");      // tên hiển thị
-                attachment.setAttachmentType("LINK");               // đánh dấu đây là link
-                attachment.setExternalUrl(userAttachmentLink);      // lưu link thực tế
-                attachment.setPath("");                            // không có file path
-                attachment.setSizeBytes(0L);                         // không có file
-                attachment.setUploadedByAccountId(accountId);       // ai thêm link
-                attachment.setCreatedAt(LocalDateTime.now());       // thời gian tạo
+                attachment.setOwnerType("REQUEST");              
+                attachment.setOwnerId(request.getId());          
+                attachment.setOriginalName("Google drive link");     
+                attachment.setAttachmentType("LINK");              
+                attachment.setExternalUrl(userAttachmentLink);    
+                attachment.setPath("");                          
+                attachment.setSizeBytes(0L);                       
+                attachment.setUploadedByAccountId(accountId);      
+                attachment.setCreatedAt(LocalDateTime.now());     
                 attachment.setContentType("External/link");
                 attachment.setChecksumSha256(null);
 

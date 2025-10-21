@@ -52,7 +52,6 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
             TimesheetPeriod selectedPeriod = null;
 
             if ("reset".equalsIgnoreCase(action)) {
-                // Lấy kỳ công hiện tại
                 selectedPeriod = tDAO.findCurrentPeriod();
                 if (selectedPeriod != null) {
                     selectedPeriodId = selectedPeriod.getId();
@@ -64,13 +63,11 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
                     endDate = now.withDayOfMonth(now.lengthOfMonth());
                 }
 
-                // Reset các filter khác
                 employeeKeyword = "";
                 department = "";
                 status = "";
                 source = "";
             } else {
-                // Nhánh dùng filter từ request, giữ null nếu param rỗng
                 startDate = (startDateStr != null && !startDateStr.isEmpty()) ? LocalDate.parse(startDateStr) : null;
                 endDate = (endDateStr != null && !endDateStr.isEmpty()) ? LocalDate.parse(endDateStr) : null;
 
@@ -88,7 +85,6 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
                 }
             }
 
-            // Xử lý export
             if (exportType != null && !exportType.isEmpty()) {
                 List<AttendanceLogDto> filteredRecords = dao.findByFilter(
                         userId,
@@ -107,7 +103,6 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
                 return;
             }
 
-            // Lấy danh sách attendance
             List<AttendanceLogDto> attendanceList = dao.findByFilter(
                     userId,
                     employeeKeyword,
@@ -134,7 +129,6 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
             );
             int totalPages = PaginationUtil.calculateTotalPages(totalRecords, recordsPerPage);
 
-            // Set attribute cho JSP
             req.setAttribute("attendanceList", attendanceList);
             req.setAttribute("periodList", tDAO.findAll());
             req.setAttribute("employeeKeyword", employeeKeyword);
@@ -143,8 +137,8 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
             req.setAttribute("endDate", (endDate != null) ? endDate.toString() : "");
             req.setAttribute("status", status != null ? status : "");
             req.setAttribute("source", source != null ? source : "");
-            req.setAttribute("selectedPeriodId", selectedPeriodId); // dùng cho <select>
-            req.setAttribute("selectedPeriod", selectedPeriod);     // dùng cho toggle nếu cần
+            req.setAttribute("selectedPeriodId", selectedPeriodId); 
+            req.setAttribute("selectedPeriod", selectedPeriod);    
             req.setAttribute("currentPage", currentPage);
             req.setAttribute("totalPages", totalPages);
 
@@ -181,7 +175,6 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
             Long selectedPeriodId = null;
             TimesheetPeriod selectedPeriod = null;
 
-            // ===== Xác định kỳ công =====
             if (periodIdStr != null && !periodIdStr.isEmpty()) {
                 try {
                     selectedPeriodId = Long.valueOf(periodIdStr);
@@ -192,20 +185,17 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
             }
 
             if (selectedPeriodId == null) {
-                // Nếu chưa có kỳ công filter, lấy kỳ công hiện tại
                 selectedPeriod = tDAO.findCurrentPeriod();
                 if (selectedPeriod != null) {
                     selectedPeriodId = selectedPeriod.getId();
                     startDate = selectedPeriod.getStartDate();
                     endDate = selectedPeriod.getEndDate();
                 } else {
-                    // Fallback nếu không có kỳ công hiện tại
                     LocalDate now = LocalDate.now();
                     startDate = now.withDayOfMonth(1);
                     endDate = now.withDayOfMonth(now.lengthOfMonth());
                 }
             } else {
-                // Nếu đã có periodId từ filter, ưu tiên start/end từ request nếu có
                 if (startDateStr != null && !startDateStr.isEmpty() && endDateStr != null && !endDateStr.isEmpty()) {
                     startDate = LocalDate.parse(startDateStr);
                     endDate = LocalDate.parse(endDateStr);
@@ -235,8 +225,8 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
             req.setAttribute("endDate", endDate.toString());
             req.setAttribute("status", status != null ? status : "");
             req.setAttribute("source", source != null ? source : "");
-            req.setAttribute("selectedPeriodId", selectedPeriodId); // dùng cho <select>
-            req.setAttribute("selectedPeriod", selectedPeriod);     // dùng cho toggle lock/unlock
+            req.setAttribute("selectedPeriodId", selectedPeriodId); 
+            req.setAttribute("selectedPeriod", selectedPeriod);    
             req.setAttribute("currentPage", currentPage);
             req.setAttribute("totalPages", totalPages);
 
