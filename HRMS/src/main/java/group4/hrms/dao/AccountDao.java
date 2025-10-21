@@ -721,4 +721,90 @@ public class AccountDao {
     public Account save(Account account) {
         return create(account);
     }
+
+    /**
+     * Update password for account
+     * 
+     * @param accountId Account ID
+     * @param newPasswordHash New password hash (bcrypt)
+     * @return true if successful, false otherwise
+     */
+    public boolean updatePassword(Long accountId, String newPasswordHash) {
+        logger.info("Updating password for account ID: {}", accountId);
+
+        // First, get the identity_id for this account
+        String getIdentityIdSql = "SELECT id FROM auth_identities WHERE account_id = ? AND provider = 'local'";
+        String updatePasswordSql = "UPDATE auth_local_credentials SET password_hash = ?, password_updated_at = ? WHERE identity_id = ?";
+
+        try (Connection conn = DatabaseUtil.getConnection()) {
+            Long identityId = null;
+
+            // Get identity_id
+            try (PreparedStatement stmt = conn.prepareStatement(getIdentityIdSql)) {
+                stmt.setLong(1, accountId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        identityId = rs.getLong("id");
+                    } else {
+                        logger.warn("No local auth identity found for account ID: {}", accountId);
+                        return false;
+                    }
+                }
+            }
+
+            // Update password
+            try (PreparedStatement stmt = conn.prepareStatement(updatePasswordSql)) {
+                stmt.setString(1, newPasswordHash);
+                stmt.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+                stmt.setLong(3, identityId);
+
+                int affectedRows = stmt.executeUpdate();
+                boolean success = affectedRows > 0;
+
+                if (success) {
+                    logger.info("Password updated successfully for account ID: {}", accountId);
+                } else {
+                    logger.warn("Failed to update password for account ID: {}", accountId);
+                }
+
+                return success;
+            }
+
+        } catch (SQLException e) {
+            logger.error("Error updating password for account ID {}: {}", accountId, e.getMessage(), e);
+            throw new RuntimeException("Error updating password", e);
+        }
+    }
+
+    /**
+     * Get password hash for account
+     * 
+     * @param accountId Account ID
+     * @return Password hash or null if not found
+     */
+    public String getPasswordHash(Long accountId) {
+        logger.debug("Getting password hash for account ID: {}", accountId);
+
+        String sql = "SELECT alc.password_hash " +
+                "FROM auth_local_credentials alc " +
+                "INNER JOIN auth_identities ai ON alc.identity_id = ai.id " +
+                "WHERE ai.account_id = ? AND ai.provider = 'local'";
+
+        try (Connection conn = DatabaseUtil.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, accountId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("password_hash");
+                }
+                return null;
+            }
+
+        } catch (SQLException e) {
+            logger.error("Error getting password hash for account ID {}: {}", accountId, e.getMessage(), e);
+            throw new RuntimeException("Error getting password hash", e);
+        }
+    }
 }
