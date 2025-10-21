@@ -25,7 +25,6 @@ public class ExportService {
                     resp.setContentType("text/csv; charset=UTF-8");
                     resp.setHeader("Content-Disposition", "attachment; filename=\"attendance.csv\"");
 
-                    // Ghi BOM UTF-8 để Excel hiển thị tiếng Việt đúng
                     OutputStream out = resp.getOutputStream();
                     out.write(new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF});
 
