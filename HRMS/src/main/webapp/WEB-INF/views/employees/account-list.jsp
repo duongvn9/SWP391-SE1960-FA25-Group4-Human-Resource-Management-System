@@ -182,21 +182,13 @@
                             background-color: #e0a800;
                         }
 
-                        .btn-action.btn-toggle-status {
-                            background-color: #28a745;
+                        .btn-action.btn-reset-password {
+                            background-color: #6c757d;
                             color: #fff;
                         }
 
-                        .btn-action.btn-toggle-status:hover {
-                            background-color: #218838;
-                        }
-
-                        .btn-action.btn-toggle-status[data-action="deactivate"] {
-                            background-color: #dc3545;
-                        }
-
-                        .btn-action.btn-toggle-status[data-action="deactivate"]:hover {
-                            background-color: #c82333;
+                        .btn-action.btn-reset-password:hover {
+                            background-color: #5a6268;
                         }
 
                         .btn-action:disabled {
@@ -221,7 +213,7 @@
                             font-weight: 500;
                             flex: 0 0 auto;
                             white-space: nowrap;
-                            order: 1;
+                            order: 2;
                         }
 
                         .pagination {
@@ -229,7 +221,7 @@
                             flex: 1 1 auto;
                             display: flex;
                             justify-content: center;
-                            order: 2;
+                            order: 1;
                         }
 
                         .pagination .page-link {
@@ -366,6 +358,28 @@
                             color: #004085;
                         }
 
+                        .clickable-header {
+                            user-select: none;
+                            transition: background-color 0.2s ease;
+                            padding: 0.5rem;
+                            margin: -0.5rem;
+                            border-radius: 6px;
+                        }
+
+                        .clickable-header:hover {
+                            background-color: rgba(0, 0, 0, 0.05);
+                        }
+
+                        .clickable-header .toggle-icon {
+                            transition: transform 0.3s ease;
+                            font-size: 1.2rem;
+                            color: #667eea;
+                        }
+
+                        .clickable-header[aria-expanded="true"] .toggle-icon {
+                            transform: rotate(180deg);
+                        }
+
                         /* Responsive Design */
                         @media (max-width: 1023px) {
                             .table .last-login-col {
@@ -456,20 +470,21 @@
                             <!-- Users Without Account Card -->
                             <c:if test="${isAdmin && not empty usersWithoutAccount}">
                                 <div class="alert alert-info" role="alert">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <h5 class="mb-0">
-                                            <i class="fas fa-user-plus me-2"></i>Users Without Account
-                                            <span class="badge bg-primary">${fn:length(usersWithoutAccount)}</span>
-                                        </h5>
-                                        <button class="btn btn-sm btn-outline-primary" type="button"
-                                            data-bs-toggle="collapse" data-bs-target="#usersWithoutAccountCollapse"
-                                            aria-expanded="false" aria-controls="usersWithoutAccountCollapse">
-                                            <i class="fas fa-chevron-down"></i>
-                                        </button>
+                                    <div class="clickable-header" style="cursor: pointer;" data-bs-toggle="collapse"
+                                        data-bs-target="#usersWithoutAccountCollapse" aria-expanded="false"
+                                        aria-controls="usersWithoutAccountCollapse">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <h5 class="mb-0">
+                                                <i class="fas fa-user-plus me-2"></i>Users Without Account
+                                                <span class="badge bg-primary">${fn:length(usersWithoutAccount)}</span>
+                                            </h5>
+                                            <i class="fas fa-chevron-down toggle-icon"></i>
+                                        </div>
+                                        <p class="mb-0 small">The following users don't have accounts yet. Click on a
+                                            user
+                                            to create an account.</p>
                                     </div>
-                                    <p class="mb-2 small">The following users don't have accounts yet. Click on a user
-                                        to create an account.</p>
-                                    <div class="collapse" id="usersWithoutAccountCollapse">
+                                    <div class="collapse mt-2" id="usersWithoutAccountCollapse">
                                         <div class="row g-2">
                                             <c:forEach var="user" items="${usersWithoutAccount}" varStatus="status">
                                                 <c:if test="${status.index < 10}">
@@ -622,7 +637,7 @@
                                                         <th>Username</th>
                                                         <th>Email Login</th>
                                                         <th>User (Full Name)</th>
-                                                        <th>Role</th>
+                                                        <th>Role in system</th>
                                                         <th>Department</th>
                                                         <th>Position</th>
                                                         <th>Status</th>
@@ -640,9 +655,7 @@
                                                             <td>
                                                                 <c:choose>
                                                                     <c:when test="${account.roleName != null}">
-                                                                        <span class="badge bg-primary">
-                                                                            ${account.roleName}
-                                                                        </span>
+                                                                        ${account.roleName}
                                                                     </c:when>
                                                                     <c:otherwise>
                                                                         <span class="text-muted">-</span>
@@ -684,31 +697,14 @@
                                                                             data-action="edit" title="Edit Account">
                                                                             <i class="fas fa-edit"></i>
                                                                         </button>
-                                                                        <c:choose>
-                                                                            <c:when
-                                                                                test="${account.status == 'active'}">
-                                                                                <button
-                                                                                    class="btn-action btn-toggle-status"
-                                                                                    data-account-id="${account.id}"
-                                                                                    data-username="${fn:escapeXml(account.username)}"
-                                                                                    data-current-status="${account.status}"
-                                                                                    data-action="deactivate"
-                                                                                    title="Deactivate Account">
-                                                                                    <i class="fas fa-ban"></i>
-                                                                                </button>
-                                                                            </c:when>
-                                                                            <c:otherwise>
-                                                                                <button
-                                                                                    class="btn-action btn-toggle-status"
-                                                                                    data-account-id="${account.id}"
-                                                                                    data-username="${fn:escapeXml(account.username)}"
-                                                                                    data-current-status="${account.status}"
-                                                                                    data-action="activate"
-                                                                                    title="Activate Account">
-                                                                                    <i class="fas fa-check-circle"></i>
-                                                                                </button>
-                                                                            </c:otherwise>
-                                                                        </c:choose>
+                                                                        <button class="btn-action btn-reset-password"
+                                                                            data-account-id="${account.id}"
+                                                                            data-username="${fn:escapeXml(account.username)}"
+                                                                            data-action="reset-password"
+                                                                            title="Reset Password"
+                                                                            style="background-color: #6c757d; color: #fff;">
+                                                                            <i class="fas fa-key"></i>
+                                                                        </button>
                                                                     </c:if>
                                                                 </div>
                                                             </td>
@@ -786,34 +782,6 @@
 
                         <!-- Footer -->
                         <jsp:include page="../layout/dashboard-footer.jsp" />
-                    </div>
-
-                    <!-- Confirmation Modal -->
-                    <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel"
-                        aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content">
-                                <div class="modal-header border-0 pb-0">
-                                    <h5 class="modal-title" id="confirmModalLabel">
-                                        <i class="fas fa-exclamation-circle me-2" id="confirmModalIcon"></i>
-                                        <span id="confirmModalTitle">Confirm Action</span>
-                                    </h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                        aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body pt-2" id="confirmModalBody">
-                                    Are you sure you want to perform this action?
-                                </div>
-                                <div class="modal-footer border-0">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                        <i class="fas fa-times me-1"></i>Cancel
-                                    </button>
-                                    <button type="button" class="btn btn-primary" id="confirmModalBtn">
-                                        <i class="fas fa-check me-1"></i>Confirm
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
                     <!-- View Account Modal -->
@@ -930,7 +898,7 @@
                                         <!-- Role Selection -->
                                         <div class="mb-3">
                                             <label for="edit-roleId" class="form-label">
-                                                Role<span class="text-danger">*</span>
+                                                Role in system<span class="text-danger">*</span>
                                             </label>
                                             <select class="form-select" id="edit-roleId" name="roleId" required>
                                                 <option value="">-- Select role --</option>
@@ -964,6 +932,85 @@
                                         </button>
                                     </div>
                                 </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reset Password Modal -->
+                    <div class="modal fade" id="resetPasswordModal" tabindex="-1"
+                        aria-labelledby="resetPasswordModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="resetPasswordModalLabel">
+                                        <i class="fas fa-key me-2"></i>Reset Password
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <form id="resetPasswordForm">
+                                    <input type="hidden" id="reset-accountId" name="accountId">
+                                    <div class="modal-body">
+                                        <div class="alert alert-warning">
+                                            <i class="fas fa-exclamation-triangle me-2"></i>
+                                            You are about to reset the password for account: <strong
+                                                id="reset-username"></strong>
+                                        </div>
+
+                                        <!-- New Password -->
+                                        <div class="mb-3">
+                                            <label for="reset-newPassword" class="form-label">
+                                                New Password<span class="text-danger">*</span>
+                                            </label>
+                                            <input type="password" class="form-control" id="reset-newPassword"
+                                                name="newPassword" required placeholder="Enter new password">
+                                        </div>
+
+                                        <!-- Confirm Password -->
+                                        <div class="mb-3">
+                                            <label for="reset-confirmPassword" class="form-label">
+                                                Confirm Password<span class="text-danger">*</span>
+                                            </label>
+                                            <input type="password" class="form-control" id="reset-confirmPassword"
+                                                required placeholder="Confirm new password">
+                                            <div class="invalid-feedback">
+                                                Passwords do not match
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                            <i class="fas fa-times me-2"></i>Cancel
+                                        </button>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-key me-2"></i>Reset Password
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Success Modal -->
+                    <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel"
+                        aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header border-0 pb-0">
+                                    <h5 class="modal-title text-success" id="successModalLabel">
+                                        <i class="fas fa-check-circle me-2"></i>Success
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body pt-2" id="successModalBody">
+                                    Password reset successfully!
+                                </div>
+                                <div class="modal-footer border-0">
+                                    <button type="button" class="btn btn-success" data-bs-dismiss="modal">
+                                        <i class="fas fa-check me-1"></i>OK
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1045,6 +1092,19 @@
                                 });
                         }
 
+                        function resetPassword(accountId, username) {
+                            // Populate reset password modal
+                            document.getElementById('reset-accountId').value = accountId;
+                            document.getElementById('reset-username').textContent = username;
+                            document.getElementById('reset-newPassword').value = '';
+                            document.getElementById('reset-confirmPassword').value = '';
+                            document.getElementById('reset-confirmPassword').classList.remove('is-invalid');
+
+                            // Show modal
+                            const modal = new bootstrap.Modal(document.getElementById('resetPasswordModal'));
+                            modal.show();
+                        }
+
                         function editAccount(accountId) {
                             // Fetch account details via AJAX
                             fetch(contextPath + '/employees/accounts/details?id=' + accountId)
@@ -1104,25 +1164,8 @@
                                         case 'edit':
                                             editAccount(accountId);
                                             break;
-                                        case 'activate':
-                                            showConfirmModal(
-                                                'Activate Account',
-                                                'Are you sure you want to activate account "<strong>' + username + '</strong>"?<br><small class="text-muted">The user will be able to login.</small>',
-                                                'success',
-                                                function () {
-                                                    toggleAccountStatus(accountId);
-                                                }
-                                            );
-                                            break;
-                                        case 'deactivate':
-                                            showConfirmModal(
-                                                'Deactivate Account',
-                                                'Are you sure you want to deactivate account "<strong>' + username + '</strong>"?<br><small class="text-muted">The user will not be able to login.</small>',
-                                                'warning',
-                                                function () {
-                                                    toggleAccountStatus(accountId);
-                                                }
-                                            );
+                                        case 'reset-password':
+                                            resetPassword(accountId, username);
                                             break;
                                     }
                                     return;
@@ -1183,76 +1226,61 @@
                                         alert('Failed to update account');
                                     });
                             });
-                        });
 
-                        function toggleAccountStatus(accountId) {
-                            // Call the toggle status API
-                            fetch(contextPath + '/employees/accounts/' + accountId + '/toggle-status', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json'
+                            // Reset password form submission
+                            document.getElementById('resetPasswordForm').addEventListener('submit', function (e) {
+                                e.preventDefault();
+
+                                const newPassword = document.getElementById('reset-newPassword').value;
+                                const confirmPassword = document.getElementById('reset-confirmPassword').value;
+                                const confirmInput = document.getElementById('reset-confirmPassword');
+
+                                // Validate passwords match
+                                if (newPassword !== confirmPassword) {
+                                    confirmInput.classList.add('is-invalid');
+                                    return;
                                 }
-                            })
-                                .then(response => response.json())
-                                .then(data => {
-                                    if (data.success) {
-                                        // Reload the page to show updated status
-                                        window.location.reload();
-                                    } else {
-                                        alert('Error: ' + (data.message || 'Failed to toggle account status'));
-                                    }
+                                confirmInput.classList.remove('is-invalid');
+
+                                const formData = new FormData(this);
+                                const urlParams = new URLSearchParams();
+                                for (let pair of formData.entries()) {
+                                    urlParams.append(pair[0], pair[1]);
+                                }
+
+                                fetch(contextPath + '/employees/accounts/reset-password', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/x-www-form-urlencoded'
+                                    },
+                                    body: urlParams.toString()
                                 })
-                                .catch(error => {
-                                    console.error('Error:', error);
-                                    alert('An error occurred while toggling account status');
-                                });
-                        }
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.success) {
+                                            // Close reset password modal
+                                            const resetModal = bootstrap.Modal.getInstance(document.getElementById('resetPasswordModal'));
+                                            resetModal.hide();
 
-                        function showConfirmModal(title, message, type, onConfirm) {
-                            const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
-                            const modalTitle = document.getElementById('confirmModalTitle');
-                            const modalBody = document.getElementById('confirmModalBody');
-                            const modalBtn = document.getElementById('confirmModalBtn');
-                            const modalIcon = document.getElementById('confirmModalIcon');
+                                            // Show success modal
+                                            const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                                            document.getElementById('successModalBody').textContent = 'Password reset successfully!';
+                                            successModal.show();
 
-                            // Set title and message
-                            modalTitle.textContent = title;
-                            modalBody.innerHTML = message;
-
-                            // Set icon and button style based on type
-                            modalIcon.className = 'fas me-2 ';
-                            modalBtn.className = 'btn ';
-
-                            switch (type) {
-                                case 'warning':
-                                    modalIcon.classList.add('fa-ban', 'text-warning');
-                                    modalBtn.classList.add('btn-warning');
-                                    modalBtn.innerHTML = '<i class="fas fa-ban me-1"></i>Deactivate';
-                                    break;
-                                case 'success':
-                                    modalIcon.classList.add('fa-check-circle', 'text-success');
-                                    modalBtn.classList.add('btn-success');
-                                    modalBtn.innerHTML = '<i class="fas fa-check-circle me-1"></i>Activate';
-                                    break;
-                                default:
-                                    modalIcon.classList.add('fa-exclamation-circle', 'text-primary');
-                                    modalBtn.classList.add('btn-primary');
-                                    modalBtn.innerHTML = '<i class="fas fa-check me-1"></i>Confirm';
-                            }
-
-                            // Remove old event listeners and add new one
-                            const newBtn = modalBtn.cloneNode(true);
-                            modalBtn.parentNode.replaceChild(newBtn, modalBtn);
-
-                            newBtn.addEventListener('click', function () {
-                                modal.hide();
-                                if (onConfirm) {
-                                    onConfirm();
-                                }
+                                            // Reload page when success modal is closed
+                                            document.getElementById('successModal').addEventListener('hidden.bs.modal', function () {
+                                                window.location.reload();
+                                            }, { once: true });
+                                        } else {
+                                            alert('Failed to reset password: ' + (data.message || 'Unknown error'));
+                                        }
+                                    })
+                                    .catch(error => {
+                                        console.error('Error:', error);
+                                        alert('Failed to reset password');
+                                    });
                             });
-
-                            modal.show();
-                        }
+                        });
                     </script>
                 </body>
 

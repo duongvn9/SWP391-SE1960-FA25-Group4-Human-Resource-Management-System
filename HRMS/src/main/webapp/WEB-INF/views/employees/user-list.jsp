@@ -143,6 +143,16 @@
                     color: #721c24;
                 }
 
+                .status-badge.locked {
+                    background-color: #fff3cd;
+                    color: #856404;
+                }
+
+                .status-badge.suspended {
+                    background-color: #f8d7da;
+                    color: #721c24;
+                }
+
                 .action-buttons {
                     display: flex;
                     gap: 0.5rem;
@@ -277,6 +287,49 @@
                 .spinner-border {
                     width: 3rem;
                     height: 3rem;
+                }
+
+                /* Accounts list in modal - scrollable */
+                #view-accounts-list {
+                    max-height: 250px;
+                    overflow-y: auto;
+                    overflow-x: hidden;
+                }
+
+                #view-accounts-list .list-group {
+                    margin-bottom: 0;
+                }
+
+                #view-accounts-list .list-group-item {
+                    border-left: none;
+                    border-right: none;
+                }
+
+                #view-accounts-list .list-group-item:first-child {
+                    border-top: none;
+                }
+
+                #view-accounts-list .list-group-item:last-child {
+                    border-bottom: none;
+                }
+
+                /* Custom scrollbar for accounts list */
+                #view-accounts-list::-webkit-scrollbar {
+                    width: 8px;
+                }
+
+                #view-accounts-list::-webkit-scrollbar-track {
+                    background: #f1f1f1;
+                    border-radius: 4px;
+                }
+
+                #view-accounts-list::-webkit-scrollbar-thumb {
+                    background: #888;
+                    border-radius: 4px;
+                }
+
+                #view-accounts-list::-webkit-scrollbar-thumb:hover {
+                    background: #555;
                 }
 
                 /* Responsive Design */
@@ -836,6 +889,84 @@
                 </div>
             </div>
 
+            <!-- View Account Modal -->
+            <div class="modal fade" id="viewAccountModal" tabindex="-1" aria-labelledby="viewAccountModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="viewAccountModalLabel">
+                                <i class="fas fa-user-shield me-2"></i>Account Details
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Username</label>
+                                    <p class="form-control-plaintext" id="view-account-username">-</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Status</label>
+                                    <p class="form-control-plaintext">
+                                        <span class="status-badge" id="view-account-status">-</span>
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Email Login</label>
+                                    <p class="form-control-plaintext" id="view-account-emailLogin">-</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">User (Full Name)</label>
+                                    <p class="form-control-plaintext" id="view-account-userFullName">-</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Department</label>
+                                    <p class="form-control-plaintext" id="view-account-department">-</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Position</label>
+                                    <p class="form-control-plaintext" id="view-account-position">-</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Last Login</label>
+                                    <p class="form-control-plaintext" id="view-account-lastLogin">-</p>
+                                </div>
+                                <div class="col-12">
+                                    <hr class="my-3">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-calendar-plus me-1"></i>Created At
+                                    </label>
+                                    <p class="form-control-plaintext" id="view-account-createdAt">-</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-calendar-check me-1"></i>Updated At
+                                    </label>
+                                    <p class="form-control-plaintext" id="view-account-updatedAt">-</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-key me-1"></i>Password Updated At
+                                    </label>
+                                    <p class="form-control-plaintext" id="view-account-passwordUpdatedAt">-</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="fas fa-times me-2"></i>Close
+                            </button>
+                            <a href="${pageContext.request.contextPath}/employees/accounts" class="btn btn-primary">
+                                <i class="fas fa-list me-2"></i>Go to Account List
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <script>
                 // Notification function
                 function showNotification(message, type = 'info') {
@@ -928,8 +1059,47 @@
                 }
 
                 function viewAccountFromUser(accountId) {
-                    // Redirect to account list page
-                    window.location.href = '${pageContext.request.contextPath}/employees/accounts#account-' + accountId;
+                    // Close user modal first
+                    const userModal = bootstrap.Modal.getInstance(document.getElementById('viewUserModal'));
+                    if (userModal) {
+                        userModal.hide();
+                    }
+
+                    // Fetch account details and show in modal
+                    setTimeout(() => {
+                        fetch('${pageContext.request.contextPath}/employees/accounts/details?id=' + accountId)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    const account = data.account;
+                                    // Populate account view modal
+                                    document.getElementById('view-account-username').textContent = account.username || '-';
+                                    document.getElementById('view-account-emailLogin').textContent = account.emailLogin || '-';
+                                    document.getElementById('view-account-userFullName').textContent = account.userFullName || '-';
+                                    document.getElementById('view-account-department').textContent = account.departmentName || '-';
+                                    document.getElementById('view-account-position').textContent = account.positionName || '-';
+                                    document.getElementById('view-account-lastLogin').textContent = account.lastLoginAt || 'Never';
+                                    document.getElementById('view-account-createdAt').textContent = account.createdAt || '-';
+                                    document.getElementById('view-account-updatedAt').textContent = account.updatedAt || '-';
+                                    document.getElementById('view-account-passwordUpdatedAt').textContent = account.passwordUpdatedAt || 'Never';
+
+                                    // Status badge
+                                    const statusBadge = document.getElementById('view-account-status');
+                                    statusBadge.textContent = account.status || '-';
+                                    statusBadge.className = 'status-badge ' + (account.status || '');
+
+                                    // Show account modal
+                                    const accountModal = new bootstrap.Modal(document.getElementById('viewAccountModal'));
+                                    accountModal.show();
+                                } else {
+                                    showNotification('Failed to load account details: ' + (data.message || 'Unknown error'), 'error');
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                showNotification('Failed to load account details', 'error');
+                            });
+                    }, 300);
                 }
 
                 function loadUserAccounts(userId) {
@@ -1022,9 +1192,41 @@
                         userModal.hide();
                     }
 
-                    // Open account detail modal (redirect to account page or open modal)
-                    // For now, redirect to account list with account detail
-                    window.location.href = '${pageContext.request.contextPath}/employees/accounts?viewAccountId=' + accountId;
+                    // Fetch account details and show in modal
+                    setTimeout(() => {
+                        fetch('${pageContext.request.contextPath}/employees/accounts/details?id=' + accountId)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    const account = data.account;
+                                    // Populate account view modal
+                                    document.getElementById('view-account-username').textContent = account.username || '-';
+                                    document.getElementById('view-account-emailLogin').textContent = account.emailLogin || '-';
+                                    document.getElementById('view-account-userFullName').textContent = account.userFullName || '-';
+                                    document.getElementById('view-account-department').textContent = account.departmentName || '-';
+                                    document.getElementById('view-account-position').textContent = account.positionName || '-';
+                                    document.getElementById('view-account-lastLogin').textContent = account.lastLoginAt || 'Never';
+                                    document.getElementById('view-account-createdAt').textContent = account.createdAt || '-';
+                                    document.getElementById('view-account-updatedAt').textContent = account.updatedAt || '-';
+                                    document.getElementById('view-account-passwordUpdatedAt').textContent = account.passwordUpdatedAt || 'Never';
+
+                                    // Status badge
+                                    const statusBadge = document.getElementById('view-account-status');
+                                    statusBadge.textContent = account.status || '-';
+                                    statusBadge.className = 'status-badge ' + (account.status || '');
+
+                                    // Show account modal
+                                    const accountModal = new bootstrap.Modal(document.getElementById('viewAccountModal'));
+                                    accountModal.show();
+                                } else {
+                                    showNotification('Failed to load account details: ' + (data.message || 'Unknown error'), 'error');
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                showNotification('Failed to load account details', 'error');
+                            });
+                    }, 300);
                 }
 
                 // Auto-submit form on filter change (optional)
