@@ -445,7 +445,7 @@
                     <div class="page-header">
                         <div class="d-flex justify-content-between align-items-center">
                             <h2 class="mb-0">User Management</h2>
-                            <c:if test="${isAdmin}">
+                            <c:if test="${canCreateUser}">
                                 <a href="${pageContext.request.contextPath}/employees/users/create"
                                     class="btn btn-primary">
                                     <i class="fas fa-plus me-2"></i>Add New User
@@ -1042,8 +1042,11 @@
                                 // Load accounts for this user
                                 loadUserAccounts(userId);
 
-                                // Store userId for edit button
-                                document.getElementById('btnEditFromView').setAttribute('data-user-id', userId);
+                                // Store userId for edit button (only if button exists)
+                                const editBtn = document.getElementById('btnEditFromView');
+                                if (editBtn) {
+                                    editBtn.setAttribute('data-user-id', userId);
+                                }
 
                                 // Show modal
                                 const modal = new bootstrap.Modal(document.getElementById('viewUserModal'));
@@ -1118,7 +1121,7 @@
                                     html += '<div class="d-flex w-100 justify-content-between align-items-center">';
                                     html += '<div>';
                                     html += '<h6 class="mb-1"><i class="fas fa-user-circle me-2"></i>' + account.username + '</h6>';
-                                    html += '<small class="text-muted">' + (account.roleName || 'No role') + '</small>';
+                                    html += '<small class="text-muted">' + (account.emailLogin || 'No email') + '</small>';
                                     html += '</div>';
                                     html += '<span class="badge bg-' + statusClass + '">' + account.status + '</span>';
                                     html += '</div>';
