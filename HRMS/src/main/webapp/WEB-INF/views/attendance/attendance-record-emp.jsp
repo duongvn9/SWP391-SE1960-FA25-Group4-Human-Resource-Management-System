@@ -121,6 +121,7 @@
 
                     <!-- Pagination POST -->
                     <div class="pagination" style="margin-top: 10px;">
+                        <!-- Previous -->
                         <c:if test="${currentPage > 1}">
                             <form method="post" style="display:inline;">
                                 <input type="hidden" name="startDate" value="${startDate}">
@@ -133,7 +134,34 @@
                             </form>
                         </c:if>
 
-                        <c:forEach var="i" begin="1" end="${totalPages}">
+                        <!-- Tính startPage và endPage -->
+                        <c:set var="startPage" value="${currentPage - 1}" />
+                        <c:set var="endPage" value="${currentPage + 1}" />
+
+                        <c:if test="${startPage < 1}">
+                            <c:set var="startPage" value="1" />
+                        </c:if>
+
+                        <c:if test="${endPage > totalPages}">
+                            <c:set var="endPage" value="${totalPages}" />
+                        </c:if>
+
+                        <!-- Hiển thị trang đầu tiên nếu không nằm trong khoảng -->
+                        <c:if test="${startPage > 1}">
+                            <form method="post" style="display:inline;">
+                                <input type="hidden" name="startDate" value="${startDate}">
+                                <input type="hidden" name="endDate" value="${endDate}">
+                                <input type="hidden" name="status" value="${status}">
+                                <input type="hidden" name="source" value="${source}">
+                                <input type="hidden" name="periodSelect" value="${selectedPeriod}">
+                                <input type="hidden" name="page" value="1">
+                                <button type="submit" class="page-link">1</button>
+                            </form>
+                            <span>...</span>
+                        </c:if>
+
+                        <!-- Vòng lặp hiển thị các trang xung quanh currentPage -->
+                        <c:forEach var="i" begin="${startPage}" end="${endPage}">
                             <c:choose>
                                 <c:when test="${i == currentPage}">
                                     <span class="page-current"><b>${i}</b></span>
@@ -152,6 +180,21 @@
                             </c:choose>
                         </c:forEach>
 
+                        <!-- Hiển thị trang cuối nếu không nằm trong khoảng -->
+                        <c:if test="${endPage < totalPages}">
+                            <span>...</span>
+                            <form method="post" style="display:inline;">
+                                <input type="hidden" name="startDate" value="${startDate}">
+                                <input type="hidden" name="endDate" value="${endDate}">
+                                <input type="hidden" name="status" value="${status}">
+                                <input type="hidden" name="source" value="${source}">
+                                <input type="hidden" name="periodSelect" value="${selectedPeriod}">
+                                <input type="hidden" name="page" value="${totalPages}">
+                                <button type="submit" class="page-link">${totalPages}</button>
+                            </form>
+                        </c:if>
+
+                        <!-- Next -->
                         <c:if test="${currentPage < totalPages}">
                             <form method="post" style="display:inline;">
                                 <input type="hidden" name="startDate" value="${startDate}">
@@ -164,38 +207,38 @@
                             </form>
                         </c:if>
                     </div>
-
-                </main>
             </div>
-        </div>
-        <script>
-            (function () {
-                document.addEventListener('DOMContentLoaded', function () {
-                    // accept either elements with .nav-item.dropdown or any .dropdown inside .nav-right
-                    const dropdowns = document.querySelectorAll('.nav-item.dropdown, .nav-right .dropdown');
+        </main>
+    </div>
+</div>
+<script>
+    (function () {
+        document.addEventListener('DOMContentLoaded', function () {
+            // accept either elements with .nav-item.dropdown or any .dropdown inside .nav-right
+            const dropdowns = document.querySelectorAll('.nav-item.dropdown, .nav-right .dropdown');
 
-                    dropdowns.forEach(drop => {
-                        const toggle = drop.querySelector('.dropdown-toggle');
-                        const menu = drop.querySelector('.dropdown-menu');
+            dropdowns.forEach(drop => {
+                const toggle = drop.querySelector('.dropdown-toggle');
+                const menu = drop.querySelector('.dropdown-menu');
 
-                        if (!toggle || !menu)
-                            return;
+                if (!toggle || !menu)
+                    return;
 
-                        // click vào toggle để mở/đóng menu
-                        toggle.addEventListener('click', function (e) {
-                            e.preventDefault();
-                            menu.classList.toggle('show');
-                        });
-
-                        // click ngoài dropdown thì đóng menu
-                        document.addEventListener('click', function (e) {
-                            if (!drop.contains(e.target)) {
-                                menu.classList.remove('show');
-                            }
-                        });
-                    });
+                // click vào toggle để mở/đóng menu
+                toggle.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    menu.classList.toggle('show');
                 });
-            })();
-        </script>
-    </body>
+
+                // click ngoài dropdown thì đóng menu
+                document.addEventListener('click', function (e) {
+                    if (!drop.contains(e.target)) {
+                        menu.classList.remove('show');
+                    }
+                });
+            });
+        });
+    })();
+</script>
+</body>
 </html>

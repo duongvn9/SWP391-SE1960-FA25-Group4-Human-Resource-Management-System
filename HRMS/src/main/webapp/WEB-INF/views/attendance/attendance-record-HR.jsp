@@ -189,11 +189,31 @@
                             <input type="hidden" name="startDate" value="${startDate}" />
                             <input type="hidden" name="endDate" value="${endDate}" />
 
+                            <!-- Previous -->
                             <c:if test="${currentPage > 1}">
                                 <button type="submit" name="page" value="${currentPage - 1}" class="pagination-link">Previous</button>
                             </c:if>
 
-                            <c:forEach var="i" begin="1" end="${totalPages}">
+                            <!-- Tính startPage và endPage -->
+                            <c:set var="startPage" value="${currentPage - 1}" />
+                            <c:set var="endPage" value="${currentPage + 1}" />
+
+                            <c:if test="${startPage < 1}">
+                                <c:set var="startPage" value="1" />
+                            </c:if>
+
+                            <c:if test="${endPage > totalPages}">
+                                <c:set var="endPage" value="${totalPages}" />
+                            </c:if>
+
+                            <!-- Hiển thị trang đầu nếu startPage > 1 -->
+                            <c:if test="${startPage > 1}">
+                                <button type="submit" name="page" value="1" class="pagination-link">1</button>
+                                <span>...</span>
+                            </c:if>
+
+                            <!-- Vòng lặp hiển thị các trang xung quanh currentPage -->
+                            <c:forEach var="i" begin="${startPage}" end="${endPage}">
                                 <c:choose>
                                     <c:when test="${i == currentPage}">
                                         <span class="pagination-current"><b>${i}</b></span>
@@ -204,12 +224,18 @@
                                 </c:choose>
                             </c:forEach>
 
+                            <!-- Hiển thị trang cuối nếu endPage < totalPages -->
+                            <c:if test="${endPage < totalPages}">
+                                <span>...</span>
+                                <button type="submit" name="page" value="${totalPages}" class="pagination-link">${totalPages}</button>
+                            </c:if>
+
+                            <!-- Next -->
                             <c:if test="${currentPage < totalPages}">
                                 <button type="submit" name="page" value="${currentPage + 1}" class="pagination-link">Next</button>
                             </c:if>
                         </form>
                     </div>
-
                 </main> 
             </div>
         </div>
@@ -255,7 +281,7 @@
         </div>
         <script>
             (function () {
-                    document.addEventListener('DOMContentLoaded', function () {
+                document.addEventListener('DOMContentLoaded', function () {
                     // select dropdowns in the top nav; allow either .nav-item.dropdown or .nav-right .dropdown
                     const dropdowns = document.querySelectorAll('.nav-item.dropdown, .nav-right .dropdown');
 
