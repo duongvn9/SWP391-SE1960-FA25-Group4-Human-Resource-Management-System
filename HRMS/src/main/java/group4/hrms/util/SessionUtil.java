@@ -21,6 +21,8 @@ public class SessionUtil {
     public static final String USER_FULL_NAME_KEY = "userFullName";
     public static final String USER_EMAIL_KEY = "userEmail";
     public static final String USER_ROLES_KEY = "userRoles";
+    public static final String USER_POSITION_ID_KEY = "userPositionId";
+    public static final String USER_DEPARTMENT_ID_KEY = "userDepartmentId";
     public static final String IS_ADMIN_KEY = "isAdmin";
     public static final String LAST_LOGIN_TIME_KEY = "lastLoginTime";
 
@@ -49,6 +51,8 @@ public class SessionUtil {
         session.setAttribute(USERNAME_KEY, account.getUsername());
         session.setAttribute(USER_FULL_NAME_KEY, user.getFullName());
         session.setAttribute(USER_EMAIL_KEY, account.getEmailLogin());
+        session.setAttribute(USER_POSITION_ID_KEY, user.getPositionId());
+        session.setAttribute(USER_DEPARTMENT_ID_KEY, user.getDepartmentId());
         session.setAttribute(LAST_LOGIN_TIME_KEY, System.currentTimeMillis());
 
         // Set full objects (needed by controllers)

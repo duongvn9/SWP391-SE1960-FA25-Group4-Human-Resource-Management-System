@@ -81,6 +81,21 @@ public class UserDetailServlet extends HttpServlet {
                 return;
             }
 
+            // Check permission - Department Manager can only view users in their department
+            logger.debug("Checking permission for user {} in department {}", userId, user.getDepartmentId());
+            boolean canView = group4.hrms.util.PermissionUtil.canViewDepartmentUsers(request, user.getDepartmentId());
+            logger.debug("Permission check result: {}", canView);
+
+            if (!canView) {
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                result.put("success", false);
+                result.put("message", "You don't have permission to view this user");
+                response.getWriter().write(gson.toJson(result));
+                logger.warn("User {} attempted to view user {} from different department",
+                        SessionUtil.getCurrentUsername(request), userId);
+                return;
+            }
+
             // Return success response
             result.put("success", true);
             result.put("user", user);
