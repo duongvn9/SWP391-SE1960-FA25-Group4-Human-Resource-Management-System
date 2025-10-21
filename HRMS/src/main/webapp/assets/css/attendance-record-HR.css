@@ -45,39 +45,45 @@
 ----------------------------*/
 .filter-form {
     display: flex;
-    flex-wrap: nowrap;        /* tất cả filter nằm trên 1 hàng */
-    gap: 0.6rem;              /* giảm khoảng cách để vừa hơn */
+    flex-wrap: nowrap;          /* Luôn giữ trên 1 hàng */
+    gap: 0.5rem;                /* Giảm khoảng cách giữa các ô */
     background: #fff;
-    padding: 1rem;
+    padding: 0.75rem;
     border-radius: var(--radius);
     box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-    overflow-x: hidden;       /* ẩn thanh cuộn ngang */
-    align-items: flex-end;    /* căn đều theo trục dọc */
-    justify-content: center;  /* căn giữa toàn bộ thanh filter */
+    overflow-x: auto;           /* Cho phép cuộn ngang nếu quá hẹp */
+    align-items: flex-end;
+    justify-content: center;
+    scroll-behavior: smooth;
 }
 
+/* Mỗi filter co giãn linh hoạt */
 .filter-group {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    flex: 0 0 160px;           /* tăng 1.5 lần so với trước */
-    min-width: 160px;         /* giảm tối thiểu */
+    flex: 1 1 110px;            /* Có thể co nhỏ xuống 110px khi hẹp */
+    min-width: 100px;           /* Giới hạn nhỏ nhất */
+    max-width: 180px;           /* Không quá to */
 }
 
 .filter-label {
     font-weight: 600;
-    margin-bottom: 0.25rem;   /* giảm khoảng cách label-input */
+    margin-bottom: 0.2rem;
     color: #111827;
+    font-size: 0.85rem;
 }
 
+/* Input và select gọn hơn */
 .filter-input,
 .filter-select {
-    padding: 0.5rem 0.7rem;   /* giảm padding để các ô nhỏ hơn */
+    padding: 0.35rem 0.5rem;    /* Giảm padding để ô nhỏ lại */
     border: 1px solid #ccc;
     border-radius: var(--radius);
     outline: none;
     width: 100%;
     box-sizing: border-box;
+    font-size: 0.9rem;
     transition: border-color 0.2s ease;
 }
 
@@ -86,26 +92,37 @@
     border-color: var(--primary);
 }
 
+/* Nhóm nút Filter */
 .filter-buttons {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.4rem;
     align-items: flex-end;
     flex: 0 0 auto;
+}
+
+/* Giảm kích thước nút */
+.filter-buttons button {
+    padding: 0.45rem 0.9rem;
+    font-size: 0.9rem;
+    white-space: nowrap;       /* Không xuống dòng chữ Filter */
 }
 
 /* ---------------------------
    BUTTONS
 ----------------------------*/
+/* ======= Nút chung ======= */
 .btn {
     border: none;
     border-radius: var(--radius);
     cursor: pointer;
     font-weight: 600;
     transition: all 0.2s ease;
-    padding: 0.5rem 1rem;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.85rem;
+    line-height: 1.2;
+    box-sizing: border-box;
 }
 
-/* Filter / Reset */
 .btn-primary {
     background: var(--primary);
     color: #fff;
@@ -122,12 +139,11 @@
     opacity: 0.85;
 }
 
-/* Action buttons */
 .action-buttons {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-top: 1rem;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
     align-items: center;
 }
 
@@ -143,6 +159,15 @@
     background: #f97316;
     color: #fff;
 }
+
+.btn-done {
+    background: #10b981;   /* xanh lá nhạt kiểu “xác nhận” */
+    color: #fff;
+}
+.btn-done:hover {
+    background: #059669;
+}
+
 .btn-submit {
     background: #4ade80;
     color: #111827;
@@ -152,12 +177,29 @@
     color: #fff;
 }
 
+/* Hiệu ứng hover chung */
 .btn-upload:hover,
 .btn-export:hover,
 .btn-edit:hover,
 .btn-submit:hover,
 .btn-delete:hover {
     opacity: 0.85;
+}
+
+.table .action-buttons .btn {
+    padding: 0.25rem 0.6rem;
+    font-size: 0.8rem;
+    min-width: 70px;
+    max-width: 80px;
+    text-align: center;
+}
+
+/* Thu nhỏ riêng Delete và Update (Edit/Submit) */
+.table .btn-delete,
+.table .btn-edit,
+.table .btn-submit {
+    flex: 1 1 70px;
+    padding: 0.25rem 0.55rem;
 }
 
 /* ---------------------------

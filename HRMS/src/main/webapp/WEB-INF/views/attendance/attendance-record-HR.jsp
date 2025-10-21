@@ -80,7 +80,12 @@
                                 <select name="periodSelect" class="filter-select">
                                     <option value="">-- All Periods --</option> 
                                 <c:forEach var="p" items="${periodList}"> 
-                                    <option value="${p.id}" <c:if test="${selectedPeriod eq p.id}">selected</c:if>>${p.name}</option> 
+                                    <option value="${p.id}" 
+                                            <c:if test="${selectedPeriod != null and selectedPeriod.id eq p.id}">
+                                                selected
+                                            </c:if>>
+                                        ${p.name}
+                                    </option> 
                                 </c:forEach> 
                             </select> 
                         </div>
@@ -100,25 +105,24 @@
                         <button type="button" id="exportPDFBtn" class="btn btn-export">Export PDF</button> 
                         <button id="editBtn" class="btn btn-edit" onclick="enableEdit()">Edit</button> 
 
-                        <div class="switch-container">
-                            <div class="toggle-switch">
-                                <input type="checkbox" id="switchInput">
-                                <label for="switchInput" class="slider"></label>
+                        <c:if test="${selectedPeriod != null}">
+                            <div class="switch-container">
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="switchInput"
+                                           data-period-id="${selectedPeriod.id}"
+                                           ${selectedPeriod.isLocked ? "checked" : ""} />
+                                    <label for="switchInput" class="slider"></label>
+                                </div>
+                                <span id="sliderStatus">
+                                    ${selectedPeriod.isLocked ? "Locked" : "Unlocked"}
+                                </span>
                             </div>
-                            <span id="sliderStatus" class="status-text">Unlocked</span>
-                        </div>
+                        </c:if>
                     </div>
 
                     <form id="exportForm" class="export-form" action="${pageContext.request.contextPath}/attendance/record/HR" method="post"> 
                         <input type="hidden" name="exportType" id="exportType"> 
                     </form>
-
-                    <c:if test="${not empty message or not empty error}">
-                        <div id="actionMessage" class="action-message" style="margin-top:10px;
-                             color: ${not empty message ? 'green' : 'red'};">
-                            <c:out value="${not empty message ? message : error}" />
-                        </div>
-                    </c:if>
 
                     <!-- ========== MAIN TABLE ========== --> 
                     <div class="table-wrapper">
@@ -150,20 +154,22 @@
                                         <td><c:out value="${att.source}" /></td> 
                                         <td><c:out value="${att.period}" /></td> 
                                         <td class="edit-col" style="display:none;"> 
-                                            <form class="actionForm" method="post" action="${pageContext.request.contextPath}/attendance/record/HR">
-                                                <input type="hidden" name="userIdEdit" value="${att.userId}">
-                                                <input type="hidden" name="employeeNameEdit" value="${att.employeeName}">
-                                                <input type="hidden" name="departmentEdit" value="${att.department}">
-                                                <input type="hidden" name="dateEdit" value="${att.date}">
-                                                <input type="hidden" name="checkInEdit" value="${att.checkIn}">
-                                                <input type="hidden" name="checkOutEdit" value="${att.checkOut}">
-                                                <input type="hidden" name="statusEdit" value="${att.status}">
-                                                <input type="hidden" name="sourceEdit" value="${att.source}">
-                                                <input type="hidden" name="periodEdit" value="${att.period}">
-                                                <input type="hidden" class="formAction" name="action" value="">
-                                                <button type="button" class="btn btn-update-row" onclick="submitAction(this, 'update')">Update</button>
-                                                <button type="button" class="btn btn-delete-row" onclick="submitAction(this, 'delete')">Delete</button>
-                                            </form>
+                                            <c:if test="${!att.isLocked}">
+                                                <form class="actionForm" method="post" action="${pageContext.request.contextPath}/attendance/record/HR">
+                                                    <input type="hidden" name="userIdEdit" value="${att.userId}">
+                                                    <input type="hidden" name="employeeNameEdit" value="${att.employeeName}">
+                                                    <input type="hidden" name="departmentEdit" value="${att.department}">
+                                                    <input type="hidden" name="dateEdit" value="${att.date}">
+                                                    <input type="hidden" name="checkInEdit" value="${att.checkIn}">
+                                                    <input type="hidden" name="checkOutEdit" value="${att.checkOut}">
+                                                    <input type="hidden" name="statusEdit" value="${att.status}">
+                                                    <input type="hidden" name="sourceEdit" value="${att.source}">
+                                                    <input type="hidden" name="periodEdit" value="${att.period}">
+                                                    <input type="hidden" class="formAction" name="action" value="">
+                                                    <button type="button" class="btn btn-update-row" onclick="submitAction(this, 'update')">Update</button>
+                                                    <button type="button" class="btn btn-delete-row" onclick="submitAction(this, 'delete')">Delete</button>
+                                                </form>
+                                            </c:if>
                                         </td>
                                     </tr> 
                                 </c:forEach> 
@@ -247,7 +253,35 @@
                 </form>
             </div>
         </div>
+        <script>
+            (function () {
+                    document.addEventListener('DOMContentLoaded', function () {
+                    // select dropdowns in the top nav; allow either .nav-item.dropdown or .nav-right .dropdown
+                    const dropdowns = document.querySelectorAll('.nav-item.dropdown, .nav-right .dropdown');
 
+                    dropdowns.forEach(drop => {
+                        const toggle = drop.querySelector('.dropdown-toggle');
+                        const menu = drop.querySelector('.dropdown-menu');
+
+                        if (!toggle || !menu)
+                            return;
+
+                        toggle.addEventListener('click', function (e) {
+                            e.preventDefault();      // ngăn default hành vi
+                            e.stopPropagation();     // tránh bubbling
+                            menu.classList.toggle('show');
+                        });
+
+                        // click ngoài dropdown thì đóng menu
+                        document.addEventListener('click', function (e) {
+                            if (!drop.contains(e.target)) {
+                                menu.classList.remove('show');
+                            }
+                        });
+                    });
+                });
+            })();
+        </script>
         <script src="${pageContext.request.contextPath}/assets/js/attendance-record-HR.js"></script> 
     </body> 
 </html>

@@ -21,6 +21,7 @@ public class AttendanceLogDto {
     private String status;
     private String source;
     private String period;
+    private boolean isLocked;
 
     public AttendanceLogDto() {
     }
@@ -110,6 +111,14 @@ public class AttendanceLogDto {
         return checkOut != null ? checkOut.toString().substring(0, 5) : "";
     }
 
+    public boolean isIsLocked() {
+        return isLocked;
+    }
+
+    public void setIsLocked(boolean isLocked) {
+        this.isLocked = isLocked;
+    }
+
     // -------- toString() để debug --------
     @Override
     public String toString() {
@@ -123,6 +132,7 @@ public class AttendanceLogDto {
                 + ", status='" + status + '\''
                 + ", source='" + source + '\''
                 + ", period='" + period + '\''
+                + ", isLocked='" + isLocked + '\''
                 + '}';
     }
 }

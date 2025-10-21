@@ -5,30 +5,57 @@ document.addEventListener("DOMContentLoaded", () => {
     const exportTypeInput = document.getElementById("exportType");
     const editBtn = document.getElementById("editBtn");
 
-    const sendToggleStatus = async (state) => {
-        try {
-            const res = await fetch(`${window.location.origin}/attendance/toggleStatus`, {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({status: state})
-            });
-            const data = await res.json();
-            console.log("Toggle status response:", data);
-        } catch (err) {
-            console.error("Error sending toggle status:", err);
-        }
-    };
-
     if (toggle) {
         toggle.addEventListener("change", () => {
-            const currentState = toggle.checked ? "Locked" : "Unlocked";
-            status.textContent = currentState;
-            sendToggleStatus(currentState);
+            const locked = toggle.checked;
+            const periodId = toggle.dataset.periodId;
+
+            const lockForm = document.createElement("form");
+            lockForm.method = "post";
+            lockForm.action = `${window.location.pathname}`;
+
+            // action
+            const actionInput = document.createElement("input");
+            actionInput.type = "hidden";
+            actionInput.name = "action";
+            actionInput.value = "toggleLock";
+            lockForm.appendChild(actionInput);
+
+            // locked
+            const lockedInput = document.createElement("input");
+            lockedInput.type = "hidden";
+            lockedInput.name = "locked";
+            lockedInput.value = locked;
+            lockForm.appendChild(lockedInput);
+
+            // periodId
+            const periodIdInput = document.createElement("input");
+            periodIdInput.type = "hidden";
+            periodIdInput.name = "periodId";
+            periodIdInput.value = periodId;
+            lockForm.appendChild(periodIdInput);
+
+            // clone filter hiện tại
+            const filterForm = document.getElementById("filterForm");
+            if (filterForm) {
+                const filterNames = ["employeeKeyword", "department", "startDate", "endDate", "status", "source", "periodSelect"];
+                filterNames.forEach(name => {
+                    const orig = filterForm.querySelector(`[name="${name}"]`);
+                    const clone = document.createElement("input");
+                    clone.type = "hidden";
+                    clone.name = name;
+                    clone.value = orig ? orig.value : "";
+                    lockForm.appendChild(clone);
+                });
+            }
+
+            document.body.appendChild(lockForm);
+            lockForm.submit();
         });
     }
 
     window.importAttendance = () => {
-        window.location.href = `${window.location.origin}/attendance/import`;
+        window.location.href = `${window.location.origin}/HRMS/attendance/import`;
     };
 
     [
@@ -51,17 +78,24 @@ document.addEventListener("DOMContentLoaded", () => {
         const editCols = document.querySelectorAll(".edit-col");
         const isEditing = editBtn.classList.toggle("active");
 
-        editCols.forEach(col => {
-            col.style.display = isEditing ? "" : "none";
-        });
+        editCols.forEach(col => col.style.display = isEditing ? "" : "none");
 
-        editBtn.textContent = isEditing ? "Done" : "Edit";
+        if (isEditing) {
+            editBtn.textContent = "Done";
+            editBtn.classList.remove("btn-edit");
+            editBtn.classList.add("btn-done");
+        } else {
+            editBtn.textContent = "Edit";
+            editBtn.classList.remove("btn-done");
+            editBtn.classList.add("btn-edit");
+        }
     };
 
     window.submitAction = (btn, actionType) => {
         const form = btn.closest("form");
         if (!form)
             return;
+
         const actionInput = form.querySelector(".formAction");
         if (actionInput)
             actionInput.value = actionType;
@@ -97,8 +131,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.submitEdit = () => {
         const form = document.getElementById("editForm");
-        form.action = "http://localhost:9999/HRMS/attendance/record/HR";
+        form.action = `${window.location.origin}/HRMS/attendance/record/HR`;
         form.method = "POST";
-        form.submit(); 
+        form.submit();
     };
 });

@@ -405,26 +405,27 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
     ) throws SQLException {
 
         StringBuilder sql = new StringBuilder("""
-    SELECT
-        u.id AS employee_id,
-        u.full_name AS employee_name,
-        d.name AS department_name,
-        DATE(al.checked_at) AS work_date,
-        MIN(CASE WHEN al.check_type='IN' THEN al.checked_at END) AS check_in,
-        MAX(CASE WHEN al.check_type='OUT' THEN al.checked_at END) AS check_out,
-        COALESCE(
-            MIN(CASE WHEN al.check_type='IN' THEN al.note END),
-            MAX(CASE WHEN al.check_type='OUT' THEN al.note END),
-            'No Records'
-        ) AS status,
-        GROUP_CONCAT(DISTINCT al.source SEPARATOR ', ') AS source,
-        tp.name AS period_name
-    FROM attendance_logs al
-    LEFT JOIN users u ON al.user_id = u.id
-    LEFT JOIN departments d ON u.department_id = d.id
-    LEFT JOIN timesheet_periods tp ON al.period_id = tp.id
-    WHERE 1=1
-""");
+        SELECT
+            u.id AS employee_id,
+            u.full_name AS employee_name,
+            d.name AS department_name,
+            DATE(al.checked_at) AS work_date,
+            MIN(CASE WHEN al.check_type='IN' THEN al.checked_at END) AS check_in,
+            MAX(CASE WHEN al.check_type='OUT' THEN al.checked_at END) AS check_out,
+            COALESCE(
+                MIN(CASE WHEN al.check_type='IN' THEN al.note END),
+                MAX(CASE WHEN al.check_type='OUT' THEN al.note END),
+                'No Records'
+            ) AS status,
+            GROUP_CONCAT(DISTINCT al.source SEPARATOR ', ') AS source,
+            tp.name AS period_name,
+            COALESCE(tp.is_locked, FALSE) AS period_locked
+        FROM attendance_logs al
+        LEFT JOIN users u ON al.user_id = u.id
+        LEFT JOIN departments d ON u.department_id = d.id
+        LEFT JOIN timesheet_periods tp ON al.period_id = tp.id
+        WHERE 1=1
+    """);
 
         List<Object> params = new ArrayList<>();
 
@@ -469,9 +470,9 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
         }
 
         sql.append("""
-    GROUP BY u.id, DATE(al.checked_at), u.full_name, d.name, tp.name
-    ORDER BY DATE(al.checked_at) DESC
-""");
+        GROUP BY u.id, DATE(al.checked_at), u.full_name, d.name, tp.name, tp.is_locked
+        ORDER BY DATE(al.checked_at) DESC
+    """);
 
         if (paged) {
             sql.append(" LIMIT ? OFFSET ?");
@@ -515,6 +516,8 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                     dto.setStatus(rs.getString("status"));
                     dto.setSource(rs.getString("source"));
                     dto.setPeriod(rs.getString("period_name"));
+
+                    dto.setIsLocked(rs.getBoolean("period_locked"));
 
                     results.add(dto);
                 }
