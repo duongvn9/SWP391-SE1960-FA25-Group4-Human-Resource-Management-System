@@ -184,9 +184,13 @@
 
                         .btn-action.btn-reset-password {
                             background-color: #6c757d;
+                        .btn-action.btn-reset-password {
+                            background-color: #6c757d;
                             color: #fff;
                         }
 
+                        .btn-action.btn-reset-password:hover {
+                            background-color: #5a6268;
                         .btn-action.btn-reset-password:hover {
                             background-color: #5a6268;
                         }
@@ -214,6 +218,7 @@
                             flex: 0 0 auto;
                             white-space: nowrap;
                             order: 2;
+                            order: 2;
                         }
 
                         .pagination {
@@ -221,6 +226,7 @@
                             flex: 1 1 auto;
                             display: flex;
                             justify-content: center;
+                            order: 1;
                             order: 1;
                         }
 
@@ -380,6 +386,28 @@
                             transform: rotate(180deg);
                         }
 
+                        .clickable-header {
+                            user-select: none;
+                            transition: background-color 0.2s ease;
+                            padding: 0.5rem;
+                            margin: -0.5rem;
+                            border-radius: 6px;
+                        }
+
+                        .clickable-header:hover {
+                            background-color: rgba(0, 0, 0, 0.05);
+                        }
+
+                        .clickable-header .toggle-icon {
+                            transition: transform 0.3s ease;
+                            font-size: 1.2rem;
+                            color: #667eea;
+                        }
+
+                        .clickable-header[aria-expanded="true"] .toggle-icon {
+                            transform: rotate(180deg);
+                        }
+
                         /* Responsive Design */
                         @media (max-width: 1023px) {
                             .table .last-login-col {
@@ -439,7 +467,7 @@
 
                                 <div class="d-flex justify-content-between align-items-center">
                                     <h2 class="mb-0">Account Management</h2>
-                                    <c:if test="${isAdmin}">
+                                    <c:if test="${canCreateAccount}">
                                         <a href="${pageContext.request.contextPath}/employees/accounts/create"
                                             class="btn btn-primary">
                                             <i class="fas fa-plus me-2"></i>Add New Account
@@ -468,8 +496,23 @@
                             </c:if>
 
                             <!-- Users Without Account Card -->
-                            <c:if test="${isAdmin && not empty usersWithoutAccount}">
+                            <c:if test="${canCreateAccount && not empty usersWithoutAccount}">
                                 <div class="alert alert-info" role="alert">
+                                    <div class="clickable-header" style="cursor: pointer;" data-bs-toggle="collapse"
+                                        data-bs-target="#usersWithoutAccountCollapse" aria-expanded="false"
+                                        aria-controls="usersWithoutAccountCollapse">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <h5 class="mb-0">
+                                                <i class="fas fa-user-plus me-2"></i>Users Without Account
+                                                <span class="badge bg-primary">${fn:length(usersWithoutAccount)}</span>
+                                            </h5>
+                                            <i class="fas fa-chevron-down toggle-icon"></i>
+                                        </div>
+                                        <p class="mb-0 small">The following users don't have accounts yet. Click on a
+                                            user
+                                            to create an account.</p>
+                                    </div>
+                                    <div class="collapse mt-2" id="usersWithoutAccountCollapse">
                                     <div class="clickable-header" style="cursor: pointer;" data-bs-toggle="collapse"
                                         data-bs-target="#usersWithoutAccountCollapse" aria-expanded="false"
                                         aria-controls="usersWithoutAccountCollapse">
@@ -637,7 +680,6 @@
                                                         <th>Username</th>
                                                         <th>Email Login</th>
                                                         <th>User (Full Name)</th>
-                                                        <th>Role in system</th>
                                                         <th>Department</th>
                                                         <th>Position</th>
                                                         <th>Status</th>
@@ -652,16 +694,6 @@
                                                             <td>${account.emailLogin != null ? account.emailLogin : '-'}
                                                             </td>
                                                             <td>${account.userFullName}</td>
-                                                            <td>
-                                                                <c:choose>
-                                                                    <c:when test="${account.roleName != null}">
-                                                                        ${account.roleName}
-                                                                    </c:when>
-                                                                    <c:otherwise>
-                                                                        <span class="text-muted">-</span>
-                                                                    </c:otherwise>
-                                                                </c:choose>
-                                                            </td>
                                                             <td>${account.departmentName != null ?
                                                                 account.departmentName :
                                                                 '-'}
@@ -691,12 +723,14 @@
                                                                         data-action="view" title="View Details">
                                                                         <i class="fas fa-eye"></i>
                                                                     </button>
-                                                                    <c:if test="${isAdmin}">
+                                                                    <c:if test="${canCreateAccount}">
                                                                         <button class="btn-action btn-edit"
                                                                             data-account-id="${account.id}"
                                                                             data-action="edit" title="Edit Account">
                                                                             <i class="fas fa-edit"></i>
                                                                         </button>
+                                                                    </c:if>
+                                                                    <c:if test="${canResetPassword}">
                                                                         <button class="btn-action btn-reset-password"
                                                                             data-account-id="${account.id}"
                                                                             data-username="${fn:escapeXml(account.username)}"
@@ -895,19 +929,13 @@
                                                 name="emailLogin" required>
                                         </div>
 
-                                        <!-- Role Selection -->
+                                        <!-- Note about permissions -->
                                         <div class="mb-3">
-                                            <label for="edit-roleId" class="form-label">
-                                                Role in system<span class="text-danger">*</span>
-                                            </label>
-                                            <select class="form-select" id="edit-roleId" name="roleId" required>
-                                                <option value="">-- Select role --</option>
-                                                <c:forEach var="role" items="${roles}">
-                                                    <option value="${role.id}">
-                                                        ${role.name} (${role.code})
-                                                    </option>
-                                                </c:forEach>
-                                            </select>
+                                            <div class="alert alert-info">
+                                                <i class="fas fa-info-circle me-2"></i>
+                                                <strong>Note:</strong> Account permissions are determined by the user's
+                                                position.
+                                            </div>
                                         </div>
 
                                         <!-- Status -->
@@ -1004,7 +1032,7 @@
                                         aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body pt-2" id="successModalBody">
-                                    Password reset successfully!
+                                    Operation completed successfully!
                                 </div>
                                 <div class="modal-footer border-0">
                                     <button type="button" class="btn btn-success" data-bs-dismiss="modal">
@@ -1015,8 +1043,52 @@
                         </div>
                     </div>
 
+                    <!-- Error Modal -->
+                    <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel"
+                        aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header border-0 pb-0">
+                                    <h5 class="modal-title text-danger" id="errorModalLabel">
+                                        <i class="fas fa-exclamation-circle me-2"></i>Error
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body pt-2" id="errorModalBody">
+                                    An error occurred. Please try again.
+                                </div>
+                                <div class="modal-footer border-0">
+                                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">
+                                        <i class="fas fa-times me-1"></i>Close
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <script>
                         const contextPath = '<c:out value="${pageContext.request.contextPath}"/>';
+
+                        // Helper function to show success modal
+                        function showSuccessModal(message, reloadOnClose = true) {
+                            document.getElementById('successModalBody').textContent = message;
+                            const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                            successModal.show();
+
+                            if (reloadOnClose) {
+                                document.getElementById('successModal').addEventListener('hidden.bs.modal', function () {
+                                    window.location.reload();
+                                }, { once: true });
+                            }
+                        }
+
+                        // Helper function to show error modal
+                        function showErrorModal(message) {
+                            document.getElementById('errorModalBody').textContent = message;
+                            const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+                            errorModal.show();
+                        }
 
                         function goToPage(page) {
                             const form = document.getElementById('filterForm');
@@ -1083,12 +1155,12 @@
                                         const modal = new bootstrap.Modal(document.getElementById('viewAccountModal'));
                                         modal.show();
                                     } else {
-                                        alert('Failed to load account details: ' + (data.message || 'Unknown error'));
+                                        showErrorModal('Failed to load account details: ' + (data.message || 'Unknown error'));
                                     }
                                 })
                                 .catch(error => {
                                     console.error('Error:', error);
-                                    alert('Failed to load account details');
+                                    showErrorModal('Failed to load account details');
                                 });
                         }
 
@@ -1118,21 +1190,16 @@
                                         document.getElementById('edit-emailLogin').value = account.emailLogin || '';
                                         document.getElementById('edit-status').value = account.status || 'active';
 
-                                        // Set role if available (for future implementation)
-                                        if (account.roleId) {
-                                            document.getElementById('edit-roleId').value = account.roleId;
-                                        }
-
                                         // Show modal
                                         const modal = new bootstrap.Modal(document.getElementById('editAccountModal'));
                                         modal.show();
                                     } else {
-                                        alert('Failed to load account details: ' + (data.message || 'Unknown error'));
+                                        showErrorModal('Failed to load account details: ' + (data.message || 'Unknown error'));
                                     }
                                 })
                                 .catch(error => {
                                     console.error('Error:', error);
-                                    alert('Failed to load account details');
+                                    showErrorModal('Failed to load account details');
                                 });
                         }
 
@@ -1164,6 +1231,8 @@
                                         case 'edit':
                                             editAccount(accountId);
                                             break;
+                                        case 'reset-password':
+                                            resetPassword(accountId, username);
                                         case 'reset-password':
                                             resetPassword(accountId, username);
                                             break;
@@ -1212,18 +1281,30 @@
                                     .then(response => response.json())
                                     .then(data => {
                                         if (data.success) {
-                                            // Close modal
+                                            // Close edit modal
                                             const modal = bootstrap.Modal.getInstance(document.getElementById('editAccountModal'));
                                             modal.hide();
-                                            // Reload page
-                                            window.location.reload();
+                                            // Show success modal and reload
+                                            showSuccessModal('Account updated successfully!');
                                         } else {
-                                            alert('Failed to update account: ' + (data.message || 'Unknown error'));
+                                            // Close edit modal first
+                                            const modal = bootstrap.Modal.getInstance(document.getElementById('editAccountModal'));
+                                            modal.hide();
+                                            // Show error modal
+                                            setTimeout(() => {
+                                                showErrorModal(data.message || 'Failed to update account');
+                                            }, 300);
                                         }
                                     })
                                     .catch(error => {
                                         console.error('Error:', error);
-                                        alert('Failed to update account');
+                                        // Close edit modal first
+                                        const modal = bootstrap.Modal.getInstance(document.getElementById('editAccountModal'));
+                                        modal.hide();
+                                        // Show error modal
+                                        setTimeout(() => {
+                                            showErrorModal('Failed to update account. Please try again.');
+                                        }, 300);
                                     });
                             });
 
@@ -1261,23 +1342,27 @@
                                             // Close reset password modal
                                             const resetModal = bootstrap.Modal.getInstance(document.getElementById('resetPasswordModal'));
                                             resetModal.hide();
-
-                                            // Show success modal
-                                            const successModal = new bootstrap.Modal(document.getElementById('successModal'));
-                                            document.getElementById('successModalBody').textContent = 'Password reset successfully!';
-                                            successModal.show();
-
-                                            // Reload page when success modal is closed
-                                            document.getElementById('successModal').addEventListener('hidden.bs.modal', function () {
-                                                window.location.reload();
-                                            }, { once: true });
+                                            // Show success modal and reload
+                                            showSuccessModal('Password reset successfully!');
                                         } else {
-                                            alert('Failed to reset password: ' + (data.message || 'Unknown error'));
+                                            // Close reset password modal first
+                                            const resetModal = bootstrap.Modal.getInstance(document.getElementById('resetPasswordModal'));
+                                            resetModal.hide();
+                                            // Show error modal
+                                            setTimeout(() => {
+                                                showErrorModal(data.message || 'Failed to reset password');
+                                            }, 300);
                                         }
                                     })
                                     .catch(error => {
                                         console.error('Error:', error);
-                                        alert('Failed to reset password');
+                                        // Close reset password modal first
+                                        const resetModal = bootstrap.Modal.getInstance(document.getElementById('resetPasswordModal'));
+                                        resetModal.hide();
+                                        // Show error modal
+                                        setTimeout(() => {
+                                            showErrorModal('Failed to reset password. Please try again.');
+                                        }, 300);
                                     });
                             });
                         });

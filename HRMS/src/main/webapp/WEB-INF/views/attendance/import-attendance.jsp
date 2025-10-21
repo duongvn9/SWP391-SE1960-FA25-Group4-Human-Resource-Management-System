@@ -91,11 +91,31 @@
                             <!-- Pagination -->
                             <c:if test="${totalPages > 1}">
                                 <div class="pagination preview-pagination">
+                                    <!-- Previous -->
                                     <c:if test="${currentPage > 1}">
                                         <a href="?action=Preview&page=${currentPage - 1}" class="page-btn prev-btn">Previous</a>
                                     </c:if>
 
-                                    <c:forEach var="i" begin="1" end="${totalPages}">
+                                    <!-- Tính startPage và endPage -->
+                                    <c:set var="startPage" value="${currentPage - 1}" />
+                                    <c:set var="endPage" value="${currentPage + 1}" />
+
+                                    <c:if test="${startPage < 1}">
+                                        <c:set var="startPage" value="1" />
+                                    </c:if>
+
+                                    <c:if test="${endPage > totalPages}">
+                                        <c:set var="endPage" value="${totalPages}" />
+                                    </c:if>
+
+                                    <!-- Trang đầu nếu cần -->
+                                    <c:if test="${startPage > 1}">
+                                        <a href="?action=Preview&page=1" class="page-btn">1</a>
+                                        <span>...</span>
+                                    </c:if>
+
+                                    <!-- Vòng lặp hiển thị các trang xung quanh currentPage -->
+                                    <c:forEach var="i" begin="${startPage}" end="${endPage}">
                                         <c:choose>
                                             <c:when test="${i == currentPage}">
                                                 <a href="javascript:void(0)" class="page-btn current-page">${i}</a>
@@ -106,6 +126,13 @@
                                         </c:choose>
                                     </c:forEach>
 
+                                    <!-- Trang cuối nếu cần -->
+                                    <c:if test="${endPage < totalPages}">
+                                        <span>...</span>
+                                        <a href="?action=Preview&page=${totalPages}" class="page-btn">${totalPages}</a>
+                                    </c:if>
+
+                                    <!-- Next -->
                                     <c:if test="${currentPage < totalPages}">
                                         <a href="?action=Preview&page=${currentPage + 1}" class="page-btn next-btn">Next</a>
                                     </c:if>
