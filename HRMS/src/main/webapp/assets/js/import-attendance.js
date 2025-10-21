@@ -1,15 +1,13 @@
 function showTab(tabId) {
-// Ẩn tất cả tab
     document.querySelectorAll(".tab-content").forEach(tab => {
         tab.style.display = "none";
     });
-    // Hiển thị tab được chọn
+
     const selectedTab = document.getElementById(tabId);
     if (selectedTab) {
         selectedTab.style.display = "block";
     }
 
-// Cập nhật trạng thái active cho button
     document.querySelectorAll(".tab-btn").forEach(btn => {
         btn.classList.remove("active");
         btn.setAttribute("aria-selected", "false");
@@ -21,14 +19,12 @@ function showTab(tabId) {
     }
 }
 
-// ==== Gán sự kiện và hiển thị tab mặc định ====
 document.addEventListener("DOMContentLoaded", () => {
-// Gán click event cho tất cả button
     document.querySelectorAll(".tab-btn").forEach(btn => {
         const tabId = btn.id.replace("-btn", "");
         btn.addEventListener("click", () => showTab(tabId));
     });
-    // Hiển thị Upload tab làm mặc định
+    
     showTab("upload");
 });
 
@@ -41,7 +37,6 @@ document.addEventListener("DOMContentLoaded", function () {
     let isMouseDown = false, startCell = null;
     const selectedCells = new Set();
 
-    // Thêm hàng mới khi Enter
     table.addEventListener("keydown", function (e) {
         if (e.key === "Enter") {
             e.preventDefault();
@@ -54,7 +49,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // Xóa ô chọn
     table.addEventListener("keydown", function (e) {
         if (e.key === "Delete" || e.key === "Backspace") {
             if (selectedCells.size > 0) {
@@ -68,7 +62,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // Auto-resize
     table.addEventListener("input", function (e) {
         const cell = e.target;
         if (cell.tagName === "TD") {
@@ -79,7 +72,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // Chọn ô bằng chuột
     table.addEventListener("mousedown", function (e) {
         if (e.target.tagName === "TD") {
             clearSelection();
@@ -142,12 +134,10 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!status)
                 errors.push(`Row ${rowNum}: Status cannot be empty.`);
 
-            // Validate định dạng Date
             if (dateStr && !dateRegex.test(dateStr)) {
                 errors.push(`Row ${rowNum}: Date must be in dd/MM/yyyy format.`);
             }
 
-            // Validate định dạng Time
             if (checkIn && !timeRegex.test(checkIn)) {
                 errors.push(`Row ${rowNum}: Check-in must be in H:mm format.`);
             }
@@ -171,12 +161,10 @@ document.addEventListener("DOMContentLoaded", function () {
             return; // dừng submit
         }
 
-        // Nếu hợp lệ, chuyển dữ liệu sang backend
         manualDataInput.value = JSON.stringify(data);
         form.submit();
     });
 
-    // Tạo row mới
     function createRow() {
         const newRow = document.createElement("tr");
         for (let i = 0; i < 5; i++) {
