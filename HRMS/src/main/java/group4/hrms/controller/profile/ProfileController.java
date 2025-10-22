@@ -167,7 +167,10 @@ public class ProfileController extends HttpServlet {
                 // Set profile with user's input (not DB values) to show what they entered
                 UserProfile profileWithInput = createProfileFromDto(currentProfile, dto);
                 req.setAttribute("profile", profileWithInput);
-                req.setAttribute("csrfToken", generateCsrfToken());
+                // Generate new CSRF token and save to session
+                String newCsrfToken = generateCsrfToken();
+                req.getSession().setAttribute("_csrf_token", newCsrfToken);
+                req.setAttribute("csrfToken", newCsrfToken);
                 logger.info("Forwarding back to edit page with errors");
                 req.getRequestDispatcher("/WEB-INF/views/profile/edit-profile.jsp").forward(req, resp);
                 return;
@@ -182,7 +185,10 @@ public class ProfileController extends HttpServlet {
                 req.setAttribute("error", clearFieldError);
                 UserProfile profileWithInput = createProfileFromDto(currentProfile, dto);
                 req.setAttribute("profile", profileWithInput);
-                req.setAttribute("csrfToken", generateCsrfToken());
+                // Generate new CSRF token and save to session
+                String newCsrfToken = generateCsrfToken();
+                req.getSession().setAttribute("_csrf_token", newCsrfToken);
+                req.setAttribute("csrfToken", newCsrfToken);
                 req.getRequestDispatcher("/WEB-INF/views/profile/edit-profile.jsp").forward(req, resp);
                 return;
             }
@@ -194,7 +200,10 @@ public class ProfileController extends HttpServlet {
                     req.setAttribute("error", "CCCD already exists");
                     UserProfile profileWithInput = createProfileFromDto(currentProfile, dto);
                     req.setAttribute("profile", profileWithInput);
-                    req.setAttribute("csrfToken", generateCsrfToken());
+                    // Generate new CSRF token and save to session
+                    String newCsrfToken = generateCsrfToken();
+                    req.getSession().setAttribute("_csrf_token", newCsrfToken);
+                    req.setAttribute("csrfToken", newCsrfToken);
                     req.getRequestDispatcher("/WEB-INF/views/profile/edit-profile.jsp").forward(req, resp);
                     return;
                 }
@@ -206,7 +215,10 @@ public class ProfileController extends HttpServlet {
                     req.setAttribute("error", "Phone number already exists");
                     UserProfile profileWithInput = createProfileFromDto(currentProfile, dto);
                     req.setAttribute("profile", profileWithInput);
-                    req.setAttribute("csrfToken", generateCsrfToken());
+                    // Generate new CSRF token and save to session
+                    String newCsrfToken = generateCsrfToken();
+                    req.getSession().setAttribute("_csrf_token", newCsrfToken);
+                    req.setAttribute("csrfToken", newCsrfToken);
                     req.getRequestDispatcher("/WEB-INF/views/profile/edit-profile.jsp").forward(req, resp);
                     return;
                 }
@@ -249,7 +261,10 @@ public class ProfileController extends HttpServlet {
                 logger.error("Failed to update profile for user_id: {}", currentProfile.getUserId());
                 req.setAttribute("error", "Failed to update profile");
                 req.setAttribute("profile", currentProfile);
-                req.setAttribute("csrfToken", generateCsrfToken());
+                // Generate new CSRF token and save to session
+                String newCsrfToken = generateCsrfToken();
+                req.getSession().setAttribute("_csrf_token", newCsrfToken);
+                req.setAttribute("csrfToken", newCsrfToken);
                 req.getRequestDispatcher("/WEB-INF/views/profile/edit-profile.jsp").forward(req, resp);
             }
             
