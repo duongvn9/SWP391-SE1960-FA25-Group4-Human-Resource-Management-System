@@ -179,8 +179,16 @@
                                                     <input type="hidden" name="checkOutEdit" value="${att.checkOut}">
                                                     <input type="hidden" name="statusEdit" value="${att.status}">
                                                     <input type="hidden" name="sourceEdit" value="${att.source}">
-                                                    <input type="hidden" name="periodEdit" 
-                                                           value="${att.period}">
+                                                    <input type="hidden" name="periodEdit" value="${att.period}">
+
+                                                    <input type="hidden" name="employeeKeyword" value="${employeeKeyword}">
+                                                    <input type="hidden" name="department" value="${department}">
+                                                    <input type="hidden" name="startDate" value="${startDate}">
+                                                    <input type="hidden" name="endDate" value="${endDate}">
+                                                    <input type="hidden" name="status" value="${status}">
+                                                    <input type="hidden" name="source" value="${source}">
+                                                    <input type="hidden" name="periodSelect" value="${selectedPeriod != null ? selectedPeriod.id : ''}">
+
                                                     <input type="hidden" class="formAction" name="action" value="">
                                                     <button type="button" class="btn btn-update-row" onclick="submitAction(this, 'update')">Update</button>
                                                     <button type="button" class="btn btn-delete-row" onclick="submitAction(this, 'delete')">Delete</button>
@@ -267,6 +275,15 @@
 
                     <input type="hidden" name="checkInOld" id="checkInOld">
                     <input type="hidden" name="checkOutOld" id="checkOutOld">
+
+                    <!-- Thêm filter -->
+                    <input type="hidden" name="employeeKeyword" value="${employeeKeyword}">
+                    <input type="hidden" name="department" value="${department}">
+                    <input type="hidden" name="startDate" value="${startDate}">
+                    <input type="hidden" name="endDate" value="${endDate}">
+                    <input type="hidden" name="status" value="${status}">
+                    <input type="hidden" name="source" value="${source}">
+                    <input type="hidden" name="periodSelect" value="${selectedPeriod != null ? selectedPeriod.id : ''}">
 
                     <label for="modalEmpId">Employee ID:</label>
                     <input type="text" name="userIdUpdate" id="modalEmpId" readonly>
