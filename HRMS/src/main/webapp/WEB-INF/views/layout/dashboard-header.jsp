@@ -114,7 +114,7 @@
                 </li>
                 <li><a class="dropdown-item" href="${pageContext.request.contextPath}/">
                         <i class="fas fa-home"></i> Back to Home</a></li>
-                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/logout">
+                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/auth/logout">
                         <i class="fas fa-sign-out-alt"></i> Logout</a></li>
             </ul>
         </div>
