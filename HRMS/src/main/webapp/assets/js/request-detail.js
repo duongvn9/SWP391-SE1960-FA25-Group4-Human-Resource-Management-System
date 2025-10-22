@@ -34,9 +34,6 @@ function openApprovalModal(requestId, requestTitle, requestStatus) {
         rejectBtn.checked = true;
         // Update modal title
         document.getElementById('approvalModalLabel').innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Override Request';
-        // Reason is required for override
-        document.getElementById('reasonRequired').style.display = 'inline';
-        document.getElementById('approvalReason').placeholder = 'Enter override reason (required)';
     } else {
         // Show both options for PENDING requests
         acceptBtn.style.display = 'inline-block';
@@ -44,8 +41,6 @@ function openApprovalModal(requestId, requestTitle, requestStatus) {
         acceptBtn.checked = true;
         // Reset modal title
         document.getElementById('approvalModalLabel').innerHTML = '<i class="fas fa-clipboard-check me-2"></i>Approve Request';
-        document.getElementById('reasonRequired').style.display = 'none';
-        document.getElementById('approvalReason').placeholder = 'Enter approval reason (optional)';
     }
 
     // Reset validation state
@@ -67,8 +62,8 @@ function submitApproval() {
     const reason = document.getElementById('approvalReason').value.trim();
     const reasonField = document.getElementById('approvalReason');
 
-    // Validate: reason is required for rejection
-    if (decision === 'reject' && !reason) {
+    // Validate: reason is ALWAYS required for both accept and reject
+    if (!reason) {
         reasonField.classList.add('is-invalid');
         document.getElementById('reasonError').style.display = 'block';
         return;
@@ -232,28 +227,6 @@ function showMessage(message, type) {
  * Initialize page functionality when DOM is ready
  */
 document.addEventListener('DOMContentLoaded', function () {
-    // Handle decision change in approval modal
-    const decisionInputs = document.querySelectorAll('input[name="decision"]');
-    decisionInputs.forEach(input => {
-        input.addEventListener('change', function () {
-            const reasonRequired = document.getElementById('reasonRequired');
-            const reasonField = document.getElementById('approvalReason');
-            const reasonError = document.getElementById('reasonError');
-
-            if (this.value === 'reject') {
-                // Show required indicator for rejection
-                reasonRequired.style.display = 'inline';
-                reasonField.placeholder = 'Enter rejection reason (required)';
-            } else {
-                // Hide required indicator for acceptance
-                reasonRequired.style.display = 'none';
-                reasonField.placeholder = 'Enter approval reason (optional)';
-                reasonField.classList.remove('is-invalid');
-                reasonError.style.display = 'none';
-            }
-        });
-    });
-
     // Clear validation when user starts typing in reason field
     const reasonField = document.getElementById('approvalReason');
     if (reasonField) {

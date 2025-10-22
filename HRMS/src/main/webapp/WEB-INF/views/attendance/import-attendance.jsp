@@ -4,24 +4,20 @@
     <head>
         <title>Import Attendance</title>
         <jsp:include page="../layout/head.jsp">
-            <jsp:param name="pageTitle" value="attendance-record-emp" />
+            <jsp:param name="pageTitle" value="Import Attendance - HRMS" />
+            <jsp:param name="pageCss" value="import-attendance.css" />
         </jsp:include>
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/import-attendance.css" />
-        <script src="${pageContext.request.contextPath}/assets/js/import-attendance.js"></script>
     </head>
     <body class="import-attendance-page">
-        <!-- Header -->
-        <jsp:include page="../layout/dashboard-header.jsp">
-            <jsp:param name="pageTitle" value="attendance-record-emp" />
+        <jsp:include page="../layout/sidebar.jsp">
+            <jsp:param name="currentPage" value="attendance-record-emp" />
         </jsp:include>
 
-        <!-- Main wrapper: sidebar + content -->
-        <div class="main-wrapper">
-            <jsp:include page="../layout/sidebar.jsp">
-                <jsp:param name="currentPage" value="attendance-record-emp" />
-            </jsp:include>
+        <!-- Main wrapper: header + content -->
+        <div class="main-content" id="main-content">
+            <jsp:include page="../layout/dashboard-header.jsp" />
 
-            <div class="content-area main-content">
+            <div class="content-area">
                 <h2 class="page-title">Import Attendance</h2>
 
                 <!-- Tabs -->
@@ -95,11 +91,31 @@
                             <!-- Pagination -->
                             <c:if test="${totalPages > 1}">
                                 <div class="pagination preview-pagination">
+                                    <!-- Previous -->
                                     <c:if test="${currentPage > 1}">
                                         <a href="?action=Preview&page=${currentPage - 1}" class="page-btn prev-btn">Previous</a>
                                     </c:if>
 
-                                    <c:forEach var="i" begin="1" end="${totalPages}">
+                                    <!-- Tính startPage và endPage -->
+                                    <c:set var="startPage" value="${currentPage - 1}" />
+                                    <c:set var="endPage" value="${currentPage + 1}" />
+
+                                    <c:if test="${startPage < 1}">
+                                        <c:set var="startPage" value="1" />
+                                    </c:if>
+
+                                    <c:if test="${endPage > totalPages}">
+                                        <c:set var="endPage" value="${totalPages}" />
+                                    </c:if>
+
+                                    <!-- Trang đầu nếu cần -->
+                                    <c:if test="${startPage > 1}">
+                                        <a href="?action=Preview&page=1" class="page-btn">1</a>
+                                        <span>...</span>
+                                    </c:if>
+
+                                    <!-- Vòng lặp hiển thị các trang xung quanh currentPage -->
+                                    <c:forEach var="i" begin="${startPage}" end="${endPage}">
                                         <c:choose>
                                             <c:when test="${i == currentPage}">
                                                 <a href="javascript:void(0)" class="page-btn current-page">${i}</a>
@@ -110,6 +126,13 @@
                                         </c:choose>
                                     </c:forEach>
 
+                                    <!-- Trang cuối nếu cần -->
+                                    <c:if test="${endPage < totalPages}">
+                                        <span>...</span>
+                                        <a href="?action=Preview&page=${totalPages}" class="page-btn">${totalPages}</a>
+                                    </c:if>
+
+                                    <!-- Next -->
                                     <c:if test="${currentPage < totalPages}">
                                         <a href="?action=Preview&page=${currentPage + 1}" class="page-btn next-btn">Next</a>
                                     </c:if>
@@ -156,5 +179,7 @@
                 </div>
             </div>
         </div>
+        <script src="${pageContext.request.contextPath}/assets/js/import-attendance.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     </body>
 </html>

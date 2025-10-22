@@ -80,15 +80,7 @@ public class UserAccountsServlet extends HttpServlet {
                         json.append("\"id\":").append(accountId).append(",");
                         json.append("\"username\":\"").append(escapeJson(rs.getString("username"))).append("\",");
                         json.append("\"emailLogin\":\"").append(escapeJson(rs.getString("email_login"))).append("\",");
-                        json.append("\"status\":\"").append(escapeJson(rs.getString("status"))).append("\",");
-
-                        // Get role name from account_roles if table exists
-                        String roleName = getRoleName(accountId, conn);
-                        if (roleName != null) {
-                            json.append("\"roleName\":\"").append(escapeJson(roleName)).append("\"");
-                        } else {
-                            json.append("\"roleName\":null");
-                        }
+                        json.append("\"status\":\"").append(escapeJson(rs.getString("status"))).append("\"");
 
                         json.append("}");
                     }
@@ -104,29 +96,6 @@ public class UserAccountsServlet extends HttpServlet {
             logger.error("Error fetching user accounts", e);
             out.write("{\"success\":false,\"message\":\"An error occurred: " + escapeJson(e.getMessage()) + "\"}");
         }
-    }
-
-    private String getRoleName(long accountId, java.sql.Connection conn) {
-        // Try to get role name from account_roles table
-        // If table doesn't exist, return null
-        String sql = "SELECT r.name FROM account_roles ar " +
-                "INNER JOIN roles r ON ar.role_id = r.id " +
-                "WHERE ar.account_id = ? " +
-                "ORDER BY r.priority DESC LIMIT 1";
-
-        try (java.sql.PreparedStatement stmt = conn.prepareStatement(sql);) {
-            stmt.setLong(1, accountId);
-            try (java.sql.ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getString("name");
-                }
-            }
-        } catch (Exception e) {
-            // Table might not exist yet, return null
-            logger.debug("Could not fetch role for account {}: {}", accountId, e.getMessage());
-        }
-
-        return null;
     }
 
     private String escapeJson(String value) {

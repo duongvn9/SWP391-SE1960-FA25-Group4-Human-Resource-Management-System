@@ -21,11 +21,30 @@ public class AttendanceLogDto {
     private String status;
     private String source;
     private String period;
+    private boolean isLocked;
+    
+    private transient LocalTime oldCheckIn;
+    private transient LocalTime oldCheckOut;
 
     public AttendanceLogDto() {
     }
 
-    // -------- Getter & Setter --------
+    public LocalTime getOldCheckIn() {
+        return oldCheckIn;
+    }
+
+    public void setOldCheckIn(LocalTime oldCheckIn) {
+        this.oldCheckIn = oldCheckIn;
+    }
+
+    public LocalTime getOldCheckOut() {
+        return oldCheckOut;
+    }
+
+    public void setOldCheckOut(LocalTime oldCheckOut) {
+        this.oldCheckOut = oldCheckOut;
+    }
+
     public Long getUserId() {
         return userId;
     }
@@ -110,7 +129,14 @@ public class AttendanceLogDto {
         return checkOut != null ? checkOut.toString().substring(0, 5) : "";
     }
 
-    // -------- toString() để debug --------
+    public boolean isIsLocked() {
+        return isLocked;
+    }
+
+    public void setIsLocked(boolean isLocked) {
+        this.isLocked = isLocked;
+    }
+
     @Override
     public String toString() {
         return "AttendanceLogDto{"
@@ -123,6 +149,9 @@ public class AttendanceLogDto {
                 + ", status='" + status + '\''
                 + ", source='" + source + '\''
                 + ", period='" + period + '\''
+                + ", isLocked='" + isLocked + '\''
+                + ", oldCheckIn='" + oldCheckIn + '\''
+                + ", oldCheckout='" + oldCheckOut + '\''
                 + '}';
     }
 }

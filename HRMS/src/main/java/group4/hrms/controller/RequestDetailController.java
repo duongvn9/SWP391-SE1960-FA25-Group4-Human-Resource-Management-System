@@ -145,6 +145,9 @@ public class RequestDetailController extends HttpServlet {
 
             RequestDto requestDto = requestDtoOpt.get();
 
+            // Calculate status badge class for UI display
+            requestDto.calculateStatusBadgeClass();
+
             // Ensure requestEntity has parsed detail objects for permission check
             // RequestDao.findById() may not parse JSON detail, so we manually trigger it
             if (requestEntity.getDetailJson() != null && !requestEntity.getDetailJson().trim().isEmpty()) {

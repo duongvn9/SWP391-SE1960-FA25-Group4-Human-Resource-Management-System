@@ -21,7 +21,7 @@ public class LoginServlet extends HttpServlet {
 
     private static final Logger logger = LoggerFactory.getLogger(LoginServlet.class);
     private final AuthService authService;
-    
+
     public LoginServlet() {
         this.authService = new AuthService();
     }
@@ -75,8 +75,8 @@ public class LoginServlet extends HttpServlet {
             String password = request.getParameter("password");
 
             // Validate input
-            if (username == null || username.trim().isEmpty() || 
-                password == null || password.trim().isEmpty()) {
+            if (username == null || username.trim().isEmpty() ||
+                    password == null || password.trim().isEmpty()) {
                 request.setAttribute("error", "Username and password are required");
                 request.setAttribute("username", username);
                 forwardToLoginPage(request, response);
@@ -91,7 +91,7 @@ public class LoginServlet extends HttpServlet {
             if (result.isSuccess()) {
                 // Create session
                 SessionUtil.createUserSession(request, result.getAccount(), result.getUser());
-                
+
                 logger.info("User {} logged in successfully", username);
 
                 // Check for original URL to redirect after login
@@ -136,7 +136,7 @@ public class LoginServlet extends HttpServlet {
     private boolean validateCsrfToken(HttpServletRequest request) {
         String sessionToken = (String) request.getSession().getAttribute("_csrf_token");
         String requestToken = request.getParameter("_csrf_token");
-        
+
         return sessionToken != null && sessionToken.equals(requestToken);
     }
 
@@ -145,7 +145,7 @@ public class LoginServlet extends HttpServlet {
      */
     private void forwardToLoginPage(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         // Generate new CSRF token
         String csrfToken = generateCsrfToken();
         request.getSession().setAttribute("_csrf_token", csrfToken);

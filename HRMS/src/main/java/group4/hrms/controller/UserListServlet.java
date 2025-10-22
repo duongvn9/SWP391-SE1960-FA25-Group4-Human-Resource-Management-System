@@ -44,11 +44,9 @@ public class UserListServlet extends HttpServlet {
 
             logger.info("User is logged in, proceeding with user list");
 
-            // Check authorization - Only ADMIN, HRM, HR can access
-            String userRoles = SessionUtil.getUserRoles(request);
-            // TODO: Implement proper role checking after roles are set in session
-            // Temporarily allow all logged-in users for testing
-            if (userRoles != null && !hasRequiredRole(userRoles)) {
+            // Check authorization - Only ADMIN, HRM, HR, Dept Manager can access
+            if (!group4.hrms.util.PermissionUtil.canViewUserList(request)) {
+                logger.warn("User does not have permission to view user list");
                 request.setAttribute("errorMessage", "You don't have permission to access this page");
                 response.sendRedirect(request.getContextPath() + "/dashboard");
                 return;
@@ -89,6 +87,15 @@ public class UserListServlet extends HttpServlet {
             int offset = (page - 1) * pageSize;
 
             // Fetch users with filters as DTOs
+            // Dept Manager chỉ xem được users trong phòng mình
+            if (!group4.hrms.util.PermissionUtil.canViewAllUsers(request)) {
+                Long userDeptId = group4.hrms.util.PermissionUtil.getCurrentUserDepartmentId(request);
+                if (userDeptId != null) {
+                    departmentId = userDeptId; // Force filter by user's department
+                    logger.info("Department Manager viewing only their department: {}", departmentId);
+                }
+            }
+
             logger.info(
                     "Fetching users with filters - search: {}, dept: {}, pos: {}, status: {}, offset: {}, pageSize: {}",
                     search, departmentId, positionId, status, offset, pageSize);
@@ -124,24 +131,9 @@ public class UserListServlet extends HttpServlet {
             request.setAttribute("sortBy", sortBy);
             request.setAttribute("sortOrder", sortOrder);
 
-            // Check if user is ADMIN for showing action buttons
-            // TODO: Replace with proper role check after role management is implemented
-            // TEMPORARY: Allow all logged-in users to see admin buttons for testing
-            boolean isAdmin = true; // Set to true temporarily for testing
-
-            // Uncomment below when ready to use position-based check:
-            /*
-             * boolean isAdmin = false;
-             * if (request.getSession(false) != null) {
-             * Object userObj = request.getSession().getAttribute("user");
-             * if (userObj != null && userObj instanceof group4.hrms.model.User) {
-             * group4.hrms.model.User currentUser = (group4.hrms.model.User) userObj;
-             * isAdmin = currentUser.getPositionId() != null && currentUser.getPositionId()
-             * == 6L;
-             * }
-             * }
-             */
-            request.setAttribute("isAdmin", isAdmin);
+            // Set permissions for UI
+            request.setAttribute("canCreateUser", group4.hrms.util.PermissionUtil.canCreateUser(request));
+            request.setAttribute("canViewAllUsers", group4.hrms.util.PermissionUtil.canViewAllUsers(request));
 
             // Forward to JSP
             request.getRequestDispatcher("/WEB-INF/views/employees/user-list.jsp")
@@ -152,18 +144,6 @@ public class UserListServlet extends HttpServlet {
             request.setAttribute("errorMessage", "An error occurred while loading data. Please try again later.");
             response.sendRedirect(request.getContextPath() + "/dashboard");
         }
-    }
-
-    /**
-     * Check if user has required role (ADMIN, HRM, or HR)
-     */
-    private boolean hasRequiredRole(String userRoles) {
-        if (userRoles == null) {
-            return false;
-        }
-        return userRoles.contains("ADMIN") ||
-                userRoles.contains("HRM") ||
-                userRoles.contains("HR");
     }
 
     /**

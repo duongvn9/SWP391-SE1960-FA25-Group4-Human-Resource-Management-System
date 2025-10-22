@@ -5,6 +5,7 @@ import group4.hrms.util.DatabaseUtil;
 
 import java.sql.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 /**
@@ -36,7 +37,6 @@ public class TimesheetPeriodDao extends BaseDao<TimesheetPeriod, Long> {
             period.setEndDate(endDate.toLocalDate());
         }
 
-        // is_locked là BOOLEAN trong DB → lấy kiểu boolean
         period.setIsLocked(rs.getBoolean("is_locked"));
 
         Long lockedBy = rs.getLong("locked_by");
@@ -89,7 +89,7 @@ public class TimesheetPeriodDao extends BaseDao<TimesheetPeriod, Long> {
         if (period.getIsLocked() != null) {
             stmt.setBoolean(4, period.getIsLocked());
         } else {
-            stmt.setBoolean(4, false); // mặc định "open"
+            stmt.setBoolean(4, false); 
         }
 
         if (period.getLockedBy() != null) {
@@ -189,6 +189,32 @@ public class TimesheetPeriodDao extends BaseDao<TimesheetPeriod, Long> {
                 logger.error("Error saving timesheet period: {}", e.getMessage(), e);
                 throw e;
             }
+        }
+    }
+
+    @Override
+    public Optional<TimesheetPeriod> findById(Long id) throws SQLException {
+        if (id == null) {
+            return Optional.empty();
+        }
+
+        String sql = "SELECT * FROM timesheet_periods WHERE id = ?";
+
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, id);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapResultSetToEntity(rs));
+                }
+            }
+
+            return Optional.empty();
+
+        } catch (SQLException e) {
+            logger.error("Error finding timesheet period by id {}: {}", id, e.getMessage(), e);
+            throw e;
         }
     }
 
@@ -348,7 +374,7 @@ public class TimesheetPeriodDao extends BaseDao<TimesheetPeriod, Long> {
     """;
 
         try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
+
             stmt.setDate(1, java.sql.Date.valueOf(date));
             stmt.setDate(2, java.sql.Date.valueOf(date));
 
@@ -391,5 +417,33 @@ public class TimesheetPeriodDao extends BaseDao<TimesheetPeriod, Long> {
         }
 
         return null;
+    }
+
+    public boolean updateLockStatus(Long periodId, boolean isLocked, Long userId) throws SQLException {
+        if (periodId == null) {
+            throw new IllegalArgumentException("periodId cannot be null");
+        }
+
+        String sql = "UPDATE timesheet_periods "
+                + "SET is_locked = ?, "
+                + "locked_by = ?, "
+                + "locked_at = ? "
+                + "WHERE id = ?";
+
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setBoolean(1, isLocked);
+
+            if (isLocked) {
+                stmt.setLong(2, userId != null ? userId : Types.NULL);
+                stmt.setTimestamp(3, Timestamp.valueOf(LocalDateTime.now()));
+            } else {
+                stmt.setNull(2, Types.BIGINT);
+                stmt.setNull(3, Types.TIMESTAMP);
+            }
+
+            stmt.setLong(4, periodId);
+            return stmt.executeUpdate() > 0;
+        }
     }
 }

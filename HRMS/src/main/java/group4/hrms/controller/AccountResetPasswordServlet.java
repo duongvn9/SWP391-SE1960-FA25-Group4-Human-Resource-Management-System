@@ -47,7 +47,7 @@ public class AccountResetPasswordServlet extends HttpServlet {
             }
 
             // Check authorization - Only ADMIN can reset passwords
-            if (!SessionUtil.hasRole(request, "ADMIN")) {
+            if (!group4.hrms.util.PermissionUtil.canResetPassword(request)) {
                 out.write("{\"success\":false,\"message\":\"You don't have permission to reset passwords\"}");
                 return;
             }

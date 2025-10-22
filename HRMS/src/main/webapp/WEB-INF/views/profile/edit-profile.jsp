@@ -203,9 +203,7 @@
                 <div class="form-row">
                     <label class="form-label">Full Name: </label>
                     <div class="form-input-wrapper">
-                        <input type="text" name="fullName" class="form-control" value="${profile.fullName}" 
-                               pattern="^[a-zA-ZÀ-ỹ\s]+$" maxlength="100"
-                               title="Full name can only contain letters and spaces">
+                        <input type="text" name="fullName" class="form-control" value="${profile.fullName}">
                     </div>
                 </div>
 
@@ -213,9 +211,7 @@
                 <div class="form-row">
                     <label class="form-label">Phone Number: </label>
                     <div class="form-input-wrapper">
-                        <input type="text" name="phone" class="form-control" value="${profile.phone}" 
-                               pattern="^[0-9]{10,11}$" placeholder="10-11 digits" autocomplete="off"
-                               title="Phone number must be 10-11 digits">
+                        <input type="text" name="phone" class="form-control" value="${profile.phone}" autocomplete="off">
                     </div>
                 </div>
 
@@ -251,9 +247,7 @@
                 <div class="form-row">
                     <label class="form-label">Citizen ID (CCCD): </label>
                     <div class="form-input-wrapper">
-                        <input type="text" name="cccd" class="form-control" value="${profile.cccd}" 
-                               pattern="^[0-9]{12}$" placeholder="12 digits" autocomplete="off"
-                               title="CCCD must be exactly 12 digits">
+                        <input type="text" name="cccd" class="form-control" value="${profile.cccd}" autocomplete="off">
                     </div>
                 </div>
 
@@ -262,7 +256,7 @@
                     <label class="form-label">CCCD Issued Date: </label>
                     <input type="date" name="cccdIssuedDate" class="form-control" value="${profile.cccdIssuedDate}">
                     <label class="label-inline">Issued Place: </label>
-                    <input type="text" name="cccdIssuedPlace" class="form-control" value="${profile.cccdIssuedPlace}" placeholder="e.g., Cuc canh sat">
+                    <input type="text" name="cccdIssuedPlace" class="form-control" value="${profile.cccdIssuedPlace}">
                 </div>
 
                 <!-- Country -->
@@ -285,7 +279,7 @@
                 <div class="form-row">
                     <label class="form-label">Address Line 1: </label>
                     <div class="form-input-wrapper">
-                        <input type="text" name="addressLine1" class="form-control" value="${profile.addressLine1}" placeholder="e.g., Phu Thuong, Tay Ho, Ha Noi">
+                        <input type="text" name="addressLine1" class="form-control" value="${profile.addressLine1}">
                     </div>
                 </div>
 
@@ -309,7 +303,7 @@
                 <div class="form-row">
                     <label class="form-label">Postal Code:</label>
                     <div class="form-input-wrapper">
-                        <input type="text" name="postalCode" class="form-control" value="${profile.postalCode}" placeholder="5-10 digits">
+                        <input type="text" name="postalCode" class="form-control" value="${profile.postalCode}">
                     </div>
                 </div>
 

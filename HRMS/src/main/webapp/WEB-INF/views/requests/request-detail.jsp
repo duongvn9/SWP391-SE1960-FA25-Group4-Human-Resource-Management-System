@@ -92,67 +92,6 @@
                             </div>
                         </c:if>
 
-                        <!-- Request Status Banner -->
-                        <div class="row mb-4">
-                            <div class="col-12">
-                                <div class="alert ${requestDto.statusBadgeClass} alert-modern border-0 shadow-sm" role="alert">
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        <div class="d-flex align-items-center">
-                                            <div class="alert-icon me-3">
-                                                <c:choose>
-                                                    <c:when test="${requestDto.status == 'PENDING'}">
-                                                        <i class="fas fa-clock fa-2x"></i>
-                                                    </c:when>
-                                                    <c:when test="${requestDto.status == 'APPROVED'}">
-                                                        <i class="fas fa-check-circle fa-2x"></i>
-                                                    </c:when>
-                                                    <c:when test="${requestDto.status == 'REJECTED'}">
-                                                        <i class="fas fa-times-circle fa-2x"></i>
-                                                    </c:when>
-                                                    <c:when test="${requestDto.status == 'CANCELLED'}">
-                                                        <i class="fas fa-ban fa-2x"></i>
-                                                    </c:when>
-                                                </c:choose>
-                                            </div>
-                                            <div>
-                                                <h5 class="mb-1 fw-bold">
-                                                    <c:choose>
-                                                        <c:when test="${requestDto.status == 'PENDING'}">Pending Approval</c:when>
-                                                        <c:when test="${requestDto.status == 'APPROVED'}">Approved</c:when>
-                                                        <c:when test="${requestDto.status == 'REJECTED'}">Rejected</c:when>
-                                                        <c:when test="${requestDto.status == 'CANCELLED'}">Cancelled</c:when>
-                                                    </c:choose>
-                                                </h5>
-                                                <p class="mb-0">
-                                                    <c:choose>
-                                                        <c:when test="${requestDto.status == 'PENDING'}">
-                                                            This request is awaiting manager approval
-                                                        </c:when>
-                                                        <c:when test="${requestDto.status == 'APPROVED'}">
-                                                            Request approved by <strong><c:out value="${requestDto.approverName}" /></strong>
-                                                            on <fmt:formatDate value="${requestDto.approvedAtAsDate}" pattern="dd/MM/yyyy" />
-                                                        </c:when>
-                                                        <c:when test="${requestDto.status == 'REJECTED'}">
-                                                            Request rejected by <strong><c:out value="${requestDto.approverName}" /></strong>
-                                                            on <fmt:formatDate value="${requestDto.approvedAtAsDate}" pattern="dd/MM/yyyy" />
-                                                        </c:when>
-                                                        <c:when test="${requestDto.status == 'CANCELLED'}">
-                                                            This request has been cancelled
-                                                        </c:when>
-                                                    </c:choose>
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div class="status-badge-large">
-                                            <span class="badge ${requestDto.statusBadgeClass} badge-lg">
-                                                <c:out value="${requestDto.status}" />
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
                         <!-- Request Information Card -->
                         <div class="card mb-4 shadow-sm border-0">
                             <div class="card-header bg-gradient-primary text-white">

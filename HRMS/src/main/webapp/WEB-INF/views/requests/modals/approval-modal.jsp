@@ -40,12 +40,12 @@
 
                         <div class="mb-3">
                             <label for="approvalReason" class="form-label">
-                                Reason <span id="reasonRequired" class="text-danger" style="display:none;">*</span>
+                                Reason <span class="text-danger">*</span>
                             </label>
-                            <textarea class="form-control" id="approvalReason" rows="3"
-                                placeholder="Enter reason (required for rejection, optional for acceptance)"></textarea>
+                            <textarea class="form-control" id="approvalReason" rows="3" required
+                                placeholder="Enter reason for your decision (required)"></textarea>
                             <div class="invalid-feedback" id="reasonError">
-                                Rejection reason is required
+                                Reason is required
                             </div>
                         </div>
                     </div>

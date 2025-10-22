@@ -1,7 +1,6 @@
 package group4.hrms.controller;
 
 import group4.hrms.dao.AccountDao;
-import group4.hrms.dao.AccountRoleDao;
 import group4.hrms.dao.UserDao;
 import group4.hrms.model.Account;
 import group4.hrms.model.User;
@@ -135,14 +134,6 @@ public class AccountDetailServlet extends HttpServlet {
                 if (posName != null) {
                     json.append(",\"positionName\":\"").append(escapeJson(posName)).append("\"");
                 }
-            }
-
-            // Get role ID for this account
-            AccountRoleDao accountRoleDao = new AccountRoleDao();
-            java.util.List<Long> roleIds = accountRoleDao.getRoleIds(accountId);
-            if (!roleIds.isEmpty()) {
-                // Get first role (highest priority should be first)
-                json.append(",\"roleId\":").append(roleIds.get(0));
             }
 
             json.append("}}");

@@ -1,7 +1,6 @@
 package group4.hrms.controller;
 
 import group4.hrms.dao.AccountDao;
-import group4.hrms.dao.AccountRoleDao;
 import group4.hrms.model.Account;
 import group4.hrms.util.SessionUtil;
 import jakarta.servlet.ServletException;
@@ -51,7 +50,6 @@ public class AccountUpdateServlet extends HttpServlet {
             String accountIdStr = request.getParameter("accountId");
             String emailLogin = request.getParameter("emailLogin");
             String status = request.getParameter("status");
-            String roleIdStr = request.getParameter("roleId");
 
             // Validate required fields
             if (accountIdStr == null || accountIdStr.trim().isEmpty()) {
@@ -93,28 +91,10 @@ public class AccountUpdateServlet extends HttpServlet {
             }
 
             // Update account
+            // Note: Permissions are determined by the user's position, not by role
             Account updatedAccount = accountDao.update(account);
 
             if (updatedAccount != null) {
-                // Update role if provided
-                if (roleIdStr != null && !roleIdStr.trim().isEmpty()) {
-                    try {
-                        Long roleId = Long.parseLong(roleIdStr);
-                        AccountRoleDao accountRoleDao = new AccountRoleDao();
-                        boolean roleUpdated = accountRoleDao.updateRole(accountId, roleId);
-
-                        if (roleUpdated) {
-                            logger.info("Role ID {} updated for account {} successfully",
-                                    roleId, accountId);
-                        } else {
-                            logger.warn("Failed to update role ID {} for account {}",
-                                    roleId, accountId);
-                        }
-                    } catch (NumberFormatException e) {
-                        logger.warn("Invalid role ID format: {}", roleIdStr);
-                    }
-                }
-
                 out.write("{\"success\":true,\"message\":\"Account updated successfully\"}");
                 logger.info("Account updated successfully: {} by user: {}",
                         account.getUsername(),

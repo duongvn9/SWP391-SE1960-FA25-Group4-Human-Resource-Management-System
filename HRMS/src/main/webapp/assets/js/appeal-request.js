@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
     addBtn.addEventListener('click', () => {
         const date = dateInput.value;
         if (!date)
-            return; // nếu chưa chọn ngày thì bỏ qua
+            return; 
         if (selectedDates.has(date)) {
             alert("Date already selected!");
             return;
@@ -16,7 +16,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         selectedDates.add(date);
 
-        // Tạo badge hiển thị ngày đã chọn
         const span = document.createElement('span');
         span.textContent = date;
         span.classList.add('badge', 'bg-primary', 'me-1', 'mb-1');

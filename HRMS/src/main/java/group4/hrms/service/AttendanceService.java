@@ -24,10 +24,6 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-/**
- * Service for handling attendance tracking logic including half-day leave
- * support
- */
 public class AttendanceService {
 
     public static List<AttendanceLogDto> readAttendanceExcelFile(InputStream inputStream) throws IOException {
@@ -45,7 +41,6 @@ public class AttendanceService {
                     continue;
                 }
 
-                // Kiểm tra nếu toàn bộ row trống, bỏ qua
                 boolean isEmpty = true;
                 for (int c = 0; c <= 8; c++) {
                     Cell cell = row.getCell(c);
@@ -105,7 +100,6 @@ public class AttendanceService {
             attendanceLogDAO.saveAttendanceLogs(logs);
             req.setAttribute("success", "Imported " + logs.size() + " attendance logs successfully.");
 
-            // Xóa file tạm
             Files.deleteIfExists(tempFilePath);
             req.getSession().removeAttribute("uploadedFile");
         } else {

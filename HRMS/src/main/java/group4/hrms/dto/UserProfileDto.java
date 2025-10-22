@@ -187,7 +187,7 @@ public class UserProfileDto {
             if (fullName.trim().length() > 100) {
                 errors.add("Full name must not exceed 100 characters");
             } else if (!fullName.matches("^[a-zA-ZÀ-ỹ\\s]+$")) {
-                errors.add("Full name can only contain letters and spaces (no numbers or special characters)");
+                errors.add("Name cannot contain digits or special characters");
             }
         }
         
@@ -225,7 +225,7 @@ public class UserProfileDto {
         // 6. Validate CCCD (Optional, 12 digits if provided)
         if (cccd != null && !cccd.trim().isEmpty()) {
             if (!cccd.matches("^[0-9]{12}$")) {
-                errors.add("Citizen ID (CCCD) must be exactly 12 digits");
+                errors.add("Citizen ID must be 12 digits");
             }
         }
         
@@ -277,22 +277,9 @@ public class UserProfileDto {
             }
         }
         
-        // 15. Validate Email (Required for system, but not editable by user)
-        if (emailCompany == null || emailCompany.trim().isEmpty()) {
-            errors.add("Email is required");
-        } else if (!isValidEmail(emailCompany)) {
-            errors.add("Invalid email format");
-        }
+        // Email is not editable by user, so no validation needed
         
         return errors.isEmpty();
-    }
-    
-    /**
-     * Simple email validation
-     */
-    private boolean isValidEmail(String email) {
-        String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
-        return email.matches(emailRegex);
     }
     
     @Override
