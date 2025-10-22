@@ -24,6 +24,14 @@ public class DashboardServlet extends HttpServlet {
             return;
         }
 
+        // Set permission flags for sidebar
+        request.setAttribute("canViewUserList", group4.hrms.util.PermissionUtil.canViewUserList(request));
+        request.setAttribute("canViewAccountList", group4.hrms.util.PermissionUtil.canViewAccountList(request));
+        request.setAttribute("canCreateUser", group4.hrms.util.PermissionUtil.canCreateUser(request));
+        request.setAttribute("canCreateAccount", group4.hrms.util.PermissionUtil.canCreateAccount(request));
+        request.setAttribute("isAdminPosition",
+                "ADMIN".equals(group4.hrms.util.PermissionUtil.getCurrentUserPositionCode(request)));
+
         // Forward đến dashboard page
         request.getRequestDispatcher("/WEB-INF/views/dashboard/dashboard.jsp").forward(request, response);
     }

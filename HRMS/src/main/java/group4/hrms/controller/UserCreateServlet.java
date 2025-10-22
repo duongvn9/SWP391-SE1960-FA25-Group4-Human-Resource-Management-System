@@ -55,6 +55,14 @@ public class UserCreateServlet extends HttpServlet {
                 return;
             }
 
+            // Check authorization - Only ADMIN can create users
+            if (!group4.hrms.util.PermissionUtil.canCreateUser(request)) {
+                logger.warn("Unauthorized access attempt to create user page");
+                request.getSession().setAttribute("errorMessage", "You don't have permission to create users");
+                response.sendRedirect(request.getContextPath() + "/employees/users");
+                return;
+            }
+
             // Load departments and positions for dropdowns (using cache)
             request.setAttribute("departments", DropdownCacheUtil.getCachedDepartments(getServletContext()));
             request.setAttribute("positions", DropdownCacheUtil.getCachedPositions(getServletContext()));
@@ -78,6 +86,14 @@ public class UserCreateServlet extends HttpServlet {
             // Check authentication
             if (!SessionUtil.isUserLoggedIn(request)) {
                 response.sendRedirect(request.getContextPath() + "/login");
+                return;
+            }
+
+            // Check authorization - Only ADMIN can create users
+            if (!group4.hrms.util.PermissionUtil.canCreateUser(request)) {
+                logger.warn("Unauthorized attempt to create user");
+                request.getSession().setAttribute("errorMessage", "You don't have permission to create users");
+                response.sendRedirect(request.getContextPath() + "/employees/users");
                 return;
             }
 

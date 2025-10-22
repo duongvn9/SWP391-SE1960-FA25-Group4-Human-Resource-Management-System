@@ -121,8 +121,12 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("modalSource").value = getVal("sourceEdit");
         document.getElementById("modalPeriod").value = getVal("periodEdit");
 
+        document.getElementById("checkInOld").value = getVal("checkInEdit");
+        document.getElementById("checkOutOld").value = getVal("checkOutEdit");
+
         document.getElementById("editModal").style.display = "flex";
     };
+
 
     window.closeModal = () => {
         document.getElementById("editModal").style.display = "none";

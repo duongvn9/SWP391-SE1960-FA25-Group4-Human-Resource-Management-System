@@ -65,8 +65,9 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                 + "check_type = ?, "
                 + "source = ?, "
                 + "note = ?, "
-                + "period_id = ? "
-                + "WHERE user_id = ? AND checked_at = ?";
+                + "period_id = ?, "
+                + "checked_at = ? " // cập nhật checked_at mới
+                + "WHERE user_id = ? AND checked_at = ?"; // tìm bản ghi bằng checked_at cũ
     }
 
     @Override
@@ -102,7 +103,10 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
     @Override
     protected void setUpdateParameters(PreparedStatement stmt, AttendanceLog log) throws SQLException {
         if (log.getCheckedAt() == null) {
-            throw new IllegalArgumentException("checkedAt cannot be null for update");
+            throw new IllegalArgumentException("checkedAt (old) cannot be null for update");
+        }
+        if (log.getCheckedAtNew() == null) {
+            throw new IllegalArgumentException("checkedAtNew cannot be null for update");
         }
 
         stmt.setString(1, log.getCheckType());
@@ -125,8 +129,14 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
             stmt.setNull(4, Types.BIGINT);
         }
 
-        stmt.setLong(5, log.getUserId());
-        stmt.setTimestamp(6, Timestamp.valueOf(log.getCheckedAt()));
+        // checked_at mới
+        stmt.setTimestamp(5, Timestamp.valueOf(log.getCheckedAtNew()));
+
+        // user_id
+        stmt.setLong(6, log.getUserId());
+
+        // checked_at cũ (điều kiện WHERE)
+        stmt.setTimestamp(7, Timestamp.valueOf(log.getCheckedAt()));
     }
 
     @Override

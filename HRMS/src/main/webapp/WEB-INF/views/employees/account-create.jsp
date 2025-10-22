@@ -286,20 +286,13 @@
                                     </div>
                                 </div>
 
-                                <!-- Role Selection -->
+                                <!-- Note about permissions -->
                                 <div class="mb-3">
-                                    <label for="roleId" class="form-label required">
-                                        <i class="fas fa-user-tag me-1"></i>Role
-                                    </label>
-                                    <select class="form-select" id="roleId" name="roleId" required>
-                                        <option value="">-- Select role --</option>
-                                        <c:forEach var="role" items="${roles}">
-                                            <option value="${role.id}">
-                                                ${role.name} (${role.code})
-                                            </option>
-                                        </c:forEach>
-                                    </select>
-                                    <small class="text-muted">Select the role for this account</small>
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <strong>Note:</strong> Account permissions will be automatically determined
+                                        based on the user's position.
+                                    </div>
                                 </div>
 
                                 <div class="row">

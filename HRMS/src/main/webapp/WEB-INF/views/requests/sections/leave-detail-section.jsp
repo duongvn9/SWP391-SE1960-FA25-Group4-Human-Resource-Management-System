@@ -3,8 +3,8 @@
         <%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
 
             <!-- Leave Request Details Card -->
-            <div class="card mb-4">
-                <div class="card-header">
+            <div class="card mb-4 shadow-sm border-0">
+                <div class="card-header bg-gradient-success text-white">
                     <h5 class="mb-0">Leave Request Details</h5>
                 </div>
                 <div class="card-body">

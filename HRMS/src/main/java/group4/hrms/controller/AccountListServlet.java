@@ -1,12 +1,10 @@
 package group4.hrms.controller;
 
 import group4.hrms.dao.AccountDao;
-import group4.hrms.dao.RoleDao;
 import group4.hrms.dao.UserDao;
 import group4.hrms.dto.AccountListDto;
 import group4.hrms.model.Department;
 import group4.hrms.model.Position;
-import group4.hrms.model.Role;
 import group4.hrms.model.User;
 import group4.hrms.util.DropdownCacheUtil;
 import group4.hrms.util.SessionUtil;
@@ -49,11 +47,13 @@ public class AccountListServlet extends HttpServlet {
 
             logger.info("User is logged in, proceeding with account list");
 
-            // Check authorization - Only ADMIN, HRM, HR can access
-            String userRoles = SessionUtil.getUserRoles(request);
-            // TODO: Implement proper role checking after roles are set in session
-            // Temporarily allow all logged-in users for testing
-            if (userRoles != null && !hasRequiredRole(userRoles)) {
+            // Check authorization - Only ADMIN can access account list
+            String positionCode = group4.hrms.util.PermissionUtil.getCurrentUserPositionCode(request);
+            boolean canView = group4.hrms.util.PermissionUtil.canViewAccountList(request);
+            logger.info("Position code: {}, canViewAccountList: {}", positionCode, canView);
+
+            if (!canView) {
+                logger.warn("User does not have permission to view account list");
                 request.setAttribute("errorMessage", "You don't have permission to access this page");
                 response.sendRedirect(request.getContextPath() + "/dashboard");
                 return;
@@ -118,15 +118,10 @@ public class AccountListServlet extends HttpServlet {
             List<User> usersWithoutAccount = userDao.findUsersWithoutAccount();
             logger.info("Found {} users without account", usersWithoutAccount.size());
 
-            // Fetch roles for edit modal
-            RoleDao roleDao = new RoleDao();
-            List<Role> roles = roleDao.findAll();
-
             // Set attributes for JSP
             request.setAttribute("accounts", accountDtos);
             request.setAttribute("departments", departments);
             request.setAttribute("positions", positions);
-            request.setAttribute("roles", roles);
             request.setAttribute("usersWithoutAccount", usersWithoutAccount);
             request.setAttribute("currentPage", page);
             request.setAttribute("pageSize", pageSize);
@@ -139,9 +134,9 @@ public class AccountListServlet extends HttpServlet {
             request.setAttribute("sortBy", sortBy);
             request.setAttribute("sortOrder", sortOrder);
 
-            // Check if user is ADMIN for showing action buttons
-            boolean isAdmin = SessionUtil.hasRole(request, "ADMIN");
-            request.setAttribute("isAdmin", isAdmin);
+            // Set permissions for UI
+            request.setAttribute("canCreateAccount", group4.hrms.util.PermissionUtil.canCreateAccount(request));
+            request.setAttribute("canResetPassword", group4.hrms.util.PermissionUtil.canResetPassword(request));
 
             // Forward to JSP
             request.getRequestDispatcher("/WEB-INF/views/employees/account-list.jsp")
@@ -152,18 +147,6 @@ public class AccountListServlet extends HttpServlet {
             request.setAttribute("errorMessage", "An error occurred while loading data. Please try again later.");
             response.sendRedirect(request.getContextPath() + "/dashboard");
         }
-    }
-
-    /**
-     * Check if user has required role (ADMIN, HRM, or HR)
-     */
-    private boolean hasRequiredRole(String userRoles) {
-        if (userRoles == null) {
-            return false;
-        }
-        return userRoles.contains("ADMIN") ||
-                userRoles.contains("HRM") ||
-                userRoles.contains("HR");
     }
 
     /**

@@ -22,8 +22,27 @@ public class AttendanceLogDto {
     private String source;
     private String period;
     private boolean isLocked;
+    
+    private transient LocalTime oldCheckIn;
+    private transient LocalTime oldCheckOut;
 
     public AttendanceLogDto() {
+    }
+
+    public LocalTime getOldCheckIn() {
+        return oldCheckIn;
+    }
+
+    public void setOldCheckIn(LocalTime oldCheckIn) {
+        this.oldCheckIn = oldCheckIn;
+    }
+
+    public LocalTime getOldCheckOut() {
+        return oldCheckOut;
+    }
+
+    public void setOldCheckOut(LocalTime oldCheckOut) {
+        this.oldCheckOut = oldCheckOut;
     }
 
     public Long getUserId() {
@@ -131,6 +150,8 @@ public class AttendanceLogDto {
                 + ", source='" + source + '\''
                 + ", period='" + period + '\''
                 + ", isLocked='" + isLocked + '\''
+                + ", oldCheckIn='" + oldCheckIn + '\''
+                + ", oldCheckout='" + oldCheckOut + '\''
                 + '}';
     }
 }
