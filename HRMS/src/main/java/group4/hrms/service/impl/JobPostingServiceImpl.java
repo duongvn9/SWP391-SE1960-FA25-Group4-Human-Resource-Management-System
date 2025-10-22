@@ -2,14 +2,9 @@ package group4.hrms.service.impl;
 
 import group4.hrms.dao.JobPostingDao;
 import group4.hrms.model.JobPosting;
-import group4.hrms.service.DepartmentService;
 import group4.hrms.service.JobPostingService;
-import group4.hrms.service.PositionService;
 import jakarta.inject.Inject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.sql.SQLException;
@@ -23,114 +18,28 @@ import java.util.Optional;
  * ĐÃ ĐIỀU CHỈNH LOGIC để phù hợp với Flow HRM: Approve (PENDING -> PUBLISHED)
  */
 public class JobPostingServiceImpl implements JobPostingService {
-    private static final Logger logger = LoggerFactory.getLogger(JobPostingServiceImpl.class);
-
-    private final JobPostingDao jobPostingDao;
-    private final DepartmentService departmentService;
-    private final PositionService positionService;
     
-    public JobPostingServiceImpl(DepartmentService departmentService, PositionService positionService) {
-        this.jobPostingDao = new JobPostingDao();
-        this.departmentService = departmentService;
-        this.positionService = positionService;
-        logger.info("JobPostingServiceImpl initialized with dependencies");
+    private final JobPostingDao jobPostingDao;
+    
+    public JobPostingServiceImpl() {
+        this.jobPostingDao = new JobPostingDao(); // Khởi tạo trực tiếp
     }
     @Override
     public long create(JobPosting jobPosting) {
-        logger.info("Attempting to create job posting: {}", jobPosting);
-        
-        // Validate job posting data
-        validateJobPosting(jobPosting);
-        
-        // Ensure status is PENDING
         if (!"PENDING".equals(jobPosting.getStatus())) {
-            logger.error("Invalid status for new job posting: {}", jobPosting.getStatus());
             throw new IllegalArgumentException("New job posting must have PENDING status");
         }
-        
         try {
-            logger.info("Saving job posting to database: title='{}', requestId={}", 
-                       jobPosting.getTitle(), jobPosting.getRequestId());
-            
-            // Set audit timestamps
-            LocalDateTime now = LocalDateTime.now();
-            jobPosting.setCreatedAt(now);
-            jobPosting.setUpdatedAt(now);
-            
             JobPosting saved = jobPostingDao.save(jobPosting);
-            if (saved == null) {
-                logger.error("JobPostingDao.save returned null");
-                throw new RuntimeException("Failed to create job posting - null result from DAO");
-            }
-            
-            Long savedId = saved.getId();
-            if (savedId == null) {
-                logger.error("Saved job posting has null ID");
-                throw new RuntimeException("Failed to get ID for created job posting");
-            }
-            
-            logger.info("Successfully created job posting with id={}", savedId);
-            return savedId;
-            
+            return saved.getId();
         } catch (SQLException e) {
-            logger.error("Database error while creating job posting: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to create job posting due to database error", e);
-        } catch (Exception e) {
-            logger.error("Unexpected error while creating job posting: {}", e.getMessage(), e);
-            throw new RuntimeException("Unexpected error while creating job posting", e);
+            throw new RuntimeException("Failed to create job posting", e);
         }
     }
     
-    private void validateJobPosting(JobPosting jobPosting) {
-        if (jobPosting == null) {
-            throw new IllegalArgumentException("Job posting cannot be null");
-        }
-        
-        List<String> errors = new ArrayList<>();
-        
-        // Required fields
-        if (isEmpty(jobPosting.getTitle())) {
-            errors.add("Title is required");
-        }
-        if (isEmpty(jobPosting.getDescription())) {
-            errors.add("Description is required");
-        }
-        if (isEmpty(jobPosting.getRequirements())) {
-            errors.add("Requirements are required");
-        }
-        if (isEmpty(jobPosting.getWorkingLocation())) {
-            errors.add("Working location is required");
-        }
-        if (jobPosting.getApplicationDeadline() == null) {
-            errors.add("Application deadline is required");
-        }
-        if (isEmpty(jobPosting.getContactEmail())) {
-            errors.add("Contact email is required");
-        }
-        
-        // Business rules
-        if (jobPosting.getApplicationDeadline() != null && 
-            jobPosting.getApplicationDeadline().isBefore(LocalDate.now())) {
-            errors.add("Application deadline cannot be in the past");
-        }
-        
-        if (!errors.isEmpty()) {
-            String errorMessage = String.join("; ", errors);
-            logger.error("Job posting validation failed: {}", errorMessage);
-            throw new IllegalArgumentException("Invalid job posting: " + errorMessage);
-        }
-        
-        logger.info("Job posting validation passed");
-    }
-    
-    private boolean isEmpty(String str) {
-        return str == null || str.trim().isEmpty();
-    }
-
     @Override
     public Optional<JobPosting> findById(long id) {
         try {
-            logger.debug("Finding job posting by id={}", id);
             return jobPostingDao.findById(id);
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -141,10 +50,9 @@ public class JobPostingServiceImpl implements JobPostingService {
     public List<JobPosting> findJobPostings(Map<String, Object> criteria, int page, int pageSize) {
         try {
             // Prefer specialized DAO methods when possible
-            if (criteria == null || !criteria.containsKey("status")) {
-                // If no criteria or no status specified, only return PENDING jobs by default
-                List<JobPosting> pendingJobs = jobPostingDao.findByStatus("PENDING");
-                return paginate(pendingJobs, page, pageSize);
+            if (criteria == null) {
+                List<JobPosting> all = jobPostingDao.findAll();
+                return paginate(all, page, pageSize);
             }
 
             // Search by requestId
@@ -170,8 +78,7 @@ public class JobPostingServiceImpl implements JobPostingService {
                     List<JobPosting> jobs = jobPostingDao.findPublishedJobs();
                     return paginate(jobs, page, pageSize);
                 } else {
-                    // Không chuyển status về lowercase vì trong DB lưu uppercase
-                    List<JobPosting> jobs = jobPostingDao.findByStatus(status.toUpperCase());
+                    List<JobPosting> jobs = jobPostingDao.findByStatus(status.toLowerCase());
                     return paginate(jobs, page, pageSize);
                 }
             }

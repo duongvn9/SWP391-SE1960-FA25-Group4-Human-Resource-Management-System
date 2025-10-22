@@ -479,864 +479,813 @@
                 <c:if test="${isAdmin && not empty usersWithoutAccount}">
                     <div class="alert alert-info" role="alert">
 
-                            <div class="clickable-header" style="cursor: pointer;" data-bs-toggle="collapse"
-                                 data-bs-target="#usersWithoutAccountCollapse" aria-expanded="false"
-                                 aria-controls="usersWithoutAccountCollapse">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <h5 class="mb-0">
-                                        <i class="fas fa-user-plus me-2"></i>Users Without Account
-                                        <span class="badge bg-primary">${fn:length(usersWithoutAccount)}</span>
-                                    </h5>
-                                    <i class="fas fa-chevron-down toggle-icon"></i>
-                                </div>
-                                <p class="mb-0 small">The following users don't have accounts yet. Click on a
-                                    user
-                                    to create an account.</p>
+                        <div class="clickable-header" style="cursor: pointer;" data-bs-toggle="collapse"
+                             data-bs-target="#usersWithoutAccountCollapse" aria-expanded="false"
+                             aria-controls="usersWithoutAccountCollapse">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-user-plus me-2"></i>Users Without Account
+                                    <span class="badge bg-primary">${fn:length(usersWithoutAccount)}</span>
+                                </h5>
+                                <i class="fas fa-chevron-down toggle-icon"></i>
                             </div>
-                            <div class="collapse mt-2" id="usersWithoutAccountCollapse">
-                                <div class="row g-2">
-                                    <c:forEach var="user" items="${usersWithoutAccount}" varStatus="status">
-                                        <c:if test="${status.index < 10}">
-                                            <div class="col-md-6 col-lg-4">
-                                                <div class="card create-account-card" data-user-id="${user.id}"
-                                                     data-user-name="${fn:escapeXml(user.fullName)}"
-                                                     data-employee-code="${fn:escapeXml(user.employeeCode)}"
-                                                     data-email-company="${fn:escapeXml(empty user.emailCompany ? '' : user.emailCompany)}">
-                                                    <div class="card-body p-2">
-                                                        <div class="d-flex align-items-center">
-                                                            <div class="flex-shrink-0">
-                                                                <i
-                                                                    class="fas fa-user-circle fa-2x text-primary"></i>
-                                                            </div>
-                                                            <div class="flex-grow-1 ms-2">
-                                                                <h6 class="mb-0">${user.fullName}</h6>
-                                                                <small
-                                                                    class="text-muted">${user.employeeCode}</small>
-                                                                <c:if test="${not empty user.emailCompany}">
-                                                                    <br><small
-                                                                        class="text-muted">${user.emailCompany}</small>
-                                                                </c:if>
-                                                            </div>
-                                                            <div class="flex-shrink-0">
-                                                                <i class="fas fa-plus-circle text-success"></i>
-                                                            </div>
+                            <p class="mb-0 small">The following users don't have accounts yet. Click on a
+                                user
+                                to create an account.</p>
+                        </div>
+                        <div class="collapse mt-2" id="usersWithoutAccountCollapse">
+                            <div class="row g-2">
+                                <c:forEach var="user" items="${usersWithoutAccount}" varStatus="status">
+                                    <c:if test="${status.index < 10}">
+                                        <div class="col-md-6 col-lg-4">
+                                            <div class="card create-account-card" data-user-id="${user.id}"
+                                                 data-user-name="${fn:escapeXml(user.fullName)}"
+                                                 data-employee-code="${fn:escapeXml(user.employeeCode)}"
+                                                 data-email-company="${fn:escapeXml(empty user.emailCompany ? '' : user.emailCompany)}">
+                                                <div class="card-body p-2">
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="flex-shrink-0">
+                                                            <i
+                                                                class="fas fa-user-circle fa-2x text-primary"></i>
+                                                        </div>
+                                                        <div class="flex-grow-1 ms-2">
+                                                            <h6 class="mb-0">${user.fullName}</h6>
+                                                            <small
+                                                                class="text-muted">${user.employeeCode}</small>
+                                                            <c:if test="${not empty user.emailCompany}">
+                                                                <br><small
+                                                                    class="text-muted">${user.emailCompany}</small>
+                                                            </c:if>
+                                                        </div>
+                                                        <div class="flex-shrink-0">
+                                                            <i class="fas fa-plus-circle text-success"></i>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </c:if>
-                                    </c:forEach>
-                                </div>
-                                <c:if test="${fn:length(usersWithoutAccount) > 10}">
-                                    <div class="text-center mt-2">
-                                        <small class="text-muted">Showing 10 of
-                                            ${fn:length(usersWithoutAccount)} users.
-                                            <a
-                                                href="${pageContext.request.contextPath}/employees/accounts/create">View
-                                                all</a>
-                                        </small>
-                                    </div>
-                                </c:if>
+                                        </div>
+                                    </c:if>
+                                </c:forEach>
                             </div>
-                        </div>
-                    </c:if>
-
-                    <!-- Filter Section -->
-                    <div class="filter-section">
-                        <form method="get" action="${pageContext.request.contextPath}/employees/accounts"
-                              id="filterForm">
-                            <div class="filter-row">
-                                <div class="filter-group">
-                                    <label for="search">Search</label>
-                                    <input type="text" id="search" name="search" class="form-control"
-                                           placeholder="Username, Email Login, or User Name"
-                                           value="${param.search}">
+                            <c:if test="${fn:length(usersWithoutAccount) > 10}">
+                                <div class="text-center mt-2">
+                                    <small class="text-muted">Showing 10 of
+                                        ${fn:length(usersWithoutAccount)} users.
+                                        <a
+                                            href="${pageContext.request.contextPath}/employees/accounts/create">View
+                                            all</a>
+                                    </small>
                                 </div>
-                                <div class="filter-group">
-                                    <label for="status">Status</label>
-                                    <select id="status" name="status" class="form-select">
-                                        <option value="">All Status</option>
-                                        <option value="active" ${param.status=='active' ? 'selected' : '' }>
-                                            Active
-                                        </option>
-                                        <option value="inactive" ${param.status=='inactive' ? 'selected' : '' }>
-                                            Inactive
-                                        </option>
-                                        <option value="locked" ${param.status=='locked' ? 'selected' : '' }>
-                                            Locked
-                                        </option>
-                                        <option value="suspended" ${param.status=='suspended' ? 'selected' : ''
-                                                }>
-                                            Suspended</option>
+                            </c:if>
+                        </div>
+                    </div>
+                </c:if>
+
+                <!-- Filter Section -->
+                <div class="filter-section">
+                    <form method="get" action="${pageContext.request.contextPath}/employees/accounts"
+                          id="filterForm">
+                        <div class="filter-row">
+                            <div class="filter-group">
+                                <label for="search">Search</label>
+                                <input type="text" id="search" name="search" class="form-control"
+                                       placeholder="Username, Email Login, or User Name"
+                                       value="${param.search}">
+                            </div>
+                            <div class="filter-group">
+                                <label for="status">Status</label>
+                                <select id="status" name="status" class="form-select">
+                                    <option value="">All Status</option>
+                                    <option value="active" ${param.status=='active' ? 'selected' : '' }>
+                                        Active
+                                    </option>
+                                    <option value="inactive" ${param.status=='inactive' ? 'selected' : '' }>
+                                        Inactive
+                                    </option>
+                                    <option value="locked" ${param.status=='locked' ? 'selected' : '' }>
+                                        Locked
+                                    </option>
+                                    <option value="suspended" ${param.status=='suspended' ? 'selected' : ''
+                                            }>
+                                        Suspended</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label for="department">Department</label>
+                                <select id="department" name="department" class="form-select">
+                                    <option value="">All Departments</option>
+                                    <c:forEach var="dept" items="${departments}">
+                                        <option value="${dept.id}" ${param.department==dept.id ? 'selected'
+                                                         : '' }>
+                                                    ${dept.name}
+                                                </option>
+                                        </c:forEach>
                                     </select>
                                 </div>
                                 <div class="filter-group">
-                                    <label for="department">Department</label>
-                                    <select id="department" name="department" class="form-select">
-                                        <option value="">All Departments</option>
-                                        <c:forEach var="dept" items="${departments}">
-                                            <option value="${dept.id}" ${param.department==dept.id ? 'selected'
-                                                             : '' }>
-                                                        ${dept.name}
-                                                    </option>
-                                            </c:forEach>
-                                        </select>
-                                    </div>
-                                    <div class="filter-group">
-                                        <label for="position">Position</label>
-                                        <select id="position" name="position" class="form-select">
-                                            <option value="">All Positions</option>
-                                            <c:forEach var="pos" items="${positions}">
-                                                <option value="${pos.id}" ${param.position==pos.id ? 'selected' : ''
-                                                        }>
-                                                    ${pos.name}
-                                                </option>
-                                            </c:forEach>
-                                        </select>
-                                    </div>
-                                    <div class="filter-actions">
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="fas fa-search me-1"></i>Filter
-                                        </button>
-                                        <a href="${pageContext.request.contextPath}/employees/accounts"
-                                           class="btn btn-secondary">
-                                            <i class="fas fa-times me-1"></i>Clear
-                                        </a>
-                                    </div>
+                                    <label for="position">Position</label>
+                                    <select id="position" name="position" class="form-select">
+                                        <option value="">All Positions</option>
+                                        <c:forEach var="pos" items="${positions}">
+                                            <option value="${pos.id}" ${param.position==pos.id ? 'selected' : ''
+                                                    }>
+                                                ${pos.name}
+                                            </option>
+                                        </c:forEach>
+                                    </select>
                                 </div>
-                                <!-- Hidden fields for pagination -->
-                                <input type="hidden" name="page" value="${currentPage}">
-                                <input type="hidden" name="pageSize" value="${pageSize}">
-                            </form>
-                        </div>
-
-                        <!-- Account List Table -->
-                        <div class="table-card">
-                            <div class="card-header">
-                                <h5 class="mb-0"><i class="fas fa-user-shield me-2"></i>Account List</h5>
+                                <div class="filter-actions">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-search me-1"></i>Filter
+                                    </button>
+                                    <a href="${pageContext.request.contextPath}/employees/accounts"
+                                       class="btn btn-secondary">
+                                        <i class="fas fa-times me-1"></i>Clear
+                                    </a>
+                                </div>
                             </div>
-
-                            <c:choose>
-                                <c:when test="${loading}">
-                                    <!-- Loading State -->
-                                    <div class="loading-state">
-                                        <div class="spinner-border text-primary" role="status">
-                                            <span class="visually-hidden">Loading...</span>
-                                        </div>
-                                        <p class="mt-3">Loading data...</p>
-                                    </div>
-                                </c:when>
-                                <c:when test="${empty accounts}">
-                                    <!-- Empty State -->
-                                    <div class="empty-state">
-                                        <i class="fas fa-inbox"></i>
-                                        <p>No accounts found</p>
-                                        <c:if
-                                            test="${not empty param.search or not empty param.status or not empty param.department or not empty param.position}">
-                                            <p class="text-muted">Try adjusting your filters</p>
-                                        </c:if>
-                                    </div>
-                                </c:when>
-                                <c:otherwise>
-                                    <!-- Table with Data -->
-                                    <div class="table-responsive">
-                                        <table class="table">
-                                            <thead>
-                                                <tr>
-                                                    <th>Username</th>
-                                                    <th>Email Login</th>
-                                                    <th>User (Full Name)</th>
-                                                    <th>Role in system</th>
-                                                    <th>Department</th>
-                                                    <th>Position</th>
-                                                    <th>Status</th>
-                                                    <th class="last-login-col">Last Login</th>
-                                                    <th>Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <c:forEach var="account" items="${accounts}">
-                                                    <tr>
-                                                        <td>${account.username}</td>
-                                                        <td>${account.emailLogin != null ? account.emailLogin : '-'}
-                                                        </td>
-                                                        <td>${account.userFullName}</td>
-                                                        <td>
-                                                            <c:choose>
-                                                                <c:when test="${account.roleName != null}">
-                                                                    ${account.roleName}
-                                                                </c:when>
-                                                                <c:otherwise>
-                                                                    <span class="text-muted">-</span>
-                                                                </c:otherwise>
-                                                            </c:choose>
-                                                        </td>
-                                                        <td>${account.departmentName != null ?
-                                                              account.departmentName :
-                                                              '-'}
-                                                        </td>
-                                                        <td>${account.positionName != null ? account.positionName :
-                                                              '-'}
-                                                        </td>
-                                                        <td>
-                                                            <span class="status-badge ${account.status}">
-                                                                ${account.status}
-                                                            </span>
-                                                        </td>
-                                                        <td class="last-login-col">
-                                                            <c:choose>
-                                                                <c:when test="${account.lastLoginAt != null}">
-                                                                    ${account.lastLoginAt}
-                                                                </c:when>
-                                                                <c:otherwise>
-                                                                    Never
-                                                                </c:otherwise>
-                                                            </c:choose>
-                                                        </td>
-                                                        <td>
-                                                            <div class="action-buttons">
-                                                                <button class="btn-action btn-view"
-                                                                        data-account-id="${account.id}"
-                                                                        data-action="view" title="View Details">
-                                                                    <i class="fas fa-eye"></i>
-                                                                </button>
-                                                                <c:if test="${isAdmin}">
-                                                                    <button class="btn-action btn-edit"
-                                                                            data-account-id="${account.id}"
-                                                                            data-action="edit" title="Edit Account">
-                                                                        <i class="fas fa-edit"></i>
-                                                                    </button>
-
-                                                                    <button class="btn-action btn-reset-password"
-                                                                            data-account-id="${account.id}"
-                                                                            data-username="${fn:escapeXml(account.username)}"
-                                                                            data-action="reset-password"
-                                                                            title="Reset Password"
-                                                                            style="background-color: #6c757d; color: #fff;">
-                                                                        <i class="fas fa-key"></i>
-                                                                    </button>
-                                                                </c:if>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                </c:forEach>
-                                            </tbody>
-                                        </table>
-                                    </div>
-
-                                    <!-- Pagination -->
-                                    <div class="pagination-wrapper">
-                                        <div class="pagination-info">
-                                            Showing ${((currentPage - 1) * pageSize) + 1} to
-                                            ${currentPage * pageSize > totalRecords ? totalRecords : currentPage *
-                                              pageSize}
-                                            of ${totalRecords} entries
-                                        </div>
-
-                                        <div class="records-per-page">
-                                            <label for="pageSizeSelect">Records per page:</label>
-                                            <select id="pageSizeSelect" onchange="changePageSize(this.value)">
-                                                <option value="10" ${pageSize==10 ? 'selected' : '' }>10</option>
-                                                <option value="20" ${pageSize==20 ? 'selected' : '' }>20</option>
-                                                <option value="50" ${pageSize==50 ? 'selected' : '' }>50</option>
-                                            </select>
-                                        </div>
-
-                                        <c:if test="${totalPages > 1}">
-                                            <nav aria-label="Page navigation">
-                                                <ul class="pagination mb-0">
-                                                    <!-- Previous Button -->
-                                                    <li class="page-item <c:if test=" ${currentPage==1}">disabled
-                                                        </c:if>">
-                                                        <a class="page-link" href="#"
-                                                           data-page="<c:out value='${currentPage - 1}'/>">
-                                                            <i class="fas fa-chevron-left"></i>
-                                                        </a>
-                                                    </li>
-
-                                                    <!-- Page Numbers -->
-                                                    <c:forEach begin="1" end="${totalPages}" var="pageNum">
-                                                        <c:if
-                                                            test="${pageNum == 1 || pageNum == totalPages || (pageNum >= currentPage - 2 && pageNum <= currentPage + 2)}">
-                                                            <li class="page-item <c:if test=" ${pageNum==currentPage}">active
-                                                                </c:if>">
-                                                                <a class="page-link" href="#" data-page="<c:out value='${pageNum}'/>">
-                                                                    <c:out value="${pageNum}" />
-                                                                </a>
-                                                            </li>
-                                                        </c:if>
-                                                        <c:if
-                                                            test="${pageNum == currentPage - 3 || pageNum == currentPage + 3}">
-                                                            <li class="page-item disabled">
-                                                                <span class="page-link">...</span>
-                                                            </li>
-                                                        </c:if>
-                                                    </c:forEach>
-
-                                                    <!-- Next Button -->
-                                                    <li class="page-item <c:if test=" ${currentPage==totalPages}">disabled
-                                                        </c:if>">
-                                                        <a class="page-link" href="#"
-                                                           data-page="<c:out value='${currentPage + 1}'/>">
-                                                            <i class="fas fa-chevron-right"></i>
-                                                        </a>
-                                                    </li>
-                                                </ul>
-                                            </nav>
-                                        </c:if>
-                                    </div>
-                                </c:otherwise>
-                            </c:choose>
-                        </div>
+                            <!-- Hidden fields for pagination -->
+                            <input type="hidden" name="page" value="${currentPage}">
+                            <input type="hidden" name="pageSize" value="${pageSize}">
+                        </form>
                     </div>
 
-                    <!-- Footer -->
-                    <jsp:include page="../layout/dashboard-footer.jsp" />
+                    <!-- Account List Table -->
+                    <div class="table-card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-user-shield me-2"></i>Account List</h5>
+                        </div>
+
+                        <c:choose>
+                            <c:when test="${loading}">
+                                <!-- Loading State -->
+                                <div class="loading-state">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p class="mt-3">Loading data...</p>
+                                </div>
+                            </c:when>
+                            <c:when test="${empty accounts}">
+                                <!-- Empty State -->
+                                <div class="empty-state">
+                                    <i class="fas fa-inbox"></i>
+                                    <p>No accounts found</p>
+                                    <c:if
+                                        test="${not empty param.search or not empty param.status or not empty param.department or not empty param.position}">
+                                        <p class="text-muted">Try adjusting your filters</p>
+                                    </c:if>
+                                </div>
+                            </c:when>
+                            <c:otherwise>
+                                <!-- Table with Data -->
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Username</th>
+                                                <th>Email Login</th>
+                                                <th>User (Full Name)</th>
+                                                <th>Role in system</th>
+                                                <th>Department</th>
+                                                <th>Position</th>
+                                                <th>Status</th>
+                                                <th class="last-login-col">Last Login</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <c:forEach var="account" items="${accounts}">
+                                                <tr>
+                                                    <td>${account.username}</td>
+                                                    <td>${account.emailLogin != null ? account.emailLogin : '-'}
+                                                    </td>
+                                                    <td>${account.userFullName}</td>
+                                                    <td>
+                                                        <c:choose>
+                                                            <c:when test="${account.roleName != null}">
+                                                                ${account.roleName}
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <span class="text-muted">-</span>
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                    </td>
+                                                    <td>${account.departmentName != null ?
+                                                          account.departmentName :
+                                                          '-'}
+                                                    </td>
+                                                    <td>${account.positionName != null ? account.positionName :
+                                                          '-'}
+                                                    </td>
+                                                    <td>
+                                                        <span class="status-badge ${account.status}">
+                                                            ${account.status}
+                                                        </span>
+                                                    </td>
+                                                    <td class="last-login-col">
+                                                        <c:choose>
+                                                            <c:when test="${account.lastLoginAt != null}">
+                                                                ${account.lastLoginAt}
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                Never
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                    </td>
+                                                    <td>
+                                                        <div class="action-buttons">
+                                                            <button class="btn-action btn-view"
+                                                                    data-account-id="${account.id}"
+                                                                    data-action="view" title="View Details">
+                                                                <i class="fas fa-eye"></i>
+                                                            </button>
+                                                            <c:if test="${isAdmin}">
+                                                                <button class="btn-action btn-edit"
+                                                                        data-account-id="${account.id}"
+                                                                        data-action="edit" title="Edit Account">
+                                                                    <i class="fas fa-edit"></i>
+                                                                </button>
+
+                                                                <button class="btn-action btn-reset-password"
+                                                                        data-account-id="${account.id}"
+                                                                        data-username="${fn:escapeXml(account.username)}"
+                                                                        data-action="reset-password"
+                                                                        title="Reset Password"
+                                                                        style="background-color: #6c757d; color: #fff;">
+                                                                    <i class="fas fa-key"></i>
+                                                                </button>
+                                                            </c:if>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </c:forEach>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- Pagination -->
+                                <div class="pagination-wrapper">
+                                    <div class="pagination-info">
+                                        Showing ${((currentPage - 1) * pageSize) + 1} to
+                                        ${currentPage * pageSize > totalRecords ? totalRecords : currentPage *
+                                          pageSize}
+                                        of ${totalRecords} entries
+                                    </div>
+
+                                    <div class="records-per-page">
+                                        <label for="pageSizeSelect">Records per page:</label>
+                                        <select id="pageSizeSelect" onchange="changePageSize(this.value)">
+                                            <option value="10" ${pageSize==10 ? 'selected' : '' }>10</option>
+                                            <option value="20" ${pageSize==20 ? 'selected' : '' }>20</option>
+                                            <option value="50" ${pageSize==50 ? 'selected' : '' }>50</option>
+                                        </select>
+                                    </div>
+
+                                    <c:if test="${totalPages > 1}">
+                                        <nav aria-label="Page navigation">
+                                            <ul class="pagination mb-0">
+                                                <!-- Previous Button -->
+                                                <li class="page-item <c:if test=" ${currentPage==1}">disabled
+                                                    </c:if>">
+                                                    <a class="page-link" href="#"
+                                                       data-page="<c:out value='${currentPage - 1}'/>">
+                                                        <i class="fas fa-chevron-left"></i>
+                                                    </a>
+                                                </li>
+
+                                                <!-- Page Numbers -->
+                                                <c:forEach begin="1" end="${totalPages}" var="pageNum">
+                                                    <c:if
+                                                        test="${pageNum == 1 || pageNum == totalPages || (pageNum >= currentPage - 2 && pageNum <= currentPage + 2)}">
+                                                        <li class="page-item <c:if test=" ${pageNum==currentPage}">active
+                                                            </c:if>">
+                                                            <a class="page-link" href="#" data-page="<c:out value='${pageNum}'/>">
+                                                                <c:out value="${pageNum}" />
+                                                            </a>
+                                                        </li>
+                                                    </c:if>
+                                                    <c:if
+                                                        test="${pageNum == currentPage - 3 || pageNum == currentPage + 3}">
+                                                        <li class="page-item disabled">
+                                                            <span class="page-link">...</span>
+                                                        </li>
+                                                    </c:if>
+                                                </c:forEach>
+
+                                                <!-- Next Button -->
+                                                <li class="page-item <c:if test=" ${currentPage==totalPages}">disabled
+                                                    </c:if>">
+                                                    <a class="page-link" href="#"
+                                                       data-page="<c:out value='${currentPage + 1}'/>">
+                                                        <i class="fas fa-chevron-right"></i>
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </nav>
+                                    </c:if>
+                                </div>
+                            </c:otherwise>
+                        </c:choose>
+                    </div>
                 </div>
 
-                <<<<<<< HEAD
-                <!-- Confirmation Modal -->
-                <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel"
-                     aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content">
-                            <div class="modal-header border-0 pb-0">
-                                <h5 class="modal-title" id="confirmModalLabel">
-                                    <i class="fas fa-exclamation-circle me-2" id="confirmModalIcon"></i>
-                                    <span id="confirmModalTitle">Confirm Action</span>
-                                    =======
-                                    <!-- View Account Modal -->
-                                    <div class="modal fade" id="viewAccountModal" tabindex="-1" aria-labelledby="viewAccountModalLabel"
-                                         aria-hidden="true">
-                                        <div class="modal-dialog modal-lg modal-dialog-centered">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title" id="viewAccountModalLabel">
-                                                        <i class="fas fa-user-shield me-2"></i>Account Details
-                                                        >>>>>>> main
-                                                    </h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                            aria-label="Close"></button>
-                                                </div>
-                                                <<<<<<< HEAD
-                                                <div class="modal-body pt-2" id="confirmModalBody">
-                                                    Are you sure you want to perform this action?
-                                                </div>
-                                                <div class="modal-footer border-0">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                                        <i class="fas fa-times me-1"></i>Cancel
-                                                    </button>
-                                                    <button type="button" class="btn btn-primary" id="confirmModalBtn">
-                                                        <i class="fas fa-check me-1"></i>Confirm
-                                                    </button>
-                                                    =======
-                                                    <div class="modal-body">
-                                                        <div class="row g-3">
-                                                            <div class="col-md-6">
-                                                                <label class="form-label fw-bold">Username</label>
-                                                                <p class="form-control-plaintext" id="view-username">-</p>
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <label class="form-label fw-bold">Status</label>
-                                                                <p class="form-control-plaintext">
-                                                                    <span class="status-badge" id="view-status">-</span>
-                                                                </p>
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <label class="form-label fw-bold">Email Login</label>
-                                                                <p class="form-control-plaintext" id="view-emailLogin">-</p>
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <label class="form-label fw-bold">User (Full Name)</label>
-                                                                <p class="form-control-plaintext" id="view-userFullName">-</p>
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <label class="form-label fw-bold">Department</label>
-                                                                <p class="form-control-plaintext" id="view-department">-</p>
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <label class="form-label fw-bold">Position</label>
-                                                                <p class="form-control-plaintext" id="view-position">-</p>
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <label class="form-label fw-bold">Last Login</label>
-                                                                <p class="form-control-plaintext" id="view-lastLogin">-</p>
-                                                            </div>
-                                                            <div class="col-12">
-                                                                <hr class="my-3">
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <label class="form-label fw-bold">
-                                                                    <i class="fas fa-calendar-plus me-1"></i>Created At
-                                                                </label>
-                                                                <p class="form-control-plaintext" id="view-createdAt">-</p>
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <label class="form-label fw-bold">
-                                                                    <i class="fas fa-calendar-check me-1"></i>Updated At
-                                                                </label>
-                                                                <p class="form-control-plaintext" id="view-updatedAt">-</p>
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <label class="form-label fw-bold">
-                                                                    <i class="fas fa-key me-1"></i>Password Updated At
-                                                                </label>
-                                                                <p class="form-control-plaintext" id="view-passwordUpdatedAt">-</p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                                            <i class="fas fa-times me-2"></i>Close
-                                                        </button>
-                                                        <c:if test="${isAdmin}">
-                                                            <button type="button" class="btn btn-primary" id="btnEditFromView">
-                                                                <i class="fas fa-edit me-2"></i>Edit Account
-                                                            </button>
-                                                        </c:if>
-                                                        >>>>>>> main
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                <!-- Footer -->
+                <jsp:include page="../layout/dashboard-footer.jsp" />
+            </div>
 
-                                        <<<<<<< HEAD
-                                        <!-- View Account Modal -->
-                                        <div class="modal fade" id="viewAccountModal" tabindex="-1" aria-labelledby="viewAccountModalLabel"
-                                             =======
-                                             <!-- Edit Account Modal -->
-                                            <div class="modal fade" id="editAccountModal" tabindex="-1" aria-labelledby="editAccountModalLabel"
-                                                 >>>>>>> main
-                                                aria-hidden="true">
-                                                <div class="modal-dialog modal-lg modal-dialog-centered">
-                                                    <div class="modal-content">
-                                                        <div class="modal-header">
-                                                            <<<<<<< HEAD
-                                                            <h5 class="modal-title" id="viewAccountModalLabel">
-                                                                <i class="fas fa-user-shield me-2"></i>Account Details
-                                                                =======
-                                                                <h5 class="modal-title" id="editAccountModalLabel">
-                                                                    <i class="fas fa-edit me-2"></i>Edit Account
-                                                                    >>>>>>> main
-                                                                </h5>
-                                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                                        aria-label="Close"></button>
-                                                        </div>
 
-                                                        <form id="editAccountForm" method="post">
-                                                            <input type="hidden" id="edit-accountId" name="accountId">
-                                                            <div class="modal-body">
-                                                                <!-- Username (Read-only) -->
-                                                                <div class="mb-3">
-                                                                    <label class="form-label fw-bold">Username</label>
-                                                                    <input type="text" class="form-control" id="edit-username" readonly>
-                                                                </div>
+            <!-- View Account Modal -->
+            <div class="modal fade" id="viewAccountModal" tabindex="-1" aria-labelledby="viewAccountModalLabel"
+                 aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="viewAccountModalLabel">
+                                <i class="fas fa-user-shield me-2"></i>Account Details
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                        </div>
 
-                                                                <!-- Email Login -->
-                                                                <div class="mb-3">
-                                                                    <label for="edit-emailLogin" class="form-label">
-                                                                        Email Login<span class="text-danger">*</span>
-                                                                    </label>
-                                                                    <input type="email" class="form-control" id="edit-emailLogin"
-                                                                           name="emailLogin" required>
-                                                                </div>
+                        <div class="modal-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Username</label>
+                                    <p class="form-control-plaintext" id="view-username">-</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Status</label>
+                                    <p class="form-control-plaintext">
+                                        <span class="status-badge" id="view-status">-</span>
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Email Login</label>
+                                    <p class="form-control-plaintext" id="view-emailLogin">-</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">User (Full Name)</label>
+                                    <p class="form-control-plaintext" id="view-userFullName">-</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Department</label>
+                                    <p class="form-control-plaintext" id="view-department">-</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Position</label>
+                                    <p class="form-control-plaintext" id="view-position">-</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Last Login</label>
+                                    <p class="form-control-plaintext" id="view-lastLogin">-</p>
+                                </div>
+                                <div class="col-12">
+                                    <hr class="my-3">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-calendar-plus me-1"></i>Created At
+                                    </label>
+                                    <p class="form-control-plaintext" id="view-createdAt">-</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-calendar-check me-1"></i>Updated At
+                                    </label>
+                                    <p class="form-control-plaintext" id="view-updatedAt">-</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-key me-1"></i>Password Updated At
+                                    </label>
+                                    <p class="form-control-plaintext" id="view-passwordUpdatedAt">-</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="fas fa-times me-2"></i>Close
+                            </button>
+                            <c:if test="${isAdmin}">
+                                <button type="button" class="btn btn-primary" id="btnEditFromView">
+                                    <i class="fas fa-edit me-2"></i>Edit Account
+                                </button>
+                            </c:if>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                                                                <!-- Role Selection -->
-                                                                <div class="mb-3">
-                                                                    <label for="edit-roleId" class="form-label">
-                                                                        Role in system<span class="text-danger">*</span>
-                                                                    </label>
-                                                                    <select class="form-select" id="edit-roleId" name="roleId" required>
-                                                                        <option value="">-- Select role --</option>
-                                                                        <c:forEach var="role" items="${roles}">
-                                                                            <option value="${role.id}">
-                                                                                ${role.name} (${role.code})
-                                                                            </option>
-                                                                        </c:forEach>
-                                                                    </select>
-                                                                </div>
 
-                                                                <!-- Status -->
-                                                                <div class="mb-3">
-                                                                    <label for="edit-status" class="form-label">
-                                                                        Status<span class="text-danger">*</span>
-                                                                    </label>
-                                                                    <select class="form-select" id="edit-status" name="status" required>
-                                                                        <option value="active">Active</option>
-                                                                        <option value="inactive">Inactive</option>
-                                                                        <option value="locked">Locked</option>
-                                                                        <option value="suspended">Suspended</option>
-                                                                    </select>
-                                                                </div>
-                                                            </div>
-                                                            <div class="modal-footer">
-                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                                                    <i class="fas fa-times me-2"></i>Cancel
-                                                                </button>
-                                                                <button type="submit" class="btn btn-primary">
-                                                                    <i class="fas fa-save me-2"></i>Save Changes
-                                                                </button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
+            <!-- Edit Account Modal -->
+            <div class="modal fade" id="editAccountModal" tabindex="-1" aria-labelledby="editAccountModalLabel"
+                 aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
 
-                                            <!-- Reset Password Modal -->
-                                            <div class="modal fade" id="resetPasswordModal" tabindex="-1"
-                                                 aria-labelledby="resetPasswordModalLabel" aria-hidden="true">
-                                                <div class="modal-dialog modal-dialog-centered">
-                                                    <div class="modal-content">
-                                                        <div class="modal-header">
-                                                            <h5 class="modal-title" id="resetPasswordModalLabel">
-                                                                <i class="fas fa-key me-2"></i>Reset Password
-                                                            </h5>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                                    aria-label="Close"></button>
-                                                        </div>
-                                                        <form id="resetPasswordForm">
-                                                            <input type="hidden" id="reset-accountId" name="accountId">
-                                                            <div class="modal-body">
-                                                                <div class="alert alert-warning">
-                                                                    <i class="fas fa-exclamation-triangle me-2"></i>
-                                                                    You are about to reset the password for account: <strong
-                                                                        id="reset-username"></strong>
-                                                                </div>
+                            <h5 class="modal-title" id="editAccountModalLabel">
+                                <i class="fas fa-edit me-2"></i>Edit Account
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                        </div>
 
-                                                                <!-- New Password -->
-                                                                <div class="mb-3">
-                                                                    <label for="reset-newPassword" class="form-label">
-                                                                        New Password<span class="text-danger">*</span>
-                                                                    </label>
-                                                                    <input type="password" class="form-control" id="reset-newPassword"
-                                                                           name="newPassword" required placeholder="Enter new password">
-                                                                </div>
+                        <form id="editAccountForm" method="post">
+                            <input type="hidden" id="edit-accountId" name="accountId">
+                            <div class="modal-body">
+                                <!-- Username (Read-only) -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Username</label>
+                                    <input type="text" class="form-control" id="edit-username" readonly>
+                                </div>
 
-                                                                <!-- Confirm Password -->
-                                                                <div class="mb-3">
-                                                                    <label for="reset-confirmPassword" class="form-label">
-                                                                        Confirm Password<span class="text-danger">*</span>
-                                                                    </label>
-                                                                    <input type="password" class="form-control" id="reset-confirmPassword"
-                                                                           required placeholder="Confirm new password">
-                                                                    <div class="invalid-feedback">
-                                                                        Passwords do not match
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="modal-footer">
-                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                                                    <i class="fas fa-times me-2"></i>Cancel
-                                                                </button>
-                                                                <button type="submit" class="btn btn-primary">
-                                                                    <i class="fas fa-key me-2"></i>Reset Password
-                                                                </button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                <!-- Email Login -->
+                                <div class="mb-3">
+                                    <label for="edit-emailLogin" class="form-label">
+                                        Email Login<span class="text-danger">*</span>
+                                    </label>
+                                    <input type="email" class="form-control" id="edit-emailLogin"
+                                           name="emailLogin" required>
+                                </div>
 
-                                            <!-- Success Modal -->
-                                            <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel"
-                                                 aria-hidden="true">
-                                                <div class="modal-dialog modal-dialog-centered">
-                                                    <div class="modal-content">
-                                                        <div class="modal-header border-0 pb-0">
-                                                            <h5 class="modal-title text-success" id="successModalLabel">
-                                                                <i class="fas fa-check-circle me-2"></i>Success
-                                                            </h5>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                                    aria-label="Close"></button>
-                                                        </div>
-                                                        <div class="modal-body pt-2" id="successModalBody">
-                                                            Password reset successfully!
-                                                        </div>
-                                                        <div class="modal-footer border-0">
-                                                            <button type="button" class="btn btn-success" data-bs-dismiss="modal">
-                                                                <i class="fas fa-check me-1"></i>OK
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                <!-- Role Selection -->
+                                <div class="mb-3">
+                                    <label for="edit-roleId" class="form-label">
+                                        Role in system<span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-select" id="edit-roleId" name="roleId" required>
+                                        <option value="">-- Select role --</option>
+                                        <c:forEach var="role" items="${roles}">
+                                            <option value="${role.id}">
+                                                ${role.name} (${role.code})
+                                            </option>
+                                        </c:forEach>
+                                    </select>
+                                </div>
 
-                                            <script>
+                                <!-- Status -->
+                                <div class="mb-3">
+                                    <label for="edit-status" class="form-label">
+                                        Status<span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-select" id="edit-status" name="status" required>
+                                        <option value="active">Active</option>
+                                        <option value="inactive">Inactive</option>
+                                        <option value="locked">Locked</option>
+                                        <option value="suspended">Suspended</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                    <i class="fas fa-times me-2"></i>Cancel
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reset Password Modal -->
+            <div class="modal fade" id="resetPasswordModal" tabindex="-1"
+                 aria-labelledby="resetPasswordModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="resetPasswordModalLabel">
+                                <i class="fas fa-key me-2"></i>Reset Password
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                        </div>
+                        <form id="resetPasswordForm">
+                            <input type="hidden" id="reset-accountId" name="accountId">
+                            <div class="modal-body">
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    You are about to reset the password for account: <strong
+                                        id="reset-username"></strong>
+                                </div>
+
+                                <!-- New Password -->
+                                <div class="mb-3">
+                                    <label for="reset-newPassword" class="form-label">
+                                        New Password<span class="text-danger">*</span>
+                                    </label>
+                                    <input type="password" class="form-control" id="reset-newPassword"
+                                           name="newPassword" required placeholder="Enter new password">
+                                </div>
+
+                                <!-- Confirm Password -->
+                                <div class="mb-3">
+                                    <label for="reset-confirmPassword" class="form-label">
+                                        Confirm Password<span class="text-danger">*</span>
+                                    </label>
+                                    <input type="password" class="form-control" id="reset-confirmPassword"
+                                           required placeholder="Confirm new password">
+                                    <div class="invalid-feedback">
+                                        Passwords do not match
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                    <i class="fas fa-times me-2"></i>Cancel
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-key me-2"></i>Reset Password
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Success Modal -->
+            <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel"
+                 aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header border-0 pb-0">
+                            <h5 class="modal-title text-success" id="successModalLabel">
+                                <i class="fas fa-check-circle me-2"></i>Success
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body pt-2" id="successModalBody">
+                            Password reset successfully!
+                        </div>
+                        <div class="modal-footer border-0">
+                            <button type="button" class="btn btn-success" data-bs-dismiss="modal">
+                                <i class="fas fa-check me-1"></i>OK
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script>
                                                 const contextPath = '<c:out value="${pageContext.request.contextPath}"/>';
                                                 function goToPage(page) {
-                                                const form = document.getElementById('filterForm');
-                                                const pageInput = form.querySelector('input[name="page"]');
-                                                pageInput.value = page;
-                                                form.submit();
+                                                    const form = document.getElementById('filterForm');
+                                                    const pageInput = form.querySelector('input[name="page"]');
+                                                    pageInput.value = page;
+                                                    form.submit();
                                                 }
 
                                                 function changePageSize(size) {
-                                                const form = document.getElementById('filterForm');
-                                                const pageSizeInput = form.querySelector('input[name="pageSize"]');
-                                                const pageInput = form.querySelector('input[name="page"]');
-                                                pageSizeInput.value = size;
-                                                pageInput.value = 1;
-                                                form.submit();
+                                                    const form = document.getElementById('filterForm');
+                                                    const pageSizeInput = form.querySelector('input[name="pageSize"]');
+                                                    const pageInput = form.querySelector('input[name="page"]');
+                                                    pageSizeInput.value = size;
+                                                    pageInput.value = 1;
+                                                    form.submit();
                                                 }
 
                                                 function createAccountForUser(userId, fullName, employeeCode, emailCompany) {
-                                                // Redirect to create account page with pre-filled user
-                                                window.location.href = contextPath + '/employees/accounts/create?userId=' + userId;
+                                                    // Redirect to create account page with pre-filled user
+                                                    window.location.href = contextPath + '/employees/accounts/create?userId=' + userId;
                                                 }
 
                                                 // Handle click on create account cards
                                                 document.addEventListener('click', function (e) {
-                                                const card = e.target.closest('.create-account-card');
-                                                if (card) {
-                                                const userId = card.dataset.userId;
-                                                const userName = card.dataset.userName;
-                                                const employeeCode = card.dataset.employeeCode;
-                                                const emailCompany = card.dataset.emailCompany;
-                                                createAccountForUser(userId, userName, employeeCode, emailCompany);
-                                                }
+                                                    const card = e.target.closest('.create-account-card');
+                                                    if (card) {
+                                                        const userId = card.dataset.userId;
+                                                        const userName = card.dataset.userName;
+                                                        const employeeCode = card.dataset.employeeCode;
+                                                        const emailCompany = card.dataset.emailCompany;
+                                                        createAccountForUser(userId, userName, employeeCode, emailCompany);
+                                                    }
                                                 });
                                                 function viewAccount(accountId) {
-                                                // Fetch account details via AJAX
-                                                fetch(contextPath + '/employees/accounts/details?id=' + accountId)
-                                                        .then(response => response.json())
-                                                        .then(data => {
-                                                        if (data.success) {
-                                                        const account = data.account;
-                                                        // Populate view modal
-                                                        document.getElementById('view-username').textContent = account.username || '-';
-                                                        document.getElementById('view-emailLogin').textContent = account.emailLogin || '-';
-                                                        document.getElementById('view-userFullName').textContent = account.userFullName || '-';
-                                                        document.getElementById('view-department').textContent = account.departmentName || '-';
-                                                        document.getElementById('view-position').textContent = account.positionName || '-';
-                                                        document.getElementById('view-lastLogin').textContent = account.lastLoginAt || 'Never';
-                                                        // Timestamps
-                                                        document.getElementById('view-createdAt').textContent = account.createdAt || '-';
-                                                        document.getElementById('view-updatedAt').textContent = account.updatedAt || '-';
-                                                        document.getElementById('view-passwordUpdatedAt').textContent = account.passwordUpdatedAt || 'Never';
-                                                        // Status badge
-                                                        const statusBadge = document.getElementById('view-status');
-                                                        statusBadge.textContent = account.status || '-';
-                                                        statusBadge.className = 'status-badge ' + (account.status || '');
-                                                        // Store accountId for edit button
-                                                        document.getElementById('btnEditFromView').setAttribute('data-account-id', accountId);
-                                                        // Show modal
-                                                        const modal = new bootstrap.Modal(document.getElementById('viewAccountModal'));
-                                                        modal.show();
-                                                        } else {
-                                                        alert('Failed to load account details: ' + (data.message || 'Unknown error'));
-                                                        }
-                                                        })
-                                                        .catch(error => {
-                                                        console.error('Error:', error);
-                                                        alert('Failed to load account details');
-                                                        });
+                                                    // Fetch account details via AJAX
+                                                    fetch(contextPath + '/employees/accounts/details?id=' + accountId)
+                                                            .then(response => response.json())
+                                                            .then(data => {
+                                                                if (data.success) {
+                                                                    const account = data.account;
+                                                                    // Populate view modal
+                                                                    document.getElementById('view-username').textContent = account.username || '-';
+                                                                    document.getElementById('view-emailLogin').textContent = account.emailLogin || '-';
+                                                                    document.getElementById('view-userFullName').textContent = account.userFullName || '-';
+                                                                    document.getElementById('view-department').textContent = account.departmentName || '-';
+                                                                    document.getElementById('view-position').textContent = account.positionName || '-';
+                                                                    document.getElementById('view-lastLogin').textContent = account.lastLoginAt || 'Never';
+                                                                    // Timestamps
+                                                                    document.getElementById('view-createdAt').textContent = account.createdAt || '-';
+                                                                    document.getElementById('view-updatedAt').textContent = account.updatedAt || '-';
+                                                                    document.getElementById('view-passwordUpdatedAt').textContent = account.passwordUpdatedAt || 'Never';
+                                                                    // Status badge
+                                                                    const statusBadge = document.getElementById('view-status');
+                                                                    statusBadge.textContent = account.status || '-';
+                                                                    statusBadge.className = 'status-badge ' + (account.status || '');
+                                                                    // Store accountId for edit button
+                                                                    document.getElementById('btnEditFromView').setAttribute('data-account-id', accountId);
+                                                                    // Show modal
+                                                                    const modal = new bootstrap.Modal(document.getElementById('viewAccountModal'));
+                                                                    modal.show();
+                                                                } else {
+                                                                    alert('Failed to load account details: ' + (data.message || 'Unknown error'));
+                                                                }
+                                                            })
+                                                            .catch(error => {
+                                                                console.error('Error:', error);
+                                                                alert('Failed to load account details');
+                                                            });
                                                 }
 
 
                                                 function resetPassword(accountId, username) {
-                                                // Populate reset password modal
-                                                document.getElementById('reset-accountId').value = accountId;
-                                                document.getElementById('reset-username').textContent = username;
-                                                document.getElementById('reset-newPassword').value = '';
-                                                document.getElementById('reset-confirmPassword').value = '';
-                                                document.getElementById('reset-confirmPassword').classList.remove('is-invalid');
-                                                // Show modal
-                                                const modal = new bootstrap.Modal(document.getElementById('resetPasswordModal'));
-                                                modal.show();
+                                                    // Populate reset password modal
+                                                    document.getElementById('reset-accountId').value = accountId;
+                                                    document.getElementById('reset-username').textContent = username;
+                                                    document.getElementById('reset-newPassword').value = '';
+                                                    document.getElementById('reset-confirmPassword').value = '';
+                                                    document.getElementById('reset-confirmPassword').classList.remove('is-invalid');
+                                                    // Show modal
+                                                    const modal = new bootstrap.Modal(document.getElementById('resetPasswordModal'));
+                                                    modal.show();
                                                 }
 
 
                                                 function editAccount(accountId) {
-                                                // Fetch account details via AJAX
-                                                fetch(contextPath + '/employees/accounts/details?id=' + accountId)
-                                                        .then(response => response.json())
-                                                        .then(data => {
-                                                        if (data.success) {
-                                                        const account = data.account;
-                                                        // Populate edit modal
-                                                        document.getElementById('edit-accountId').value = account.id;
-                                                        document.getElementById('edit-username').value = account.username || '';
-                                                        document.getElementById('edit-emailLogin').value = account.emailLogin || '';
-                                                        document.getElementById('edit-status').value = account.status || 'active';
-                                                        // Set role if available (for future implementation)
-                                                        if (account.roleId) {
-                                                        document.getElementById('edit-roleId').value = account.roleId;
-                                                        }
+                                                    // Fetch account details via AJAX
+                                                    fetch(contextPath + '/employees/accounts/details?id=' + accountId)
+                                                            .then(response => response.json())
+                                                            .then(data => {
+                                                                if (data.success) {
+                                                                    const account = data.account;
+                                                                    // Populate edit modal
+                                                                    document.getElementById('edit-accountId').value = account.id;
+                                                                    document.getElementById('edit-username').value = account.username || '';
+                                                                    document.getElementById('edit-emailLogin').value = account.emailLogin || '';
+                                                                    document.getElementById('edit-status').value = account.status || 'active';
+                                                                    // Set role if available (for future implementation)
+                                                                    if (account.roleId) {
+                                                                        document.getElementById('edit-roleId').value = account.roleId;
+                                                                    }
 
-                                                        // Show modal
-                                                        const modal = new bootstrap.Modal(document.getElementById('editAccountModal'));
-                                                        modal.show();
-                                                        } else {
-                                                        alert('Failed to load account details: ' + (data.message || 'Unknown error'));
-                                                        }
-                                                        })
-                                                        .catch(error => {
-                                                        console.error('Error:', error);
-                                                        alert('Failed to load account details');
-                                                        });
+                                                                    // Show modal
+                                                                    const modal = new bootstrap.Modal(document.getElementById('editAccountModal'));
+                                                                    modal.show();
+                                                                } else {
+                                                                    alert('Failed to load account details: ' + (data.message || 'Unknown error'));
+                                                                }
+                                                            })
+                                                            .catch(error => {
+                                                                console.error('Error:', error);
+                                                                alert('Failed to load account details');
+                                                            });
                                                 }
 
                                                 document.addEventListener('DOMContentLoaded', function () {
-                                                const filterForm = document.getElementById('filterForm');
-                                                const searchInput = document.getElementById('search');
-                                                if (searchInput) {
-                                                searchInput.addEventListener('keypress', function (e) {
-                                                if (e.key === 'Enter') {
-                                                e.preventDefault();
-                                                filterForm.submit();
-                                                }
-                                                });
-                                                }
+                                                    const filterForm = document.getElementById('filterForm');
+                                                    const searchInput = document.getElementById('search');
+                                                    if (searchInput) {
+                                                        searchInput.addEventListener('keypress', function (e) {
+                                                            if (e.key === 'Enter') {
+                                                                e.preventDefault();
+                                                                filterForm.submit();
+                                                            }
+                                                        });
+                                                    }
 
-                                                document.addEventListener('click', function (e) {
-                                                const button = e.target.closest('.btn-action');
-                                                if (button) {
-                                                const accountId = button.dataset.accountId;
-                                                const action = button.dataset.action;
-                                                const username = button.dataset.username;
-                                                const currentStatus = button.dataset.currentStatus;
-                                                switch (action) {
-                                                case 'view':
-                                                        viewAccount(accountId);
-                                                break;
-                                                case 'edit':
-                                                        editAccount(accountId);
-                                                break;
-                                                << << << < HEAD
-            case 'activ                                ate':
-            showConfirmModal(
-            'Activate Account',
-            'Are you sure you want to activate account "<strong>' + username + '</strong>"?<br><small class="text-muted">Th                                e user will be able to login.</smal                                l>',
-                        'success',
-                        function () {
-                                                        toggle                                AccountStatus(accountId);
-                                                                                  }
-                                                              );
-                                                    break;                                                
-                                                    case '                                                deactivate':
-                                                    showConfirmModal(
-                                                    'Deactivate Account',
-                                                    'Are you                                                sure you want to deactivate account "<strong>' + username +                                 '</strong>"?<br><small class="text-mute                                                          d">The user will no                                                t be able to login.</sma                                                ll>',
-                                                        'warning',
-                                                                                    fu                                                    nction (                                                                       )                                                      {                                                    
-                                                        tog                                                    gleAccountStatus(accountId);
-                                                                    }
-                                                                                       );
-                                                                   =======
-                                                                    case 'reset-pass                                word':
-                                                        resetPassword(accountId, username);
-                                                        >>>>>>> main
-                                                        break;
+                                                    document.addEventListener('click', function (e) {
+                                                        const button = e.target.closest('.btn-action');
+                                                        if (button) {
+                                                            const accountId = button.dataset.accountId;
+                                                            const action = button.dataset.action;
+                                                            const username = button.dataset.username;
+                                                            const currentStatus = button.dataset.currentStatus;
+                                                            switch (action) {
+                                                                case 'view':
+                                                                    viewAccount(accountId);
+                                                                    break;
+                                                                case 'edit':
+                                                                    editAccount(accountId);
+                                                                    break;
+
+                                                                case 'reset-pass                                word':
+                                                                    resetPassword(accountId, username);
+                                                                    break;
+                                                            }
+                                                            return;
                                                         }
-                                                                                                return;
-                                                              }
-                
-                                                    const pageLink = e.target.closest('.page-link');
+
+                                                        const pageLink = e.target.closest('.page-link');
                                                         if (pageLink && pageLink.dataset.page) {
-                                                        e.preventDefault();
-                                                const page = parseInt(pageLink.dataset.page);
-                                                if (!isNaN(page) && page > 0) {
-                                                goToPage(page);
-                                                }
+                                                            e.preventDefault();
+                                                            const page = parseInt(pageLink.dataset.page);
+                                                            if (!isNaN(page) && page > 0) {
+                                                                goToPage(page);
+                                                            }
                                                         }
-                                                        });
-                            
-                                                                                   // Edit from view modal
-                                                                document                                                    .getElementById('btnEditFromView')?.addEventListener('click', function () {
+                                                    });
+
+                                                    // Edit from view modal
+                                                    document.getElementById('btnEditFromView')?.addEventListener('click', function () {
                                                         const accountId = this.getAttribute('data-account-id');
-                                                // Close view modal
-                                                const viewModal = bootstrap.Modal.getInstance(document.getElementById('viewAccountModal'));
-                                                viewModal.hide();
-                                                // Open edit modal
-                                                setTimeo                                ut(() => editAccount(accountId), 300);
-                                                        });
-                            
-                                                        // Edit form submission
-                                                        document.getElementById('editAccountForm').addEventListener('submit', function (e) {
+                                                        // Close view modal
+                                                        const viewModal = bootstrap.Modal.getInstance(document.getElementById('viewAccountModal'));
+                                                        viewModal.hide();
+                                                        // Open edit modal
+                                                        setTimeo                                ut(() => editAccount(accountId), 300);
+                                                    });
+
+                                                    // Edit form submission
+                                                    document.getElementById('editAccountForm').addEventListener('submit', function (e) {
+                                                    e.preventDefault();
+                                                            const formData = new FormData(this);
+                                                            // Convert FormData to URLSearchParams
+                                                            const urlParams = new URLSearchParams();
+                                                            for (let pair of formData.entries()) {
+                                                    urlParams.append(pair[0], pair[1]);
+                                                    }
+
+                                                    fetch(contextPath + '/employees/accounts/update', {
+                                                    method: 'POST',
+                                                            headers: {
+                                                            'Content-Type': 'application/x-www-form-urlencoded'
+                                                            },
+                                                            body: urlParams.toString()
+                                                    })
+                                                            .then(response => response.json())
+                                                            .then(data => {
+                                                            if (data.success) {
+                                                            // Close modal                                                
+                                                            const modal = bootstrap.Modal.ge                                                tInstance(document.getElementById('editAccountModal'));
+                                                                    modal.hide();
+                                                                    // Reload page
+                                                                    window.l                                                    ocation.reload();
+                                                            } else {
+                                                            alert('Failed to update account: ' + (data.message || 'Unknown error'));
+                                                            }
+                                                            })
+                                                            .catch(error => {
+                                                            console.error('Error:', error);
+                                                                    alert('Failed to update account');
+                                                            });
+                                                    }
+                                                    );
+
+
+                                                    // Reset password form submission
+                                                    document.getElementById('resetPasswordForm').addEventListener('submit', function (e) {
                                                         e.preventDefault();
-                                                const formData = new FormData(this);
-                                                // Convert FormData to URLSearchParams
-                                                const urlParams = new URLSearchParams();
-                                                for (let pair of formData.entries()) {
-                                                urlParams.append(pair[0], pair[1]);
-                                                }
-
-                                                fetch(contextPath + '/employees/accounts/update', {
-                                                method: 'POST',
-                                                        headers: {
-                                                        'Content-Type': 'application/x-www-form-urlencoded'
-                                                        },
-                                                        body: urlParams.toString()
-                                                })
-                                                        .then(response => response.json())
-                                                        .then(data => {
-                                                        if (data.success) {
-                                                        // Close modal                                                
-                                                        const modal = bootstrap.Modal.ge                                                tInstance(document.getElementById('editAccountModal'));                                                    
-                                                        modal.hide();
-                                                        // Reload page
-                                                        window.l                                                    ocation.reload();
-                                                        } else {
-                                                                   alert('Failed to update account: ' + (data.message || 'Unknown error'));
+                                                        const newPassword = document.getElementById('reset-newPassword').value;
+                                                        const confirmPassword = document.getElementById('reset-confirmPassword').value;
+                                                        const confirmInput = document.getElementById('reset-confirmPassword');
+                                                        // Validate passwords match
+                                                        if (newPassword !== confirmPassword) {
+                                                            confirmInput.classList.add('is-invalid');
+                                                            return;
                                                         }
-                                                        })
-                                                        .catch(error => {
-                                                        console.error('Error:', error);
-                                                        alert('Failed to update account');
-                                                        });
-                                                        });
-                                                                    
-                                                                
-                                                        // Reset password form submission
-                                                        document.getElementById('resetPasswordForm').addEventListener('submit', function (e) {
-                                                        e.preventDefault();
-                                                const newPassword = document.getElementById('reset-newPassword').value;
-                                                const confirmPassword = document.getElementById('reset-confirmPassword').value;
-                                                const confirmInput = document.getElementById('reset-confirmPassword');
-                                                // Validate passwords match
-                                                if (newPassword !== confirmPassword) {
-                                                confirmInput.classList.add('is-invalid');
-                                                return;
-                                                }
-                                                confirmInput.classList.remove('is-invalid');
-                                                const formData = new FormData(this);
-                                                const urlParams = new URLSearchParams();
-                                                for (let pair of formData.entries()) {
-                                                urlParams.append(pair[0], pair[1]);
-                                                }
-
-                                                fetch(contextPath + '/employees/accounts/reset-password', {
-                                                method: 'POST',
-                                                        headers: {
-                                                        'Content-Type': 'application/x-www-form-urlencoded'
-                                                        },
-                                                        body: urlParams.toString()
-                                                })
-                                                        .then(response => response.json())
-                                                        .then(data => {
-                                                        if (data.success) {
-                                                        // Close reset password modal
-                                                        const resetModal = bootstrap.Modal.getInstance(document.getElementById('resetPasswordModal'));
-                                                        resetModal.hide();
-                                                        // Show success modal
-                                                        const successModal = new bootstrap.Modal(document.getElementById('successModal'));
-                                                        document.getElementById('successModalBody').textContent = 'Password reset successfully!';
-                                                        successModal.show();
-                                                        // Reload page when                                                 success modal is closed
-                                                        document.getElementById('successModal').addEventListener                                                    ('hidden.bs.modal', function () {
-                                                        window.location.reload();
-                                                        },{ once: true });
-                                                        } else {
-                                                        alert('Failed to reset password: ' + (data.message || 'Unknown error'));
+                                                        confirmInput.classList.remove('is-invalid');
+                                                        const formData = new FormData(this);
+                                                        const urlParams = new URLSearchParams();
+                                                        for (let pair of formData.entries()) {
+                                                            urlParams.append(pair[0], pair[1]);
                                                         }
-                                                        })
-                                                        .catch(error => {
-                                                        console.error('Error:', error);
-                                                        alert('Failed to reset password');
-                                                        });
-                                                        });
-                                            });
-                                            </script>
-                </body>
 
-                </html>
+                                                        fetch(contextPath + '/employees/accounts/reset-password', {
+                                                            method: 'POST',
+                                                            headers: {
+                                                                'Content-Type': 'application/x-www-form-urlencoded'
+                                                            },
+                                                            body: urlParams.toString()
+                                                        })
+                                                                .then(response => response.json())
+                                                                .then(data => {
+                                                                    if (data.success) {
+                                                                        // Close reset password modal
+                                                                        const resetModal = bootstrap.Modal.getInstance(document.getElementById('resetPasswordModal'));
+                                                                        resetModal.hide();
+                                                                        // Show success modal
+                                                                        const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                                                                        document.getElementById('successModalBody').textContent = 'Password reset successfully!';
+                                                                        successModal.show();
+                                                                        // Reload page when                                                 success modal is closed
+                                                                        document.getElementById('successModal').addEventListener('hidden.bs.modal', function () {
+                                                                            window.location.reload();
+                                                                        }, {once: true});
+                                                                    } else {
+                                                                        alert('Failed to reset password: ' + (data.message || 'Unknown error'));
+                                                                    }
+                                                                })
+                                                                .catch(error => {
+                                                                    console.error('Error:', error);
+                                                                    alert('Failed to reset password');
+                                                                });
+                                                    });
+                                                });
+            </script>
+        </body>
+
+    </html>
