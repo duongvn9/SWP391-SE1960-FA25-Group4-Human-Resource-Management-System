@@ -44,9 +44,6 @@
                             </label>
                             <textarea class="form-control" id="approvalReason" rows="3" required
                                 placeholder="Enter reason for your decision (required)"></textarea>
-                            <div class="invalid-feedback" id="reasonError">
-                                Reason is required
-                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
