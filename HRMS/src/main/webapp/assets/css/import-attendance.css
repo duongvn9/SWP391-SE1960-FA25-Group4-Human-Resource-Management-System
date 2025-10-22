@@ -1,7 +1,7 @@
 /* Scoped styles for Import Attendance page */
 :root {
     --ia-sidebar-width: 260px; /* fallback if sidebar variable missing */
-    --ia-header-h: 64px; /* fallback header height */
+    --ia-header-h: 64px;       /* fallback header height */
     --ia-gap: 12px;
     --ia-primary: #4f46e5;
     --ia-muted: #6c757d;
@@ -9,16 +9,36 @@
     --ia-radius: 10px;
 }
 
-/* Ensure main content accounts for fixed sidebar & header when this CSS is loaded on its page */
+/* Main content top padding cho header */
 .import-attendance-page .main-content {
-    /* Do not override layout (margin-left/min-height/display) which is controlled by sidebar.jsp
-       Keep only top padding so header spacing remains correct for this page. */
     padding-top: calc(var(--header-h, var(--ia-header-h)) + var(--ia-gap));
+    margin-left: var(--sidebar-width, 260px); /* lấy theo biến sidebar */
+    transition: margin-left 0.3s ease;
 }
 
-/* When sidebar collapsed, page should still display correctly */
-body.sidebar-collapsed .import-attendance-page .main-content {
+/* Sidebar mặc định */
+.import-attendance-page .sidebar {
+    width: var(--sidebar-width, 260px);
+    transition: width 0.3s ease;
+}
+
+/* Header mặc định */
+.import-attendance-page .top-navbar {
+    left: var(--sidebar-width, 260px);
+    transition: left 0.3s ease;
+}
+
+/* Khi sidebar thu gọn (dựa vào class .collapsed) */
+.import-attendance-page .sidebar.collapsed {
+    width: 70px;
+}
+
+.import-attendance-page .sidebar.collapsed ~ .main-content {
     margin-left: 70px;
+}
+
+.import-attendance-page .sidebar.collapsed ~ .top-navbar {
+    left: 70px;
 }
 
 /* Content area */
