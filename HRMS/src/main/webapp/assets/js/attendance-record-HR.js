@@ -90,22 +90,74 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+// submit update/delete row
     window.submitAction = (btn, actionType) => {
-        const form = btn.closest("form");
+        const rowForm = btn.closest("form.actionForm");
+        if (!rowForm)
+            return;
+
+        rowForm.querySelector(".formAction").value = actionType;
+
+        // clone filter từ #filterForm
+        const filterForm = document.getElementById("filterForm");
+        if (filterForm) {
+            // xóa các clone cũ
+            rowForm.querySelectorAll(".filter-clone").forEach(el => el.remove());
+
+            filterForm.querySelectorAll("input, select").forEach(input => {
+                if (!input.name)
+                    return;
+                const hidden = document.createElement("input");
+                hidden.type = "hidden";
+                hidden.name = input.name;
+                hidden.value = input.value;
+                hidden.classList.add("filter-clone");
+                rowForm.appendChild(hidden);
+            });
+        }
+
+        if (actionType === "update") {
+            openEditModalFromForm(rowForm);
+        } else if (actionType === "delete") {
+            if (confirm("Are you sure you want to delete this record?")) {
+                rowForm.submit();
+            }
+        }
+    };
+
+    // submit từ modal edit
+    window.submitEdit = () => {
+        const form = document.getElementById("editForm");
         if (!form)
             return;
 
-        const actionInput = form.querySelector(".formAction");
-        if (actionInput)
-            actionInput.value = actionType;
+        // xóa clone cũ
+        form.querySelectorAll(".filter-clone").forEach(el => el.remove());
 
-        if (actionType === "update") {
-            openEditModalFromForm(form);
-        } else if (actionType === "delete") {
-            if (confirm("Are you sure you want to delete this record?")) {
-                form.submit();
-            }
+        // clone filter
+        const filterForm = document.getElementById("filterForm");
+        if (filterForm) {
+            filterForm.querySelectorAll("input, select").forEach(input => {
+                if (!input.name)
+                    return;
+                if (input.type === "button" || input.type === "submit")
+                    return;
+
+                const hidden = document.createElement("input");
+                hidden.type = "hidden";
+                hidden.name = input.name;
+                hidden.value = input.value;
+                hidden.classList.add("filter-clone");
+                form.appendChild(hidden);
+            });
         }
+
+        console.log("Submitting edit form with filters:");
+        form.querySelectorAll(".filter-clone").forEach(i => console.log(i.name, i.value));
+
+        form.action = `${window.location.origin}/HRMS/attendance/record/HR`;
+        form.method = "POST";
+        form.submit();
     };
 
     const openEditModalFromForm = (form) => {
@@ -121,8 +173,12 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("modalSource").value = getVal("sourceEdit");
         document.getElementById("modalPeriod").value = getVal("periodEdit");
 
+        document.getElementById("checkInOld").value = getVal("checkInEdit");
+        document.getElementById("checkOutOld").value = getVal("checkOutEdit");
+
         document.getElementById("editModal").style.display = "flex";
     };
+
 
     window.closeModal = () => {
         document.getElementById("editModal").style.display = "none";
