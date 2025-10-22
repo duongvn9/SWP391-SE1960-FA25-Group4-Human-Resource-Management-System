@@ -27,6 +27,19 @@ function openApprovalModal(requestId, requestTitle) {
         reasonErrorEl.style.display = 'none';
     }
 
+    // Add event listeners to clear error when decision changes
+    const decisionRadios = document.querySelectorAll('input[name="decision"]');
+    decisionRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (approvalReasonEl) {
+                approvalReasonEl.classList.remove('is-invalid');
+            }
+            if (reasonErrorEl) {
+                reasonErrorEl.style.display = 'none';
+            }
+        });
+    });
+
     // Show modal
     const modal = new bootstrap.Modal(document.getElementById('approvalModal'));
     modal.show();
@@ -41,13 +54,20 @@ function submitApproval() {
     const reason = document.getElementById('approvalReason').value.trim();
     const reasonField = document.getElementById('approvalReason');
 
-    // Validate: reason is required for rejection
-    if (decision === 'reject' && !reason) {
+    // Validate: reason is required for both accept and reject
+    const reasonError = document.getElementById('reasonError');
+    if (!reason) {
         reasonField.classList.add('is-invalid');
+        if (reasonError) {
+            reasonError.style.display = 'block';
+        }
         return;
     }
 
     reasonField.classList.remove('is-invalid');
+    if (reasonError) {
+        reasonError.style.display = 'none';
+    }
 
     // Disable submit button
     const submitBtn = event.target;
@@ -97,72 +117,7 @@ function submitApproval() {
         submitBtn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Submit';
     });
 }
-
-/**
- * Delete request with confirmation dialog
- * Performs soft delete by changing status to CANCELLED via AJAX
- * @param {number} requestId - The ID of the request to delete
- */
-function deleteRequest(requestId) {
-    if (!confirm('Are you sure you want to delete this request? This will change its status to CANCELLED.')) {
-        return;
-    }
-
-    // Show loading state
-    const deleteButton = event.target.closest('button');
-    if (deleteButton) {
-        deleteButton.disabled = true;
-        deleteButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-    }
-
-    // Get context path from the page
-    const contextPath = getContextPath();
-
-    // Use form data instead of JSON for servlet compatibility
-    const formData = new URLSearchParams();
-    formData.append('action', 'delete');
-    formData.append('requestId', requestId);
-
-    fetch(contextPath + '/requests', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: formData
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok: ' + response.status);
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.success) {
-            showMessage('Request deleted successfully', 'success');
-            // Reload page after short delay to show message
-            setTimeout(() => {
-                location.reload();
-            }, 1000);
-        } else {
-            showMessage('Error: ' + (data.message || 'Failed to delete request'), 'error');
-            // Re-enable button on error
-            if (deleteButton) {
-                deleteButton.disabled = false;
-                deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
-            }
-        }
-    })
-    .catch(error => {
-        console.error('Error deleting request:', error);
-        showMessage('An error occurred while deleting the request. Please try again.', 'error');
-        // Re-enable button on error
-        if (deleteButton) {
-            deleteButton.disabled = false;
-            deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
-        }
-    });
-}
-
+s
 /**
  * Get the application context path
  * @returns {string} The context path
@@ -244,22 +199,17 @@ function getBootstrapAlertClass(type) {
  * Initialize page functionality when DOM is ready
  */
 document.addEventListener('DOMContentLoaded', function() {
-    // Handle decision change in approval modal
+    // Handle decision change in approval modal - clear validation errors
     const decisionInputs = document.querySelectorAll('input[name="decision"]');
     decisionInputs.forEach(input => {
         input.addEventListener('change', function() {
             const reasonErrorEl = document.getElementById('reasonError');
             const reasonField = document.getElementById('approvalReason');
 
-            if (this.value === 'reject') {
-                if (reasonErrorEl) reasonErrorEl.style.display = 'block';
-                if (reasonField) reasonField.placeholder = 'Enter rejection reason (required)';
-            } else {
-                if (reasonErrorEl) reasonErrorEl.style.display = 'none';
-                if (reasonField) {
-                    reasonField.placeholder = 'Enter approval reason (optional)';
-                    reasonField.classList.remove('is-invalid');
-                }
+            // Clear validation errors when decision changes
+            if (reasonErrorEl) reasonErrorEl.style.display = 'none';
+            if (reasonField) {
+                reasonField.classList.remove('is-invalid');
             }
         });
     });
