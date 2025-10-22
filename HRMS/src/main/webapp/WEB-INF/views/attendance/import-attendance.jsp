@@ -180,7 +180,6 @@
             </div>
         </div>
         <script src="${pageContext.request.contextPath}/assets/js/import-attendance.js"></script>
-        <!-- Thêm ngay trước </body> -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     </body>
 </html>
