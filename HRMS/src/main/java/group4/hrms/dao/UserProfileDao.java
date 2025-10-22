@@ -1,12 +1,18 @@
 package group4.hrms.dao;
 
-import group4.hrms.model.UserProfile;
-import group4.hrms.util.DatabaseUtil;
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.*;
-import java.util.Optional;
+import group4.hrms.model.UserProfile;
+import group4.hrms.util.DatabaseUtil;
 
 /**
  * DAO class để xử lý user profile data

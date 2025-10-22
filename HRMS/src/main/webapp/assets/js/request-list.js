@@ -16,8 +16,16 @@ function openApprovalModal(requestId, requestTitle) {
     document.getElementById('decisionAccept').checked = true;
 
     // Reset validation
-    document.getElementById('approvalReason').classList.remove('is-invalid');
-    document.getElementById('reasonRequired').style.display = 'none';
+    const approvalReasonEl = document.getElementById('approvalReason');
+    if (approvalReasonEl) {
+        approvalReasonEl.classList.remove('is-invalid');
+    }
+
+    // The modal uses id="reasonError" for the validation message. Use defensive checks.
+    const reasonErrorEl = document.getElementById('reasonError');
+    if (reasonErrorEl) {
+        reasonErrorEl.style.display = 'none';
+    }
 
     // Show modal
     const modal = new bootstrap.Modal(document.getElementById('approvalModal'));
@@ -240,16 +248,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const decisionInputs = document.querySelectorAll('input[name="decision"]');
     decisionInputs.forEach(input => {
         input.addEventListener('change', function() {
-            const reasonRequired = document.getElementById('reasonRequired');
+            const reasonErrorEl = document.getElementById('reasonError');
             const reasonField = document.getElementById('approvalReason');
 
             if (this.value === 'reject') {
-                reasonRequired.style.display = 'inline';
-                reasonField.placeholder = 'Enter rejection reason (required)';
+                if (reasonErrorEl) reasonErrorEl.style.display = 'block';
+                if (reasonField) reasonField.placeholder = 'Enter rejection reason (required)';
             } else {
-                reasonRequired.style.display = 'none';
-                reasonField.placeholder = 'Enter approval reason (optional)';
-                reasonField.classList.remove('is-invalid');
+                if (reasonErrorEl) reasonErrorEl.style.display = 'none';
+                if (reasonField) {
+                    reasonField.placeholder = 'Enter approval reason (optional)';
+                    reasonField.classList.remove('is-invalid');
+                }
             }
         });
     });
