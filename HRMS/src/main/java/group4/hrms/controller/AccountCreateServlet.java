@@ -15,7 +15,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * Servlet xử lý tạo Account mới
@@ -28,6 +30,34 @@ public class AccountCreateServlet extends HttpServlet {
     private static final Logger logger = LoggerFactory.getLogger(AccountCreateServlet.class);
     private final AccountDao accountDao = new AccountDao();
     private final UserDao userDao = new UserDao();
+
+    // Password validation patterns
+    private static final Pattern UPPERCASE_PATTERN = Pattern.compile(".*[A-Z].*");
+    private static final Pattern SPECIAL_CHAR_PATTERN = Pattern.compile(".*[!@#$%^&*(),.?\":{}|<>].*");
+
+    /**
+     * Validate password strength according to requirements
+     * 
+     * @param password The password to validate
+     * @return List of specific error messages, empty if password is valid
+     */
+    private List<String> validatePassword(String password) {
+        List<String> errors = new ArrayList<>();
+
+        if (password == null || password.length() < 6) {
+            errors.add("Password must be at least 6 characters long");
+        }
+
+        if (password != null && !UPPERCASE_PATTERN.matcher(password).matches()) {
+            errors.add("Password must contain at least one uppercase letter");
+        }
+
+        if (password != null && !SPECIAL_CHAR_PATTERN.matcher(password).matches()) {
+            errors.add("Password must contain at least one special character");
+        }
+
+        return errors;
+    }
 
     /**
      * GET - Hiển thị form tạo account mới
@@ -131,6 +161,16 @@ public class AccountCreateServlet extends HttpServlet {
 
             if (confirmPassword == null || !password.equals(confirmPassword)) {
                 session.setAttribute("errorMessage", "Passwords do not match");
+                response.sendRedirect(request.getContextPath() + "/employees/accounts/create");
+                return;
+            }
+
+            // Validate password strength
+            List<String> passwordErrors = validatePassword(password);
+            if (!passwordErrors.isEmpty()) {
+                // Combine all password validation errors into a single message
+                String errorMessage = "Password validation failed: " + String.join("; ", passwordErrors);
+                session.setAttribute("errorMessage", errorMessage);
                 response.sendRedirect(request.getContextPath() + "/employees/accounts/create");
                 return;
             }

@@ -18,6 +18,7 @@ public class UserListDto {
     private String positionName;
     private String status;
     private LocalDate dateJoined;
+    private String gender;
     private boolean hasActiveAccounts;
 
     // Constructors
@@ -38,6 +39,7 @@ public class UserListDto {
         this.departmentName = rs.getString("department_name");
         this.positionName = rs.getString("position_name");
         this.status = rs.getString("status");
+        this.gender = rs.getString("gender");
 
         Date dateJoinedSql = rs.getDate("date_joined");
         if (dateJoinedSql != null) {
@@ -119,6 +121,14 @@ public class UserListDto {
         this.dateJoined = dateJoined;
     }
 
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
     public boolean isHasActiveAccounts() {
         return hasActiveAccounts;
     }
@@ -138,6 +148,7 @@ public class UserListDto {
                 ", positionName='" + positionName + '\'' +
                 ", status='" + status + '\'' +
                 ", dateJoined=" + dateJoined +
+                ", gender='" + gender + '\'' +
                 ", hasActiveAccounts=" + hasActiveAccounts +
                 '}';
     }
