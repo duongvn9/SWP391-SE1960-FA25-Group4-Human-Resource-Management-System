@@ -118,10 +118,25 @@
                                 </span>
                             </div>
                         </c:if>
+
+                        <c:if test="${not empty error}">
+                            <div class="form-message error-message" style="color: red">${error}</div>
+                        </c:if>
+                        <c:if test="${not empty message}">
+                            <div class="form-message success-message" style="color: green">${message}</div>
+                        </c:if>
                     </div>
 
-                    <form id="exportForm" class="export-form" action="${pageContext.request.contextPath}/attendance/record/HR" method="post"> 
-                        <input type="hidden" name="exportType" id="exportType"> 
+                    <form id="exportForm" class="export-form" action="${pageContext.request.contextPath}/attendance/record/HR" method="post">
+                        <input type="hidden" name="exportType" id="exportType">
+                        <input type="hidden" name="employeeKeyword" id="exportEmployeeKeyword" value="${employeeKeyword}">
+                        <input type="hidden" name="department" id="exportDepartment" value="${department}">
+                        <input type="hidden" name="startDate" id="exportStartDate" value="${startDate}">
+                        <input type="hidden" name="endDate" id="exportEndDate" value="${endDate}">
+                        <input type="hidden" name="status" id="exportStatus" value="${status}">
+                        <input type="hidden" name="source" id="exportSource" value="${source}">
+                        <input type="hidden" name="periodSelect" id="exportPeriodSelect" 
+                               value="${selectedPeriod != null ? selectedPeriod.id : ''}">
                     </form>
 
                     <!-- ========== MAIN TABLE ========== --> 
@@ -165,6 +180,15 @@
                                                     <input type="hidden" name="statusEdit" value="${att.status}">
                                                     <input type="hidden" name="sourceEdit" value="${att.source}">
                                                     <input type="hidden" name="periodEdit" value="${att.period}">
+
+                                                    <input type="hidden" name="employeeKeyword" value="${employeeKeyword}">
+                                                    <input type="hidden" name="department" value="${department}">
+                                                    <input type="hidden" name="startDate" value="${startDate}">
+                                                    <input type="hidden" name="endDate" value="${endDate}">
+                                                    <input type="hidden" name="status" value="${status}">
+                                                    <input type="hidden" name="source" value="${source}">
+                                                    <input type="hidden" name="periodSelect" value="${selectedPeriod != null ? selectedPeriod.id : ''}">
+
                                                     <input type="hidden" class="formAction" name="action" value="">
                                                     <button type="button" class="btn btn-update-row" onclick="submitAction(this, 'update')">Update</button>
                                                     <button type="button" class="btn btn-delete-row" onclick="submitAction(this, 'delete')">Delete</button>
@@ -185,9 +209,10 @@
                             <input type="hidden" name="department" value="${department}" />
                             <input type="hidden" name="status" value="${status}" />
                             <input type="hidden" name="source" value="${source}" />
-                            <input type="hidden" name="periodSelect" value="${selectedPeriod}" />
                             <input type="hidden" name="startDate" value="${startDate}" />
                             <input type="hidden" name="endDate" value="${endDate}" />
+                            <input type="hidden" name="periodSelect" id="exportPeriodSelect" 
+                                   value="${selectedPeriod != null ? selectedPeriod.id : ''}">
 
                             <!-- Previous -->
                             <c:if test="${currentPage > 1}">
@@ -248,6 +273,18 @@
                 <form id="editForm" method="post">
                     <input type="hidden" name="action" value="update">
 
+                    <input type="hidden" name="checkInOld" id="checkInOld">
+                    <input type="hidden" name="checkOutOld" id="checkOutOld">
+
+                    <!-- Thêm filter -->
+                    <input type="hidden" name="employeeKeyword" value="${employeeKeyword}">
+                    <input type="hidden" name="department" value="${department}">
+                    <input type="hidden" name="startDate" value="${startDate}">
+                    <input type="hidden" name="endDate" value="${endDate}">
+                    <input type="hidden" name="status" value="${status}">
+                    <input type="hidden" name="source" value="${source}">
+                    <input type="hidden" name="periodSelect" value="${selectedPeriod != null ? selectedPeriod.id : ''}">
+
                     <label for="modalEmpId">Employee ID:</label>
                     <input type="text" name="userIdUpdate" id="modalEmpId" readonly>
 
@@ -258,7 +295,7 @@
                     <input type="text" name="departmentUpdate" id="modalDepartment" readonly>
 
                     <label for="modalDate">Date:</label>
-                    <input type="date" name="dateUpdate" id="modalDate" required>
+                    <input type="date" name="dateUpdate" id="modalDate" readonly>
 
                     <label for="modalCheckIn">Check-in:</label>
                     <input type="time" name="checkInUpdate" id="modalCheckIn" required>

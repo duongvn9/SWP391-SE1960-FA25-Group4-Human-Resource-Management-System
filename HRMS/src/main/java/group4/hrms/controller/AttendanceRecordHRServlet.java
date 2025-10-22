@@ -167,6 +167,8 @@ public class AttendanceRecordHRServlet extends HttpServlet {
                 }
 
                 currentPage = 1;
+            } else if ("filter".equalsIgnoreCase(action)) {
+                currentPage = 1;
             } else if ("delete".equalsIgnoreCase(action)) {
                 handleDelete(req);
             } else if ("update".equalsIgnoreCase(action)) {
@@ -235,8 +237,6 @@ public class AttendanceRecordHRServlet extends HttpServlet {
                     offset,
                     true
             );
-
-            System.out.println(attendanceList);
 
             req.setAttribute("attendanceList", attendanceList);
             req.setAttribute("periodList", tDAO.findAll());
@@ -309,7 +309,7 @@ public class AttendanceRecordHRServlet extends HttpServlet {
         }
     }
 
-    private void handleUpdate(HttpServletRequest req) {
+    private void handleUpdate(HttpServletRequest req) throws SQLException {
         try {
             Long userId = Long.valueOf(req.getParameter("userIdUpdate"));
             String employeeName = req.getParameter("employeeNameUpdate");
@@ -320,6 +320,9 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             String status = req.getParameter("statusUpdate");
             String source = req.getParameter("sourceUpdate");
             String period = req.getParameter("periodUpdate");
+
+            LocalTime oldCheckIn = LocalTime.parse(req.getParameter("checkInOld"));
+            LocalTime oldCheckOut = LocalTime.parse(req.getParameter("checkOutOld"));
 
             AttendanceLogDto record = new AttendanceLogDto();
             record.setUserId(userId);
@@ -332,7 +335,8 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             record.setSource(source);
             record.setPeriod(period);
 
-            List<AttendanceLog> logs = AttendanceMapper.convertDtoToEntity(record);
+            List<AttendanceLog> logs = AttendanceMapper.convertDtoToEntity(record, oldCheckIn, oldCheckOut);
+            System.out.println(logs);
             boolean success = attendanceLogDao.updateAttendanceLogs(logs);
 
             if (success) {
@@ -340,7 +344,7 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             } else {
                 req.setAttribute("error", "Failed to update record.");
             }
-        } catch (NumberFormatException | SQLException e) {
+        } catch (NumberFormatException e) {
             req.setAttribute("error", "Invalid update input.");
         }
     }

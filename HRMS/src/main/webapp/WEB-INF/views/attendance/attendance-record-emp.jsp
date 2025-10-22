@@ -10,6 +10,7 @@
             <jsp:param name="pageTitle" value="attendance-record-emp" />
         </jsp:include>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/attendance-record-emp.css">
+
     </head>
     <body class="attendance-page">
         <div class="page-wrapper">
@@ -49,7 +50,7 @@
                             <select id="source" name="source" class="filter-select">
                                 <option value="">All</option>
                                 <option value="Manual" ${source == 'Manual' ? 'selected' : ''}>Manual</option>
-                                <option value="Import" ${source == 'Import' ? 'selected' : ''}>Import</option>
+                                <option value="excel" ${source == 'Import' ? 'selected' : ''}>Excel</option>
                             </select>
                         </div>
 
@@ -240,5 +241,6 @@
         });
     })();
 </script>
+<script src="${pageContext.request.contextPath}/assets/js/attendance-record-emp.js"></script> 
 </body>
 </html>
