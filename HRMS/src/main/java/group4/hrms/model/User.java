@@ -16,6 +16,7 @@ public class User {
     private String cccd;
     private String emailCompany;
     private String phone;
+    private String gender;
     private Long departmentId;
     private Long positionId;
     private String status;
@@ -54,7 +55,8 @@ public class User {
     }
 
     // Constructors
-    public User() {}
+    public User() {
+    }
 
     public User(String fullName, String emailCompany) {
         this.fullName = fullName;
@@ -118,6 +120,14 @@ public class User {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
     }
 
     public Long getDepartmentId() {
@@ -233,8 +243,10 @@ public class User {
     // equals, hashCode, toString
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         User user = (User) o;
         return Objects.equals(id, user.id) && Objects.equals(employeeCode, user.employeeCode);
     }
@@ -251,6 +263,7 @@ public class User {
                 ", employeeCode='" + employeeCode + '\'' +
                 ", fullName='" + fullName + '\'' +
                 ", emailCompany='" + emailCompany + '\'' +
+                ", gender='" + gender + '\'' +
                 ", status='" + status + '\'' +
                 ", departmentId=" + departmentId +
                 ", positionId=" + positionId +
