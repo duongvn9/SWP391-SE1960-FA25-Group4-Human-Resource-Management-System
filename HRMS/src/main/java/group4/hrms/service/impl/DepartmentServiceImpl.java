@@ -3,7 +3,6 @@ package group4.hrms.service.impl;
 import group4.hrms.dao.DepartmentDao;
 import group4.hrms.model.Department;
 import group4.hrms.service.DepartmentService;
-import jakarta.inject.Inject;
 
 import java.util.List;
 
@@ -12,8 +11,11 @@ import java.util.List;
  */
 public class DepartmentServiceImpl implements DepartmentService {
     
-    @Inject
-    private DepartmentDao departmentDao;
+    private final DepartmentDao departmentDao;
+    
+    public DepartmentServiceImpl(DepartmentDao departmentDao) {
+        this.departmentDao = departmentDao;
+    }
     
     @Override
     public List<Department> getAllDepartments() {

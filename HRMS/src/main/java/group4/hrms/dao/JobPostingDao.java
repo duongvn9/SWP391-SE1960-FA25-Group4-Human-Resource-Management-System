@@ -10,6 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import group4.hrms.model.JobPosting;
 import group4.hrms.util.DatabaseUtil;
 
@@ -19,10 +22,142 @@ import group4.hrms.util.DatabaseUtil;
  * @author Group4
  */
 public class JobPostingDao extends BaseDao<JobPosting, Long> {
+    private static final Logger logger = LoggerFactory.getLogger(JobPostingDao.class);
     
     @Override
     protected String getTableName() {
         return "job_postings";
+    }
+    
+    /**
+     * Get list of request IDs that already have job postings created
+     * Used to filter out requests that already have job postings
+     */
+    public List<Long> findRequestIdsWithJobPostings() throws SQLException {
+        String sql = "SELECT DISTINCT request_id FROM job_postings WHERE request_id IS NOT NULL";
+        List<Long> requestIds = new ArrayList<>();
+        
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    requestIds.add(rs.getLong("request_id"));
+                }
+            }
+        }
+        return requestIds;
+    }
+    
+    @Override 
+    public JobPosting save(JobPosting entity) throws SQLException {
+        logger.debug("Starting save operation for JobPosting: {}", entity);
+        try (Connection conn = DatabaseUtil.getConnection()) {
+            String sql;
+            if (entity.getId() == null) {
+            sql = "INSERT INTO job_postings (request_id, title, department_id, description, status, " +
+                "created_by_account_id, created_at, updated_at, code, job_level, job_type, " +
+                "quantity, min_salary, max_salary, min_experience_years, requirements, benefits, " +
+                "working_location, application_deadline, contact_email, contact_phone, " +
+                "salary_type, priority, working_hours, start_date, expiry_date) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, " +
+                "?, ?, ?, ?, ?)";
+                logger.debug("Using INSERT SQL: {}", sql);
+            } else {
+            sql = "UPDATE job_postings SET request_id=?, title=?, department_id=?, description=?, status=?, " +
+                "created_by_account_id=?, updated_at=?, code=?, job_level=?, job_type=?, " +
+                "quantity=?, min_salary=?, max_salary=?, min_experience_years=?, requirements=?, " +
+                "benefits=?, working_location=?, application_deadline=?, contact_email=?, contact_phone=?, " +
+                "salary_type=?, priority=?, working_hours=?, start_date=?, expiry_date=? " +
+                "WHERE id=?";
+            }
+
+            try (PreparedStatement stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+                int paramIndex = 1;
+                setNullableLong(stmt, paramIndex++, entity.getRequestId());
+                stmt.setString(paramIndex++, entity.getTitle());
+                setNullableLong(stmt, paramIndex++, entity.getDepartmentId());
+                stmt.setString(paramIndex++, entity.getDescription());
+                stmt.setString(paramIndex++, entity.getStatus());
+                setNullableLong(stmt, paramIndex++, entity.getCreatedByAccountId());
+                
+                if (entity.getId() == null) {
+                    // For INSERT
+                    stmt.setObject(paramIndex++, LocalDateTime.now());
+                    stmt.setObject(paramIndex++, LocalDateTime.now());
+                } else {
+                    // For UPDATE
+                    stmt.setObject(paramIndex++, LocalDateTime.now());
+                }
+                
+                stmt.setString(paramIndex++, entity.getCode());
+                // JobPosting uses 'level' as the field name and getter getLevel()
+                stmt.setString(paramIndex++, entity.getLevel());
+                stmt.setString(paramIndex++, entity.getJobType());
+                // DB column is 'quantity'
+                setNullableInt(stmt, paramIndex++, entity.getNumberOfPositions());
+                setNullableBigDecimal(stmt, paramIndex++, entity.getMinSalary());
+                setNullableBigDecimal(stmt, paramIndex++, entity.getMaxSalary());
+                setNullableInt(stmt, paramIndex++, entity.getMinExperienceYears());
+                stmt.setString(paramIndex++, entity.getRequirements());
+                stmt.setString(paramIndex++, entity.getBenefits());
+                stmt.setString(paramIndex++, entity.getWorkingLocation());
+                stmt.setObject(paramIndex++, entity.getApplicationDeadline());
+                stmt.setString(paramIndex++, entity.getContactEmail());
+                stmt.setString(paramIndex++, entity.getContactPhone());
+                
+                // Thêm các trường mới
+                stmt.setString(paramIndex++, entity.getSalaryType());
+                stmt.setString(paramIndex++, entity.getPriority());
+                stmt.setString(paramIndex++, entity.getWorkingHours());
+                stmt.setObject(paramIndex++, entity.getStartDate());
+                stmt.setObject(paramIndex++, entity.getApplicationDeadline()); // expiry_date = application_deadline
+                
+                if (entity.getId() != null) {
+                    stmt.setLong(paramIndex++, entity.getId());
+                }
+
+                int affectedRows = stmt.executeUpdate();
+                if (affectedRows == 0) {
+                    throw new SQLException("Creating/Updating job posting failed, no rows affected.");
+                }
+
+                if (entity.getId() == null) {
+                    try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                        if (generatedKeys.next()) {
+                            entity.setId(generatedKeys.getLong(1));
+                        } else {
+                            throw new SQLException("Creating job posting failed, no ID obtained.");
+                        }
+                    }
+                }
+            }
+            return entity;
+        }
+    }
+    
+    private void setNullableLong(PreparedStatement stmt, int paramIndex, Long value) throws SQLException {
+        if (value == null) {
+            stmt.setNull(paramIndex, Types.BIGINT);
+        } else {
+            stmt.setLong(paramIndex, value);
+        }
+    }
+    
+    private void setNullableInt(PreparedStatement stmt, int paramIndex, Integer value) throws SQLException {
+        if (value == null) {
+            stmt.setNull(paramIndex, Types.INTEGER);
+        } else {
+            stmt.setInt(paramIndex, value);
+        }
+    }
+    
+    private void setNullableBigDecimal(PreparedStatement stmt, int paramIndex, java.math.BigDecimal value) throws SQLException {
+        if (value == null) {
+            stmt.setNull(paramIndex, Types.DECIMAL);
+        } else {
+            stmt.setBigDecimal(paramIndex, value);
+        }
     }
     
     @Override
@@ -42,8 +177,24 @@ public class JobPostingDao extends BaseDao<JobPosting, Long> {
             job.setDepartmentId(departmentId);
         }
         
-        job.setDescription(rs.getString("description"));
-        job.setStatus(rs.getString("status"));
+    job.setDescription(rs.getString("description"));
+    // Quantity (number of positions) column in DB is named 'quantity'
+    int qty = rs.getInt("quantity");
+    if (!rs.wasNull()) {
+        job.setNumberOfPositions(qty);
+    }
+    // Salary fields
+    java.math.BigDecimal minSalary = rs.getBigDecimal("min_salary");
+    if (minSalary != null) job.setMinSalary(minSalary);
+    java.math.BigDecimal maxSalary = rs.getBigDecimal("max_salary");
+    if (maxSalary != null) job.setMaxSalary(maxSalary);
+    String salaryType = rs.getString("salary_type");
+    if (salaryType != null) job.setSalaryType(salaryType);
+        
+    String workingLocation = rs.getString("working_location");
+    if (workingLocation != null) job.setWorkingLocation(workingLocation);
+        
+    job.setStatus(rs.getString("status"));
         job.setPublishedAt(getLocalDateTime(rs, "published_at"));
         
         Long createdByAccountId = rs.getLong("created_by_account_id");
@@ -69,14 +220,14 @@ public class JobPostingDao extends BaseDao<JobPosting, Long> {
     
     @Override
     protected String createInsertSql() {
-        return "INSERT INTO job_postings (request_id, title, department_id, description, status, " +
-               "published_at, created_by_account_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+     return "INSERT INTO job_postings (request_id, title, department_id, description, status, " +
+         "min_salary, max_salary, salary_type, published_at, created_by_account_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     }
     
     @Override
     protected String createUpdateSql() {
-        return "UPDATE job_postings SET request_id = ?, title = ?, department_id = ?, description = ?, " +
-               "status = ?, published_at = ?, created_by_account_id = ?, updated_at = ? WHERE id = ?";
+     return "UPDATE job_postings SET request_id = ?, title = ?, department_id = ?, description = ?, " +
+         "status = ?, min_salary = ?, max_salary = ?, salary_type = ?, published_at = ?, created_by_account_id = ?, updated_at = ? WHERE id = ?";
     }
     
     @Override
@@ -94,14 +245,32 @@ public class JobPostingDao extends BaseDao<JobPosting, Long> {
         }
         stmt.setString(4, job.getDescription());
         stmt.setString(5, job.getStatus());
-        setTimestamp(stmt, 6, job.getPublishedAt());
-        if (job.getCreatedByAccountId() != null) {
-            stmt.setLong(7, job.getCreatedByAccountId());
+
+        // salary fields
+        if (job.getMinSalary() != null) {
+            stmt.setBigDecimal(6, job.getMinSalary());
         } else {
-            stmt.setNull(7, Types.BIGINT);
+            stmt.setNull(6, Types.DECIMAL);
         }
-        setTimestamp(stmt, 8, job.getCreatedAt() != null ? job.getCreatedAt() : LocalDateTime.now());
-        setTimestamp(stmt, 9, job.getUpdatedAt() != null ? job.getUpdatedAt() : LocalDateTime.now());
+        if (job.getMaxSalary() != null) {
+            stmt.setBigDecimal(7, job.getMaxSalary());
+        } else {
+            stmt.setNull(7, Types.DECIMAL);
+        }
+        if (job.getSalaryType() != null) {
+            stmt.setString(8, job.getSalaryType());
+        } else {
+            stmt.setNull(8, Types.VARCHAR);
+        }
+
+        setTimestamp(stmt, 9, job.getPublishedAt());
+        if (job.getCreatedByAccountId() != null) {
+            stmt.setLong(10, job.getCreatedByAccountId());
+        } else {
+            stmt.setNull(10, Types.BIGINT);
+        }
+        setTimestamp(stmt, 11, job.getCreatedAt() != null ? job.getCreatedAt() : LocalDateTime.now());
+        setTimestamp(stmt, 12, job.getUpdatedAt() != null ? job.getUpdatedAt() : LocalDateTime.now());
     }
     
     @Override
@@ -119,14 +288,32 @@ public class JobPostingDao extends BaseDao<JobPosting, Long> {
         }
         stmt.setString(4, job.getDescription());
         stmt.setString(5, job.getStatus());
-        setTimestamp(stmt, 6, job.getPublishedAt());
-        if (job.getCreatedByAccountId() != null) {
-            stmt.setLong(7, job.getCreatedByAccountId());
+
+        // salary fields
+        if (job.getMinSalary() != null) {
+            stmt.setBigDecimal(6, job.getMinSalary());
         } else {
-            stmt.setNull(7, Types.BIGINT);
+            stmt.setNull(6, Types.DECIMAL);
         }
-        setTimestamp(stmt, 8, LocalDateTime.now());
-        stmt.setLong(9, job.getId());
+        if (job.getMaxSalary() != null) {
+            stmt.setBigDecimal(7, job.getMaxSalary());
+        } else {
+            stmt.setNull(7, Types.DECIMAL);
+        }
+        if (job.getSalaryType() != null) {
+            stmt.setString(8, job.getSalaryType());
+        } else {
+            stmt.setNull(8, Types.VARCHAR);
+        }
+
+        setTimestamp(stmt, 9, job.getPublishedAt());
+        if (job.getCreatedByAccountId() != null) {
+            stmt.setLong(10, job.getCreatedByAccountId());
+        } else {
+            stmt.setNull(10, Types.BIGINT);
+        }
+        setTimestamp(stmt, 11, LocalDateTime.now());
+        stmt.setLong(12, job.getId());
     }
     
     // Business methods

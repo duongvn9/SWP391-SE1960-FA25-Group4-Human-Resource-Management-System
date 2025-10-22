@@ -4,27 +4,135 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Job Postings - HRMS</title>
-    <jsp:include page="/WEB-INF/views/layout/links.jsp"/>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/job-posting.css"/>
+    <jsp:include page="../layout/head.jsp">
+        <jsp:param name="pageTitle" value="Job Postings - HRMS" />
+        <jsp:param name="pageCss" value="job-posting.css" />
+    </jsp:include>
+    <style>
+        /* Custom styles for Job Postings list */
+        .content-area {
+            padding: 1.5rem;
+        }
+
+        .page-title {
+            color: #2c3e50;
+            font-size: 1.75rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .page-subtitle {
+            color: #6c757d;
+            font-size: 0.875rem;
+        }
+
+        .filter-card {
+            background-color: #f8f9fa;
+            border: none;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            margin-bottom: 1.5rem;
+        }
+
+        .filter-card .card-body {
+            padding: 1.25rem;
+        }
+
+        .table {
+            background-color: #ffffff;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+
+        .table th {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            color: #495057;
+            font-weight: 600;
+        }
+
+        .badge {
+            font-weight: 500;
+            padding: 0.5em 0.75em;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .content-area {
+                padding: 1rem;
+            }
+
+            .page-head {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .filter-form {
+                flex-direction: column;
+            }
+
+            .filter-form .col-md-2 {
+                width: 100%;
+                margin-bottom: 1rem;
+            }
+
+            .table-responsive {
+                border: 0;
+                margin-bottom: 0;
+            }
+
+            .pagination {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 0.5rem;
+            }
+        }
+
+        /* Animation for status badges */
+        .badge {
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .badge:hover {
+            transform: scale(1.1);
+        }
+    </style>
 </head>
 <body>
-    <jsp:include page="/WEB-INF/views/layout/navbar.jsp"/>
-    
-    <div class="container my-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="h4 mb-0">Job Postings</h2>
-            
-            <!-- Only HR can create new job postings -->
-            <c:if test="${sessionScope.userRole == 'HR'}">
-                <a href="${pageContext.request.contextPath}/job-posting/create" 
-                   class="btn btn-primary">
-                    <i class="bi bi-plus-circle"></i> Create New
-                </a>
-            </c:if>
-        </div>
+    <div class="alert alert-info">DEBUG: loggedInUser.positionId = ${sessionScope.loggedInUser.positionId}</div>
+    <!-- Sidebar -->
+    <jsp:include page="../layout/sidebar.jsp">
+        <jsp:param name="currentPage" value="job-postings" />
+    </jsp:include>
+
+    <!-- Main Content -->
+    <div class="main-content" id="main-content">
+        <!-- Header -->
+        <jsp:include page="../layout/dashboard-header.jsp" />
+
+        <!-- Content Area -->
+        <div class="content-area">
+           
+
+            <!-- Page Title -->
+            <div class="page-head d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="page-title"><i class="fas fa-briefcase me-2"></i>Job Postings</h2>
+                    <p class="page-subtitle">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Manage and track all job postings
+                        <c:if test="${not empty jobPostings}">
+                            <span class="badge bg-primary ms-2">${jobPostings.size()} Records</span>
+                        </c:if>
+                    </p>
+                </div>
+                
+                <!-- Only HR can create new job postings -->
+                <c:if test="${sessionScope.userRole == 'HR'}">
+                    <a href="${pageContext.request.contextPath}/job-posting/create" 
+                       class="btn btn-primary">
+                        <i class="fas fa-plus-circle me-1"></i> Create New Posting
+                    </a>
+                </c:if>
+            </div>
 
         <!-- Success/Error Messages -->
         <c:if test="${not empty param.success}">
@@ -41,11 +149,12 @@
         </c:if>
 
         <!-- Filters -->
-        <div class="card mb-4">
+        <div class="card filter-card">
             <div class="card-body">
-                <form method="get" class="row g-3">
+                <form method="get" class="row g-3 filter-form">
                     <div class="col-md-2">
-                        <label class="form-label">Status</label>
+                        <label class="form-label">
+                            <i class="fas fa-filter me-1"></i> Status</label>
                         <select name="status" class="form-select">
                             <option value="">All</option>
                             <option value="PENDING" ${param.status == 'PENDING' ? 'selected' : ''}>Pending</option>
@@ -93,12 +202,17 @@
                             <option value="URGENT" ${param.priority == 'URGENT' ? 'selected' : ''}>Urgent</option>
                         </select>
                     </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-filter"></i> Filter
-                        </button>
-                        <a href="${pageContext.request.contextPath}/job-postings" 
-                           class="btn btn-outline-secondary ms-2">Clear</a>
+                    <div class="col-md-2">
+                        <label class="form-label d-block">&nbsp;</label>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary flex-grow-1">
+                                <i class="fas fa-filter me-1"></i> Apply Filters
+                            </button>
+                            <a href="${pageContext.request.contextPath}/job-postings" 
+                               class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i> Clear
+                            </a>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -106,33 +220,38 @@
 
         <!-- Job Postings Table -->
         <div class="table-responsive">
-            <table class="table table-striped table-hover table-bordered">
-                <thead class="table-light">
+            <table class="table table-striped table-hover">
+                <thead>
                     <tr>
-                        <th>Title</th>
-                        <th>Department</th>
-                        <th>Type</th>
-                        <th>Level</th>
-                        <th>Positions</th>
-                        <th>Priority</th>
-                        <th>Status</th>
-                        <th>Created</th>
-                        <th>Deadline</th>
-                        <th>Actions</th>
+                        <th><i class="fas fa-file-alt me-1"></i> Title</th>
+                        <th><i class="fas fa-building me-1"></i> Department</th>
+                        <th><i class="fas fa-briefcase me-1"></i> Type</th>
+                        <th><i class="fas fa-layer-group me-1"></i> Level</th>
+                        <th><i class="fas fa-users me-1"></i> Positions</th>
+                        <th><i class="fas fa-flag me-1"></i> Priority</th>
+                        <th><i class="fas fa-info-circle me-1"></i> Status</th>
+                        <th><i class="fas fa-clock me-1"></i> Deadline</th>
+                        <th><i class="fas fa-cogs me-1"></i> Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     <c:forEach items="${jobPostings}" var="job">
                         <tr>
                             <td>
-                                <a href="${pageContext.request.contextPath}/job-posting/view?id=${job.id}"
+                                <a href="${pageContext.request.contextPath}/job-postings/view?id=${job.id}"
                                    class="text-decoration-none">
                                     ${job.title}
                                 </a>
                                 <br>
                                 <small class="text-muted">${job.code}</small>
                             </td>
-                            <td>${job.departmentName}</td>
+                            <td>
+                                <c:forEach items="${departments}" var="dept">
+                                    <c:if test="${dept.id == job.departmentId}">
+                                        ${dept.name}
+                                    </c:if>
+                                </c:forEach>
+                            </td>
                             <td>${job.jobType}</td>
                             <td>${job.level}</td>
                             <td class="text-center">${job.numberOfPositions}</td>
@@ -173,37 +292,49 @@
                                 <fmt:formatDate value="${deadline}" pattern="MMM d, yyyy"/>
                             </td>
                             <td class="text-nowrap">
-                                <!-- View button for all -->
-                                <a href="${pageContext.request.contextPath}/job-posting/view?id=${job.id}"
-                                   class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-eye"></i>
-                                </a>
-
-                                <!-- Edit button for HR (only if PENDING) -->
-                                <c:if test="${sessionScope.userRole == 'HR' && job.status == 'PENDING'}">
-                                    <a href="${pageContext.request.contextPath}/job-posting/edit?id=${job.id}"
-                                       class="btn btn-sm btn-outline-secondary">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
+                                <!-- View Details button -->
+                                <button type="button" 
+                                        class="btn btn-sm btn-info" 
+                                        data-bs-toggle="tooltip" 
+                                        title="View Details"
+                                        onclick="window.location.href='${pageContext.request.contextPath}/job-postings/view?id=${job.id}'">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                
+                                <!-- Approve/Reject buttons for HR Manager (position_id = 7) when status is PENDING -->
+                                <c:if test="${sessionScope.loggedInUser != null && sessionScope.loggedInUser.positionId == 7 && job.status == 'PENDING'}">
+                                    <button type="button" class="btn btn-sm btn-success"
+                                            onclick="approveJobPosting('${job.id}')" 
+                                            data-bs-toggle="tooltip"
+                                            title="Approve">
+                                        <i class="fas fa-check-circle"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-danger"
+                                            onclick="rejectJobPosting('${job.id}')"
+                                            data-bs-toggle="tooltip" 
+                                            title="Reject">
+                                        <i class="fas fa-times-circle"></i>
+                                    </button>
+                                </c:if>
+                                
+                                <!-- Edit button for HR Staff (position_id = 8) (only if PENDING) -->
+                                <c:if test="${sessionScope.loggedInUser.positionId == 8 && job.status == 'PENDING'}">
+                                    <button type="button" 
+                                            class="btn btn-sm btn-secondary"
+                                            data-bs-toggle="tooltip"
+                                            title="Edit"
+                                            onclick="window.location.href='${pageContext.request.contextPath}/job-posting/edit?id=${job.id}'">
+                                        <i class="fas fa-pencil"></i>
+                                    </button>
                                 </c:if>
 
-                                <!-- Approve/Reject buttons for HRM (only if PENDING) -->
-                                <c:if test="${sessionScope.userRole == 'HRM' && job.status == 'PENDING'}">
-                                    <button type="button" class="btn btn-sm btn-outline-success"
-                                            onclick="approveJobPosting('${job.id}')">
-                                        <i class="bi bi-check-circle"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-outline-danger"
-                                            onclick="rejectJobPosting('${job.id}')">
-                                        <i class="bi bi-x-circle"></i>
-                                    </button>
-                                </c:if>
-
-                                <!-- Publish button for HRM (only if APPROVED) -->
-                                <c:if test="${sessionScope.userRole == 'HRM' && job.status == 'APPROVED'}">
+                                <!-- Publish button for HR Manager (position_id = 7) when status is APPROVED -->
+                                <c:if test="${sessionScope.loggedInUser.positionId == 7 && job.status == 'APPROVED'}">
                                     <button type="button" class="btn btn-sm btn-outline-primary"
                                             onclick="publishJobPosting('${job.id}')"
-                                        <i class="bi bi-globe"></i>
+                                            data-bs-toggle="tooltip" 
+                                            title="Publish">
+                                        <i class="fas fa-globe"></i>
                                     </button>
                                 </c:if>
                             </td>
@@ -249,7 +380,7 @@
         </c:if>
     </div>
 
-    <jsp:include page="/WEB-INF/views/layout/footer.jsp"/>
+   
 
     <!-- Confirmation Modals -->
     <div class="modal fade" id="approveModal" tabindex="-1">
@@ -325,26 +456,76 @@
         </div>
     </div>
 
-    <script>
-        // Initialize modals
-        const approveModal = new bootstrap.Modal(document.getElementById('approveModal'));
-        const rejectModal = new bootstrap.Modal(document.getElementById('rejectModal'));
-        const publishModal = new bootstrap.Modal(document.getElementById('publishModal'));
-        
-        function approveJobPosting(id) {
-            document.getElementById('approveJobId').value = id;
-            approveModal.show();
-        }
-        
-        function rejectJobPosting(id) {
-            document.getElementById('rejectJobId').value = id;
-            rejectModal.show();
-        }
-        
-        function publishJobPosting(id) {
-            document.getElementById('publishJobId').value = id;
-            publishModal.show();
-        }
-    </script>
+    <!-- Approve Modal -->
+    <div class="modal fade" id="approveModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Approve Job Posting</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to approve this job posting?
+                    <br><br>
+                    <small class="text-muted">
+                        After approval, the job posting can be published.
+                    </small>
+                </div>
+                <div class="modal-footer">
+                    <form method="post" action="${pageContext.request.contextPath}/job-posting/approve">
+                        <input type="hidden" name="csrfToken" value="${csrfToken}"/>
+                        <input type="hidden" name="id" id="approveJobId"/>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success">Approve</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Footer -->
+    <jsp:include page="../layout/dashboard-footer.jsp"/>
+</div>
+
+<script>
+    // Initialize modals
+    const approveModal = new bootstrap.Modal(document.getElementById('approveModal'));
+    const rejectModal = new bootstrap.Modal(document.getElementById('rejectModal'));
+    const publishModal = new bootstrap.Modal(document.getElementById('publishModal'));
+    
+    function approveJobPosting(id) {
+        document.getElementById('approveJobId').value = id;
+        approveModal.show();
+    }
+    
+    function rejectJobPosting(id) {
+        document.getElementById('rejectJobId').value = id;
+        rejectModal.show();
+    }
+    
+    function publishJobPosting(id) {
+        document.getElementById('publishJobId').value = id;
+        publishModal.show();
+    }
+
+    // Add hover effect to action buttons
+    document.addEventListener('DOMContentLoaded', function() {
+        const buttons = document.querySelectorAll('.btn-sm');
+        buttons.forEach(btn => {
+            btn.addEventListener('mouseover', function() {
+                if (this.title) {
+                    this.setAttribute('data-bs-toggle', 'tooltip');
+                    new bootstrap.Tooltip(this).show();
+                }
+            });
+        });
+
+        // Initialize all tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+    });
+</script>
 </body>
 </html>

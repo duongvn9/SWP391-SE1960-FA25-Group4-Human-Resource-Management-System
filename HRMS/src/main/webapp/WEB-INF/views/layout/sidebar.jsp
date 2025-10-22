@@ -348,19 +348,11 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="${pageContext.request.contextPath}/job-postings/create"
-                                        class="nav-link ${param.currentPage == 'create-job-posting' ? 'active' : ''}">
-                                        <i class="fas fa-plus-circle"></i><span>Create Job Posting</span>
+                                    <a href="${pageContext.request.contextPath}/recruitment/approved"
+                                        class="nav-link ${param.currentPage == 'approved-recruitment-requests' ? 'active' : ''}">
+                                        <i class="fas fa-check-circle"></i><span>Approved Recruitment Requests</span>
                                     </a>
                                 </li>
-                                <c:if test="${sessionScope.user.positionId == 7}">
-                                    <li>
-                                        <a href="${pageContext.request.contextPath}/recruitment-approval"
-                                            class="nav-link ${param.currentPage == 'recruitment-approval' ? 'active' : ''}">
-                                            <i class="fas fa-check-circle"></i><span>Recruitment Approval</span>
-                                        </a>
-                                    </li>
-                                </c:if>
                             </ul>
                         </li>
                     </c:if>

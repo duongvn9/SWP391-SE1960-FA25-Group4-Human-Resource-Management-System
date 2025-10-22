@@ -11,6 +11,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import group4.hrms.dao.DepartmentDao;
+import group4.hrms.dao.JobPostingDao;
 import group4.hrms.dao.RequestDao;
 import group4.hrms.dao.UserDao;
 import group4.hrms.dto.PaginationMetadata;
@@ -35,12 +36,19 @@ public class RequestListService {
     private final RequestDao requestDao;
     private final UserDao userDao;
     private final DepartmentDao departmentDao;
+    private final JobPostingDao jobPostingDao;
 
     // Constructors
     public RequestListService(RequestDao requestDao, UserDao userDao, DepartmentDao departmentDao) {
+        this(requestDao, userDao, departmentDao, new JobPostingDao());
+    }
+    
+    public RequestListService(RequestDao requestDao, UserDao userDao, DepartmentDao departmentDao, 
+            JobPostingDao jobPostingDao) {
         this.requestDao = requestDao;
         this.userDao = userDao;
         this.departmentDao = departmentDao;
+        this.jobPostingDao = jobPostingDao;
     }
 
     /**
@@ -71,9 +79,22 @@ public class RequestListService {
             // 3. Calculate offset for pagination
             int offset = (filter.getPage() - 1) * filter.getPageSize();
 
-            // 4. Fetch filtered requests from DAO
-            List<RequestDto> requests = requestDao.findWithFilters(filter, targetUserIds,
+            // 4. Get list of requests that already have job postings
+            List<Long> requestIdsWithJobPostings = new ArrayList<>();
+            try {
+                List<Long> tempList = jobPostingDao.findRequestIdsWithJobPostings();
+                requestIdsWithJobPostings.addAll(tempList);
+                logger.info("Found " + requestIdsWithJobPostings.size() + " requests with existing job postings");
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "Error getting requests with job postings", e);
+            }
+            
+            // 5. Fetch filtered requests from DAO, excluding those with job postings
+            List<RequestDto> requests = requestDao.findWithFilters(filter, targetUserIds, 
                                                                    offset, filter.getPageSize());
+            
+            // 6. Remove requests that already have job postings
+            requests.removeIf(req -> requestIdsWithJobPostings.contains(req.getId()));
 
             // 5. Get total count for pagination
             long totalCount = requestDao.countWithFilters(filter, targetUserIds);

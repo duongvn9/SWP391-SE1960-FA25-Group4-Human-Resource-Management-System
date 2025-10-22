@@ -4,30 +4,64 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Job Posting - HRMS</title>
-    <jsp:include page="/WEB-INF/views/layout/links.jsp"/>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/job-posting.css"/>
+    <jsp:include page="../layout/head.jsp">
+        <jsp:param name="pageTitle" value="Create Job Posting - HRMS" />
+        <jsp:param name="pageCss" value="job-posting.css" />
+    </jsp:include>
 </head>
 <body>
-    <jsp:include page="/WEB-INF/views/layout/navbar.jsp"/>
-    
-    <div class="container my-4">
-        <div class="row">
-            <div class="col">
-                <h2 class="h4 mb-3">Create Job Posting</h2>
+    <!-- Sidebar -->
+    <jsp:include page="../layout/sidebar.jsp">
+        <jsp:param name="currentPage" value="job-postings" />
+    </jsp:include>
+
+    <!-- Main Content -->
+    <div class="main-content" id="main-content">
+        <!-- Header -->
+        <jsp:include page="../layout/dashboard-header.jsp" />
+
+        <!-- Content Area -->
+        <div class="content-area">
+        
+
+            <!-- Page Title -->
+            <div class="page-head d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="page-title"><i class="fas fa-plus-circle me-2"></i>Create Job Posting</h2>
+                    <p class="page-subtitle">Create a new job posting from recruitment request</p>
+                </div>
+                <a href="${pageContext.request.contextPath}/job-postings" class="btn btn-outline-secondary">
+                    <i class="fas fa-list me-1"></i> View All Job Postings 
+                </a>
+            </div>
                 
-                <!-- Show error/success messages if any -->
-                <c:if test="${not empty error}">
-                    <div class="alert alert-danger">${error}</div>
-                </c:if>
-                <c:if test="${not empty success}">
-                    <div class="alert alert-success">${success}</div>
-                </c:if>
-                
-                <form method="post" action="${pageContext.request.contextPath}/job-posting/create" class="needs-validation" novalidate>
-                    <input type="hidden" name="csrfToken" value="${csrfToken}"/>
+            <!-- Main Form Card -->
+            <div class="card job-posting-card">
+                <div class="card-header">
+                    <h4><i class="fas fa-edit me-2"></i>Job Posting Form</h4>
+                </div>
+
+                <div class="card-body">
+                    <!-- Alerts -->
+                    <c:if test="${not empty error}">
+                        <div class="alert alert-danger" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <c:out value="${error}" />
+                        </div>
+                    </c:if>
+                    <c:if test="${not empty success}">
+                        <div class="alert alert-success" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <c:out value="${success}" />
+                        </div>
+                    </c:if>
+
+                    <form method="post" action="${pageContext.request.contextPath}/job-postings/create" 
+                          class="needs-validation" novalidate>
+                        <input type="hidden" name="csrfToken" value="${csrfToken}"/>
+                        <c:if test="${not empty sourceRequestId}">
+                            <input type="hidden" name="sourceRequestId" value="${sourceRequestId}" />
+                        </c:if>
 
                     <!-- Basic Information -->
                     <div class="card mb-4">
@@ -38,16 +72,47 @@
                             <!-- Position Code & Name (Read-only from Request) -->
                             <div class="row g-3 mb-3">
                                 <div class="col-md-4">
-                                    <label for="positionCode" class="form-label">Position Code</label>
+                                    <label for="positionCode" class="form-label">
+                                        <i class="fas fa-hashtag"></i> Position Code
+                                    </label>
                                     <input type="text" class="form-control" id="positionCode" 
                                            value="${requestDetails.positionCode}" readonly>
                                     <input type="hidden" name="positionCode" value="${requestDetails.positionCode}">
+                                    <div class="form-text">Auto-filled from recruitment request</div>
                                 </div>
                                 <div class="col-md-8">
-                                    <label for="positionName" class="form-label">Position Name</label>
+                                    <label for="positionName" class="form-label">
+                                        <i class="fas fa-id-badge"></i> Position Name
+                                    </label>
                                     <input type="text" class="form-control" id="positionName" 
                                            value="${requestDetails.positionName}" readonly>
                                     <input type="hidden" name="positionName" value="${requestDetails.positionName}">
+                                    <div class="form-text">Auto-filled from recruitment request</div>
+                                </div>
+                            </div>
+
+                            <!-- Job Title & Code editable by HR -->
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label for="jobTitle" class="form-label">
+                                        <i class="fas fa-heading"></i> Job Title
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control ${not empty errors.jobTitle ? 'is-invalid' : ''}" 
+                                           id="jobTitle" name="jobTitle" required
+                                           value="${param.jobTitle != null ? param.jobTitle : requestDetails.positionName}">
+                                    <div class="form-text">Title shown in job listing (can be customized from position name)</div>
+                                    <div class="invalid-feedback">${errors.jobTitle}</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="code" class="form-label">
+                                        <i class="fas fa-barcode"></i> Job Code
+                                    </label>
+                                    <input type="text" class="form-control ${not empty errors.code ? 'is-invalid' : ''}" 
+                                           id="code" name="code" 
+                                           value="${param.code != null ? param.code : requestDetails.positionCode}">
+                                    <div class="form-text">Public job code (defaults to position code if empty)</div>
+                                    <div class="invalid-feedback">${errors.code}</div>
                                 </div>
                             </div>
 
@@ -93,6 +158,31 @@
                                     <div class="invalid-feedback">${errors.workingHours}</div>
                                 </div>
                             </div>
+                            <!-- Min Experience & Start Date -->
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-4">
+                                    <label for="minExperienceYears" class="form-label">
+                                        <i class="fas fa-briefcase"></i> Min Experience Years
+                                    </label>
+                                    <input type="number" class="form-control ${not empty errors.minExperienceYears ? 'is-invalid' : ''}" 
+                                           id="minExperienceYears" name="minExperienceYears" 
+                                           min="0" max="20"
+                                           value="${param.minExperienceYears}">
+                                    <div class="form-text">Required years of experience (0-20)</div>
+                                    <div class="invalid-feedback">${errors.minExperienceYears}</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="startDate" class="form-label">
+                                        <i class="fas fa-calendar-alt"></i> Expected Start Date
+                                    </label>
+                                    <input type="date" class="form-control ${not empty errors.startDate ? 'is-invalid' : ''}" 
+                                           id="startDate" name="startDate" 
+                                           min="${LocalDate.now()}"
+                                           value="${param.startDate}">
+                                    <div class="form-text">When the position starts</div>
+                                    <div class="invalid-feedback">${errors.startDate}</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -106,21 +196,18 @@
                             <div class="row g-3 mb-3">
                                 <div class="col-md-4">
                                     <label for="salaryType" class="form-label">Salary Type</label>
-                                    <input type="text" class="form-control" id="salaryType"
-                                           value="${requestDetails.salaryType}" readonly>
-                                    <input type="hidden" name="salaryType" value="${requestDetails.salaryType}">
+                                    <input type="text" class="form-control" id="salaryType" name="salaryType"
+                                           value="${param.salaryType != null ? param.salaryType : requestDetails.salaryType}">
                                 </div>
                                 <div class="col-md-4">
                                     <label for="minSalary" class="form-label">Minimum Salary (VND)</label>
-                                    <input type="number" class="form-control" id="minSalary"
-                                           value="${requestDetails.minSalary}" readonly>
-                                    <input type="hidden" name="minSalary" value="${requestDetails.minSalary}">
+                                    <input type="number" step="0.01" class="form-control" id="minSalary" name="minSalary"
+                                           value="${param.minSalary != null ? param.minSalary : requestDetails.minSalary}">
                                 </div>
                                 <div class="col-md-4">
                                     <label for="maxSalary" class="form-label">Maximum Salary (VND)</label>
-                                    <input type="number" class="form-control" id="maxSalary"
-                                           value="${requestDetails.maxSalary}" readonly>
-                                    <input type="hidden" name="maxSalary" value="${requestDetails.maxSalary}">
+                                    <input type="number" step="0.01" class="form-control" id="maxSalary" name="maxSalary"
+                                           value="${param.maxSalary != null ? param.maxSalary : requestDetails.maxSalary}">
                                 </div>
                             </div>
                         </div>
@@ -197,17 +284,132 @@
                         </div>
                     </div>
 
-                    <!-- Submit Buttons -->
-                    <div class="text-center">
-                        <button type="submit" class="btn btn-primary btn-lg">Submit for Approval</button>
-                        <a href="${pageContext.request.contextPath}/job-postings" class="btn btn-outline-secondary btn-lg ms-2">Cancel</a>
+                    <!-- Actions -->
+                    <div class="mt-4 d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="${pageContext.request.contextPath}/job-postings" 
+                           class="btn btn-secondary">
+                            <i class="fas fa-times me-1"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-1"></i> Submit for Approval
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <jsp:include page="/WEB-INF/views/layout/footer.jsp"/>
-    <script src="${pageContext.request.contextPath}/assets/js/job-posting.js"></script>
+    <!-- Footer -->
+    <jsp:include page="../layout/dashboard-footer.jsp" />
+</div>
+
+<script>
+    // Form validation
+    (function() {
+        'use strict';
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Character counter for textareas
+            document.querySelectorAll('textarea').forEach(textarea => {
+                const maxLength = textarea.maxLength;
+                if(maxLength && maxLength > 0) {
+                    const counter = document.createElement('div');
+                    counter.className = 'char-counter';
+                    textarea.parentNode.appendChild(counter);
+                    
+                    function updateCounter() {
+                        const remaining = maxLength - textarea.value.length;
+                        counter.textContent = textarea.value.length + '/' + maxLength + ' characters';
+                    }
+                    
+                    textarea.addEventListener('input', updateCounter);
+                    updateCounter(); // Initial count
+                }
+            });
+
+            // Form validation
+            const form = document.querySelector('.needs-validation');
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+</script>
+
+<style>
+/* Custom styles for Job Posting form */
+.job-posting-card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.job-posting-card .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.job-posting-card .card-header h4 {
+    color: #2c3e50;
+    margin-bottom: 0;
+}
+
+.form-label {
+    font-weight: 500;
+    color: #495057;
+}
+
+.form-label i {
+    width: 20px;
+    color: #6c757d;
+}
+
+.form-text {
+    font-size: 0.825rem;
+    color: #6c757d;
+}
+
+.char-counter {
+    font-size: 0.75rem;
+    color: #6c757d;
+    text-align: right;
+    margin-top: 0.25rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .content-area {
+        padding: 1rem;
+    }
+    
+    .job-posting-card {
+        margin-bottom: 1rem;
+    }
+    
+    .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .d-md-flex.justify-content-md-end {
+        flex-direction: column-reverse;
+    }
+}
+
+/* Form validation styles */
+.was-validated .form-control:invalid:focus,
+.form-control.is-invalid:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+}
+
+.was-validated .form-control:valid:focus,
+.form-control.is-valid:focus {
+    border-color: #198754;
+    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+}
+</style>
 </body>
 </html>

@@ -23,7 +23,7 @@ public class JobPostingMapper {
     jobPosting.setNumberOfPositions(dto.getQuantity());
     jobPosting.setJobType(normalizeJobType(dto.getJobType()));
     jobPosting.setDescription(dto.getJobSummary());
-    jobPosting.setLocation(dto.getWorkingLocation());
+    jobPosting.setWorkingLocation(dto.getWorkingLocation());
     // Salary: lấy trực tiếp từ DTO mới
     jobPosting.setMinSalary(dto.getMinSalary() != null ? java.math.BigDecimal.valueOf(dto.getMinSalary()) : null);
     jobPosting.setMaxSalary(dto.getMaxSalary() != null ? java.math.BigDecimal.valueOf(dto.getMaxSalary()) : null);

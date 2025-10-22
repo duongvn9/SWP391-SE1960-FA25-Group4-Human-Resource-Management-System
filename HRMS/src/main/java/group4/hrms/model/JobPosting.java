@@ -22,7 +22,7 @@ public class JobPosting {
     private String description;             // Mô tả công việc
     private String requirements;            // Yêu cầu ứng viên
     private String benefits;                // Quyền lợi
-    private String location;                // Địa điểm làm việc
+    private String workingLocation;         // Địa điểm làm việc
     private Integer minExperienceYears;     // Số năm kinh nghiệm tối thiểu
     private BigDecimal minSalary;           // Mức lương tối thiểu
     private BigDecimal maxSalary;           // Mức lương tối đa
@@ -159,12 +159,12 @@ public class JobPosting {
         this.benefits = benefits;
     }
     
-    public String getLocation() {
-        return location;
+    public String getWorkingLocation() {
+        return workingLocation;
     }
     
-    public void setLocation(String location) {
-        this.location = location;
+    public void setWorkingLocation(String workingLocation) {
+        this.workingLocation = workingLocation;
     }
 
     public Integer getMinExperienceYears() {
