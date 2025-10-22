@@ -70,6 +70,13 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             </c:if>
+            
+            <c:if test="${not empty error}">
+                <div class="alert alert-danger alert-dismissible fade show">
+                    <i class="fas fa-exclamation-circle"></i> ${error}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            </c:if>
 
             <div class="change-password-card">
                 <form method="post" action="${pageContext.request.contextPath}/change-password">
@@ -92,7 +99,10 @@
                         <i class="fas fa-info-circle"></i> 
                         <strong>Password Requirements:</strong>
                         <ul class="mb-0 mt-2">
-                            <li>Must not be empty</li>
+                            <li>Must be longer than 6 characters (minimum 7)</li>
+                            <li>Must contain at least 1 uppercase letter (A-Z)</li>
+                            <li>Must contain at least 1 number (0-9)</li>
+                            <li>Must contain at least 1 special character (!@#$%^&*...)</li>
                             <li>New password and confirm password must match</li>
                         </ul>
                     </div>
