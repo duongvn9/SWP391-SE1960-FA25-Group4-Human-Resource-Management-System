@@ -150,6 +150,9 @@ public class ProfileController extends HttpServlet {
             logger.info("Updating profile for user_id: {}, username: {}", 
                 currentProfile.getUserId(), username);
             logger.info("=== DEBUG INFO ===");
+            logger.info("Gender from request: '{}'", req.getParameter("gender"));
+            logger.info("Gender in DTO: '{}'", dto.getGender());
+            logger.info("Gender in DB: '{}'", currentProfile.getGender());
             logger.info("Phone from request: '{}'", req.getParameter("phone"));
             logger.info("Phone in DTO: '{}'", dto.getPhone());
             logger.info("Phone in DB: '{}'", currentProfile.getPhone());
@@ -177,21 +180,6 @@ public class ProfileController extends HttpServlet {
             }
             
             logger.info("Validation passed, continuing to update...");
-            
-            // Validate: Cannot clear existing data (cannot set to empty if already has value)
-            String clearFieldError = validateNoClearingData(currentProfile, dto);
-            if (clearFieldError != null) {
-                logger.warn("Attempt to clear existing data: {}", clearFieldError);
-                req.setAttribute("error", clearFieldError);
-                UserProfile profileWithInput = createProfileFromDto(currentProfile, dto);
-                req.setAttribute("profile", profileWithInput);
-                // Generate new CSRF token and save to session
-                String newCsrfToken = generateCsrfToken();
-                req.getSession().setAttribute("_csrf_token", newCsrfToken);
-                req.setAttribute("csrfToken", newCsrfToken);
-                req.getRequestDispatcher("/WEB-INF/views/profile/edit-profile.jsp").forward(req, resp);
-                return;
-            }
             
             // Check uniqueness constraints
             if (dto.getCccd() != null && !dto.getCccd().trim().isEmpty()) {
@@ -234,22 +222,23 @@ public class ProfileController extends HttpServlet {
             
             // Update profile
             UserProfile updatedProfile = new UserProfile();
-            updatedProfile.setFullName(dto.getFullName());
+            updatedProfile.setFullName(emptyToNull(dto.getFullName()));
             updatedProfile.setDob(dto.getDob());
             // Normalize gender to lowercase before saving
-            updatedProfile.setGender(dto.getGender() != null ? dto.getGender().toLowerCase() : null);
-            updatedProfile.setHometown(dto.getHometown());
-            updatedProfile.setCccd(dto.getCccd());
+            updatedProfile.setGender(dto.getGender() != null && !dto.getGender().trim().isEmpty() 
+                ? dto.getGender().toLowerCase() : null);
+            updatedProfile.setHometown(emptyToNull(dto.getHometown()));
+            updatedProfile.setCccd(emptyToNull(dto.getCccd()));
             updatedProfile.setCccdIssuedDate(dto.getCccdIssuedDate());
-            updatedProfile.setCccdIssuedPlace(dto.getCccdIssuedPlace());
-            updatedProfile.setEmailCompany(dto.getEmailCompany());
-            updatedProfile.setPhone(dto.getPhone());
-            updatedProfile.setAddressLine1(dto.getAddressLine1());
-            updatedProfile.setAddressLine2(dto.getAddressLine2());
-            updatedProfile.setCity(dto.getCity());
-            updatedProfile.setState(dto.getState());
-            updatedProfile.setPostalCode(dto.getPostalCode());
-            updatedProfile.setCountry(dto.getCountry());
+            updatedProfile.setCccdIssuedPlace(emptyToNull(dto.getCccdIssuedPlace()));
+            updatedProfile.setEmailCompany(emptyToNull(dto.getEmailCompany()));
+            updatedProfile.setPhone(emptyToNull(dto.getPhone()));
+            updatedProfile.setAddressLine1(emptyToNull(dto.getAddressLine1()));
+            updatedProfile.setAddressLine2(emptyToNull(dto.getAddressLine2()));
+            updatedProfile.setCity(emptyToNull(dto.getCity()));
+            updatedProfile.setState(emptyToNull(dto.getState()));
+            updatedProfile.setPostalCode(emptyToNull(dto.getPostalCode()));
+            updatedProfile.setCountry(emptyToNull(dto.getCountry()));
             
             boolean success = userProfileDao.updateProfile(currentProfile.getUserId(), updatedProfile);
             
@@ -344,87 +333,99 @@ public class ProfileController extends HttpServlet {
      * Alt Flow 1: Detect no changes
      */
     private boolean hasChanges(UserProfile current, UserProfileDto dto) {
+        logger.info("=== CHECKING CHANGES ===");
+        
         // Compare all editable fields
-        if (!equals(current.getFullName(), dto.getFullName())) return true;
-        if (!equals(current.getPhone(), dto.getPhone())) return true;
-        if (!equals(current.getGender(), dto.getGender())) return true;
-        if (!equals(current.getHometown(), dto.getHometown())) return true;
-        if (!equals(current.getCccd(), dto.getCccd())) return true;
-        if (!equals(current.getCccdIssuedPlace(), dto.getCccdIssuedPlace())) return true;
-        if (!equals(current.getAddressLine1(), dto.getAddressLine1())) return true;
-        if (!equals(current.getAddressLine2(), dto.getAddressLine2())) return true;
-        if (!equals(current.getCity(), dto.getCity())) return true;
-        if (!equals(current.getState(), dto.getState())) return true;
-        if (!equals(current.getPostalCode(), dto.getPostalCode())) return true;
-        if (!equals(current.getCountry(), dto.getCountry())) return true;
+        if (!equals(current.getFullName(), dto.getFullName())) {
+            logger.info("FullName changed: '{}' -> '{}'", current.getFullName(), dto.getFullName());
+            return true;
+        }
+        if (!equals(current.getPhone(), dto.getPhone())) {
+            logger.info("Phone changed: '{}' -> '{}'", current.getPhone(), dto.getPhone());
+            return true;
+        }
+        // Normalize gender to lowercase before comparison
+        String currentGender = current.getGender() != null ? current.getGender().toLowerCase() : null;
+        String dtoGender = dto.getGender() != null ? dto.getGender().toLowerCase() : null;
+        if (!equals(currentGender, dtoGender)) {
+            logger.info("Gender changed: '{}' -> '{}'", currentGender, dtoGender);
+            return true;
+        }
+        if (!equals(current.getHometown(), dto.getHometown())) {
+            logger.info("Hometown changed: '{}' -> '{}'", current.getHometown(), dto.getHometown());
+            return true;
+        }
+        if (!equals(current.getCccd(), dto.getCccd())) {
+            logger.info("CCCD changed: '{}' -> '{}'", current.getCccd(), dto.getCccd());
+            return true;
+        }
+        if (!equals(current.getCccdIssuedPlace(), dto.getCccdIssuedPlace())) {
+            logger.info("CCCD Issued Place changed");
+            return true;
+        }
+        if (!equals(current.getAddressLine1(), dto.getAddressLine1())) {
+            logger.info("Address Line 1 changed");
+            return true;
+        }
+        if (!equals(current.getAddressLine2(), dto.getAddressLine2())) {
+            logger.info("Address Line 2 changed");
+            return true;
+        }
+        if (!equals(current.getCity(), dto.getCity())) {
+            logger.info("City changed");
+            return true;
+        }
+        if (!equals(current.getState(), dto.getState())) {
+            logger.info("State changed");
+            return true;
+        }
+        if (!equals(current.getPostalCode(), dto.getPostalCode())) {
+            logger.info("Postal Code changed");
+            return true;
+        }
+        if (!equals(current.getCountry(), dto.getCountry())) {
+            logger.info("Country changed: '{}' -> '{}'", current.getCountry(), dto.getCountry());
+            return true;
+        }
         
         // Compare dates
-        if (!equals(current.getDob(), dto.getDob())) return true;
-        if (!equals(current.getCccdIssuedDate(), dto.getCccdIssuedDate())) return true;
+        if (!equals(current.getDob(), dto.getDob())) {
+            logger.info("DOB changed");
+            return true;
+        }
+        if (!equals(current.getCccdIssuedDate(), dto.getCccdIssuedDate())) {
+            logger.info("CCCD Issued Date changed");
+            return true;
+        }
         
+        logger.info("No changes detected");
         return false;
     }
     
     /**
-     * Helper method to compare two objects (handles null)
+     * Helper method to compare two objects (handles null and empty strings)
      */
     private boolean equals(Object obj1, Object obj2) {
+        // Handle strings specially - treat null and empty as equivalent
+        if (obj1 instanceof String || obj2 instanceof String) {
+            String str1 = obj1 != null ? ((String) obj1).trim() : "";
+            String str2 = obj2 != null ? ((String) obj2).trim() : "";
+            return str1.equals(str2);
+        }
+        
+        // For non-strings (like dates)
         if (obj1 == null && obj2 == null) return true;
         if (obj1 == null || obj2 == null) return false;
-        
-        // Trim strings before comparison
-        if (obj1 instanceof String && obj2 instanceof String) {
-            return ((String) obj1).trim().equals(((String) obj2).trim());
-        }
         
         return obj1.equals(obj2);
     }
     
+
     /**
-     * Validate that user is not clearing existing data
-     * Returns error message if trying to clear data, null if OK
+     * Convert empty string to null (for database storage)
      */
-    private String validateNoClearingData(UserProfile current, UserProfileDto dto) {
-        // Check each field - if current has value, new value cannot be empty
-        if (hasValue(current.getFullName()) && !hasValue(dto.getFullName())) {
-            return "Cannot clear Full Name - this field cannot be empty";
-        }
-        if (hasValue(current.getPhone()) && !hasValue(dto.getPhone())) {
-            return "Cannot clear Phone Number - this field cannot be empty";
-        }
-        if (current.getDob() != null && dto.getDob() == null) {
-            return "Cannot clear Date of Birth - this field cannot be empty";
-        }
-        if (hasValue(current.getGender()) && !hasValue(dto.getGender())) {
-            return "Cannot clear Gender - this field cannot be empty";
-        }
-        if (hasValue(current.getCccd()) && !hasValue(dto.getCccd())) {
-            return "Cannot clear Citizen ID - this field cannot be empty";
-        }
-        if (current.getCccdIssuedDate() != null && dto.getCccdIssuedDate() == null) {
-            return "Cannot clear CCCD Issued Date - this field cannot be empty";
-        }
-        if (hasValue(current.getCccdIssuedPlace()) && !hasValue(dto.getCccdIssuedPlace())) {
-            return "Cannot clear CCCD Issued Place - this field cannot be empty";
-        }
-        if (hasValue(current.getCountry()) && !hasValue(dto.getCountry())) {
-            return "Cannot clear Country - this field cannot be empty";
-        }
-        if (hasValue(current.getAddressLine1()) && !hasValue(dto.getAddressLine1())) {
-            return "Cannot clear Address Line 1 - this field cannot be empty";
-        }
-        if (hasValue(current.getCity()) && !hasValue(dto.getCity())) {
-            return "Cannot clear City - this field cannot be empty";
-        }
-        
-        return null; // No errors
-    }
-    
-    /**
-     * Check if a string has value (not null and not empty after trim)
-     */
-    private boolean hasValue(String str) {
-        return str != null && !str.trim().isEmpty();
+    private String emptyToNull(String str) {
+        return (str != null && !str.trim().isEmpty()) ? str.trim() : null;
     }
     
     /**

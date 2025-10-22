@@ -11,15 +11,18 @@
  */
 function openApprovalModal(requestId, requestTitle, requestStatus) {
     // Set modal data
-    document.getElementById('modalRequestId').value = requestId;
-    document.getElementById('modalRequestTitle').textContent = requestTitle;
+    const modalRequestIdEl = document.getElementById('modalRequestId');
+    if (modalRequestIdEl) modalRequestIdEl.value = requestId;
+    const modalRequestTitleEl = document.getElementById('modalRequestTitle');
+    if (modalRequestTitleEl) modalRequestTitleEl.textContent = requestTitle;
 
     // Get employee name from the page (displayed in the request information card)
     const employeeName = document.querySelector('.fw-semibold')?.textContent.trim() || 'N/A';
     document.getElementById('modalEmployeeName').textContent = employeeName;
 
     // Reset form fields
-    document.getElementById('approvalReason').value = '';
+    const approvalReasonEl = document.getElementById('approvalReason');
+    if (approvalReasonEl) approvalReasonEl.value = '';
 
     // For APPROVED requests (manager override), hide Accept option and show only Reject
     const acceptBtn = document.getElementById('decisionAccept');
@@ -28,24 +31,27 @@ function openApprovalModal(requestId, requestTitle, requestStatus) {
 
     if (requestStatus === 'APPROVED') {
         // Hide Accept option
-        acceptBtn.style.display = 'none';
-        acceptLabel.style.display = 'none';
+        if (acceptBtn) acceptBtn.style.display = 'none';
+        if (acceptLabel) acceptLabel.style.display = 'none';
         // Auto-select Reject
-        rejectBtn.checked = true;
+        if (rejectBtn) rejectBtn.checked = true;
         // Update modal title
-        document.getElementById('approvalModalLabel').innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Override Request';
+        const modalLabel = document.getElementById('approvalModalLabel');
+        if (modalLabel) modalLabel.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Override Request';
     } else {
         // Show both options for PENDING requests
-        acceptBtn.style.display = 'inline-block';
-        acceptLabel.style.display = 'inline-block';
-        acceptBtn.checked = true;
+        if (acceptBtn) acceptBtn.style.display = 'inline-block';
+        if (acceptLabel) acceptLabel.style.display = 'inline-block';
+        if (acceptBtn) acceptBtn.checked = true;
         // Reset modal title
-        document.getElementById('approvalModalLabel').innerHTML = '<i class="fas fa-clipboard-check me-2"></i>Approve Request';
+        const modalLabel = document.getElementById('approvalModalLabel');
+        if (modalLabel) modalLabel.innerHTML = '<i class="fas fa-clipboard-check me-2"></i>Approve Request';
     }
 
     // Reset validation state
-    document.getElementById('approvalReason').classList.remove('is-invalid');
-    document.getElementById('reasonError').style.display = 'none';
+    if (approvalReasonEl) approvalReasonEl.classList.remove('is-invalid');
+    const reasonErrorEl = document.getElementById('reasonError');
+    if (reasonErrorEl) reasonErrorEl.style.display = 'none';
 
     // Show modal
     const modal = new bootstrap.Modal(document.getElementById('approvalModal'));
