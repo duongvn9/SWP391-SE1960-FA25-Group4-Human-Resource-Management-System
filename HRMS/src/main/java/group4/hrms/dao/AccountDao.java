@@ -13,8 +13,8 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * DAO class cho Account entity - Phiên bản đơn giản
- * Xử lý các thao tác CRUD với bảng accounts
+ * DAO class cho Account entity - Phiên bản đơn giản Xử lý các thao tác CRUD với
+ * bảng accounts
  */
 public class AccountDao {
 
@@ -41,8 +41,7 @@ public class AccountDao {
     public Account create(Account account) {
         logger.info("Tạo mới account: {}", account.getUsername());
 
-        try (Connection conn = DatabaseUtil.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(INSERT_ACCOUNT, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(INSERT_ACCOUNT, Statement.RETURN_GENERATED_KEYS)) {
 
             LocalDateTime now = LocalDateTime.now();
 
@@ -85,8 +84,7 @@ public class AccountDao {
     public Account update(Account account) {
         logger.info("Cập nhật account ID: {}", account.getId());
 
-        try (Connection conn = DatabaseUtil.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(UPDATE_ACCOUNT)) {
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(UPDATE_ACCOUNT)) {
 
             LocalDateTime now = LocalDateTime.now();
 
@@ -127,8 +125,7 @@ public class AccountDao {
     public boolean delete(Long accountId) {
         logger.info("Xóa account ID: {}", accountId);
 
-        try (Connection conn = DatabaseUtil.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(DELETE_ACCOUNT)) {
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(DELETE_ACCOUNT)) {
 
             stmt.setLong(1, accountId);
             int affectedRows = stmt.executeUpdate();
@@ -154,8 +151,7 @@ public class AccountDao {
     public Optional<Account> findById(Long accountId) {
         logger.debug("Tìm account theo ID: {}", accountId);
 
-        try (Connection conn = DatabaseUtil.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(SELECT_ACCOUNT_BY_ID)) {
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(SELECT_ACCOUNT_BY_ID)) {
 
             stmt.setLong(1, accountId);
 
@@ -182,8 +178,7 @@ public class AccountDao {
     public Optional<Account> findByUsername(String username) {
         logger.debug("Tìm account theo username: {}", username);
 
-        try (Connection conn = DatabaseUtil.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(SELECT_ACCOUNT_BY_USERNAME)) {
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(SELECT_ACCOUNT_BY_USERNAME)) {
 
             stmt.setString(1, username);
 
@@ -212,9 +207,7 @@ public class AccountDao {
 
         List<Account> accounts = new ArrayList<>();
 
-        try (Connection conn = DatabaseUtil.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(SELECT_ALL_ACCOUNTS);
-                ResultSet rs = stmt.executeQuery()) {
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(SELECT_ALL_ACCOUNTS); ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
                 accounts.add(mapResultSetToAccount(rs));
@@ -235,8 +228,7 @@ public class AccountDao {
     public Optional<Account> findByEmailLogin(String emailLogin) {
         logger.debug("Tìm account theo email login: {}", emailLogin);
 
-        try (Connection conn = DatabaseUtil.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(SELECT_ACCOUNT_BY_EMAIL)) {
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(SELECT_ACCOUNT_BY_EMAIL)) {
 
             stmt.setString(1, emailLogin);
 
@@ -266,16 +258,15 @@ public class AccountDao {
 
     /**
      * Tìm accounts với filters và pagination
-     * 
-     * @param search       Search keyword (username, email_login, hoặc user
-     *                     full_name)
-     * @param status       Status filter
+     *
+     * @param search Search keyword (username, email_login, hoặc user full_name)
+     * @param status Status filter
      * @param departmentId Department ID filter
-     * @param positionId   Position ID filter
-     * @param offset       Offset for pagination
-     * @param limit        Limit for pagination
-     * @param sortBy       Column to sort by
-     * @param sortOrder    Sort order (asc/desc)
+     * @param positionId Position ID filter
+     * @param offset Offset for pagination
+     * @param limit Limit for pagination
+     * @param sortBy Column to sort by
+     * @param sortOrder Sort order (asc/desc)
      * @return List of AccountListDto
      */
     public List<AccountListDto> findWithFilters(String search, String status, Long departmentId,
@@ -350,8 +341,7 @@ public class AccountDao {
         // MySQL pagination syntax
         sql.append("LIMIT ? OFFSET ?");
 
-        try (Connection conn = DatabaseUtil.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
 
             int paramIndex = 1;
 
@@ -399,11 +389,11 @@ public class AccountDao {
 
     /**
      * Đếm tổng số accounts với filters
-     * 
-     * @param search       Search keyword
-     * @param status       Status filter
+     *
+     * @param search Search keyword
+     * @param status Status filter
      * @param departmentId Department ID filter
-     * @param positionId   Position ID filter
+     * @param positionId Position ID filter
      * @return Total count
      */
     public int countWithFilters(String search, String status, Long departmentId, Long positionId) {
@@ -429,8 +419,7 @@ public class AccountDao {
             sql.append("AND u.position_id = ? ");
         }
 
-        try (Connection conn = DatabaseUtil.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
 
             int paramIndex = 1;
 
@@ -474,21 +463,20 @@ public class AccountDao {
 
     /**
      * Tìm accounts theo user ID
-     * 
+     *
      * @param userId User ID
      * @return List of accounts
      */
     public List<Account> findByUserId(Long userId) {
         logger.debug("Tìm accounts theo user ID: {}", userId);
 
-        String sql = "SELECT id, user_id, username, email_login, status, failed_attempts, " +
-                "last_login_at, created_at, updated_at " +
-                "FROM accounts WHERE user_id = ? ORDER BY created_at DESC";
+        String sql = "SELECT id, user_id, username, email_login, status, failed_attempts, "
+                + "last_login_at, created_at, updated_at "
+                + "FROM accounts WHERE user_id = ? ORDER BY created_at DESC";
 
         List<Account> accounts = new ArrayList<>();
 
-        try (Connection conn = DatabaseUtil.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setLong(1, userId);
 
@@ -508,7 +496,6 @@ public class AccountDao {
     }
 
     // Helper methods
-
     /**
      * Map ResultSet thành Account object
      */
@@ -586,12 +573,12 @@ public class AccountDao {
     }
 
     /**
-     * Create account with password (local authentication)
-     * Creates account, auth_identity, and auth_local_credentials in a transaction
-     * 
-     * @param userId        User ID
-     * @param username      Username
-     * @param emailLogin    Email for login
+     * Create account with password (local authentication) Creates account,
+     * auth_identity, and auth_local_credentials in a transaction
+     *
+     * @param userId User ID
+     * @param username Username
+     * @param emailLogin Email for login
      * @param plainPassword Plain text password (will be hashed)
      * @return Created Account
      */
@@ -714,11 +701,97 @@ public class AccountDao {
 
     /**
      * Save account (alias for create method)
-     * 
+     *
      * @param account Account to save
      * @return Created account
      */
     public Account save(Account account) {
         return create(account);
     }
+
+    /**
+     * Update password for account
+     *
+     * @param accountId Account ID
+     * @param newPasswordHash New password hash (bcrypt)
+     * @return true if successful, false otherwise
+     */
+    public boolean updatePassword(Long accountId, String newPasswordHash) {
+        logger.info("Updating password for account ID: {}", accountId);
+
+        // First, get the identity_id for this account
+        String getIdentityIdSql = "SELECT id FROM auth_identities WHERE account_id = ? AND provider = 'local'";
+        String updatePasswordSql = "UPDATE auth_local_credentials SET password_hash = ?, password_updated_at = ? WHERE identity_id = ?";
+
+        try (Connection conn = DatabaseUtil.getConnection()) {
+            Long identityId = null;
+
+            // Get identity_id
+            try (PreparedStatement stmt = conn.prepareStatement(getIdentityIdSql)) {
+                stmt.setLong(1, accountId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        identityId = rs.getLong("id");
+                    } else {
+                        logger.warn("No local auth identity found for account ID: {}", accountId);
+                        return false;
+                    }
+                }
+            }
+
+            // Update password
+            try (PreparedStatement stmt = conn.prepareStatement(updatePasswordSql)) {
+                stmt.setString(1, newPasswordHash);
+                stmt.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+                stmt.setLong(3, identityId);
+
+                int affectedRows = stmt.executeUpdate();
+                boolean success = affectedRows > 0;
+
+                if (success) {
+                    logger.info("Password updated successfully for account ID: {}", accountId);
+                } else {
+                    logger.warn("Failed to update password for account ID: {}", accountId);
+                }
+
+                return success;
+            }
+
+        } catch (SQLException e) {
+            logger.error("Error updating password for account ID {}: {}", accountId, e.getMessage(), e);
+            throw new RuntimeException("Error updating password", e);
+        }
+    }
+
+    /**
+     * Get password hash for account
+     *
+     * @param accountId Account ID
+     * @return Password hash or null if not found
+     */
+    public String getPasswordHash(Long accountId) {
+        logger.debug("Getting password hash for account ID: {}", accountId);
+
+        String sql = "SELECT alc.password_hash "
+                + "FROM auth_local_credentials alc "
+                + "INNER JOIN auth_identities ai ON alc.identity_id = ai.id "
+                + "WHERE ai.account_id = ? AND ai.provider = 'local'";
+
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, accountId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("password_hash");
+                }
+                return null;
+            }
+
+        } catch (SQLException e) {
+            logger.error("Error getting password hash for account ID {}: {}", accountId, e.getMessage(), e);
+            throw new RuntimeException("Error getting password hash", e);
+        }
+    }
+
 }

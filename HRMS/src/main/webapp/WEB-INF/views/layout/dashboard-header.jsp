@@ -101,6 +101,8 @@
                     </span>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end shadow">
+                    <li><a class="dropdown-item" href="${pageContext.request.contextPath}/my-account">
+                            <i class="fas fa-user-circle"></i> My Account</a></li>
                     <li><a class="dropdown-item" href="${pageContext.request.contextPath}/user-profile">
                             <i class="fas fa-user"></i> Profile</a></li>
                     <li><a class="dropdown-item" href="${pageContext.request.contextPath}/contracts">
