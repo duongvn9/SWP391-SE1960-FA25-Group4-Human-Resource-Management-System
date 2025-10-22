@@ -1,5 +1,8 @@
 package group4.hrms.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import group4.hrms.dao.AttendanceLogDao;
 import group4.hrms.dao.DepartmentDao;
 import group4.hrms.dao.TimesheetPeriodDao;
@@ -33,7 +36,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 @WebServlet("/attendance/import")
@@ -48,7 +50,7 @@ public class ImportAttendanceServlet extends HttpServlet {
             resp.sendRedirect(req.getContextPath() + "/login");
             return;
         }
-        
+
         String action = req.getParameter("action");
         if ("Preview".equalsIgnoreCase(action)) {
             int page = 1;
@@ -86,56 +88,43 @@ public class ImportAttendanceServlet extends HttpServlet {
 
         try {
             if ("ManualImport".equalsIgnoreCase(action)) {
+                System.out.println("Test manual");
                 String manualDataJson = req.getParameter("manualData");
+                System.out.println(manualDataJson);
                 List<AttendanceLogDto> manualLogs = new ArrayList<>();
 
                 if (manualDataJson != null && !manualDataJson.trim().isEmpty()) {
+                    // Xoá các dấu [] ở đầu cuối
                     manualDataJson = manualDataJson.trim();
-                    if (manualDataJson.startsWith("[") && manualDataJson.endsWith("]")) {
-                        manualDataJson = manualDataJson.substring(1, manualDataJson.length() - 1); 
-                        String[] records = manualDataJson.split("\\},\\{");
-                        for (String r : records) {
-                            r = r.replace("{", "").replace("}", "");
-                            String[] fields = r.split(",");
-                            AttendanceLogDto dto = new AttendanceLogDto();
+                    if (manualDataJson.startsWith("[")) {
+                        manualDataJson = manualDataJson.substring(1);
+                    }
+                    if (manualDataJson.endsWith("]")) {
+                        manualDataJson = manualDataJson.substring(0, manualDataJson.length() - 1);
+                    }
 
-                            for (String f : fields) {
-                                String[] kv = f.split(":", 2);
-                                if (kv.length == 2) {
-                                    String key = kv[0].trim().replaceAll("\"", "");
-                                    String value = kv[1].trim().replaceAll("\"", "");
+                    // Tách các object bằng "},{" (giả định dữ liệu đúng format)
+                    String[] objects = manualDataJson.split("\\},\\{");
 
-                                    switch (key) {
-                                        case "employeeId" -> {
-                                            dto.setUserId(value.isEmpty() ? null : Long.valueOf(value));
-                                        }
-                                        case "date" -> {
-                                            if (!value.isEmpty()) {
-                                                DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-                                                dto.setDate(LocalDate.parse(value, dateFormatter));
-                                            }
-                                        }
-                                        case "checkIn" -> {
-                                            if (!value.isEmpty()) {
-                                                DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("H:mm");
-                                                dto.setCheckIn(LocalTime.parse(value, timeFormatter));
-                                            }
-                                        }
-                                        case "checkOut" -> {
-                                            if (!value.isEmpty()) {
-                                                DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("H:mm");
-                                                dto.setCheckOut(LocalTime.parse(value, timeFormatter));
-                                            }
-                                        }
-                                        case "status" -> {
-                                            dto.setStatus(value);
-                                        }
-                                    }
-                                }
-                            }
-
-                            manualLogs.add(dto);
+                    for (String obj : objects) {
+                        // Bổ sung lại dấu { và }
+                        if (!obj.startsWith("{")) {
+                            obj = "{" + obj;
                         }
+                        if (!obj.endsWith("}")) {
+                            obj = obj + "}";
+                        }
+
+                        AttendanceLogDto dto = new AttendanceLogDto();
+
+                        // Lấy từng field thủ công
+                        dto.setUserId(extractLong(obj, "userId"));
+                        dto.setDate(extractDate(obj, "date"));         // yyyy-MM-dd → LocalDate
+                        dto.setCheckIn(extractTime(obj, "checkIn"));   // HH:mm → LocalTime
+                        dto.setCheckOut(extractTime(obj, "checkOut")); // HH:mm → LocalTime
+                        dto.setStatus(extractString(obj, "status"));
+
+                        manualLogs.add(dto);
                     }
                 }
 
@@ -143,8 +132,10 @@ public class ImportAttendanceServlet extends HttpServlet {
                 DepartmentDao dDao = new DepartmentDao();
                 TimesheetPeriodDao tDao = new TimesheetPeriodDao();
                 AttendanceLogDao dao = new AttendanceLogDao();
+
                 for (AttendanceLogDto dto : manualLogs) {
                     try {
+                        // Gán employeeName và department
                         if (dto.getUserId() != null) {
                             Optional<User> userOpt = userDao.findById(dto.getUserId());
                             userOpt.ifPresent(user -> {
@@ -162,14 +153,16 @@ public class ImportAttendanceServlet extends HttpServlet {
                         } else {
                             dto.setPeriod("N/A");
                         }
+
                     } catch (SQLException e) {
                     }
                 }
-
+                System.out.println(manualLogs);
                 List<AttendanceLog> record = AttendanceMapper.convertDtoToEntity(manualLogs);
+                System.out.println(record);
                 dao.saveAttendanceLogs(record);
-                req.setAttribute("manualSuccess", "Import successfully");
 
+                req.setAttribute("manualSuccess", "Import successfully");
                 req.getRequestDispatcher("/WEB-INF/views/attendance/import-attendance.jsp").forward(req, resp);
                 return;
             }
@@ -229,6 +222,46 @@ public class ImportAttendanceServlet extends HttpServlet {
         } catch (SQLException ex) {
             Logger.getLogger(ImportAttendanceServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    private Long extractLong(String json, String key) {
+        try {
+            String pattern = "\"" + key + "\":(\\d+)";
+            java.util.regex.Matcher m = java.util.regex.Pattern.compile(pattern).matcher(json);
+            if (m.find()) {
+                return Long.valueOf(m.group(1));
+            }
+        } catch (NumberFormatException e) {
+        }
+        return null;
+    }
+
+    private String extractString(String json, String key) {
+        try {
+            String pattern = "\"" + key + "\":\"(.*?)\"";
+            java.util.regex.Matcher m = java.util.regex.Pattern.compile(pattern).matcher(json);
+            if (m.find()) {
+                return m.group(1);
+            }
+        } catch (Exception e) {
+        }
+        return null;
+    }
+
+    private LocalDate extractDate(String json, String key) {
+        String val = extractString(json, key);
+        if (val != null) {
+            return LocalDate.parse(val);
+        }
+        return null;
+    }
+
+    private LocalTime extractTime(String json, String key) {
+        String val = extractString(json, key);
+        if (val != null) {
+            return LocalTime.parse(val);
+        }
+        return null;
     }
 
     private Path handleFileUpload(HttpServletRequest req) throws IOException, ServletException {

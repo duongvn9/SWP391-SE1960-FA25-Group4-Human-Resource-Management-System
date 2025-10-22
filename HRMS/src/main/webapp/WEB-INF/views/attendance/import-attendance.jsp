@@ -20,7 +20,6 @@
             <div class="content-area">
                 <h2 class="page-title">Import Attendance</h2>
 
-                <!-- Tabs -->
                 <div class="tab-header">
                     <button class="tab-btn upload-tab-btn" id="upload-btn">Upload File</button>
                     <button class="tab-btn manual-tab-btn" id="manual-btn">Manual Entry</button>
@@ -45,7 +44,6 @@
                             <button type="submit" id="import" name="action" value="Import" class="form-button btn-secondary">Import</button>
                         </div>
 
-                        <!-- Messages -->
                         <c:if test="${not empty error}">
                             <div class="form-message error-message">${error}</div>
                         </c:if>
@@ -91,12 +89,10 @@
                             <!-- Pagination -->
                             <c:if test="${totalPages > 1}">
                                 <div class="pagination preview-pagination">
-                                    <!-- Previous -->
                                     <c:if test="${currentPage > 1}">
                                         <a href="?action=Preview&page=${currentPage - 1}" class="page-btn prev-btn">Previous</a>
                                     </c:if>
 
-                                    <!-- Tính startPage và endPage -->
                                     <c:set var="startPage" value="${currentPage - 1}" />
                                     <c:set var="endPage" value="${currentPage + 1}" />
 
@@ -108,13 +104,11 @@
                                         <c:set var="endPage" value="${totalPages}" />
                                     </c:if>
 
-                                    <!-- Trang đầu nếu cần -->
                                     <c:if test="${startPage > 1}">
                                         <a href="?action=Preview&page=1" class="page-btn">1</a>
                                         <span>...</span>
                                     </c:if>
 
-                                    <!-- Vòng lặp hiển thị các trang xung quanh currentPage -->
                                     <c:forEach var="i" begin="${startPage}" end="${endPage}">
                                         <c:choose>
                                             <c:when test="${i == currentPage}">
@@ -126,13 +120,11 @@
                                         </c:choose>
                                     </c:forEach>
 
-                                    <!-- Trang cuối nếu cần -->
                                     <c:if test="${endPage < totalPages}">
                                         <span>...</span>
                                         <a href="?action=Preview&page=${totalPages}" class="page-btn">${totalPages}</a>
                                     </c:if>
 
-                                    <!-- Next -->
                                     <c:if test="${currentPage < totalPages}">
                                         <a href="?action=Preview&page=${currentPage + 1}" class="page-btn next-btn">Next</a>
                                     </c:if>
@@ -144,42 +136,96 @@
 
                 <!-- Manual Tab -->
                 <div id="manual" class="tab-content manual-tab">
-                    <h3 class="section-title">Manual Entry</h3>
+                    <div class="manual-inner">
+                        <h3 class="section-title">Manual Entry</h3>
 
-                    <div id="manualFeedback" class="feedback-message"></div>
+                        <div id="manualFeedback" class="feedback-message"></div>
 
-                    <table id="manualTable" class="excel-table manual-table">
-                        <thead>
-                            <tr class="table-header">
-                                <th>Employee ID</th>
-                                <th>Date</th>
-                                <th>Check-in</th>
-                                <th>Check-out</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                        <table id="manualTable" class="excel-table manual-table">
+                            <thead>
+                                <tr class="table-header">
+                                    <th>Employee</th>
+                                    <th>Date</th>
+                                    <th>Check-in</th>
+                                    <th>Check-out</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="manual-row">
+                                    <td class="manual-cell">
+                                        <input list="employeeList" class="form-control employee-input" placeholder="Select or type name">
+                                    </td>
+                                    <td class="manual-cell">
+                                        <input type="date" class="form-control date-input">
+                                    </td>
+                                    <td class="manual-cell">
+                                        <input type="time" class="form-control checkin-input">
+                                    </td>
+                                    <td class="manual-cell">
+                                        <input type="time" class="form-control checkout-input">
+                                    </td>
+                                    <td class="manual-cell">
+                                        <select class="form-control status-input">
+                                            <option value="">Select status</option>
+                                            <option value="Late">Late</option>
+                                            <option value="On Leave">On Time</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <template id="manualRowTemplate">
                             <tr class="manual-row">
-                                <td contenteditable="true" class="manual-cell"></td>
-                                <td contenteditable="true" class="manual-cell"></td>
-                                <td contenteditable="true" class="manual-cell"></td>
-                                <td contenteditable="true" class="manual-cell"></td>
-                                <td contenteditable="true" class="manual-cell"></td>
+                                <td class="manual-cell">
+                                    <input list="employeeList" class="form-control employee-input" placeholder="Select or type name">
+                                </td>
+                                <td class="manual-cell">
+                                    <input type="date" class="form-control date-input">
+                                </td>
+                                <td class="manual-cell">
+                                    <input type="time" class="form-control checkin-input">
+                                </td>
+                                <td class="manual-cell">
+                                    <input type="time" class="form-control checkout-input">
+                                </td>
+                                <td class="manual-cell">
+                                    <select class="form-control status-input">
+                                        <option value="">Select status</option>
+                                        <option value="Present">Present</option>
+                                        <option value="Absent">Absent</option>
+                                        <option value="Late">Late</option>
+                                        <option value="On Leave">On Leave</option>
+                                    </select>
+                                </td>
                             </tr>
-                        </tbody>
-                    </table>
+                        </template>
 
-                    <div class="manual-btn-wrapper">
-                        <form id="manualImportForm" action="${pageContext.request.contextPath}/attendance/import" method="post">
-                            <input type="hidden" name="action" value="ManualImport" />
-                            <input type="hidden" id="manualData" name="manualData" />
-                            <button type="submit" class="btn btn-import">Import</button>
-                        </form>
+                        <div class="manual-btn-wrapper d-flex gap-2 mt-3">
+                            <button type="button" id="addRowBtn" class="btn btn-secondary">
+                                <i class="fas fa-plus"></i> Add Row
+                            </button>
+
+                            <form id="manualImportForm" action="${pageContext.request.contextPath}/attendance/import" method="post">
+                                <input type="hidden" name="action" value="ManualImport" />
+                                <input type="hidden" id="manualData" name="manualData" />
+                                <button type="submit" class="btn btn-import">Import</button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
         <script src="${pageContext.request.contextPath}/assets/js/import-attendance.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            document.getElementById("addRowBtn").addEventListener("click", () => {
+                const tbody = document.querySelector("#manualTable tbody");
+                const template = document.getElementById("manualRowTemplate");
+                const newRow = template.content.cloneNode(true);
+                tbody.appendChild(newRow);
+            });
+        </script>
     </body>
 </html>

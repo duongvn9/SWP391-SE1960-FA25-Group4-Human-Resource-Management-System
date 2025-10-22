@@ -1,17 +1,23 @@
 function showTab(tabId) {
+    // BƯỚC 1: ẨN TẤT CẢ TAB (cực kỳ quan trọng!)
     document.querySelectorAll(".tab-content").forEach(tab => {
-        tab.style.display = "none";
+        tab.classList.remove("active");
+        tab.style.display = "none"; // ẨN HOÀN TOÀN
     });
 
+    // BƯỚC 2: HIỆN TAB ĐƯỢC CHỌN
     const selectedTab = document.getElementById(tabId);
     if (selectedTab) {
-        selectedTab.style.display = "block";
+        selectedTab.classList.add("active");
+        selectedTab.style.display = "block"; // HIỆN LẠI
     }
 
+    // BƯỚC 3: CẬP NHẬT NÚT
     document.querySelectorAll(".tab-btn").forEach(btn => {
         btn.classList.remove("active");
         btn.setAttribute("aria-selected", "false");
     });
+
     const activeBtn = document.getElementById(tabId + "-btn");
     if (activeBtn) {
         activeBtn.classList.add("active");
@@ -25,189 +31,45 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.addEventListener("click", () => showTab(tabId));
     });
 
+    // Mở tab Upload mặc định
     showTab("upload");
 });
 
-document.addEventListener("DOMContentLoaded", function () {
-    const table = document.getElementById("manualTable").querySelector("tbody");
-    const form = document.getElementById("manualImportForm");
-    const feedback = document.getElementById("manualFeedback");
-    const manualDataInput = document.getElementById("manualData");
+function collectManualData() {
+    const table = document.getElementById("manualTable");
+    const rows = table.querySelectorAll("tbody tr.manual-row");
+    const data = [];
 
-    let isMouseDown = false, startCell = null;
-    const selectedCells = new Set();
+    rows.forEach(row => {
+        const userId = row.querySelector(".employee-input").value.trim(); // phải là userId (hoặc parse số nếu cần)
+        const date = row.querySelector(".date-input").value; // yyyy-MM-dd
+        const checkIn = row.querySelector(".checkin-input").value; // HH:mm
+        const checkOut = row.querySelector(".checkout-input").value; // HH:mm
+        const status = row.querySelector(".status-input").value;
 
-    table.addEventListener("keydown", function (e) {
-        if (e.key === "Enter") {
-            e.preventDefault();
-            const currentCell = document.activeElement;
-            if (currentCell?.tagName === "TD") {
-                const newRow = createRow();
-                table.appendChild(newRow);
-                newRow.cells[0].focus();
-            }
-        }
-    });
-
-    table.addEventListener("keydown", function (e) {
-        if (e.key === "Delete" || e.key === "Backspace") {
-            if (selectedCells.size > 0) {
-                e.preventDefault();
-                selectedCells.forEach(cell => {
-                    cell.innerText = "";
-                    cell.classList.remove("selected");
-                });
-                selectedCells.clear();
-            }
-        }
-    });
-
-    table.addEventListener("input", function (e) {
-        const cell = e.target;
-        if (cell.tagName === "TD") {
-            cell.style.width = "auto";
-            const sw = cell.scrollWidth;
-            cell.style.width = sw < 500 ? `${sw}px` : "500px";
-            cell.style.whiteSpace = sw < 500 ? "nowrap" : "pre-wrap";
-        }
-    });
-
-    table.addEventListener("mousedown", function (e) {
-        if (e.target.tagName === "TD") {
-            clearSelection();
-            isMouseDown = true;
-            startCell = e.target;
-            startCell.classList.add("selected");
-            selectedCells.add(startCell);
-            e.preventDefault();
-        }
-    });
-
-    table.addEventListener("mouseover", function (e) {
-        if (isMouseDown && e.target.tagName === "TD")
-            highlightRange(startCell, e.target);
-    });
-
-    document.addEventListener("mouseup", function () {
-        isMouseDown = false;
-        startCell = null;
-    });
-
-    table.addEventListener("click", function (e) {
-        if (e.target.tagName === "TD" && !isMouseDown) {
-            clearSelection();
-            e.target.classList.add("selected");
-            selectedCells.add(e.target);
-            e.target.focus();
-        }
-    });
-
-    form.addEventListener("submit", function (e) {
-        e.preventDefault();
-
-        const rows = Array.from(table.querySelectorAll("tbody tr"));
-        const data = [];
-        const errors = [];
-
-        const dateRegex = /^([0-2]?[0-9]|3[01])\/(0?[1-9]|1[0-2])\/\d{4}$/; // dd/MM/yyyy
-        const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/; // H:mm or HH:mm
-
-        // Kiểm tra xem có hàng nào có dữ liệu không
-        const hasData = rows.some(row => {
-            return Array.from(row.querySelectorAll("td")).some(cell => cell.innerText.trim() !== "");
-        });
-
-        if (!hasData) {
-            feedback.style.display = "block";
-            feedback.style.color = "red";
-            feedback.innerHTML = "The table is empty. Please fill in at least one row.";
-            return; // dừng submit
-        }
-
-        rows.forEach((row, index) => {
-            const cells = row.querySelectorAll("td");
-            const rowNum = index + 1;
-
-            const employeeId = cells[0]?.innerText.trim();
-            const dateStr = cells[1]?.innerText.trim();
-            const checkIn = cells[2]?.innerText.trim();
-            const checkOut = cells[3]?.innerText.trim();
-            const status = cells[4]?.innerText.trim();
-
-            // Nếu hàng hoàn toàn trống, bỏ qua
-            const isRowEmpty = !employeeId && !dateStr && !checkIn && !checkOut && !status;
-            if (isRowEmpty)
-                return;
-
-            // Validate từng ô riêng lẻ, chỉ những ô cần thiết trên hàng có dữ liệu
-            if (!employeeId)
-                errors.push(`Row ${rowNum}: Employee ID cannot be empty.`);
-            if (!dateStr)
-                errors.push(`Row ${rowNum}: Date cannot be empty.`);
-            else if (!dateRegex.test(dateStr))
-                errors.push(`Row ${rowNum}: Date must be in dd/MM/yyyy format.`);
-
-            if (!checkIn)
-                errors.push(`Row ${rowNum}: Check-in cannot be empty.`);
-            else if (!timeRegex.test(checkIn))
-                errors.push(`Row ${rowNum}: Check-in must be in H:mm format.`);
-
-            if (!checkOut)
-                errors.push(`Row ${rowNum}: Check-out cannot be empty.`);
-            else if (!timeRegex.test(checkOut))
-                errors.push(`Row ${rowNum}: Check-out must be in H:mm format.`);
-
-            if (!status)
-                errors.push(`Row ${rowNum}: Status cannot be empty.`);
-
+        // Bỏ qua các hàng trống hoàn toàn
+        if (userId || date || checkIn || checkOut || status) {
             data.push({
-                employeeId,
-                date: dateStr,
-                checkIn,
-                checkOut,
-                status
+                userId: userId ? Number(userId) : null, // convert sang Long ở server
+                date: date || null,
+                checkIn: checkIn || null,
+                checkOut: checkOut || null,
+                status: status || null
             });
-        });
-
-        if (errors.length > 0) {
-            feedback.style.display = "block";
-            feedback.style.color = "red";
-            feedback.innerHTML = errors.join("<br/>");
-            return; // dừng submit
         }
-
-        manualDataInput.value = JSON.stringify(data);
-        form.submit();
     });
 
-    function createRow() {
-        const newRow = document.createElement("tr");
-        for (let i = 0; i < 5; i++) {
-            const td = document.createElement("td");
-            td.contentEditable = "true";
-            td.style.border = "1px solid #ccc";
-            td.style.minWidth = "100px";
-            td.style.maxWidth = "200px";
-            td.style.whiteSpace = "pre-wrap";
-            td.style.wordBreak = "break-word";
-            newRow.appendChild(td);
-        }
-        return newRow;
-    }
+    return data;
+}
 
-    function clearSelection() {
-        selectedCells.forEach(c => c.classList.remove("selected"));
-        selectedCells.clear();
-    }
+// Gán dữ liệu vào input ẩn khi submit form
+document.getElementById("manualImportForm").addEventListener("submit", function (e) {
+    const manualDataInput = document.getElementById("manualData");
+    const manualData = collectManualData();
 
-    function highlightRange(start, end) {
-        clearSelection();
-        const allCells = Array.from(table.querySelectorAll("td"));
-        const [min, max] = [Math.min(allCells.indexOf(start), allCells.indexOf(end)), Math.max(allCells.indexOf(start), allCells.indexOf(end))];
-        for (let i = min; i <= max; i++) {
-            allCells[i].classList.add("selected");
-            selectedCells.add(allCells[i]);
-        }
-    }
+    // Chuyển thành JSON để gửi lên server
+    manualDataInput.value = JSON.stringify(manualData);
+
+    // Nếu muốn kiểm tra trước khi submit
+    console.log("Manual Data:", manualData);
 });
-
