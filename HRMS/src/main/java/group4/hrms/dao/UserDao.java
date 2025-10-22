@@ -1,16 +1,24 @@
 package group4.hrms.dao;
 
-import group4.hrms.model.User;
-import group4.hrms.util.DatabaseUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.math.BigDecimal;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
+import java.sql.Types;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import group4.hrms.model.User;
+import group4.hrms.util.DatabaseUtil;
 
 /**
  * DAO cho User entity
@@ -1174,7 +1182,7 @@ public class UserDao {
 
     /**
      * Tìm user theo ID và trả về UserDetailDto
-     * 
+     *
      * @param id User ID
      * @return UserDetailDto hoặc null nếu không tìm thấy
      */
@@ -1216,7 +1224,7 @@ public class UserDao {
 
     /**
      * Tìm users theo position ID
-     * 
+     *
      * @param positionId Position ID
      * @return List of users with the specified position
      */
@@ -1259,7 +1267,7 @@ public class UserDao {
 
     /**
      * Tìm users chưa có account (active users without any account)
-     * 
+     *
      * @return List of users without accounts
      */
     public List<User> findUsersWithoutAccount() {
