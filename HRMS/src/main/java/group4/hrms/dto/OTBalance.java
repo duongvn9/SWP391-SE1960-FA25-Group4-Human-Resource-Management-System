@@ -18,23 +18,31 @@ package group4.hrms.dto;
  * @see group4.hrms.service.OTRequestService#getOTBalance(Long)
  */
 public class OTBalance {
-    private Integer currentWeekHours;    // Giờ OT tuần này
-    private Integer weeklyLimit;         // 48h
-    private Integer monthlyHours;        // Giờ OT tháng này
-    private Integer monthlyLimit;        // 40h
-    private Integer annualHours;         // Giờ OT năm này
-    private Integer annualLimit;         // 300h hoặc 200h
+    private Double currentWeekHours;    // Giờ OT tuần này (may be fractional)
+    private Integer weeklyApprovedCount;  // Number of approved OT requests in current week
+    private Integer monthlyApprovedCount; // Number of approved OT requests in current month
+    private Integer annualApprovedCount;  // Number of approved OT requests in current year
+    private Double regularHoursThisWeek; // Regular scheduled work hours in the week (used to compute remaining OT)
+    private Double weeklyLimit;         // 48h
+    private Double monthlyHours;        // Giờ OT tháng này
+    private Double monthlyLimit;        // 40h
+    private Double annualHours;         // Giờ OT năm này
+    private Double annualLimit;         // 300h hoặc 200h
 
     /**
      * Default constructor with standard limits and zero hours.
      */
     public OTBalance() {
-        this.weeklyLimit = 48;
-        this.monthlyLimit = 40;
-        this.annualLimit = 300;
-        this.currentWeekHours = 0;
-        this.monthlyHours = 0;
-        this.annualHours = 0;
+        this.weeklyLimit = 48.0;
+        this.monthlyLimit = 40.0;
+        this.annualLimit = 300.0;
+        this.currentWeekHours = 0.0;
+        this.weeklyApprovedCount = 0;
+        this.monthlyApprovedCount = 0;
+        this.annualApprovedCount = 0;
+        this.regularHoursThisWeek = 0.0;
+        this.monthlyHours = 0.0;
+        this.annualHours = 0.0;
     }
 
     /**
@@ -45,12 +53,16 @@ public class OTBalance {
      * @param annualHours hours used in current year
      */
     public OTBalance(Integer currentWeekHours, Integer monthlyHours, Integer annualHours) {
-        this.currentWeekHours = currentWeekHours;
-        this.weeklyLimit = 48;
-        this.monthlyHours = monthlyHours;
-        this.monthlyLimit = 40;
-        this.annualHours = annualHours;
-        this.annualLimit = 300;
+        this.currentWeekHours = currentWeekHours == null ? 0.0 : currentWeekHours.doubleValue();
+        this.weeklyLimit = 48.0;
+        this.weeklyApprovedCount = 0;
+        this.monthlyApprovedCount = 0;
+        this.annualApprovedCount = 0;
+        this.regularHoursThisWeek = 0.0;
+        this.monthlyHours = monthlyHours == null ? 0.0 : monthlyHours.doubleValue();
+        this.monthlyLimit = 40.0;
+        this.annualHours = annualHours == null ? 0.0 : annualHours.doubleValue();
+        this.annualLimit = 300.0;
     }
 
     /**
@@ -66,41 +78,54 @@ public class OTBalance {
     public OTBalance(Integer currentWeekHours, Integer weeklyLimit,
                     Integer monthlyHours, Integer monthlyLimit,
                     Integer annualHours, Integer annualLimit) {
-        this.currentWeekHours = currentWeekHours;
-        this.weeklyLimit = weeklyLimit;
-        this.monthlyHours = monthlyHours;
-        this.monthlyLimit = monthlyLimit;
-        this.annualHours = annualHours;
-        this.annualLimit = annualLimit;
+        this.currentWeekHours = currentWeekHours == null ? 0.0 : currentWeekHours.doubleValue();
+        this.weeklyLimit = weeklyLimit == null ? 48.0 : weeklyLimit.doubleValue();
+        this.regularHoursThisWeek = 0.0;
+        this.monthlyHours = monthlyHours == null ? 0.0 : monthlyHours.doubleValue();
+        this.monthlyLimit = monthlyLimit == null ? 40.0 : monthlyLimit.doubleValue();
+        this.annualHours = annualHours == null ? 0.0 : annualHours.doubleValue();
+        this.annualLimit = annualLimit == null ? 300.0 : annualLimit.doubleValue();
     }
 
     // Calculated Methods
 
     /**
-     * Calculates remaining weekly OT hours.
+     * Calculates remaining weekly OT hours as a fractional value.
      *
-     * @return remaining hours in the week (minimum 0)
+     * @return remaining hours in the week (minimum 0.0), rounded to 1 decimal
      */
-    public Integer getWeeklyRemaining() {
-        return Math.max(0, weeklyLimit - currentWeekHours);
+    public Double getWeeklyRemaining() {
+        // Remaining allowed OT this week = weeklyLimit - regularHoursThisWeek - currentWeekHours
+        double remaining = (weeklyLimit != null ? weeklyLimit : 0.0) -
+                           (regularHoursThisWeek != null ? regularHoursThisWeek : 0.0) -
+                           (currentWeekHours != null ? currentWeekHours : 0.0);
+        double result = Math.max(0.0, remaining);
+        // round to 1 decimal for display consistency
+        return Math.round(result * 10.0) / 10.0;
     }
 
     /**
-     * Calculates remaining monthly OT hours.
+     * Calculates remaining monthly OT hours as a fractional value.
      *
-     * @return remaining hours in the month (minimum 0)
+     * @return remaining hours in the month (minimum 0.0), rounded to 1 decimal
      */
-    public Integer getMonthlyRemaining() {
-        return Math.max(0, monthlyLimit - monthlyHours);
+    public Double getMonthlyRemaining() {
+        double remaining = (monthlyLimit != null ? monthlyLimit : 0.0) -
+                           (monthlyHours != null ? monthlyHours : 0.0);
+        double result = Math.max(0.0, remaining);
+        return Math.round(result * 10.0) / 10.0;
     }
 
     /**
-     * Calculates remaining annual OT hours.
+     * Calculates remaining annual OT hours as a fractional value.
      *
-     * @return remaining hours in the year (minimum 0)
+     * @return remaining hours in the year (minimum 0.0), rounded to 1 decimal
      */
-    public Integer getAnnualRemaining() {
-        return Math.max(0, annualLimit - annualHours);
+    public Double getAnnualRemaining() {
+        double remaining = (annualLimit != null ? annualLimit : 0.0) -
+                           (annualHours != null ? annualHours : 0.0);
+        double result = Math.max(0.0, remaining);
+        return Math.round(result * 10.0) / 10.0;
     }
 
     /**
@@ -110,10 +135,11 @@ public class OTBalance {
      * @return percentage (0-100)
      */
     public Integer getWeeklyPercentage() {
-        if (weeklyLimit <= 0) {
+        if (weeklyLimit == null || weeklyLimit <= 0.0) {
             return 0;
         }
-        return Math.min(100, (int) ((currentWeekHours * 100.0) / weeklyLimit));
+        double used = (currentWeekHours != null ? currentWeekHours : 0.0);
+        return Math.min(100, (int) Math.round((used * 100.0) / weeklyLimit));
     }
 
     /**
@@ -123,10 +149,11 @@ public class OTBalance {
      * @return percentage (0-100)
      */
     public Integer getMonthlyPercentage() {
-        if (monthlyLimit <= 0) {
+        if (monthlyLimit == null || monthlyLimit <= 0.0) {
             return 0;
         }
-        return Math.min(100, (int) ((monthlyHours * 100.0) / monthlyLimit));
+        double used = (monthlyHours != null ? monthlyHours : 0.0);
+        return Math.min(100, (int) Math.round((used * 100.0) / monthlyLimit));
     }
 
     /**
@@ -136,74 +163,108 @@ public class OTBalance {
      * @return percentage (0-100)
      */
     public Integer getAnnualPercentage() {
-        if (annualLimit <= 0) {
+        if (annualLimit == null || annualLimit <= 0.0) {
             return 0;
         }
-        return Math.min(100, (int) ((annualHours * 100.0) / annualLimit));
+        double used = (annualHours != null ? annualHours : 0.0);
+        return Math.min(100, (int) Math.round((used * 100.0) / annualLimit));
     }
 
     // Getters and Setters
 
-    public Integer getCurrentWeekHours() {
+    public Double getCurrentWeekHours() {
         return currentWeekHours;
     }
 
-    public void setCurrentWeekHours(Integer currentWeekHours) {
+    public void setCurrentWeekHours(Double currentWeekHours) {
         this.currentWeekHours = currentWeekHours;
     }
 
-    public Integer getWeeklyLimit() {
+    public Integer getWeeklyApprovedCount() {
+        return weeklyApprovedCount;
+    }
+
+    public void setWeeklyApprovedCount(Integer weeklyApprovedCount) {
+        this.weeklyApprovedCount = weeklyApprovedCount;
+    }
+
+    public Double getWeeklyLimit() {
         return weeklyLimit;
     }
 
-    public void setWeeklyLimit(Integer weeklyLimit) {
+    public void setWeeklyLimit(Double weeklyLimit) {
         this.weeklyLimit = weeklyLimit;
     }
 
-    public Integer getMonthlyHours() {
+    public Double getMonthlyHours() {
         return monthlyHours;
     }
 
-    public void setMonthlyHours(Integer monthlyHours) {
+    public void setMonthlyHours(Double monthlyHours) {
         this.monthlyHours = monthlyHours;
     }
 
-    public Integer getMonthlyLimit() {
+    public Double getMonthlyLimit() {
         return monthlyLimit;
     }
 
-    public void setMonthlyLimit(Integer monthlyLimit) {
+    public void setMonthlyLimit(Double monthlyLimit) {
         this.monthlyLimit = monthlyLimit;
     }
 
-    public Integer getAnnualHours() {
+    public Double getAnnualHours() {
         return annualHours;
     }
 
-    public void setAnnualHours(Integer annualHours) {
+    public void setAnnualHours(Double annualHours) {
         this.annualHours = annualHours;
     }
 
-    public Integer getAnnualLimit() {
+    public Double getAnnualLimit() {
         return annualLimit;
     }
 
-    public void setAnnualLimit(Integer annualLimit) {
+    public void setAnnualLimit(Double annualLimit) {
         this.annualLimit = annualLimit;
+    }
+
+    public Double getRegularHoursThisWeek() {
+        return regularHoursThisWeek;
+    }
+
+    public void setRegularHoursThisWeek(Double regularHoursThisWeek) {
+        this.regularHoursThisWeek = regularHoursThisWeek;
+    }
+
+    public Integer getMonthlyApprovedCount() {
+        return monthlyApprovedCount;
+    }
+
+    public void setMonthlyApprovedCount(Integer monthlyApprovedCount) {
+        this.monthlyApprovedCount = monthlyApprovedCount;
+    }
+
+    public Integer getAnnualApprovedCount() {
+        return annualApprovedCount;
+    }
+
+    public void setAnnualApprovedCount(Integer annualApprovedCount) {
+        this.annualApprovedCount = annualApprovedCount;
     }
 
     @Override
     public String toString() {
-        return "OTBalance{" +
-                "currentWeekHours=" + currentWeekHours +
-                ", weeklyLimit=" + weeklyLimit +
-                ", monthlyHours=" + monthlyHours +
-                ", monthlyLimit=" + monthlyLimit +
-                ", annualHours=" + annualHours +
-                ", annualLimit=" + annualLimit +
-                ", weeklyRemaining=" + getWeeklyRemaining() +
-                ", monthlyRemaining=" + getMonthlyRemaining() +
-                ", annualRemaining=" + getAnnualRemaining() +
-                '}';
+    return "OTBalance{" +
+        "currentWeekHours=" + currentWeekHours +
+        ", regularHoursThisWeek=" + regularHoursThisWeek +
+        ", weeklyLimit=" + weeklyLimit +
+        ", monthlyHours=" + monthlyHours +
+        ", monthlyLimit=" + monthlyLimit +
+        ", annualHours=" + annualHours +
+        ", annualLimit=" + annualLimit +
+        ", weeklyRemaining=" + getWeeklyRemaining() +
+        ", monthlyRemaining=" + getMonthlyRemaining() +
+        ", annualRemaining=" + getAnnualRemaining() +
+        '}';
     }
 }

@@ -295,21 +295,46 @@ public class OTRequestService {
             LocalDate now = LocalDate.now();
 
             // Calculate current week hours (Monday to Sunday)
-            int currentWeekHours = calculateOTHoursInWeek(userId, now);
+            double currentWeekHours = calculateOTHoursInWeek(userId, now);
+
+            // Also compute how many approved OT requests are in the current week
+            java.time.LocalDate weekStart = now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+            java.time.LocalDate weekEnd = now.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+            int approvedCountInWeek = countApprovedOTRequestsInRange(userId, weekStart, weekEnd);
 
             // Calculate current month hours
-            int monthlyHours = calculateOTHoursInMonth(userId, now.getYear(), now.getMonthValue());
+            double monthlyHours = calculateOTHoursInMonth(userId, now.getYear(), now.getMonthValue());
 
             // Calculate current year hours
-            int annualHours = calculateOTHoursInYear(userId, now.getYear());
+            double annualHours = calculateOTHoursInYear(userId, now.getYear());
 
-            logger.info(String.format("OT balance retrieved: userId=%d, weekly=%d/%d, monthly=%d/%d, annual=%d/%d",
-                       userId, currentWeekHours, WEEKLY_LIMIT, monthlyHours, MONTHLY_LIMIT,
-                       annualHours, ANNUAL_LIMIT));
+            // Count approved requests for month and year
+            java.time.LocalDate monthStart = now.with(TemporalAdjusters.firstDayOfMonth());
+            java.time.LocalDate monthEnd = now.with(TemporalAdjusters.lastDayOfMonth());
+            int approvedCountInMonth = countApprovedOTRequestsInRange(userId, monthStart, monthEnd);
 
-            return new OTBalance(currentWeekHours, WEEKLY_LIMIT,
-                               monthlyHours, MONTHLY_LIMIT,
-                               annualHours, ANNUAL_LIMIT);
+            java.time.LocalDate yearStart = java.time.LocalDate.of(now.getYear(), 1, 1);
+            java.time.LocalDate yearEnd = java.time.LocalDate.of(now.getYear(), 12, 31);
+            int approvedCountInYear = countApprovedOTRequestsInRange(userId, yearStart, yearEnd);
+
+            logger.info(String.format("OT balance retrieved: userId=%d, weekly=%.2f/%.0f, monthly=%.2f/%.0f, annual=%.2f/%.0f",
+                       userId, currentWeekHours, (double)WEEKLY_LIMIT, monthlyHours, (double)MONTHLY_LIMIT,
+                       annualHours, (double)ANNUAL_LIMIT));
+
+            OTBalance balance = new OTBalance();
+            balance.setCurrentWeekHours(currentWeekHours);
+            // compute regular hours this week: default REGULAR_WEEKLY_HOURS if there is any weekday OT in week
+            double regularHoursThisWeek = computeRegularHoursForWeek(userId, now);
+            balance.setRegularHoursThisWeek(regularHoursThisWeek);
+            balance.setWeeklyLimit((double) WEEKLY_LIMIT);
+            balance.setMonthlyHours(monthlyHours);
+            balance.setMonthlyLimit((double) MONTHLY_LIMIT);
+            balance.setMonthlyApprovedCount(approvedCountInMonth);
+            balance.setAnnualHours(annualHours);
+            balance.setAnnualLimit((double) ANNUAL_LIMIT);
+            balance.setAnnualApprovedCount(approvedCountInYear);
+            balance.setWeeklyApprovedCount(approvedCountInWeek);
+            return balance;
 
         } catch (Exception e) {
             logger.log(Level.SEVERE, String.format("Error getting OT balance: userId=%d", userId), e);
@@ -367,37 +392,36 @@ public class OTRequestService {
      * Weekday OT: 19:00-22:00, max 2 hours
      */
     private void validateWeekdayOTTime(String otDate, String startTime, String endTime, Double otHours) {
-        LocalDate date = LocalDate.parse(otDate);
-        java.time.DayOfWeek dayOfWeek = date.getDayOfWeek();
+        // Determine OT type for the date - only enforce these rules for WEEKDAY type
+        String otType = determineOTType(otDate);
+        if (!OT_TYPE_WEEKDAY.equals(otType)) {
+            // Compensatory/Holiday/Weekend are exempt from the weekday 19:00-22:00 restriction
+            return;
+        }
 
-        // Check if it's a weekday (Monday-Friday)
-        boolean isWeekday = dayOfWeek.getValue() >= 1 && dayOfWeek.getValue() <= 5;
+        LocalTime start = LocalTime.parse(startTime);
+        LocalTime end = LocalTime.parse(endTime);
+        LocalTime weekdayOTStart = LocalTime.of(19, 0); // 19:00
+        LocalTime weekdayOTEnd = LocalTime.of(22, 0);   // 22:00
 
-        if (isWeekday) {
-            LocalTime start = LocalTime.parse(startTime);
-            LocalTime end = LocalTime.parse(endTime);
-            LocalTime weekdayOTStart = LocalTime.of(19, 0); // 19:00
-            LocalTime weekdayOTEnd = LocalTime.of(22, 0);   // 22:00
+        // Weekday OT must be between 19:00-22:00
+        if (start.isBefore(weekdayOTStart)) {
+            throw new IllegalArgumentException(
+                "Weekday OT can only start from 19:00 onwards. Your start time: " + startTime
+            );
+        }
 
-            // Weekday OT must be between 19:00-22:00
-            if (start.isBefore(weekdayOTStart)) {
-                throw new IllegalArgumentException(
-                    "Weekday OT can only start from 19:00 onwards. Your start time: " + startTime
-                );
-            }
+        if (end.isAfter(weekdayOTEnd)) {
+            throw new IllegalArgumentException(
+                "Weekday OT must end by 22:00. Your end time: " + endTime
+            );
+        }
 
-            if (end.isAfter(weekdayOTEnd)) {
-                throw new IllegalArgumentException(
-                    "Weekday OT must end by 22:00. Your end time: " + endTime
-                );
-            }
-
-            // Weekday OT maximum 2 hours
-            if (otHours > 2.0) {
-                throw new IllegalArgumentException(
-                    String.format("Weekday OT is limited to 2 hours maximum. You requested: %.1f hours", otHours)
-                );
-            }
+        // Weekday OT maximum 2 hours
+        if (otHours > 2.0) {
+            throw new IllegalArgumentException(
+                String.format("Weekday OT is limited to 2 hours maximum. You requested: %.1f hours", otHours)
+            );
         }
     }
 
@@ -440,8 +464,8 @@ public class OTRequestService {
                 logger.warning(String.format("Daily limit exceeded: userId=%d, date=%s, total=%.1f, limit=%d",
                               userId, otDate, totalDailyHours, DAILY_LIMIT));
                 throw new IllegalArgumentException(
-                    String.format("Tổng giờ trong ngày không được vượt quá %d giờ (hiện tại: %.1f giờ). " +
-                        "Giờ làm thường: %dh, OT đã duyệt: %.1fh, OT yêu cầu: %.1fh",
+                    String.format("Total daily hours cannot exceed %d hours (current: %.1fh). " +
+                        "Regular hours: %dh, Approved OT: %.1fh, Requested OT: %.1fh",
                         DAILY_LIMIT, totalDailyHours, REGULAR_DAILY_HOURS, approvedOTHours, otHours)
                 );
             }
@@ -452,7 +476,7 @@ public class OTRequestService {
                 logger.warning(String.format("Weekday OT limit exceeded: userId=%d, date=%s, totalOT=%.1f, maxOT=%.1f",
                               userId, otDate, totalOTHours, maxOTHours));
                 throw new IllegalArgumentException(
-                    String.format("Ngày thường chỉ được OT tối đa %.0f giờ (đã duyệt: %.1fh, yêu cầu: %.1fh, tổng: %.1fh)",
+                    String.format("Weekday OT is limited to %.0f hours maximum (approved: %.1fh, requested: %.1fh, total: %.1fh)",
                         maxOTHours, approvedOTHours, otHours, totalOTHours)
                 );
             }
@@ -470,7 +494,7 @@ public class OTRequestService {
                 logger.warning(String.format("Weekend/Holiday OT limit exceeded: userId=%d, date=%s, totalOT=%.1f, maxOT=%.1f",
                               userId, otDate, totalOTHours, maxOTHours));
                 throw new IllegalArgumentException(
-                    String.format("Cuối tuần/Ngày lễ chỉ được OT tối đa %.0f giờ (đã duyệt: %.1fh, yêu cầu: %.1fh, tổng: %.1fh)",
+                    String.format("Weekend/Holiday OT is limited to %.0f hours maximum (approved: %.1fh, requested: %.1fh, total: %.1fh)",
                         maxOTHours, approvedOTHours, otHours, totalOTHours)
                 );
             }
@@ -529,8 +553,8 @@ public class OTRequestService {
             logger.warning(String.format("Weekly limit exceeded: userId=%d, week=%s to %s, total=%.1f, limit=%d",
                           userId, weekStart, weekEnd, totalWeeklyHours, WEEKLY_LIMIT));
             throw new IllegalArgumentException(
-                String.format("Tổng giờ trong tuần không được vượt quá %d giờ (hiện tại: %.1f giờ). " +
-                    "Giờ thường: %.0fh, OT đã duyệt: %.1fh, OT yêu cầu: %.1fh",
+                String.format("Total weekly hours cannot exceed %d hours (current: %.1fh). " +
+                    "Regular hours: %.0fh, Approved OT: %.1fh, Requested OT: %.1fh",
                     WEEKLY_LIMIT, totalWeeklyHours, regularHours, approvedWeeklyOTHours, otHours)
             );
         }
@@ -543,7 +567,7 @@ public class OTRequestService {
     private void validateEmployeeConsent(Boolean employeeConsent) {
         if (employeeConsent == null || !employeeConsent) {
             throw new IllegalArgumentException(
-                "Cần có sự đồng ý của nhân viên cho mọi công việc OT"
+                "Employee consent is required for all OT work"
             );
         }
     }
@@ -688,7 +712,7 @@ public class OTRequestService {
     }
 
 
-    private int calculateOTHoursInWeek(Long userId, LocalDate date) {
+    private double calculateOTHoursInWeek(Long userId, LocalDate date) {
         // Get week start (Monday) and end (Sunday)
         LocalDate weekStart = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         LocalDate weekEnd = date.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
@@ -697,23 +721,21 @@ public class OTRequestService {
     }
 
 
-    private int calculateOTHoursInMonth(Long userId, int year, int month) {
+    private double calculateOTHoursInMonth(Long userId, int year, int month) {
         LocalDate monthStart = LocalDate.of(year, month, 1);
         LocalDate monthEnd = monthStart.with(TemporalAdjusters.lastDayOfMonth());
-
         return calculateApprovedOTHours(userId, monthStart, monthEnd);
     }
 
 
-    private int calculateOTHoursInYear(Long userId, int year) {
+    private double calculateOTHoursInYear(Long userId, int year) {
         LocalDate yearStart = LocalDate.of(year, 1, 1);
         LocalDate yearEnd = LocalDate.of(year, 12, 31);
-
         return calculateApprovedOTHours(userId, yearStart, yearEnd);
     }
 
 
-    private int calculateApprovedOTHours(Long userId, LocalDate startDate, LocalDate endDate) {
+    private double calculateApprovedOTHours(Long userId, LocalDate startDate, LocalDate endDate) {
         logger.fine(String.format("Calculating approved OT hours: userId=%d, startDate=%s, endDate=%s",
                    userId, startDate, endDate));
 
@@ -745,14 +767,36 @@ public class OTRequestService {
                 }
             }
 
-            int result = (int) Math.ceil(totalHours);
-            logger.info(String.format("Calculated approved OT hours: userId=%d, dateRange=%s to %s, hours=%d, requests=%d",
-                       userId, startDate, endDate, result, approvedCount));
-            return result;
+            logger.info(String.format("Calculated approved OT hours (double): userId=%d, dateRange=%s to %s, hours=%.2f, requests=%d",
+                       userId, startDate, endDate, totalHours, approvedCount));
+            return totalHours;
 
         } catch (Exception e) {
             logger.log(Level.SEVERE, String.format("Error calculating approved OT hours: userId=%d, startDate=%s, endDate=%s",
                       userId, startDate, endDate), e);
+            return 0;
+        }
+    }
+
+    /**
+     * Count approved OT requests (number of requests) in a date range for user.
+     */
+    private int countApprovedOTRequestsInRange(Long userId, LocalDate startDate, LocalDate endDate) {
+        try {
+            List<Request> otRequests = getUserOTRequests(userId);
+            int approvedCount = 0;
+            for (Request request : otRequests) {
+                if (!"APPROVED".equals(request.getStatus())) continue;
+                OTRequestDetail detail = request.getOtDetail();
+                if (detail == null) continue;
+                LocalDate otDate = LocalDate.parse(detail.getOtDate());
+                if (!otDate.isBefore(startDate) && !otDate.isAfter(endDate)) {
+                    approvedCount++;
+                }
+            }
+            return approvedCount;
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error counting approved OT requests", e);
             return 0;
         }
     }
@@ -800,8 +844,8 @@ public class OTRequestService {
                                   userId, otDate, detail.getStartTime(), detail.getEndTime(),
                                   startTime, endTime, request.getStatus()));
                     throw new IllegalArgumentException(
-                        String.format("Trùng lịch OT! Bạn đã có OT từ %s đến %s vào ngày %s (Trạng thái: %s). " +
-                            "Vui lòng chọn khung giờ khác.",
+                        String.format("OT schedule conflict! You already have OT from %s to %s on %s (Status: %s). " +
+                            "Please choose a different time slot.",
                             detail.getStartTime(), detail.getEndTime(), otDate, request.getStatus())
                     );
                 }
@@ -873,54 +917,54 @@ public class OTRequestService {
         try {
             LocalDate date = LocalDate.parse(otDate);
 
-            // Calculate current weekly OT hours
-            int currentWeekHours = calculateOTHoursInWeek(userId, date);
-            logger.fine(String.format("Weekly balance: userId=%d, current=%d, requested=%.1f, limit=%d",
+            // Calculate current weekly OT hours (double precision)
+            double currentWeekHours = calculateOTHoursInWeek(userId, date);
+            logger.fine(String.format("Weekly balance: userId=%d, current=%.2f, requested=%.1f, limit=%d",
                        userId, currentWeekHours, otHours, WEEKLY_LIMIT));
 
             if (currentWeekHours + otHours > WEEKLY_LIMIT) {
-                logger.warning(String.format("Weekly OT limit exceeded: userId=%d, current=%d, requested=%.1f, limit=%d",
+                logger.warning(String.format("Weekly OT limit exceeded: userId=%d, current=%.2f, requested=%.1f, limit=%d",
                               userId, currentWeekHours, otHours, WEEKLY_LIMIT));
                 throw new IllegalArgumentException(
-                    String.format("Vượt quá giới hạn OT tuần! Hiện tại: %d giờ, Yêu cầu: %.1f giờ, " +
-                        "Giới hạn: %d giờ. Còn lại: %d giờ.",
+                    String.format("Weekly OT limit exceeded! Current: %.1fh, Requested: %.1fh, " +
+                        "Limit: %dh. Remaining: %.1fh.",
                         currentWeekHours, otHours, WEEKLY_LIMIT, WEEKLY_LIMIT - currentWeekHours)
                 );
             }
 
             // Calculate current monthly OT hours
-            int monthlyHours = calculateOTHoursInMonth(userId, date.getYear(), date.getMonthValue());
-            logger.fine(String.format("Monthly balance: userId=%d, current=%d, requested=%.1f, limit=%d",
+            double monthlyHours = calculateOTHoursInMonth(userId, date.getYear(), date.getMonthValue());
+            logger.fine(String.format("Monthly balance: userId=%d, current=%.2f, requested=%.1f, limit=%d",
                        userId, monthlyHours, otHours, MONTHLY_LIMIT));
 
             if (monthlyHours + otHours > MONTHLY_LIMIT) {
-                logger.warning(String.format("Monthly OT limit exceeded: userId=%d, current=%d, requested=%.1f, limit=%d",
+                logger.warning(String.format("Monthly OT limit exceeded: userId=%d, current=%.2f, requested=%.1f, limit=%d",
                               userId, monthlyHours, otHours, MONTHLY_LIMIT));
                 throw new IllegalArgumentException(
-                    String.format("Vượt quá giới hạn OT tháng! Hiện tại: %d giờ, Yêu cầu: %.1f giờ, " +
-                        "Giới hạn: %d giờ. Còn lại: %d giờ.",
+                    String.format("Monthly OT limit exceeded! Current: %.1fh, Requested: %.1fh, " +
+                        "Limit: %dh. Remaining: %.1fh.",
                         monthlyHours, otHours, MONTHLY_LIMIT, MONTHLY_LIMIT - monthlyHours)
                 );
             }
 
             // Calculate current annual OT hours
-            int annualHours = calculateOTHoursInYear(userId, date.getYear());
-            logger.fine(String.format("Annual balance: userId=%d, current=%d, requested=%.1f, limit=%d",
+            double annualHours = calculateOTHoursInYear(userId, date.getYear());
+            logger.fine(String.format("Annual balance: userId=%d, current=%.2f, requested=%.1f, limit=%d",
                        userId, annualHours, otHours, ANNUAL_LIMIT));
 
             if (annualHours + otHours > ANNUAL_LIMIT) {
-                logger.warning(String.format("Annual OT limit exceeded: userId=%d, current=%d, requested=%.1f, limit=%d",
+                logger.warning(String.format("Annual OT limit exceeded: userId=%d, current=%.2f, requested=%.1f, limit=%d",
                               userId, annualHours, otHours, ANNUAL_LIMIT));
                 throw new IllegalArgumentException(
-                    String.format("Vượt quá giới hạn OT năm! Hiện tại: %d giờ, Yêu cầu: %.1f giờ, " +
-                        "Giới hạn: %d giờ. Còn lại: %d giờ.",
+                    String.format("Annual OT limit exceeded! Current: %.1fh, Requested: %.1fh, " +
+                        "Limit: %dh. Remaining: %.1fh.",
                         annualHours, otHours, ANNUAL_LIMIT, ANNUAL_LIMIT - annualHours)
                 );
             }
 
-            logger.info(String.format("OT balance validation passed: userId=%d, date=%s, weekly=%d/%d, monthly=%d/%d, annual=%d/%d",
-                       userId, otDate, currentWeekHours, WEEKLY_LIMIT, monthlyHours, MONTHLY_LIMIT,
-                       annualHours, ANNUAL_LIMIT));
+            logger.info(String.format("OT balance validation passed: userId=%d, date=%s, weekly=%.2f/%.0f, monthly=%.2f/%.0f, annual=%.2f/%.0f",
+                       userId, otDate, currentWeekHours, (double)WEEKLY_LIMIT, monthlyHours, (double)MONTHLY_LIMIT,
+                       annualHours, (double)ANNUAL_LIMIT));
 
         } catch (IllegalArgumentException e) {
             throw e; // Re-throw validation errors
@@ -1003,9 +1047,9 @@ public class OTRequestService {
                             logger.warning(String.format("OT conflicts with morning half-day leave: userId=%d, date=%s, otTime=%s-%s, leaveType=%s",
                                           userId, otDate, startTime, endTime, leaveDetail.getLeaveTypeName()));
                             throw new IllegalArgumentException(
-                                String.format("Không thể tạo OT trong khung giờ %s-%s vào ngày %s! " +
-                                    "Bạn đã có đơn nghỉ phép buổi sáng (8:00-12:00) được duyệt (%s). " +
-                                    "Bạn chỉ có thể tạo OT sau 12:00.",
+                                String.format("Cannot create OT during %s-%s on %s! " +
+                                    "You have an approved morning half-day leave (8:00-12:00) (%s). " +
+                                    "You can only create OT after 12:00.",
                                     startTime, endTime, otDate, leaveDetail.getLeaveTypeName())
                             );
                         }
@@ -1024,9 +1068,9 @@ public class OTRequestService {
                             logger.warning(String.format("OT conflicts with afternoon half-day leave: userId=%d, date=%s, otTime=%s-%s, leaveType=%s",
                                           userId, otDate, startTime, endTime, leaveDetail.getLeaveTypeName()));
                             throw new IllegalArgumentException(
-                                String.format("Không thể tạo OT trong khung giờ %s-%s vào ngày %s! " +
-                                    "Bạn đã có đơn nghỉ phép buổi chiều (13:00-17:00) được duyệt (%s). " +
-                                    "Bạn chỉ có thể tạo OT sau 17:00.",
+                                String.format("Cannot create OT during %s-%s on %s! " +
+                                    "You have an approved afternoon half-day leave (13:00-17:00) (%s). " +
+                                    "You can only create OT after 17:00.",
                                     startTime, endTime, otDate, leaveDetail.getLeaveTypeName())
                             );
                         }
@@ -1039,8 +1083,8 @@ public class OTRequestService {
                     logger.warning(String.format("OT conflicts with full-day leave: userId=%d, date=%s, leaveType=%s, leaveDates=%s to %s",
                                   userId, otDate, leaveDetail.getLeaveTypeName(), leaveDetail.getStartDate(), leaveDetail.getEndDate()));
                     throw new IllegalArgumentException(
-                        String.format("Không thể tạo OT vào ngày %s! Bạn đã có đơn nghỉ phép được duyệt " +
-                            "(%s) từ %s đến %s.",
+                        String.format("Cannot create OT on %s! You have an approved leave request " +
+                            "(%s) from %s to %s.",
                             otDate, leaveDetail.getLeaveTypeName(),
                             leaveDetail.getStartDate(), leaveDetail.getEndDate())
                     );
@@ -1167,6 +1211,40 @@ public class OTRequestService {
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Error getting compensatory days for year " + year, e);
             return java.util.Collections.emptyList();
+        }
+    }
+
+    /**
+     * Compute regular scheduled work hours for the week containing the given date.
+     * This accounts for holidays and compensatory days: regular hours are only
+     * counted for working weekdays that are not holidays/compensatory.
+     */
+    private double computeRegularHoursForWeek(Long userId, LocalDate dateInWeek) {
+        try {
+            LocalDate weekStart = dateInWeek.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+            LocalDate weekEnd = dateInWeek.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+
+            int workingDays = 0;
+            LocalDate cursor = weekStart;
+            while (!cursor.isAfter(weekEnd)) {
+                DayOfWeek dow = cursor.getDayOfWeek();
+                // skip weekends
+                if (dow != DayOfWeek.SATURDAY && dow != DayOfWeek.SUNDAY) {
+                    boolean isHoliday = isHoliday(cursor.toString());
+                    boolean isComp = isCompensatoryDay(cursor.toString());
+                    // If it's a regular weekday and not holiday/compensatory, count as working day
+                    if (!isHoliday && !isComp) {
+                        workingDays++;
+                    }
+                }
+                cursor = cursor.plusDays(1);
+            }
+
+            return workingDays * (double) REGULAR_DAILY_HOURS;
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error computing regular hours for week: " + dateInWeek, e);
+            // Fall back to default regular weekly hours if error
+            return (double) REGULAR_WEEKLY_HOURS;
         }
     }
 
