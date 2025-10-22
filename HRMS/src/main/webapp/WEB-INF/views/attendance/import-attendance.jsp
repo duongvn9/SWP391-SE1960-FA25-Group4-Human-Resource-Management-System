@@ -179,34 +179,8 @@
                 </div>
             </div>
         </div>
-        <script>
-            (function () {
-                document.addEventListener('DOMContentLoaded', function () {
-                    const dropdowns = document.querySelectorAll('.nav-item.dropdown');
-
-                    dropdowns.forEach(drop => {
-                        const toggle = drop.querySelector('.dropdown-toggle');
-                        const menu = drop.querySelector('.dropdown-menu');
-
-                        if (!toggle || !menu)
-                            return;
-
-                        // click vào toggle để mở/đóng menu
-                        toggle.addEventListener('click', function (e) {
-                            e.preventDefault();
-                            menu.classList.toggle('show');
-                        });
-
-                        // click ngoài dropdown thì đóng menu
-                        document.addEventListener('click', function (e) {
-                            if (!drop.contains(e.target)) {
-                                menu.classList.remove('show');
-                            }
-                        });
-                    });
-                });
-            })();
-        </script>
         <script src="${pageContext.request.contextPath}/assets/js/import-attendance.js"></script>
+        <!-- Thêm ngay trước </body> -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     </body>
 </html>
