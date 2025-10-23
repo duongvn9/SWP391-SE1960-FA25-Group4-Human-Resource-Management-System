@@ -18,6 +18,12 @@ public class AttendanceLog {
 
     private LocalDateTime checkedAtNew;
 
+    // Các trường chỉ dùng khi map DTO
+    private String employeeName;
+    private String departmentName;
+    private String periodName;
+    private boolean periodLocked;
+
     public AttendanceLog() {
     }
 
@@ -113,6 +119,38 @@ public class AttendanceLog {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getEmployeeName() {
+        return employeeName;
+    }
+
+    public void setEmployeeName(String employeeName) {
+        this.employeeName = employeeName;
+    }
+
+    public String getDepartmentName() {
+        return departmentName;
+    }
+
+    public void setDepartmentName(String departmentName) {
+        this.departmentName = departmentName;
+    }
+
+    public String getPeriodName() {
+        return periodName;
+    }
+
+    public void setPeriodName(String periodName) {
+        this.periodName = periodName;
+    }
+
+    public boolean isPeriodLocked() {
+        return periodLocked;
+    }
+
+    public void setPeriodLocked(boolean periodLocked) {
+        this.periodLocked = periodLocked;
     }
 
     @Override

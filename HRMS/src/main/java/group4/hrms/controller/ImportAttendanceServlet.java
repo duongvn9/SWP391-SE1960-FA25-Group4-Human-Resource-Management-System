@@ -1,8 +1,5 @@
 package group4.hrms.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import group4.hrms.dao.AttendanceLogDao;
 import group4.hrms.dao.DepartmentDao;
 import group4.hrms.dao.TimesheetPeriodDao;
@@ -36,6 +33,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Map;
 import java.util.Optional;
 
 @WebServlet("/attendance/import")
@@ -79,6 +77,9 @@ public class ImportAttendanceServlet extends HttpServlet {
             }
         }
 
+        UserDao uDao = new UserDao();
+        List<User> uList = uDao.findAll();
+        req.setAttribute("uList", uList);
         req.getRequestDispatcher("/WEB-INF/views/attendance/import-attendance.jsp").forward(req, resp);
     }
 
@@ -86,15 +87,16 @@ public class ImportAttendanceServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String action = req.getParameter("action");
 
+        UserDao userDao = new UserDao();
+        DepartmentDao dDao = new DepartmentDao();
+        TimesheetPeriodDao tDao = new TimesheetPeriodDao();
+        AttendanceLogDao dao = new AttendanceLogDao();
         try {
             if ("ManualImport".equalsIgnoreCase(action)) {
-                System.out.println("Test manual");
                 String manualDataJson = req.getParameter("manualData");
-                System.out.println(manualDataJson);
                 List<AttendanceLogDto> manualLogs = new ArrayList<>();
 
                 if (manualDataJson != null && !manualDataJson.trim().isEmpty()) {
-                    // Xoá các dấu [] ở đầu cuối
                     manualDataJson = manualDataJson.trim();
                     if (manualDataJson.startsWith("[")) {
                         manualDataJson = manualDataJson.substring(1);
@@ -103,11 +105,10 @@ public class ImportAttendanceServlet extends HttpServlet {
                         manualDataJson = manualDataJson.substring(0, manualDataJson.length() - 1);
                     }
 
-                    // Tách các object bằng "},{" (giả định dữ liệu đúng format)
+                    // Tách các object bằng "},{"
                     String[] objects = manualDataJson.split("\\},\\{");
 
                     for (String obj : objects) {
-                        // Bổ sung lại dấu { và }
                         if (!obj.startsWith("{")) {
                             obj = "{" + obj;
                         }
@@ -116,26 +117,19 @@ public class ImportAttendanceServlet extends HttpServlet {
                         }
 
                         AttendanceLogDto dto = new AttendanceLogDto();
-
-                        // Lấy từng field thủ công
                         dto.setUserId(extractLong(obj, "userId"));
-                        dto.setDate(extractDate(obj, "date"));         // yyyy-MM-dd → LocalDate
-                        dto.setCheckIn(extractTime(obj, "checkIn"));   // HH:mm → LocalTime
-                        dto.setCheckOut(extractTime(obj, "checkOut")); // HH:mm → LocalTime
+                        dto.setDate(extractDate(obj, "date"));
+                        dto.setCheckIn(extractTime(obj, "checkIn"));
+                        dto.setCheckOut(extractTime(obj, "checkOut"));
                         dto.setStatus(extractString(obj, "status"));
 
                         manualLogs.add(dto);
                     }
                 }
 
-                UserDao userDao = new UserDao();
-                DepartmentDao dDao = new DepartmentDao();
-                TimesheetPeriodDao tDao = new TimesheetPeriodDao();
-                AttendanceLogDao dao = new AttendanceLogDao();
-
+                // --- Bổ sung thông tin user, phòng ban, kỳ công ---
                 for (AttendanceLogDto dto : manualLogs) {
                     try {
-                        // Gán employeeName và department
                         if (dto.getUserId() != null) {
                             Optional<User> userOpt = userDao.findById(dto.getUserId());
                             userOpt.ifPresent(user -> {
@@ -157,17 +151,34 @@ public class ImportAttendanceServlet extends HttpServlet {
                     } catch (SQLException e) {
                     }
                 }
-                System.out.println(manualLogs);
-                List<AttendanceLog> record = AttendanceMapper.convertDtoToEntity(manualLogs);
-                System.out.println(record);
-                dao.saveAttendanceLogs(record);
 
-                req.setAttribute("manualSuccess", "Import successfully");
+                // --- ✅ Validate dữ liệu ---
+                Map<String, List<AttendanceLogDto>> validatedMap = dao.validateManualLogs(manualLogs);
+                System.out.println(validatedMap);
+                List<AttendanceLogDto> validLogs = validatedMap.get("valid");
+                List<AttendanceLogDto> invalidLogs = validatedMap.get("invalid");
+
+                // --- ✅ Lưu các bản ghi hợp lệ ---
+                if (!validLogs.isEmpty()) {
+                    List<AttendanceLog> record = AttendanceMapper.convertDtoToEntity(validLogs);
+                    dao.saveAttendanceLogs(record);
+                }
+
+                // --- ✅ Đưa thông tin ra FE ---
+                if (!invalidLogs.isEmpty()) {
+                    req.setAttribute("invalidLogs", invalidLogs);
+                    req.setAttribute("manualError", "Some records are duplicate or invalid.");
+                } else {
+                    req.setAttribute("manualSuccess", "Import successfully");
+                }
+
+                List<User> uList = userDao.findAll();
+                req.setAttribute("uList", uList);
                 req.getRequestDispatcher("/WEB-INF/views/attendance/import-attendance.jsp").forward(req, resp);
                 return;
             }
         } catch (ServletException | IOException | NumberFormatException ex) {
-            req.setAttribute("manualError", "Lỗi server: " + ex.getMessage());
+            req.setAttribute("manualError", "Server error: " + ex.getMessage());
             req.getRequestDispatcher("/WEB-INF/views/attendance/import-attendance.jsp").forward(req, resp);
             return;
         } catch (SQLException ex) {
@@ -215,6 +226,8 @@ public class ImportAttendanceServlet extends HttpServlet {
                 AttendanceService.processImport(logsDto, action, tempFilePath, req);
             }
 
+            List<User> uList = userDao.findAll();
+            req.setAttribute("uList", uList);
             req.getRequestDispatcher("/WEB-INF/views/attendance/import-attendance.jsp").forward(req, resp);
         } catch (ServletException | IOException e) {
             req.setAttribute("error", "Lỗi: " + e.getMessage());

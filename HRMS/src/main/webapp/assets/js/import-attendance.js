@@ -1,18 +1,21 @@
+// ---------------------------
+// TAB FUNCTION
+// ---------------------------
 function showTab(tabId) {
-    // BƯỚC 1: ẨN TẤT CẢ TAB (cực kỳ quan trọng!)
+    // Ẩn tất cả tab
     document.querySelectorAll(".tab-content").forEach(tab => {
         tab.classList.remove("active");
-        tab.style.display = "none"; // ẨN HOÀN TOÀN
+        tab.style.display = "none";
     });
 
-    // BƯỚC 2: HIỆN TAB ĐƯỢC CHỌN
+    // Hiện tab được chọn
     const selectedTab = document.getElementById(tabId);
     if (selectedTab) {
         selectedTab.classList.add("active");
-        selectedTab.style.display = "block"; // HIỆN LẠI
+        selectedTab.style.display = "block";
     }
 
-    // BƯỚC 3: CẬP NHẬT NÚT
+    // Cập nhật nút
     document.querySelectorAll(".tab-btn").forEach(btn => {
         btn.classList.remove("active");
         btn.setAttribute("aria-selected", "false");
@@ -31,30 +34,84 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.addEventListener("click", () => showTab(tabId));
     });
 
-    // Mở tab Upload mặc định
     showTab("upload");
 });
 
+// ---------------------------
+// MANUAL ROW DROPDOWN FUNCTIONS
+// ---------------------------
+function showEmployeeList(input) {
+    const dropdown = input.parentElement.querySelector(".custom-dropdown");
+    if (!dropdown)
+        return;
+    dropdown.style.display = "block";
+
+    const items = dropdown.querySelectorAll("li");
+    items.forEach(li => li.style.display = "");
+}
+
+function filterEmployeeList(input) {
+    const dropdown = input.parentElement.querySelector(".custom-dropdown");
+    if (!dropdown)
+        return;
+
+    const filter = input.value.toLowerCase();
+    const items = dropdown.querySelectorAll("li");
+
+    let hasMatch = false;
+    items.forEach(li => {
+        const match = li.textContent.toLowerCase().includes(filter);
+        li.style.display = match ? "" : "none";
+        if (match)
+            hasMatch = true;
+    });
+
+    dropdown.style.display = hasMatch ? "block" : "none";
+}
+
+// ---------------------------
+// CLICK EVENT CHỌN NHÂN VIÊN
+// ---------------------------
+document.addEventListener("click", e => {
+    // Click chọn 1 nhân viên trong dropdown
+    if (e.target.matches(".custom-dropdown li")) {
+        const li = e.target;
+        const wrapper = li.closest(".employee-select-wrapper");
+        const input = wrapper.querySelector(".employee-input");
+        const hidden = wrapper.querySelector(".employee-id-hidden");
+
+        input.value = li.textContent.trim(); 
+        hidden.value = li.dataset.id;        
+        wrapper.querySelector(".custom-dropdown").style.display = "none";
+    }
+    // Click ra ngoài dropdown -> ẩn
+    else if (!e.target.closest(".employee-select-wrapper")) {
+        document.querySelectorAll(".custom-dropdown").forEach(d => d.style.display = "none");
+    }
+});
+
+// ---------------------------
+// COLLECT MANUAL DATA
+// ---------------------------
 function collectManualData() {
     const table = document.getElementById("manualTable");
     const rows = table.querySelectorAll("tbody tr.manual-row");
     const data = [];
 
     rows.forEach(row => {
-        const userId = row.querySelector(".employee-input").value.trim(); // phải là userId (hoặc parse số nếu cần)
-        const date = row.querySelector(".date-input").value; // yyyy-MM-dd
-        const checkIn = row.querySelector(".checkin-input").value; // HH:mm
-        const checkOut = row.querySelector(".checkout-input").value; // HH:mm
-        const status = row.querySelector(".status-input").value;
+        const userId = row.querySelector(".employee-id-hidden")?.value.trim() || null;
+        const date = row.querySelector(".date-input")?.value || null;
+        const checkIn = row.querySelector(".checkin-input")?.value || null;
+        const checkOut = row.querySelector(".checkout-input")?.value || null;
+        const status = row.querySelector(".status-input")?.value || null;
 
-        // Bỏ qua các hàng trống hoàn toàn
         if (userId || date || checkIn || checkOut || status) {
             data.push({
-                userId: userId ? Number(userId) : null, // convert sang Long ở server
-                date: date || null,
-                checkIn: checkIn || null,
-                checkOut: checkOut || null,
-                status: status || null
+                userId: userId ? Number(userId) : null,
+                date: date,
+                checkIn: checkIn,
+                checkOut: checkOut,
+                status: status
             });
         }
     });
@@ -62,14 +119,14 @@ function collectManualData() {
     return data;
 }
 
-// Gán dữ liệu vào input ẩn khi submit form
-document.getElementById("manualImportForm").addEventListener("submit", function (e) {
+// ---------------------------
+// SUBMIT FORM
+// ---------------------------
+document.getElementById("manualImportForm")?.addEventListener("submit", function (e) {
     const manualDataInput = document.getElementById("manualData");
     const manualData = collectManualData();
 
-    // Chuyển thành JSON để gửi lên server
     manualDataInput.value = JSON.stringify(manualData);
 
-    // Nếu muốn kiểm tra trước khi submit
     console.log("Manual Data:", manualData);
 });
