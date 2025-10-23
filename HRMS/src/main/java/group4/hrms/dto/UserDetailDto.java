@@ -22,6 +22,7 @@ public class UserDetailDto {
     private String positionName;
     private String dateJoined;
     private String startWorkDate;
+    private String gender;
     private String status;
     private String createdAt;
     private String updatedAt;
@@ -58,6 +59,7 @@ public class UserDetailDto {
         }
         this.positionName = rs.getString("position_name");
 
+        this.gender = rs.getString("gender");
         this.status = rs.getString("status");
 
         // Format dates
@@ -193,5 +195,13 @@ public class UserDetailDto {
 
     public void setUpdatedAt(String updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
     }
 }

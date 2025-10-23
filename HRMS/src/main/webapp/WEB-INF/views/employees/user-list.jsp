@@ -502,8 +502,6 @@
                                         </option>
                                         <option value="inactive" ${param.status=='inactive' ? 'selected' : '' }>Inactive
                                         </option>
-                                        <option value="terminated" ${param.status=='terminated' ? 'selected' : '' }>
-                                            Terminated</option>
                                     </select>
                                 </div>
                                 <div class="filter-actions">
@@ -712,6 +710,10 @@
                                     <p class="form-control-plaintext" id="view-emailCompany">-</p>
                                 </div>
                                 <div class="col-md-6">
+                                    <label class="form-label fw-bold">Gender</label>
+                                    <p class="form-control-plaintext" id="view-gender">-</p>
+                                </div>
+                                <div class="col-md-6">
                                     <label class="form-label fw-bold">Department</label>
                                     <p class="form-control-plaintext" id="view-department">-</p>
                                 </div>
@@ -796,7 +798,8 @@
                                         Phone<span class="text-danger">*</span>
                                     </label>
                                     <input type="tel" class="form-control" id="edit-phone" name="phone" required
-                                        pattern="[0-9]{10,11}">
+                                        pattern="0[0-9]{9}"
+                                        title="Phone number must be exactly 10 digits and start with 0">
                                 </div>
 
                                 <!-- Company Email -->
@@ -815,8 +818,8 @@
                                     </label>
                                     <select class="form-select" id="edit-gender" name="gender" required>
                                         <option value="">Select Gender</option>
-                                        <option value="Male">Male</option>
-                                        <option value="Female">Female</option>
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
                                     </select>
                                 </div>
 
@@ -876,7 +879,6 @@
                                     <select class="form-select" id="edit-status" name="status" required>
                                         <option value="active">Active</option>
                                         <option value="inactive">Inactive</option>
-                                        <option value="terminated">Terminated</option>
                                     </select>
                                 </div>
                             </div>
@@ -1052,6 +1054,7 @@
                                 document.getElementById('view-fullName').textContent = user.fullName || '-';
                                 document.getElementById('view-phone').textContent = user.phone || '-';
                                 document.getElementById('view-emailCompany').textContent = user.emailCompany || '-';
+                                document.getElementById('view-gender').textContent = user.gender ? user.gender.charAt(0).toUpperCase() + user.gender.slice(1) : '-';
                                 document.getElementById('view-department').textContent = user.departmentName || '-';
                                 document.getElementById('view-position').textContent = user.positionName || '-';
                                 document.getElementById('view-dateJoined').textContent = user.dateJoined || '-';
@@ -1180,7 +1183,8 @@
                                 document.getElementById('edit-fullName').value = user.fullName || '';
                                 document.getElementById('edit-phone').value = user.phone || '';
                                 document.getElementById('edit-emailCompany').value = user.emailCompany || '';
-                                document.getElementById('edit-gender').value = user.gender || '';
+                                // Set gender value (ensure lowercase to match select options)
+                                document.getElementById('edit-gender').value = user.gender ? user.gender.toLowerCase() : '';
                                 document.getElementById('edit-departmentId').value = user.departmentId || '';
                                 document.getElementById('edit-positionId').value = user.positionId || '';
 

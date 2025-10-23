@@ -43,7 +43,6 @@ public class UserCreateServlet extends HttpServlet {
     // Validation patterns
     private static final Pattern EMPLOYEE_CODE_PATTERN = Pattern.compile("^HE\\d{4}$");
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@(.+)$");
-    private static final Pattern PHONE_PATTERN = Pattern.compile("^[0-9]{10,11}$");
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -139,7 +138,7 @@ public class UserCreateServlet extends HttpServlet {
             if (isNullOrEmpty(phone)) {
                 errors.add("Phone number is required");
             } else if (!ValidationUtil.isPhoneValid(phone.trim())) {
-                errors.add("Phone number must be 10 or 11 digits");
+                errors.add("Phone number must be exactly 10 digits and start with 0");
             } else if (userDao.isPhoneExists(phone.trim())) {
                 errors.add("Phone number already exists");
             }
