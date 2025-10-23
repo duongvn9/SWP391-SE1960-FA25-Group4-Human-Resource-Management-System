@@ -83,13 +83,6 @@
                             </div>
                         </div>
 
-                        <div class="form-options">
-                            <div class="remember-me">
-                                <input type="checkbox" id="remember" name="remember" class="custom-checkbox">
-                                <label for="remember">Remember me</label>
-                            </div>
-                        </div>
-
                         <button type="submit" class="btn btn-login">
                             <span class="btn-text">
                                 <i class="fas fa-sign-in-alt"></i>
