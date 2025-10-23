@@ -27,6 +27,7 @@ import java.util.List;
 public class AccountListServlet extends HttpServlet {
 
     private static final Logger logger = LoggerFactory.getLogger(AccountListServlet.class);
+    private static final int DEFAULT_PAGE_SIZE = 10;
 
     private final AccountDao accountDao = new AccountDao();
     private final UserDao userDao = new UserDao();
@@ -71,11 +72,11 @@ public class AccountListServlet extends HttpServlet {
 
             // Parse pagination parameters
             int page = parseIntOrDefault(pageStr, 1);
-            int pageSize = parseIntOrDefault(pageSizeStr, 20);
+            int pageSize = parseIntOrDefault(pageSizeStr, DEFAULT_PAGE_SIZE);
 
             // Validate page size
             if (pageSize < 1 || pageSize > 100) {
-                pageSize = 20;
+                pageSize = DEFAULT_PAGE_SIZE;
             }
 
             // Parse filter parameters
@@ -98,31 +99,103 @@ public class AccountListServlet extends HttpServlet {
                     "Fetching accounts with filters - search: {}, status: {}, dept: {}, pos: {}, offset: {}, pageSize: {}",
                     search, status, departmentId, positionId, offset, pageSize);
 
+            // Measure query execution time
+            long queryStartTime = System.currentTimeMillis();
+
             List<AccountListDto> accountDtos = accountDao.findWithFilters(
                     search, status, departmentId, positionId,
                     offset, pageSize, sortBy, sortOrder);
 
-            logger.info("Found {} accounts", accountDtos.size());
-
             // Get total count for pagination
             int totalRecords = accountDao.countWithFilters(search, status, departmentId, positionId);
+
+            long queryEndTime = System.currentTimeMillis();
+            long queryExecutionTime = queryEndTime - queryStartTime;
+
             int totalPages = (int) Math.ceil((double) totalRecords / pageSize);
 
-            logger.info("Total records: {}, Total pages: {}", totalRecords, totalPages);
+            logger.info("Found {} accounts out of {} total records in {} ms",
+                    accountDtos.size(), totalRecords, queryExecutionTime);
+            logger.info("Total pages: {}, Main query execution time: {} ms", totalPages, queryExecutionTime);
 
-            // Fetch departments and positions for filter dropdowns (using cache)
-            List<Department> departments = DropdownCacheUtil.getCachedDepartments(getServletContext());
-            List<Position> positions = DropdownCacheUtil.getCachedPositions(getServletContext());
+            // Log performance metrics for monitoring
+            logger.info("Performance metrics - Main query: {} ms, Page: {}, PageSize: {}, TotalRecords: {}",
+                    queryExecutionTime, page, pageSize, totalRecords);
 
-            // Fetch users without account (for quick create card)
-            List<User> usersWithoutAccount = userDao.findUsersWithoutAccount();
-            logger.info("Found {} users without account", usersWithoutAccount.size());
+            // Log performance warning if query is slow
+            if (queryExecutionTime > 1000) {
+                logger.warn("Slow query detected: {} ms for account list query with filters", queryExecutionTime);
+            }
+
+            // Fetch departments and positions for filter dropdowns using DropdownCacheUtil
+            // This replaces direct DAO calls with cached data for performance optimization
+            long cacheStartTime = System.currentTimeMillis();
+
+            List<Department> departments = DropdownCacheUtil.getDepartments(getServletContext());
+            List<Position> positions = DropdownCacheUtil.getPositions(getServletContext());
+
+            long cacheEndTime = System.currentTimeMillis();
+            long cacheExecutionTime = cacheEndTime - cacheStartTime;
+
+            // Log cache performance and statistics
+            logger.info("Cache lookup completed in {} ms", cacheExecutionTime);
+
+            // Log detailed cache statistics for monitoring cache hit rate
+            String departmentsCacheStats = DropdownCacheUtil.getDepartmentsCacheStats(getServletContext());
+            String positionsCacheStats = DropdownCacheUtil.getPositionsCacheStats(getServletContext());
+
+            logger.info("Departments cache statistics: {}", departmentsCacheStats);
+            logger.info("Positions cache statistics: {}", positionsCacheStats);
+
+            // Log cache validity status
+            boolean isDeptCacheValid = DropdownCacheUtil.isDepartmentsCacheValid(getServletContext());
+            boolean isPosCacheValid = DropdownCacheUtil.isPositionsCacheValid(getServletContext());
+            logger.debug("Cache validity - Departments: {}, Positions: {}", isDeptCacheValid, isPosCacheValid);
+
+            // Performance warning for slow cache operations
+            if (cacheExecutionTime > 100) {
+                logger.warn("Slow cache operation detected: {} ms for dropdown cache lookup", cacheExecutionTime);
+            }
+
+            // Lazy loading for users without account - only load when requested
+            List<User> usersWithoutAccount = null;
+            int usersWithoutAccountTotal = 0;
+            String loadUsers = request.getParameter("loadUsers");
+            String limitStr = request.getParameter("limit");
+
+            if ("true".equals(loadUsers)) {
+                // Parse limit parameter (default to 10, max 50)
+                int limit = parseIntOrDefault(limitStr, 10);
+                if (limit > 50)
+                    limit = 50;
+
+                long usersQueryStartTime = System.currentTimeMillis();
+                usersWithoutAccount = userDao.findUsersWithoutAccountLimited(limit);
+
+                // Get total count for display
+                List<User> allUsersWithoutAccount = userDao.findUsersWithoutAccount();
+                usersWithoutAccountTotal = allUsersWithoutAccount.size();
+
+                long usersQueryEndTime = System.currentTimeMillis();
+                long usersQueryTime = usersQueryEndTime - usersQueryStartTime;
+
+                logger.info("Lazy loaded {} users without account (total: {}, limit: {}) in {} ms",
+                        usersWithoutAccount.size(), usersWithoutAccountTotal, limit, usersQueryTime);
+
+                // Log performance warning if users query is slow
+                if (usersQueryTime > 500) {
+                    logger.warn("Slow query detected: {} ms for users without account query", usersQueryTime);
+                }
+            } else {
+                logger.debug("Users without account not requested - skipping query for performance");
+            }
 
             // Set attributes for JSP
             request.setAttribute("accounts", accountDtos);
             request.setAttribute("departments", departments);
             request.setAttribute("positions", positions);
             request.setAttribute("usersWithoutAccount", usersWithoutAccount);
+            request.setAttribute("usersWithoutAccountTotal", usersWithoutAccountTotal);
             request.setAttribute("currentPage", page);
             request.setAttribute("pageSize", pageSize);
             request.setAttribute("totalPages", totalPages);
@@ -137,6 +210,19 @@ public class AccountListServlet extends HttpServlet {
             // Set permissions for UI
             request.setAttribute("canCreateAccount", group4.hrms.util.PermissionUtil.canCreateAccount(request));
             request.setAttribute("canResetPassword", group4.hrms.util.PermissionUtil.canResetPassword(request));
+
+            // Log final performance summary
+            long totalRequestTime = System.currentTimeMillis() - queryStartTime;
+            logger.info(
+                    "AccountListServlet request completed - Total time: {} ms, Query time: {} ms, Cache time: {} ms",
+                    totalRequestTime, queryExecutionTime, cacheExecutionTime);
+
+            // Performance optimization verification
+            if (totalRequestTime < 2000) {
+                logger.debug("Performance target met: Request completed in {} ms (< 2000ms target)", totalRequestTime);
+            } else {
+                logger.warn("Performance target missed: Request took {} ms (> 2000ms target)", totalRequestTime);
+            }
 
             // Forward to JSP
             request.getRequestDispatcher("/WEB-INF/views/employees/account-list.jsp")

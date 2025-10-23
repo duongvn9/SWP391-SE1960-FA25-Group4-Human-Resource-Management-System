@@ -468,15 +468,21 @@
                             </c:if>
 
                             <!-- Users Without Account Card -->
-                            <c:if test="${canCreateAccount && not empty usersWithoutAccount}">
+                            <c:if test="${canCreateAccount}">
                                 <div class="alert alert-info" role="alert">
                                     <div class="clickable-header" style="cursor: pointer;" data-bs-toggle="collapse"
                                         data-bs-target="#usersWithoutAccountCollapse" aria-expanded="false"
-                                        aria-controls="usersWithoutAccountCollapse">
+                                        aria-controls="usersWithoutAccountCollapse" onclick="loadUsersWithoutAccount()">
                                         <div class="d-flex justify-content-between align-items-center mb-2">
                                             <h5 class="mb-0">
                                                 <i class="fas fa-user-plus me-2"></i>Users Without Account
-                                                <span class="badge bg-primary">${fn:length(usersWithoutAccount)}</span>
+                                                <span class="badge bg-primary" id="usersWithoutAccountCount">
+                                                    <c:choose>
+                                                        <c:when test="${not empty usersWithoutAccount}">
+                                                            ${usersWithoutAccountTotal}</c:when>
+                                                        <c:otherwise>...</c:otherwise>
+                                                    </c:choose>
+                                                </span>
                                             </h5>
                                             <i class="fas fa-chevron-down toggle-icon"></i>
                                         </div>
@@ -485,24 +491,17 @@
                                             to create an account.</p>
                                     </div>
                                     <div class="collapse mt-2" id="usersWithoutAccountCollapse">
-                                        <div class="clickable-header" style="cursor: pointer;" data-bs-toggle="collapse"
-                                            data-bs-target="#usersWithoutAccountCollapse" aria-expanded="false"
-                                            aria-controls="usersWithoutAccountCollapse">
-                                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                                <h5 class="mb-0">
-                                                    <i class="fas fa-user-plus me-2"></i>Users Without Account
-                                                    <span
-                                                        class="badge bg-primary">${fn:length(usersWithoutAccount)}</span>
-                                                </h5>
-                                                <i class="fas fa-chevron-down toggle-icon"></i>
+                                        <div id="usersWithoutAccountContent">
+                                            <!-- Loading state -->
+                                            <div class="text-center py-3" id="usersWithoutAccountLoading">
+                                                <div class="spinner-border spinner-border-sm text-primary"
+                                                    role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                <p class="mt-2 mb-0 small text-muted">Loading users...</p>
                                             </div>
-                                            <p class="mb-0 small">The following users don't have accounts yet. Click on
-                                                a
-                                                user
-                                                to create an account.</p>
-                                        </div>
-                                        <div class="collapse mt-2" id="usersWithoutAccountCollapse">
-                                            <div class="row g-2">
+                                            <!-- Content will be loaded here -->
+                                            <div class="row g-2" id="usersWithoutAccountList" style="display: none;">
                                                 <c:forEach var="user" items="${usersWithoutAccount}" varStatus="status">
                                                     <c:if test="${status.index < 10}">
                                                         <div class="col-md-6 col-lg-4">
@@ -537,10 +536,12 @@
                                                     </c:if>
                                                 </c:forEach>
                                             </div>
-                                            <c:if test="${fn:length(usersWithoutAccount) > 10}">
-                                                <div class="text-center mt-2">
-                                                    <small class="text-muted">Showing 10 of
-                                                        ${fn:length(usersWithoutAccount)} users.
+                                            <c:if
+                                                test="${not empty usersWithoutAccount && usersWithoutAccountTotal > 10}">
+                                                <div class="text-center mt-2" id="usersWithoutAccountViewAll">
+                                                    <small class="text-muted">Showing ${fn:length(usersWithoutAccount)}
+                                                        of
+                                                        ${usersWithoutAccountTotal} users.
                                                         <a
                                                             href="${pageContext.request.contextPath}/employees/accounts/create">View
                                                             all</a>
@@ -549,6 +550,7 @@
                                             </c:if>
                                         </div>
                                     </div>
+                                </div>
                             </c:if>
 
                             <!-- Filter Section -->
@@ -1339,6 +1341,87 @@
                                         }, 300);
                                     });
                             });
+
+                            // Lazy loading for Users Without Account
+                            let usersWithoutAccountLoaded = false;
+
+                            window.loadUsersWithoutAccount = function () {
+                                // Only load once
+                                if (usersWithoutAccountLoaded) {
+                                    return;
+                                }
+
+                                const loadingDiv = document.getElementById('usersWithoutAccountLoading');
+                                const listDiv = document.getElementById('usersWithoutAccountList');
+                                const countBadge = document.getElementById('usersWithoutAccountCount');
+
+                                // Show loading state
+                                loadingDiv.style.display = 'block';
+                                listDiv.style.display = 'none';
+
+                                // Fetch users without account with limit of 10
+                                fetch(contextPath + '/employees/accounts?loadUsers=true&limit=10')
+                                    .then(response => response.text())
+                                    .then(html => {
+                                        // Parse the HTML response to extract users data
+                                        const parser = new DOMParser();
+                                        const doc = parser.parseFromString(html, 'text/html');
+
+                                        // Extract the user cards and count from the response
+                                        const sourceList = doc.querySelector('#usersWithoutAccountList');
+                                        const totalCountElement = doc.querySelector('#usersWithoutAccountCount');
+
+                                        // Update count badge
+                                        if (totalCountElement && totalCountElement.textContent !== '...') {
+                                            countBadge.textContent = totalCountElement.textContent;
+                                        }
+
+                                        // Copy the content
+                                        if (sourceList) {
+                                            listDiv.innerHTML = sourceList.innerHTML;
+                                        }
+
+                                        // Hide loading, show list
+                                        loadingDiv.style.display = 'none';
+                                        listDiv.style.display = 'flex';
+
+                                        // Mark as loaded
+                                        usersWithoutAccountLoaded = true;
+
+                                        // Re-attach click handlers for the new cards
+                                        attachUserCardClickHandlers();
+                                    })
+                                    .catch(error => {
+                                        console.error('Error loading users without account:', error);
+                                        loadingDiv.style.display = 'none';
+                                        listDiv.innerHTML = '<div class="col-12 text-center py-3"><p class="text-muted">Failed to load users. Please try again.</p></div>';
+                                        listDiv.style.display = 'block';
+                                    });
+                            };
+
+                            function attachUserCardClickHandlers() {
+                                document.querySelectorAll('.create-account-card').forEach(card => {
+                                    card.addEventListener('click', function () {
+                                        const userId = this.dataset.userId;
+                                        const userName = this.dataset.userName;
+                                        const employeeCode = this.dataset.employeeCode;
+                                        const emailCompany = this.dataset.emailCompany;
+
+                                        // Redirect to create account page with user data
+                                        const url = new URL(contextPath + '/employees/accounts/create', window.location.origin);
+                                        url.searchParams.append('userId', userId);
+                                        url.searchParams.append('userName', userName);
+                                        url.searchParams.append('employeeCode', employeeCode);
+                                        if (emailCompany) {
+                                            url.searchParams.append('emailCompany', emailCompany);
+                                        }
+                                        window.location.href = url.toString();
+                                    });
+                                });
+                            }
+
+                            // Attach handlers on page load for any existing cards
+                            attachUserCardClickHandlers();
                         });
                     </script>
                 </body>

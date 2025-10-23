@@ -130,6 +130,28 @@
                 .form-group input.is-invalid,
                 .form-group select.is-invalid {
                     border-color: #dc3545;
+                    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath d='m5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+                    background-repeat: no-repeat;
+                    background-position: right calc(0.375em + 0.1875rem) center;
+                    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+                    padding-right: calc(1.5em + 0.75rem);
+                }
+
+                .form-group input.is-valid,
+                .form-group select.is-valid {
+                    border-color: #28a745;
+                    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%2328a745' d='m2.3 6.73.94-.94 1.38 1.38 3.02-3.02.94.94L2.97 8.84z'/%3e%3c/svg%3e");
+                    background-repeat: no-repeat;
+                    background-position: right calc(0.375em + 0.1875rem) center;
+                    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+                    padding-right: calc(1.5em + 0.75rem);
+                }
+
+                .form-group .valid-feedback {
+                    display: block;
+                    margin-top: 0.5rem;
+                    font-size: 0.875rem;
+                    color: #28a745;
                 }
 
                 .form-check {
@@ -345,7 +367,7 @@
                                         placeholder="Enter full name" value="${fullName}" required maxlength="255">
                                 </div>
 
-                                <!-- Date of Birth and Phone (Row) -->
+                                <!-- Date of Birth and Gender (Row) -->
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label for="dateOfBirth">Date of Birth<span class="required">*</span></label>
@@ -355,12 +377,25 @@
                                     </div>
 
                                     <div class="form-group">
-                                        <label for="phone">Phone<span class="required">*</span></label>
-                                        <input type="tel" id="phone" name="phone"
-                                            class="form-control ${not empty errors and empty phone ? 'is-invalid' : ''}"
-                                            placeholder="Enter phone number" value="${phone}" required
-                                            pattern="[0-9]{10,11}" title="Phone number must be 10-11 digits">
+                                        <label for="gender">Gender<span class="required">*</span></label>
+                                        <select id="gender" name="gender"
+                                            class="form-select ${not empty errors and empty gender ? 'is-invalid' : ''}"
+                                            required>
+                                            <option value="">Select Gender</option>
+                                            <option value="male" ${gender=='male' ? 'selected' : '' }>Male</option>
+                                            <option value="female" ${gender=='female' ? 'selected' : '' }>Female
+                                            </option>
+                                        </select>
                                     </div>
+                                </div>
+
+                                <!-- Phone (Full Width) -->
+                                <div class="form-group">
+                                    <label for="phone">Phone<span class="required">*</span></label>
+                                    <input type="tel" id="phone" name="phone"
+                                        class="form-control ${not empty errors and empty phone ? 'is-invalid' : ''}"
+                                        placeholder="Enter phone number" value="${phone}" required
+                                        pattern="[0-9]{10,11}" title="Phone number must be 10-11 digits">
                                 </div>
 
                                 <!-- Company Email (Required) -->
@@ -451,18 +486,30 @@
                     const today = new Date().toISOString().split('T')[0];
                     dateOfBirthInput.setAttribute('max', today);
 
+                    // Age validation function
+                    function validateAge(dateOfBirth) {
+                        if (!dateOfBirth) return false;
+
+                        const today = new Date();
+                        const birthDate = new Date(dateOfBirth);
+                        let age = today.getFullYear() - birthDate.getFullYear();
+                        const monthDiff = today.getMonth() - birthDate.getMonth();
+
+                        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                            age--;
+                        }
+
+                        return age >= 18;
+                    }
+
                     // HTML5 validation is enabled by default with 'required' attributes
                     form.addEventListener('submit', function (e) {
-                        // Additional custom validation for Date of Birth
+                        // Age validation for Date of Birth
                         const dateOfBirth = dateOfBirthInput.value;
                         if (dateOfBirth) {
-                            const dob = new Date(dateOfBirth);
-                            const todayDate = new Date();
-                            todayDate.setHours(0, 0, 0, 0);
-
-                            if (dob >= todayDate) {
+                            if (!validateAge(dateOfBirth)) {
                                 e.preventDefault();
-                                dateOfBirthInput.setCustomValidity('Date of birth must be in the past');
+                                dateOfBirthInput.setCustomValidity('Date of birth must indicate user is at least 18 years old');
                                 dateOfBirthInput.reportValidity();
                                 return false;
                             } else {
@@ -471,100 +518,171 @@
                         }
                     });
 
+                    // Real-time age validation on blur event
+                    dateOfBirthInput.addEventListener('blur', function () {
+                        const dateOfBirth = this.value;
+                        if (dateOfBirth) {
+                            const isValid = validateAge(dateOfBirth);
+                            if (!isValid) {
+                                this.setCustomValidity('Employee must be at least 18 years old');
+                                this.reportValidity();
+                            } else {
+                                this.setCustomValidity('');
+                            }
+                            updateFieldValidation(this, isValid);
+                        }
+                    });
+
                     // Clear custom validity on input change
                     dateOfBirthInput.addEventListener('change', function () {
                         this.setCustomValidity('');
+                        if (this.value) {
+                            const isValid = validateAge(this.value);
+                            updateFieldValidation(this, isValid);
+                        }
                     });
 
-                    // Auto-format phone number (optional enhancement)
+                    // Phone validation function
+                    function validatePhone(phone) {
+                        if (!phone) return false;
+                        const phoneRegex = /^[0-9]{10,11}$/;
+                        return phoneRegex.test(phone);
+                    }
+
+                    // Enhanced phone input handling
                     const phoneInput = document.getElementById('phone');
                     phoneInput.addEventListener('input', function (e) {
-                        // Remove non-numeric characters
+                        // Auto-remove non-numeric characters
                         this.value = this.value.replace(/[^0-9]/g, '');
+
+                        // Real-time validation
+                        const phone = this.value;
+                        const isValid = phone === '' || validatePhone(phone);
+                        if (phone && !isValid) {
+                            this.setCustomValidity('Please enter a valid phone number (10-11 digits)');
+                        } else {
+                            this.setCustomValidity('');
+                        }
+                        updateFieldValidation(this, isValid);
                     });
+
+                    // Function to add visual validation indicators
+                    function updateFieldValidation(field, isValid) {
+                        field.classList.remove('is-valid', 'is-invalid');
+                        if (field.value.trim() !== '') {
+                            if (isValid) {
+                                field.classList.add('is-valid');
+                            } else {
+                                field.classList.add('is-invalid');
+                            }
+                        }
+                    }
 
                     // Custom validation messages for required fields
                     const fullNameInput = document.getElementById('fullName');
                     fullNameInput.addEventListener('invalid', function () {
                         if (this.validity.valueMissing) {
-                            this.setCustomValidity('Full name is required');
+                            this.setCustomValidity('Please enter your full name');
                         }
                     });
                     fullNameInput.addEventListener('input', function () {
                         this.setCustomValidity('');
+                        const isValid = this.value.trim().length > 0;
+                        updateFieldValidation(this, isValid);
                     });
 
                     phoneInput.addEventListener('invalid', function () {
                         if (this.validity.valueMissing) {
-                            this.setCustomValidity('Phone number is required');
-                        } else if (this.validity.patternMismatch) {
-                            this.setCustomValidity('Invalid phone number format (10-11 digits required)');
+                            this.setCustomValidity('Please enter your phone number');
+                        } else if (this.validity.patternMismatch || !validatePhone(this.value)) {
+                            this.setCustomValidity('Please enter a valid phone number (10-11 digits)');
                         }
-                    });
-                    phoneInput.addEventListener('input', function () {
-                        this.setCustomValidity('');
                     });
 
                     const emailInput = document.getElementById('emailCompany');
                     emailInput.addEventListener('invalid', function () {
                         if (this.validity.valueMissing) {
-                            this.setCustomValidity('Company email is required');
+                            this.setCustomValidity('Please enter your company email');
                         } else if (this.validity.typeMismatch) {
-                            this.setCustomValidity('Invalid email format');
+                            this.setCustomValidity('Please enter a valid email address');
                         }
                     });
                     emailInput.addEventListener('input', function () {
                         this.setCustomValidity('');
+                        const isValid = this.value === '' || this.validity.valid;
+                        updateFieldValidation(this, isValid);
                     });
 
                     const departmentSelect = document.getElementById('departmentId');
                     departmentSelect.addEventListener('invalid', function () {
                         if (this.validity.valueMissing) {
-                            this.setCustomValidity('Department is required');
+                            this.setCustomValidity('Please select a department');
                         }
                     });
                     departmentSelect.addEventListener('change', function () {
                         this.setCustomValidity('');
+                        const isValid = this.value !== '';
+                        updateFieldValidation(this, isValid);
                     });
 
                     const positionSelect = document.getElementById('positionId');
                     positionSelect.addEventListener('invalid', function () {
                         if (this.validity.valueMissing) {
-                            this.setCustomValidity('Position is required');
+                            this.setCustomValidity('Please select a position');
                         }
                     });
                     positionSelect.addEventListener('change', function () {
                         this.setCustomValidity('');
+                        const isValid = this.value !== '';
+                        updateFieldValidation(this, isValid);
                     });
 
                     const dateJoinedInput = document.getElementById('dateJoined');
                     dateJoinedInput.addEventListener('invalid', function () {
                         if (this.validity.valueMissing) {
-                            this.setCustomValidity('Date joined is required');
+                            this.setCustomValidity('Please enter the date joined');
                         }
                     });
                     dateJoinedInput.addEventListener('input', function () {
                         this.setCustomValidity('');
+                        const isValid = this.value !== '';
+                        updateFieldValidation(this, isValid);
                     });
 
                     const startWorkDateInput = document.getElementById('startWorkDate');
                     startWorkDateInput.addEventListener('invalid', function () {
                         if (this.validity.valueMissing) {
-                            this.setCustomValidity('Start work date is required');
+                            this.setCustomValidity('Please enter the start work date');
                         }
                     });
                     startWorkDateInput.addEventListener('input', function () {
                         this.setCustomValidity('');
+                        const isValid = this.value !== '';
+                        updateFieldValidation(this, isValid);
+                    });
+
+                    const genderSelect = document.getElementById('gender');
+                    genderSelect.addEventListener('invalid', function () {
+                        if (this.validity.valueMissing) {
+                            this.setCustomValidity('Please select your gender');
+                        }
+                    });
+                    genderSelect.addEventListener('change', function () {
+                        this.setCustomValidity('');
+                        const isValid = this.value !== '';
+                        updateFieldValidation(this, isValid);
                     });
 
                     const employeeCodeInput = document.getElementById('employeeCode');
                     employeeCodeInput.addEventListener('invalid', function () {
                         if (this.validity.patternMismatch) {
-                            this.setCustomValidity('Invalid employee code format. Must be HExxxx (e.g., HE0001)');
+                            this.setCustomValidity('Please use the format HExxxx (e.g., HE0001)');
                         }
                     });
                     employeeCodeInput.addEventListener('input', function () {
                         this.setCustomValidity('');
+                        const isValid = this.value === '' || this.validity.valid;
+                        updateFieldValidation(this, isValid);
                     });
                 });
             </script>

@@ -9,6 +9,7 @@ import group4.hrms.model.Role;
 import group4.hrms.model.User;
 import group4.hrms.util.DropdownCacheUtil;
 import group4.hrms.util.SessionUtil;
+import group4.hrms.util.ValidationUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -107,6 +108,7 @@ public class UserCreateServlet extends HttpServlet {
             String positionIdStr = request.getParameter("positionId");
             String dateJoinedStr = request.getParameter("dateJoined");
             String startWorkDateStr = request.getParameter("startWorkDate");
+            String gender = request.getParameter("gender");
 
             // Validate all fields and collect errors
             List<String> errors = new ArrayList<>();
@@ -125,6 +127,8 @@ public class UserCreateServlet extends HttpServlet {
                     dateOfBirth = LocalDate.parse(dateOfBirthStr);
                     if (dateOfBirth.isAfter(LocalDate.now())) {
                         errors.add("Date of birth must be in the past");
+                    } else if (!ValidationUtil.isAgeValid(dateOfBirth)) {
+                        errors.add("Date of birth must indicate user is at least 18 years old");
                     }
                 } catch (DateTimeParseException e) {
                     errors.add("Invalid date of birth format");
@@ -134,8 +138,8 @@ public class UserCreateServlet extends HttpServlet {
             // Validate phone
             if (isNullOrEmpty(phone)) {
                 errors.add("Phone number is required");
-            } else if (!PHONE_PATTERN.matcher(phone.trim()).matches()) {
-                errors.add("Invalid phone number format");
+            } else if (!ValidationUtil.isPhoneValid(phone.trim())) {
+                errors.add("Phone number must be 10 or 11 digits");
             } else if (userDao.isPhoneExists(phone.trim())) {
                 errors.add("Phone number already exists");
             }
@@ -195,6 +199,13 @@ public class UserCreateServlet extends HttpServlet {
                 } catch (DateTimeParseException e) {
                     errors.add("Invalid start work date format");
                 }
+            }
+
+            // Validate gender
+            if (isNullOrEmpty(gender)) {
+                errors.add("Gender is required");
+            } else if (!ValidationUtil.isGenderValid(gender.trim())) {
+                errors.add("Gender must be either 'male' or 'female'");
             }
 
             // Handle employee code (auto-generate if empty)
@@ -274,7 +285,7 @@ public class UserCreateServlet extends HttpServlet {
                 request.setAttribute("errors", errors);
                 loadFormData(request);
                 preserveFormData(request, employeeCode, fullName, dateOfBirthStr, phone, emailCompany,
-                        departmentIdStr, positionIdStr, dateJoinedStr, startWorkDateStr);
+                        departmentIdStr, positionIdStr, dateJoinedStr, startWorkDateStr, gender);
                 request.getRequestDispatcher("/WEB-INF/views/employees/user-create.jsp")
                         .forward(request, response);
                 return;
@@ -284,6 +295,7 @@ public class UserCreateServlet extends HttpServlet {
             User user = new User();
             user.setEmployeeCode(employeeCode);
             user.setFullName(fullName.trim());
+            user.setGender(gender.trim().toLowerCase());
             user.setEmailCompany(emailCompany.trim().toLowerCase());
             user.setPhone(phone.trim());
             user.setDepartmentId(departmentId);
@@ -318,7 +330,7 @@ public class UserCreateServlet extends HttpServlet {
                 request.setAttribute("errors", errors);
                 loadFormData(request);
                 preserveFormData(request, employeeCode, fullName, dateOfBirthStr, phone, emailCompany,
-                        departmentIdStr, positionIdStr, dateJoinedStr, startWorkDateStr);
+                        departmentIdStr, positionIdStr, dateJoinedStr, startWorkDateStr, gender);
                 request.getRequestDispatcher("/WEB-INF/views/employees/user-create.jsp")
                         .forward(request, response);
             }
@@ -360,6 +372,7 @@ public class UserCreateServlet extends HttpServlet {
             request.setAttribute("selectedPosition", request.getParameter("positionId"));
             request.setAttribute("dateJoined", request.getParameter("dateJoined"));
             request.setAttribute("startWorkDate", request.getParameter("startWorkDate"));
+            request.setAttribute("selectedGender", request.getParameter("gender"));
             request.getRequestDispatcher("/WEB-INF/views/employees/user-create.jsp")
                     .forward(request, response);
         }
@@ -467,7 +480,7 @@ public class UserCreateServlet extends HttpServlet {
 
     private void preserveFormData(HttpServletRequest request, String employeeCode, String fullName,
             String dateOfBirth, String phone, String emailCompany, String departmentId,
-            String positionId, String dateJoined, String startWorkDate) {
+            String positionId, String dateJoined, String startWorkDate, String gender) {
         request.setAttribute("employeeCode", employeeCode);
         request.setAttribute("fullName", fullName);
         request.setAttribute("dateOfBirth", dateOfBirth);
@@ -477,6 +490,7 @@ public class UserCreateServlet extends HttpServlet {
         request.setAttribute("selectedPosition", positionId);
         request.setAttribute("dateJoined", dateJoined);
         request.setAttribute("startWorkDate", startWorkDate);
+        request.setAttribute("selectedGender", gender);
     }
 
     private boolean isNullOrEmpty(String str) {

@@ -54,7 +54,7 @@
                                 <c:when test="${setting != null}">
                                     <!-- Read-only type field when editing -->
                                     <input type="text" class="form-control" id="type-display" value="${setting.type}" readonly disabled>
-                                    <input type="hidden" name="type" value="${setting.type}">
+                                    <input type="hidden" id="type" name="type" value="${setting.type}">
                                     <small class="text-muted">Type cannot be changed after creation</small>
                                 </c:when>
                                 <c:otherwise>
@@ -65,6 +65,9 @@
                                         <option value="Position" ${type == 'Position' ? 'selected' : ''}>Position</option>
                                         <option value="Role" ${type == 'Role' ? 'selected' : ''}>Role</option>
                                     </select>
+                                    <small class="text-info" id="department-note" style="display: none;">
+                                        <i class="fas fa-info-circle"></i> Department does not have value and priority
+                                    </small>
                                 </c:otherwise>
                             </c:choose>
                         </div>
@@ -119,5 +122,57 @@
             </div>
         </div>
     </div>
+    
+    <script>
+        // Show/hide Value and Priority fields based on Type selection
+        document.addEventListener('DOMContentLoaded', function() {
+            var typeSelect = document.getElementById('type');
+            var valueField = document.getElementById('value');
+            var priorityField = document.getElementById('priority');
+            var departmentNote = document.getElementById('department-note');
+            
+            // Function to toggle fields
+            function toggleFields() {
+                var valueGroup = valueField.closest('.mb-3');
+                var priorityGroup = priorityField.closest('.mb-3');
+                var selectedType = '';
+                
+                // Get type value from either select or hidden input
+                if (typeSelect) {
+                    if (typeSelect.tagName === 'SELECT') {
+                        selectedType = typeSelect.value;
+                    } else if (typeSelect.tagName === 'INPUT') {
+                        selectedType = typeSelect.value;
+                    }
+                }
+                
+                if (selectedType === 'Department') {
+                    // Hide value and priority for Department
+                    valueGroup.style.display = 'none';
+                    priorityGroup.style.display = 'none';
+                    // Show department note (only for create mode)
+                    if (departmentNote) {
+                        departmentNote.style.display = 'block';
+                    }
+                } else if (selectedType === 'Position' || selectedType === 'Role') {
+                    // Show value and priority for Position and Role
+                    valueGroup.style.display = 'block';
+                    priorityGroup.style.display = 'block';
+                    // Hide department note
+                    if (departmentNote) {
+                        departmentNote.style.display = 'none';
+                    }
+                }
+            }
+            
+            // Run on page load
+            toggleFields();
+            
+            // Run on type change (only for create mode with select dropdown)
+            if (typeSelect && typeSelect.tagName === 'SELECT') {
+                typeSelect.addEventListener('change', toggleFields);
+            }
+        });
+    </script>
 </body>
 </html>

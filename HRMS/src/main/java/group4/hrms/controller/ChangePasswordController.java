@@ -123,6 +123,14 @@ public class ChangePasswordController extends HttpServlet {
                 return;
             }
             
+            // Check if new password is same as current password
+            if (PasswordUtil.verifyPassword(newPassword, currentPasswordHash)) {
+                logger.warn("New password is same as current password for account_id: {}", accountId);
+                req.setAttribute("error", "New password must be different from current password");
+                req.getRequestDispatcher("/WEB-INF/views/account/change-password.jsp").forward(req, resp);
+                return;
+            }
+            
             // Hash new password using bcrypt
             String newPasswordHash = PasswordUtil.hashPassword(newPassword);
             

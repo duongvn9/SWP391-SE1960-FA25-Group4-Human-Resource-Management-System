@@ -179,6 +179,31 @@ public class ProfileController extends HttpServlet {
                 return;
             }
             
+            // E1: Validate age >= 18
+            if (dto.getDob() != null) {
+                LocalDate today = LocalDate.now();
+                int age = today.getYear() - dto.getDob().getYear();
+                
+                // Adjust age if birthday hasn't occurred this year yet
+                if (today.getMonthValue() < dto.getDob().getMonthValue() ||
+                    (today.getMonthValue() == dto.getDob().getMonthValue() && today.getDayOfMonth() < dto.getDob().getDayOfMonth())) {
+                    age--;
+                }
+                
+                if (age < 18) {
+                    logger.warn("Age validation failed: age={}, dob={}", age, dto.getDob());
+                    req.setAttribute("error", "Age must be at least 18 years old");
+                    UserProfile profileWithInput = createProfileFromDto(currentProfile, dto);
+                    req.setAttribute("profile", profileWithInput);
+                    // Generate new CSRF token and save to session
+                    String newCsrfToken = generateCsrfToken();
+                    req.getSession().setAttribute("_csrf_token", newCsrfToken);
+                    req.setAttribute("csrfToken", newCsrfToken);
+                    req.getRequestDispatcher("/WEB-INF/views/profile/edit-profile.jsp").forward(req, resp);
+                    return;
+                }
+            }
+            
             logger.info("Validation passed, continuing to update...");
             
             // Check uniqueness constraints
