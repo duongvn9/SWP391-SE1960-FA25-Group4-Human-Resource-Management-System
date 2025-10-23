@@ -1,4 +1,5 @@
 <%@ page contentType="text/html; charset=UTF-8" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
 
 <style>
     :root {
@@ -107,8 +108,11 @@
                         <i class="fas fa-user"></i> Profile</a></li>
                 <li><a class="dropdown-item" href="${pageContext.request.contextPath}/contracts">
                         <i class="fas fa-file-alt"></i> Employment Contract</a></li>
-                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/settings">
-                        <i class="fas fa-cog"></i> Settings</a></li>
+                <%-- Settings - Admin Position Only (position_id = 6) --%>
+                <c:if test="${sessionScope.user != null && sessionScope.user.positionId == 6}">
+                    <li><a class="dropdown-item" href="${pageContext.request.contextPath}/settings">
+                            <i class="fas fa-cog"></i> Settings</a></li>
+                </c:if>
                 <li>
                     <hr class="dropdown-divider">
                 </li>
