@@ -457,6 +457,24 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('otRequestForm').addEventListener('submit', function(e) {
         let isValid = true;
 
+        // Check request title
+        const requestTitleInput = document.getElementById('requestTitle');
+        if (requestTitleInput && (!requestTitleInput.value || requestTitleInput.value.trim() === '')) {
+            e.preventDefault();
+            showValidationToast('Please enter a request title', 'error');
+            requestTitleInput.focus();
+            isValid = false;
+            return;
+        }
+
+        if (requestTitleInput && requestTitleInput.value.trim().length < 5) {
+            e.preventDefault();
+            showValidationToast('Request title must be at least 5 characters long', 'error');
+            requestTitleInput.focus();
+            isValid = false;
+            return;
+        }
+
         // Check consent checkbox
         if (!employeeConsentCheckbox.checked) {
             e.preventDefault();
@@ -523,15 +541,16 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        // Check date not in past
+        // Check date not in past and must be at least 1 day in advance
         if (dateStr) {
             const selectedDate = new Date(dateStr);
             const today = new Date();
             today.setHours(0, 0, 0, 0);
+            selectedDate.setHours(0, 0, 0, 0);
 
-            if (selectedDate < today) {
+            if (selectedDate <= today) {
                 e.preventDefault();
-                showValidationToast('Cannot select past date. Please choose a future date.', 'error');
+                showValidationToast('OT request must be submitted at least 1 day in advance. Please select tomorrow or a future date.', 'error');
                 otDateInput.focus();
                 isValid = false;
                 return;

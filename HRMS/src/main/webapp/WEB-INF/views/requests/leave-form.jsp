@@ -3,6 +3,7 @@
         <%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
             <%
                 // Retrieve form data from session (if exists from previous error)
+                String savedRequestTitle = (String) session.getAttribute("formData_requestTitle");
                 String savedLeaveType = (String) session.getAttribute("formData_leaveTypeCode");
                 String savedStartDate = (String) session.getAttribute("formData_startDate");
                 String savedEndDate = (String) session.getAttribute("formData_endDate");
@@ -11,6 +12,7 @@
                 String savedHalfDayPeriod = (String) session.getAttribute("formData_halfDayPeriod");
 
                 // Clear form data from session after retrieving
+                session.removeAttribute("formData_requestTitle");
                 session.removeAttribute("formData_leaveTypeCode");
                 session.removeAttribute("formData_startDate");
                 session.removeAttribute("formData_endDate");
@@ -19,6 +21,7 @@
                 session.removeAttribute("formData_halfDayPeriod");
 
                 // Make available to JSTL
+                pageContext.setAttribute("savedRequestTitle", savedRequestTitle);
                 pageContext.setAttribute("savedLeaveType", savedLeaveType);
                 pageContext.setAttribute("savedStartDate", savedStartDate);
                 pageContext.setAttribute("savedEndDate", savedEndDate);
@@ -170,64 +173,12 @@
                             </div>
 
                             <div class="card-body">
-                                <!-- Alerts -->
-                                <c:if test="${not empty error}">
-                                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                        <div class="d-flex align-items-start">
-                                            <div class="flex-shrink-0">
-                                                <c:choose>
-                                                    <c:when test="${errorType == 'OVERLAP'}">
-                                                        <i class="fas fa-calendar-times fa-2x me-3"></i>
-                                                    </c:when>
-                                                    <c:when
-                                                        test="${errorType == 'BALANCE_EXCEEDED' || errorType == 'INSUFFICIENT_BALANCE'}">
-                                                        <i class="fas fa-exclamation-circle fa-2x me-3"></i>
-                                                    </c:when>
-                                                    <c:when test="${errorType == 'OT_CONFLICT'}">
-                                                        <i class="fas fa-clock fa-2x me-3"></i>
-                                                    </c:when>
-                                                    <c:when test="${errorType == 'HALF_DAY_NON_WORKING_DAY'}">
-                                                        <i class="fas fa-calendar-day fa-2x me-3"></i>
-                                                    </c:when>
-                                                    <c:when
-                                                        test="${errorType == 'HALF_DAY_FULL_DAY_CONFLICT' || errorType == 'HALF_DAY_SAME_PERIOD_CONFLICT'}">
-                                                        <i class="fas fa-calendar-times fa-2x me-3"></i>
-                                                    </c:when>
-                                                    <c:when test="${errorType == 'INVALID_HALF_DAY_PERIOD'}">
-                                                        <i class="fas fa-clock fa-2x me-3"></i>
-                                                    </c:when>
-                                                    <c:otherwise>
-                                                        <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
-                                                    </c:otherwise>
-                                                </c:choose>
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                <c:choose>
-                                                    <c:when test="${not empty errorTitle and not empty errorDetails}">
-                                                        <h5 class="alert-heading mb-2">
-                                                            <c:out value="${errorTitle}" />
-                                                        </h5>
-                                                        <div class="error-details" style="white-space: pre-line;">
-                                                            <c:out value="${errorDetails}" />
-                                                        </div>
-                                                    </c:when>
-                                                    <c:otherwise>
-                                                        <c:out value="${error}" />
-                                                    </c:otherwise>
-                                                </c:choose>
-                                            </div>
-                                        </div>
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert"
-                                            aria-label="Close"></button>
-                                    </div>
-                                </c:if>
-
-                                <c:if test="${not empty success}">
-                                    <div class="alert alert-success" role="alert">
-                                        <i class="fas fa-check-circle me-2"></i>
-                                        <c:out value="${success}" />
-                                    </div>
-                                </c:if>
+                                <!-- Hidden inputs for toast notifications -->
+                                <input type="hidden" id="serverError" value="${error}">
+                                <input type="hidden" id="serverErrorTitle" value="${errorTitle}">
+                                <input type="hidden" id="serverErrorDetails" value="${errorDetails}">
+                                <input type="hidden" id="serverErrorType" value="${errorType}">
+                                <input type="hidden" id="serverSuccess" value="${success}">
 
                                 <!-- Form -->
                                 <form method="post" action="${pageContext.request.contextPath}/requests/leave/create"
@@ -271,6 +222,21 @@
                                         <strong>Notice:</strong> This is unpaid leave - salary will be deducted based on
                                         days taken.
                                         For half-day unpaid leave, 50% of daily salary will be deducted.
+                                    </div>
+
+                                    <!-- Request Title -->
+                                    <div class="mb-3">
+                                        <label for="requestTitle" class="form-label">
+                                            <i class="fas fa-heading"></i> Request Title
+                                            <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="text" class="form-control" id="requestTitle" name="requestTitle"
+                                               placeholder="Enter a brief title for your leave request (e.g., 'Family emergency')"
+                                               maxlength="200" required value="${not empty savedRequestTitle ? savedRequestTitle : ''}">
+                                        <div class="form-text">
+                                            <i class="fas fa-info-circle"></i>
+                                            Provide a clear title that summarizes your leave request (max 200 characters)
+                                        </div>
                                     </div>
 
                                     <!-- Duration Type & Half-Day Period (Same Row) -->
@@ -381,11 +347,12 @@
                                         </div>
                                     </div>
 
-                                    <!-- Supporting Documents (Optional) - Hybrid: File Upload or Link -->
-                                    <div class="mt-3">
+                                    <!-- Supporting Documents - Hybrid: File Upload or Link -->
+                                    <div class="mt-3" id="supportingDocumentsSection">
                                         <label class="form-label">
                                             <i class="fas fa-paperclip"></i> Supporting Documents
-                                            <span class="text-muted">(Optional)</span>
+                                            <span class="text-muted" id="attachmentOptionalLabel">(Optional)</span>
+                                            <span class="text-danger d-none" id="attachmentRequiredLabel">*</span>
                                         </label>
 
                                         <!-- Attachment Type Selection -->
@@ -573,11 +540,21 @@
                                     html += '<div class="rule-item"><small>Advance Notice</small><br><strong>' + rules.minAdvanceNotice + ' days</strong></div>';
                                 }
 
+                                // Handle certificate requirement
+                                const attachmentOptionalLabel = document.getElementById('attachmentOptionalLabel');
+                                const attachmentRequiredLabel = document.getElementById('attachmentRequiredLabel');
+
                                 if (rules.requiresCertificate) {
                                     html += '<div class="rule-item"><small>Certificate</small><br><strong><span class="leave-badge warning">Required</span></strong></div>';
                                     certificateRequired.classList.remove('d-none');
+                                    // Make attachment required
+                                    if (attachmentOptionalLabel) attachmentOptionalLabel.classList.add('d-none');
+                                    if (attachmentRequiredLabel) attachmentRequiredLabel.classList.remove('d-none');
                                 } else {
                                     certificateRequired.classList.add('d-none');
+                                    // Make attachment optional
+                                    if (attachmentOptionalLabel) attachmentOptionalLabel.classList.remove('d-none');
+                                    if (attachmentRequiredLabel) attachmentRequiredLabel.classList.add('d-none');
                                 }
 
                                 // Show/hide unpaid leave notice
@@ -914,6 +891,38 @@
                         document.getElementById('leaveRequestForm').addEventListener('submit', async function (e) {
                             e.preventDefault(); // Prevent default submission initially
 
+                            // Validate request title
+                            const requestTitleInput = document.getElementById('requestTitle');
+                            if (!requestTitleInput.value || requestTitleInput.value.trim() === '') {
+                                displayValidationErrors(['Please enter a request title']);
+                                requestTitleInput.focus();
+                                return false;
+                            }
+
+                            if (requestTitleInput.value.trim().length < 5) {
+                                displayValidationErrors(['Request title must be at least 5 characters long']);
+                                requestTitleInput.focus();
+                                return false;
+                            }
+
+                            // Validate certificate requirement
+                            const selectedLeaveType = document.getElementById('leaveTypeCode').value;
+                            if (selectedLeaveType && leaveTypeRules[selectedLeaveType]) {
+                                const rules = leaveTypeRules[selectedLeaveType];
+                                if (rules.requiresCertificate) {
+                                    // Check if attachment provided (file or link)
+                                    const attachmentType = document.querySelector('input[name="attachmentType"]:checked')?.value;
+                                    const hasFile = document.getElementById('attachments')?.files?.length > 0;
+                                    const hasLink = document.getElementById('driveLink')?.value?.trim() !== '';
+
+                                    if (!hasFile && !hasLink) {
+                                        displayValidationErrors(['This leave type requires supporting documents (certificate). Please upload a file or provide a Google Drive link.']);
+                                        document.getElementById('supportingDocumentsSection').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                        return false;
+                                    }
+                                }
+                            }
+
                             const durationType = document.querySelector('input[name="durationType"]:checked')?.value;
                             const isHalfDay = durationType === 'HALF_DAY';
 
@@ -946,7 +955,16 @@
                             }
 
                             this.classList.add('was-validated');
-                            // Submit the form
+
+                            // Disable submit button to prevent double submission
+                            const submitBtn = document.getElementById('submitBtn');
+                            if (submitBtn) {
+                                submitBtn.disabled = true;
+                                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Submitting...';
+                            }
+
+                            // Remove event listener to prevent infinite loop, then submit
+                            this.removeEventListener('submit', arguments.callee);
                             this.submit();
                         });
 
@@ -1168,6 +1186,169 @@
 
                 <!-- Attachment Toggle Script -->
                 <script src="${pageContext.request.contextPath}/assets/js/attachment-toggle.js"></script>
+
+                <!-- Toast Container -->
+                <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 11000;">
+                    <div id="validationToast" class="toast border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="toast-header" id="toastHeader">
+                            <i class="fas fa-exclamation-circle text-danger me-2" id="toastIcon"></i>
+                            <strong class="me-auto" id="toastTitle">Validation Error</strong>
+                            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                        <div class="toast-body" id="toastMessage">
+                            <!-- Message will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Toast Styles -->
+                <style>
+                    /* Toast notification styling */
+                    #validationToast {
+                        min-width: 350px;
+                        max-width: 550px;
+                    }
+
+                    #validationToast .toast-header {
+                        font-weight: 600;
+                    }
+
+                    #validationToast .toast-header.bg-danger {
+                        background-color: #dc3545 !important;
+                        color: white;
+                    }
+
+                    #validationToast .toast-header.bg-warning {
+                        background-color: #ffc107 !important;
+                        color: #000;
+                    }
+
+                    #validationToast .toast-header.bg-success {
+                        background-color: #198754 !important;
+                        color: white;
+                    }
+
+                    #validationToast .toast-header.bg-info {
+                        background-color: #0dcaf0 !important;
+                        color: #000;
+                    }
+
+                    #validationToast .toast-header .btn-close {
+                        filter: brightness(0) invert(1);
+                    }
+
+                    #validationToast .toast-header.bg-warning .btn-close,
+                    #validationToast .toast-header.bg-info .btn-close {
+                        filter: brightness(0);
+                    }
+
+                    #validationToast .toast-body {
+                        padding: 1rem;
+                        font-size: 0.95rem;
+                        white-space: pre-line;
+                    }
+
+                    @keyframes slideInRight {
+                        from {
+                            transform: translateX(100%);
+                            opacity: 0;
+                        }
+                        to {
+                            transform: translateX(0);
+                            opacity: 1;
+                        }
+                    }
+
+                    #validationToast.show {
+                        animation: slideInRight 0.3s ease-out;
+                    }
+                </style>
+
+                <!-- Toast JavaScript -->
+                <script>
+                    /**
+                     * Show toast notification with error type handling
+                     * @param {string} message - The message to display
+                     * @param {string} type - Type: 'success', 'danger', 'warning', 'info'
+                     * @param {string} title - Optional title
+                     * @param {string} errorType - Error type for icon selection
+                     */
+                    function showToast(message, type = 'danger', title = null, errorType = null) {
+                        const toastElement = document.getElementById('validationToast');
+                        const toastHeader = document.getElementById('toastHeader');
+                        const toastIcon = document.getElementById('toastIcon');
+                        const toastTitle = document.getElementById('toastTitle');
+                        const toastMessage = document.getElementById('toastMessage');
+
+                        // Reset classes
+                        toastHeader.className = 'toast-header';
+                        toastIcon.className = 'fas me-2';
+
+                        // Set type-specific styling
+                        if (type === 'success') {
+                            toastHeader.classList.add('bg-success');
+                            toastIcon.classList.add('fa-check-circle', 'text-white');
+                            toastTitle.textContent = title || 'Success';
+                        } else if (type === 'danger' || type === 'error') {
+                            toastHeader.classList.add('bg-danger');
+                            // Icon based on error type
+                            if (errorType === 'OVERLAP' || errorType === 'HALF_DAY_FULL_DAY_CONFLICT' || errorType === 'HALF_DAY_SAME_PERIOD_CONFLICT') {
+                                toastIcon.classList.add('fa-calendar-times', 'text-white');
+                            } else if (errorType === 'BALANCE_EXCEEDED' || errorType === 'INSUFFICIENT_BALANCE') {
+                                toastIcon.classList.add('fa-exclamation-circle', 'text-white');
+                            } else if (errorType === 'OT_CONFLICT' || errorType === 'INVALID_HALF_DAY_PERIOD') {
+                                toastIcon.classList.add('fa-clock', 'text-white');
+                            } else if (errorType === 'HALF_DAY_NON_WORKING_DAY') {
+                                toastIcon.classList.add('fa-calendar-day', 'text-white');
+                            } else {
+                                toastIcon.classList.add('fa-exclamation-triangle', 'text-white');
+                            }
+                            toastTitle.textContent = title || 'Error';
+                        } else if (type === 'warning') {
+                            toastHeader.classList.add('bg-warning');
+                            toastIcon.classList.add('fa-exclamation-triangle');
+                            toastTitle.textContent = title || 'Warning';
+                        } else {
+                            toastHeader.classList.add('bg-info');
+                            toastIcon.classList.add('fa-info-circle');
+                            toastTitle.textContent = title || 'Information';
+                        }
+
+                        // Set message
+                        toastMessage.textContent = message;
+
+                        // Show toast
+                        const toast = new bootstrap.Toast(toastElement, {
+                            autohide: true,
+                            delay: 7000 // 7 seconds for leave errors (longer to read)
+                        });
+                        toast.show();
+                    }
+
+                    // Auto-show toast on page load if there's a server message
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const errorInput = document.getElementById('serverError');
+                        const errorTitle = document.getElementById('serverErrorTitle');
+                        const errorDetails = document.getElementById('serverErrorDetails');
+                        const errorType = document.getElementById('serverErrorType');
+                        const successInput = document.getElementById('serverSuccess');
+
+                        if (errorInput && errorInput.value && errorInput.value.trim() !== '') {
+                            let message = errorInput.value;
+                            let title = errorTitle && errorTitle.value ? errorTitle.value : 'Error';
+
+                            // If there are error details, combine them
+                            if (errorDetails && errorDetails.value && errorDetails.value.trim() !== '') {
+                                message = errorDetails.value;
+                            }
+
+                            const type = errorType && errorType.value ? errorType.value : null;
+                            showToast(message, 'danger', title, type);
+                        } else if (successInput && successInput.value && successInput.value.trim() !== '') {
+                            showToast(successInput.value, 'success', 'Success');
+                        }
+                    });
+                </script>
 
             </body>
 

@@ -71,25 +71,15 @@
                             </div>
                         </div>
 
-                        <!-- Alerts -->
+                        <!-- Alerts converted to Toast notifications -->
                         <!-- Check for error in request scope first, then session scope -->
                         <c:if test="${not empty error}">
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                <i class="fas fa-exclamation-circle me-2"></i>
-                                <c:out value="${error}" />
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"
-                                    aria-label="Close"></button>
-                            </div>
+                            <input type="hidden" id="serverError" value="${error}">
                         </c:if>
 
                         <!-- Check for success in request scope first, then session scope -->
                         <c:if test="${not empty success}">
-                            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                <i class="fas fa-check-circle me-2"></i>
-                                <c:out value="${success}" />
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"
-                                    aria-label="Close"></button>
-                            </div>
+                            <input type="hidden" id="serverSuccess" value="${success}">
                         </c:if>
 
                         <!-- Request Information Card -->
@@ -515,6 +505,120 @@
 
                 <!-- Bootstrap JS -->
                 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+                <!-- Toast Notification Container -->
+                <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 11000;">
+                    <div id="validationToast" class="toast border-0 shadow-lg fade hide" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="toast-header bg-danger text-white">
+                            <i class="fas fa-exclamation-circle me-2" id="toastIcon"></i>
+                            <strong class="me-auto" id="toastTitle">Notification</strong>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                        <div class="toast-body" id="toastMessage">Message here</div>
+                    </div>
+                </div>
+
+                <style>
+                    /* Toast notification styling */
+                    #validationToast {
+                        min-width: 350px;
+                        max-width: 550px;
+                    }
+
+                    #validationToast .toast-header {
+                        border-radius: 0.375rem 0.375rem 0 0;
+                    }
+
+                    #validationToast .toast-header.bg-danger {
+                        background-color: #dc3545 !important;
+                    }
+
+                    #validationToast .toast-header.bg-success {
+                        background-color: #198754 !important;
+                    }
+
+                    #validationToast .toast-body {
+                        font-size: 0.95rem;
+                        padding: 1rem;
+                        line-height: 1.5;
+                    }
+
+                    /* Animation */
+                    #validationToast.show {
+                        animation: slideInRight 0.3s ease-out;
+                    }
+
+                    @keyframes slideInRight {
+                        from {
+                            transform: translateX(100%);
+                            opacity: 0;
+                        }
+                        to {
+                            transform: translateX(0);
+                            opacity: 1;
+                        }
+                    }
+                </style>
+
+                <!-- Toast Auto-show Script -->
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        // Check for server error
+                        const serverError = document.getElementById('serverError');
+                        if (serverError && serverError.value) {
+                            showToast(serverError.value, 'danger', 'Error');
+                        }
+
+                        // Check for server success
+                        const serverSuccess = document.getElementById('serverSuccess');
+                        if (serverSuccess && serverSuccess.value) {
+                            showToast(serverSuccess.value, 'success', 'Success');
+                        }
+                    });
+
+                    /**
+                     * Show toast notification
+                     * @param {string} message - Message to display
+                     * @param {string} type - Type: 'success', 'danger', 'warning', 'info'
+                     * @param {string} title - Toast title
+                     */
+                    function showToast(message, type, title) {
+                        const toast = document.getElementById('validationToast');
+                        const toastHeader = toast.querySelector('.toast-header');
+                        const toastIcon = document.getElementById('toastIcon');
+                        const toastTitle = document.getElementById('toastTitle');
+                        const toastMessage = document.getElementById('toastMessage');
+
+                        // Set message and title
+                        toastMessage.textContent = message;
+                        toastTitle.textContent = title || 'Notification';
+
+                        // Remove all bg classes
+                        toastHeader.classList.remove('bg-danger', 'bg-success', 'bg-warning', 'bg-info');
+
+                        // Set appropriate style based on type
+                        if (type === 'success') {
+                            toastHeader.classList.add('bg-success');
+                            toastIcon.className = 'fas fa-check-circle me-2';
+                        } else if (type === 'danger') {
+                            toastHeader.classList.add('bg-danger');
+                            toastIcon.className = 'fas fa-exclamation-circle me-2';
+                        } else if (type === 'warning') {
+                            toastHeader.classList.add('bg-warning');
+                            toastIcon.className = 'fas fa-exclamation-triangle me-2';
+                        } else {
+                            toastHeader.classList.add('bg-info');
+                            toastIcon.className = 'fas fa-info-circle me-2';
+                        }
+
+                        // Show toast
+                        const bsToast = new bootstrap.Toast(toast, {
+                            autohide: true,
+                            delay: 5000
+                        });
+                        bsToast.show();
+                    }
+                </script>
 
                 <!-- Page-specific JavaScript -->
                 <script src="${pageContext.request.contextPath}/assets/js/request-detail.js"></script>

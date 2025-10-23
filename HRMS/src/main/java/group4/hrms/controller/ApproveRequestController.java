@@ -130,6 +130,82 @@ public class ApproveRequestController extends HttpServlet {
                     return;
                 }
 
+                // Validate OT balance before approving OT requests
+                if (req.getRequestTypeId() != null && req.getRequestTypeId() == 7L) {
+                    try {
+                        // Initialize OTRequestService with required DAOs
+                        group4.hrms.dao.RequestTypeDao requestTypeDao = new group4.hrms.dao.RequestTypeDao();
+                        group4.hrms.dao.HolidayDao holidayDao = new group4.hrms.dao.HolidayDao();
+                        group4.hrms.dao.HolidayCalendarDao holidayCalendarDao = new group4.hrms.dao.HolidayCalendarDao();
+                        group4.hrms.dao.UserDao userDao = new group4.hrms.dao.UserDao();
+
+                        group4.hrms.service.OTRequestService otService = new group4.hrms.service.OTRequestService(
+                            requestDao, requestTypeDao, holidayDao, holidayCalendarDao, userDao
+                        );
+
+                        group4.hrms.dto.OTRequestDetail otDetail = req.getOtDetail();
+                        if (otDetail != null) {
+                            // Validate weekly, monthly, and annual limits
+                            otService.validateOTBalance(
+                                req.getUserId(),
+                                otDetail.getOtDate(),
+                                otDetail.getOtHours()
+                            );
+                        }
+                    } catch (IllegalArgumentException e) {
+                        out.print("{\"success\": false, \"message\": \"Cannot approve: " + e.getMessage() + "\"}");
+                        return;
+                    } catch (Exception e) {
+                        logger.log(Level.WARNING, "Error validating OT balance during approval", e);
+                        out.print("{\"success\": false, \"message\": \"Cannot approve: Unable to validate OT balance\"}");
+                        return;
+                    }
+                }
+
+                // Validate leave balance for LEAVE requests (request_type_id = 6)
+                if (req.getRequestTypeId() != null && req.getRequestTypeId() == 6L) {
+                    try {
+                        group4.hrms.dao.LeaveTypeDao leaveTypeDao = new group4.hrms.dao.LeaveTypeDao();
+                        group4.hrms.dao.RequestTypeDao requestTypeDao = new group4.hrms.dao.RequestTypeDao();
+
+                        group4.hrms.service.LeaveRequestService leaveService = new group4.hrms.service.LeaveRequestService(
+                            requestDao, requestTypeDao, leaveTypeDao
+                        );
+
+                        group4.hrms.dto.LeaveRequestDetail leaveDetail = req.getLeaveDetail();
+                        if (leaveDetail != null && leaveDetail.getLeaveTypeCode() != null) {
+                            // Parse dates to calculate requested days and year
+                            try {
+                                java.time.LocalDate startDate = java.time.LocalDate.parse(leaveDetail.getStartDate());
+                                java.time.LocalDate endDate = java.time.LocalDate.parse(leaveDetail.getEndDate());
+
+                                // Calculate requested days (inclusive)
+                                int requestedDays = (int) java.time.temporal.ChronoUnit.DAYS.between(startDate, endDate) + 1;
+                                int year = startDate.getYear();
+
+                                // Validate leave balance before approval
+                                leaveService.validateLeaveBalance(
+                                    req.getUserId(),
+                                    leaveDetail.getLeaveTypeCode(),
+                                    requestedDays,
+                                    year
+                                );
+                            } catch (java.time.format.DateTimeParseException e) {
+                                logger.log(Level.WARNING, "Invalid date format in leave detail", e);
+                                out.print("{\"success\": false, \"message\": \"Cannot approve: Invalid date format\"}");
+                                return;
+                            }
+                        }
+                    } catch (IllegalArgumentException e) {
+                        out.print("{\"success\": false, \"message\": \"Cannot approve: " + e.getMessage() + "\"}");
+                        return;
+                    } catch (Exception e) {
+                        logger.log(Level.WARNING, "Error validating leave balance during approval", e);
+                        out.print("{\"success\": false, \"message\": \"Cannot approve: Unable to validate leave balance\"}");
+                        return;
+                    }
+                }
+
                 req.setStatus("APPROVED");
                 req.setCurrentApproverAccountId(currentAccount.getId());
                 req.setUpdatedAt(LocalDateTime.now());

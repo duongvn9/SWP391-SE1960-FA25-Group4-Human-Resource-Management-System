@@ -29,6 +29,11 @@ public class OTBalance {
     private Double annualHours;         // Giờ OT năm này
     private Double annualLimit;         // 300h hoặc 200h
 
+    // Date ranges for display
+    private String weekStartDate;       // Monday of current week (format: dd/MM)
+    private String weekEndDate;         // Sunday of current week (format: dd/MM)
+    private String monthName;           // Current month name (e.g., "October 2025")
+
     /**
      * Default constructor with standard limits and zero hours.
      */
@@ -250,6 +255,30 @@ public class OTBalance {
 
     public void setAnnualApprovedCount(Integer annualApprovedCount) {
         this.annualApprovedCount = annualApprovedCount;
+    }
+
+    public String getWeekStartDate() {
+        return weekStartDate;
+    }
+
+    public void setWeekStartDate(String weekStartDate) {
+        this.weekStartDate = weekStartDate;
+    }
+
+    public String getWeekEndDate() {
+        return weekEndDate;
+    }
+
+    public void setWeekEndDate(String weekEndDate) {
+        this.weekEndDate = weekEndDate;
+    }
+
+    public String getMonthName() {
+        return monthName;
+    }
+
+    public void setMonthName(String monthName) {
+        this.monthName = monthName;
     }
 
     @Override
