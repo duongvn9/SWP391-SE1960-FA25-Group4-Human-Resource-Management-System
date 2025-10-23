@@ -238,11 +238,6 @@ public class ImportAttendanceServlet extends HttpServlet {
 
             List<User> uList = userDao.findAll();
             req.setAttribute("uList", uList);
-            String activeTab = req.getParameter("activeTab");
-            if (activeTab == null || activeTab.isEmpty()) {
-                activeTab = "upload";
-            }
-            req.setAttribute("activeTab", activeTab);
             req.getRequestDispatcher("/WEB-INF/views/attendance/import-attendance.jsp").forward(req, resp);
         } catch (ServletException | IOException e) {
             req.setAttribute("error", "Lỗi: " + e.getMessage());

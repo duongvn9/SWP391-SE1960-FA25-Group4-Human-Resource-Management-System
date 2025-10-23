@@ -179,6 +179,7 @@
                             <button type="submit" id="import" name="action" value="Import" class="form-button btn-secondary">Import</button>
                         </div>
 
+                        <!-- Success/Error Messages -->
                         <c:if test="${not empty error}">
                             <div class="form-message error-message">${error}</div>
                         </c:if>
@@ -221,6 +222,7 @@
                                 </tbody>
                             </table>
 
+                            <!-- ✅ Pagination for Preview Records -->
                             <!-- Pagination -->
                             <c:if test="${totalPages > 1}">
                                 <div class="pagination preview-pagination">
@@ -307,6 +309,7 @@
                                                     <div class="employee-select-wrapper">
                                                         <input type="text" name="employeeName"
                                                                class="form-control employee-input"
+                                                               placeholder="Select an employee"
                                                                value="${log.employeeName}"
                                                                style="background-color:#ffe6e6;"
                                                                onfocus="showEmployeeList(this)"
@@ -347,7 +350,7 @@
                                                 <div class="employee-select-wrapper">
                                                     <input type="text" name="employeeName"
                                                            class="form-control employee-input"
-                                                           placeholder="Select or type name"
+                                                           placeholder="Select an employee"
                                                            onfocus="showEmployeeList(this)"
                                                            oninput="filterEmployeeList(this)">
                                                     <input type="hidden" name="employeeId" class="employee-id-hidden">
@@ -382,7 +385,7 @@
                                     <div class="employee-select-wrapper">
                                         <input type="text" name="employeeName"
                                                class="form-control employee-input"
-                                               placeholder="Select or type name"
+                                               placeholder="Select an employee"
                                                onfocus="showEmployeeList(this)"
                                                oninput="filterEmployeeList(this)">
                                         <input type="hidden" name="employeeId" class="employee-id-hidden">
@@ -576,6 +579,15 @@
                         const tabId = btn.id.replace("-btn", "");
                         showTab(tabId);
                     });
+                });
+            });
+        </script>
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+
+                document.querySelectorAll(".date-input").forEach(input => {
+                    input.setAttribute("max", today); // chỉ chọn ngày hiện tại trở về
                 });
             });
         </script>
