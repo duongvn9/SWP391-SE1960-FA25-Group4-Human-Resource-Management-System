@@ -486,6 +486,15 @@
                                     </select>
                                 </div>
                                 <div class="filter-group">
+                                    <label for="gender">Gender</label>
+                                    <select id="gender" name="gender" class="form-select">
+                                        <option value="">All</option>
+                                        <option value="Male" ${param.gender=='Male' ? 'selected' : '' }>Male</option>
+                                        <option value="Female" ${param.gender=='Female' ? 'selected' : '' }>Female
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="filter-group">
                                     <label for="status">Status</label>
                                     <select id="status" name="status" class="form-select">
                                         <option value="">All Status</option>
@@ -556,6 +565,7 @@
                                                 <th>Employee Code</th>
                                                 <th>Full Name</th>
                                                 <th>Email</th>
+                                                <th>Gender</th>
                                                 <th>Department</th>
                                                 <th>Position</th>
                                                 <th>Status</th>
@@ -569,6 +579,9 @@
                                                     <td>${user.employeeCode}</td>
                                                     <td>${user.fullName}</td>
                                                     <td>${user.emailCompany}</td>
+                                                    <td>${user.gender != null ?
+                                                        user.gender.substring(0,1).toUpperCase().concat(user.gender.substring(1).toLowerCase())
+                                                        : '-'}</td>
                                                     <td>${user.departmentName != null ? user.departmentName : '-'}</td>
                                                     <td>${user.positionName != null ? user.positionName : '-'}</td>
                                                     <td>
@@ -793,6 +806,18 @@
                                     </label>
                                     <input type="email" class="form-control" id="edit-emailCompany" name="emailCompany"
                                         required>
+                                </div>
+
+                                <!-- Gender -->
+                                <div class="mb-3">
+                                    <label for="edit-gender" class="form-label">
+                                        Gender<span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-select" id="edit-gender" name="gender" required>
+                                        <option value="">Select Gender</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                    </select>
                                 </div>
 
                                 <div class="row">
@@ -1155,6 +1180,7 @@
                                 document.getElementById('edit-fullName').value = user.fullName || '';
                                 document.getElementById('edit-phone').value = user.phone || '';
                                 document.getElementById('edit-emailCompany').value = user.emailCompany || '';
+                                document.getElementById('edit-gender').value = user.gender || '';
                                 document.getElementById('edit-departmentId').value = user.departmentId || '';
                                 document.getElementById('edit-positionId').value = user.positionId || '';
 

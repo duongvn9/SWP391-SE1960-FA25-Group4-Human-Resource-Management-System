@@ -99,17 +99,20 @@
                                                 </div>
                                                 <div class="balance-stats">
                                                     <div class="stat-main">
-                                                        <span
-                                                            class="stat-value">${otBalance.currentWeekHours}h</span>
-                                                        <span class="stat-separator">/</span>
-                                                        <span
-                                                            class="stat-limit">${otBalance.weeklyLimit}h</span>
-                                                    </div>
+                                                            <div>
+                                                                <span class="stat-value"><fmt:formatNumber value="${otBalance.currentWeekHours}" minFractionDigits="1" maxFractionDigits="1"/>h</span>
+                                                            </div>
+                                                        </div>
+                                                    <!-- Expose regular scheduled hours this week for client-side preview -->
+                                                    <span id="regularHoursThisWeek" style="display:none">${otBalance.regularHoursThisWeek}</span>
                                                     <div class="stat-remaining">
                                                         <span class="stat-label">Remaining:</span>
                                                         <span
-                                                            class="stat-value-sm">${otBalance.weeklyRemaining}h</span>
+                                                            class="stat-value-sm"><fmt:formatNumber value="${otBalance.weeklyRemaining}" minFractionDigits="1" maxFractionDigits="1"/>h</span>
                                                     </div>
+                                                        <div class="stat-extra text-muted mt-1">
+                                                            <small>Approved requests: <c:out value="${otBalance.weeklyApprovedCount}"/></small>
+                                                        </div>
                                                     <small class="text-muted d-block mt-1">
                                                         <i class="fas fa-info-circle"></i>
                                                         Total work hours (regular + OT) cannot exceed
@@ -156,21 +159,20 @@
                                                 </div>
                                                 <div class="balance-stats">
                                                     <div class="stat-main">
-                                                        <span
-                                                            class="stat-value">${otBalance.monthlyHours}h</span>
-                                                        <span class="stat-separator">/</span>
-                                                        <span
-                                                            class="stat-limit">${otBalance.monthlyLimit}h</span>
+                                                                    <span class="stat-value"><fmt:formatNumber value="${otBalance.monthlyHours}" minFractionDigits="1" maxFractionDigits="1"/>h</span>
                                                     </div>
                                                     <div class="stat-remaining">
                                                         <span class="stat-label">Remaining:</span>
                                                         <span
-                                                            class="stat-value-sm">${otBalance.monthlyRemaining}h</span>
+                                                            class="stat-value-sm"><fmt:formatNumber value="${otBalance.monthlyRemaining}" minFractionDigits="1" maxFractionDigits="1"/>h</span>
                                                     </div>
-                                                    <small class="text-muted d-block mt-1">
-                                                        <i class="fas fa-info-circle"></i>
-                                                        Monthly OT limit (includes weekends & holidays)
-                                                    </small>
+                                                                <div class="stat-extra text-muted mt-1">
+                                                                    <small>Approved requests: <c:out value="${otBalance.monthlyApprovedCount}"/></small>
+                                                                </div>
+                                                                <small class="text-muted d-block mt-1">
+                                                                    <i class="fas fa-info-circle"></i>
+                                                                    Monthly OT limit
+                                                                </small>
                                                 </div>
                                                 <div class="balance-progress">
                                                     <div class="progress" style="height: 10px;">
@@ -212,21 +214,19 @@
                                                 </div>
                                                 <div class="balance-stats">
                                                     <div class="stat-main">
-                                                        <span
-                                                            class="stat-value">${otBalance.annualHours}h</span>
-                                                        <span class="stat-separator">/</span>
-                                                        <span
-                                                            class="stat-limit">${otBalance.annualLimit}h</span>
+                                                        <span class="stat-value"><fmt:formatNumber value="${otBalance.annualHours}" minFractionDigits="1" maxFractionDigits="1"/>h</span>
                                                     </div>
                                                     <div class="stat-remaining">
                                                         <span class="stat-label">Remaining:</span>
                                                         <span
-                                                            class="stat-value-sm">${otBalance.annualRemaining}h</span>
+                                                            class="stat-value-sm"><fmt:formatNumber value="${otBalance.annualRemaining}" minFractionDigits="1" maxFractionDigits="1"/>h</span>
+                                                    </div>
+                                                    <div class="stat-extra text-muted mt-1">
+                                                        <small>Approved requests: <c:out value="${otBalance.annualApprovedCount}"/></small>
                                                     </div>
                                                     <small class="text-muted d-block mt-1">
                                                         <i class="fas fa-info-circle"></i>
-                                                        Annual OT limit (300h standard, 200h if not
-                                                        eligible)
+                                                        Annual OT limit
                                                     </small>
                                                 </div>
                                                 <div class="balance-progress">
@@ -272,19 +272,13 @@
                     </div>
 
                     <div class="card-body">
-                        <!-- Alerts -->
+                        <!-- Server messages will be shown as Toast notifications -->
                         <c:if test="${not empty error}">
-                            <div class="alert alert-danger" role="alert">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                <c:out value="${error}" />
-                            </div>
+                            <input type="hidden" id="serverError" value="<c:out value='${error}'/>" />
                         </c:if>
 
                         <c:if test="${not empty success}">
-                            <div class="alert alert-success" role="alert">
-                                <i class="fas fa-check-circle me-2"></i>
-                                <c:out value="${success}" />
-                            </div>
+                            <input type="hidden" id="serverSuccess" value="<c:out value='${success}'/>" />
                         </c:if>
 
                         <!-- Form -->
@@ -706,6 +700,71 @@
                 }
             });
         </script>
+
+        <!-- Toast Notification Container -->
+        <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 11000;">
+            <div id="validationToast" class="toast border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                    <i class="fas fa-exclamation-circle text-danger me-2" id="toastIcon"></i>
+                    <strong class="me-auto" id="toastTitle">Validation Error</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body" id="toastMessage">
+                    Please check your input.
+                </div>
+            </div>
+        </div>
+
+        <style>
+            /* Toast notification styling */
+            #validationToast {
+                min-width: 350px;
+                max-width: 550px;
+            }
+
+            #validationToast .toast-header {
+                border-radius: 0.375rem 0.375rem 0 0;
+            }
+
+            #validationToast .toast-header.bg-danger {
+                background-color: #dc3545 !important;
+            }
+
+            #validationToast .toast-header.bg-warning {
+                background-color: #ffc107 !important;
+                color: #000 !important;
+            }
+
+            #validationToast .toast-header.bg-success {
+                background-color: #198754 !important;
+            }
+
+            #validationToast .toast-header.bg-info {
+                background-color: #0dcaf0 !important;
+            }
+
+            #validationToast .toast-body {
+                font-size: 0.95rem;
+                padding: 1rem;
+                line-height: 1.5;
+            }
+
+            /* Animation */
+            #validationToast.show {
+                animation: slideInRight 0.3s ease-out;
+            }
+
+            @keyframes slideInRight {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+        </style>
 
         <!-- Form JavaScript -->
         <script src="${pageContext.request.contextPath}/assets/js/ot-form.js"></script>

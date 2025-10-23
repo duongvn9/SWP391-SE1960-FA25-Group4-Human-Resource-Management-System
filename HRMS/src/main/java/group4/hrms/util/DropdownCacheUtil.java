@@ -13,9 +13,9 @@ import java.util.List;
 
 /**
  * Utility class for caching dropdown data (departments and positions) in
- * application scope
- * Requirements: 9.5 - Cache Department and Position data to avoid repeated
- * queries
+ * application scope with 5-minute expiration and cache statistics tracking
+ * Requirements: 8.5 - Cache Department and Position data with 5-minute
+ * expiration
  */
 public class DropdownCacheUtil {
 
@@ -27,8 +27,36 @@ public class DropdownCacheUtil {
     private static final String DEPARTMENTS_CACHE_TIME_KEY = "cached_departments_time";
     private static final String POSITIONS_CACHE_TIME_KEY = "cached_positions_time";
 
-    // Cache expiration time in minutes (default: 60 minutes)
-    private static final long CACHE_EXPIRATION_MINUTES = 60;
+    // Cache statistics keys
+    private static final String DEPARTMENTS_HIT_COUNT_KEY = "departments_cache_hits";
+    private static final String POSITIONS_HIT_COUNT_KEY = "positions_cache_hits";
+    private static final String DEPARTMENTS_MISS_COUNT_KEY = "departments_cache_misses";
+    private static final String POSITIONS_MISS_COUNT_KEY = "positions_cache_misses";
+
+    // Cache expiration time in minutes (5 minutes as per requirements 8.5)
+    private static final long CACHE_EXPIRATION_MINUTES = 5;
+
+    /**
+     * Get cached departments list (convenience method)
+     * Alias for getCachedDepartments() for backward compatibility
+     *
+     * @param context ServletContext for application scope
+     * @return List of departments
+     */
+    public static List<Department> getDepartments(ServletContext context) {
+        return getCachedDepartments(context);
+    }
+
+    /**
+     * Get cached positions list (convenience method)
+     * Alias for getCachedPositions() for backward compatibility
+     *
+     * @param context ServletContext for application scope
+     * @return List of positions
+     */
+    public static List<Position> getPositions(ServletContext context) {
+        return getCachedPositions(context);
+    }
 
     /**
      * Get cached departments list from application scope
@@ -46,12 +74,15 @@ public class DropdownCacheUtil {
         LocalDateTime cacheTime = (LocalDateTime) context.getAttribute(DEPARTMENTS_CACHE_TIME_KEY);
 
         if (cachedDepartments != null && cacheTime != null && !isCacheExpired(cacheTime)) {
-            logger.debug("Returning cached departments (size: {})", cachedDepartments.size());
+            // Cache hit - increment counter
+            incrementCacheHits(context, DEPARTMENTS_HIT_COUNT_KEY);
+            logger.debug("Cache HIT: Returning cached departments (size: {})", cachedDepartments.size());
             return cachedDepartments;
         }
 
-        // Cache is expired or doesn't exist, refresh from database
-        logger.info("Departments cache expired or not found, refreshing from database");
+        // Cache miss - increment counter and refresh from database
+        incrementCacheMisses(context, DEPARTMENTS_MISS_COUNT_KEY);
+        logger.info("Cache MISS: Departments cache expired or not found, refreshing from database");
         return refreshDepartmentsCache(context);
     }
 
@@ -71,12 +102,15 @@ public class DropdownCacheUtil {
         LocalDateTime cacheTime = (LocalDateTime) context.getAttribute(POSITIONS_CACHE_TIME_KEY);
 
         if (cachedPositions != null && cacheTime != null && !isCacheExpired(cacheTime)) {
-            logger.debug("Returning cached positions (size: {})", cachedPositions.size());
+            // Cache hit - increment counter
+            incrementCacheHits(context, POSITIONS_HIT_COUNT_KEY);
+            logger.debug("Cache HIT: Returning cached positions (size: {})", cachedPositions.size());
             return cachedPositions;
         }
 
-        // Cache is expired or doesn't exist, refresh from database
-        logger.info("Positions cache expired or not found, refreshing from database");
+        // Cache miss - increment counter and refresh from database
+        incrementCacheMisses(context, POSITIONS_MISS_COUNT_KEY);
+        logger.info("Cache MISS: Positions cache expired or not found, refreshing from database");
         return refreshPositionsCache(context);
     }
 
@@ -200,5 +234,114 @@ public class DropdownCacheUtil {
      */
     public static long getCacheExpirationMinutes() {
         return CACHE_EXPIRATION_MINUTES;
+    }
+
+    /**
+     * Force invalidate all caches regardless of expiration time
+     * This method clears all cached data and forces fresh database queries
+     *
+     * @param context ServletContext for application scope
+     */
+    public static void invalidateAllCaches(ServletContext context) {
+        logger.info("Force invalidating all dropdown caches");
+        clearAllCaches(context);
+
+        // Also clear statistics
+        context.removeAttribute(DEPARTMENTS_HIT_COUNT_KEY);
+        context.removeAttribute(POSITIONS_HIT_COUNT_KEY);
+        context.removeAttribute(DEPARTMENTS_MISS_COUNT_KEY);
+        context.removeAttribute(POSITIONS_MISS_COUNT_KEY);
+
+        logger.info("All dropdown caches and statistics invalidated");
+    }
+
+    /**
+     * Get cache statistics for departments
+     *
+     * @param context ServletContext for application scope
+     * @return String with cache hit/miss statistics
+     */
+    public static String getDepartmentsCacheStats(ServletContext context) {
+        Integer hits = (Integer) context.getAttribute(DEPARTMENTS_HIT_COUNT_KEY);
+        Integer misses = (Integer) context.getAttribute(DEPARTMENTS_MISS_COUNT_KEY);
+
+        hits = (hits != null) ? hits : 0;
+        misses = (misses != null) ? misses : 0;
+
+        int total = hits + misses;
+        double hitRate = total > 0 ? (double) hits / total * 100 : 0;
+
+        return String.format("Departments Cache - Hits: %d, Misses: %d, Hit Rate: %.1f%%",
+                hits, misses, hitRate);
+    }
+
+    /**
+     * Get cache statistics for positions
+     *
+     * @param context ServletContext for application scope
+     * @return String with cache hit/miss statistics
+     */
+    public static String getPositionsCacheStats(ServletContext context) {
+        Integer hits = (Integer) context.getAttribute(POSITIONS_HIT_COUNT_KEY);
+        Integer misses = (Integer) context.getAttribute(POSITIONS_MISS_COUNT_KEY);
+
+        hits = (hits != null) ? hits : 0;
+        misses = (misses != null) ? misses : 0;
+
+        int total = hits + misses;
+        double hitRate = total > 0 ? (double) hits / total * 100 : 0;
+
+        return String.format("Positions Cache - Hits: %d, Misses: %d, Hit Rate: %.1f%%",
+                hits, misses, hitRate);
+    }
+
+    /**
+     * Check if departments cache is currently valid (not expired)
+     *
+     * @param context ServletContext for application scope
+     * @return true if cache exists and is not expired, false otherwise
+     */
+    public static boolean isDepartmentsCacheValid(ServletContext context) {
+        List<Department> cachedDepartments = (List<Department>) context.getAttribute(DEPARTMENTS_CACHE_KEY);
+        LocalDateTime cacheTime = (LocalDateTime) context.getAttribute(DEPARTMENTS_CACHE_TIME_KEY);
+
+        return cachedDepartments != null && cacheTime != null && !isCacheExpired(cacheTime);
+    }
+
+    /**
+     * Check if positions cache is currently valid (not expired)
+     *
+     * @param context ServletContext for application scope
+     * @return true if cache exists and is not expired, false otherwise
+     */
+    public static boolean isPositionsCacheValid(ServletContext context) {
+        List<Position> cachedPositions = (List<Position>) context.getAttribute(POSITIONS_CACHE_KEY);
+        LocalDateTime cacheTime = (LocalDateTime) context.getAttribute(POSITIONS_CACHE_TIME_KEY);
+
+        return cachedPositions != null && cacheTime != null && !isCacheExpired(cacheTime);
+    }
+
+    /**
+     * Increment cache hit counter
+     *
+     * @param context ServletContext for application scope
+     * @param key     Cache hit counter key
+     */
+    private static void incrementCacheHits(ServletContext context, String key) {
+        Integer currentCount = (Integer) context.getAttribute(key);
+        currentCount = (currentCount != null) ? currentCount + 1 : 1;
+        context.setAttribute(key, currentCount);
+    }
+
+    /**
+     * Increment cache miss counter
+     *
+     * @param context ServletContext for application scope
+     * @param key     Cache miss counter key
+     */
+    private static void incrementCacheMisses(ServletContext context, String key) {
+        Integer currentCount = (Integer) context.getAttribute(key);
+        currentCount = (currentCount != null) ? currentCount + 1 : 1;
+        context.setAttribute(key, currentCount);
     }
 }

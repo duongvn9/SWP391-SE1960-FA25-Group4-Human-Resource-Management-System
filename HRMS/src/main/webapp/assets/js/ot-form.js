@@ -5,8 +5,74 @@
 
 console.log('OT Form script loaded');
 
+/**
+ * Show validation toast notification instead of alert
+ * @param {string} message - The message to display
+ * @param {string} type - The type of notification ('error', 'warning', 'info', 'success')
+ */
+function showValidationToast(message, type = 'error') {
+    const toast = document.getElementById('validationToast');
+    const toastTitle = document.getElementById('toastTitle');
+    const toastMessage = document.getElementById('toastMessage');
+    const toastIcon = document.getElementById('toastIcon');
+    const toastHeader = toast.querySelector('.toast-header');
+    const btnClose = toast.querySelector('.btn-close');
+
+    // Reset all background classes
+    toastHeader.classList.remove('bg-danger', 'bg-warning', 'bg-success', 'bg-info', 'text-white');
+    btnClose.classList.remove('btn-close-white');
+
+    // Set icon and colors based on type
+    if (type === 'success') {
+        toastIcon.className = 'fas fa-check-circle text-success me-2';
+        toastTitle.textContent = 'Success';
+        toastHeader.classList.add('bg-success', 'text-white');
+        btnClose.classList.add('btn-close-white');
+    } else if (type === 'error') {
+        toastIcon.className = 'fas fa-exclamation-circle text-danger me-2';
+        toastTitle.textContent = 'Error';
+        toastHeader.classList.add('bg-danger', 'text-white');
+        btnClose.classList.add('btn-close-white');
+    } else if (type === 'warning') {
+        toastIcon.className = 'fas fa-exclamation-triangle text-warning me-2';
+        toastTitle.textContent = 'Warning';
+        toastHeader.classList.add('bg-warning');
+    } else {
+        toastIcon.className = 'fas fa-info-circle text-info me-2';
+        toastTitle.textContent = 'Information';
+        toastHeader.classList.add('bg-info', 'text-white');
+        btnClose.classList.add('btn-close-white');
+    }
+
+    toastMessage.textContent = message;
+
+    const bsToast = new bootstrap.Toast(toast, {
+        autohide: true,
+        delay: type === 'success' ? 6000 : 5000  // Success messages stay a bit longer
+    });
+    bsToast.show();
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, initializing OT form...');
+
+    // Check for server messages and display as toast
+    const serverError = document.getElementById('serverError');
+    const serverSuccess = document.getElementById('serverSuccess');
+
+    if (serverSuccess) {
+        const successMessage = serverSuccess.value;
+        if (successMessage) {
+            showValidationToast(successMessage, 'success');
+        }
+    }
+
+    if (serverError) {
+        const errorMessage = serverError.value;
+        if (errorMessage) {
+            showValidationToast(errorMessage, 'error');
+        }
+    }
 
     // Get form elements
     const otDateInput = document.getElementById('otDate');
@@ -264,6 +330,101 @@ document.addEventListener('DOMContentLoaded', function() {
 
         otHoursDisplay.classList.remove('error');
         otHoursText.textContent = hours + ' hours';
+
+        // Update live OT balance preview (if OT balance card exists)
+        try {
+            updateLiveOTBalancePreview(hours, otDateInput.value);
+        } catch (e) {
+            console.debug('Live OT balance preview not available or failed:', e);
+        }
+    }
+    /**
+     * Live update the OT Balance card displayed on the page
+     * This updates weekly/monthly/annual displays to include the currently-entered OT hours
+     */
+    function updateLiveOTBalancePreview(requestedHours, selectedDateStr) {
+        // Elements used in the OT balance card
+        const weekValueEl = document.querySelector('.ot-balance-card .col-md-4 .stat-main .stat-value');
+        const weekLimitEl = document.querySelector('.ot-balance-card .col-md-4 .stat-limit');
+        const weekRemainingEl = document.querySelector('.ot-balance-card .col-md-4 .stat-value-sm');
+        const weekProgressBar = document.querySelector('.ot-balance-card .col-md-4 .progress-bar');
+        const weekPctText = document.querySelector('.ot-balance-card .col-md-4 .balance-progress small.text-muted');
+
+        // If elements not found, try to find by structure using IDs in JSP
+        const weekCard = document.querySelector('.ot-balance-card');
+
+        if (!weekCard) return; // nothing to update
+
+        // Read current values from DOM (they are rendered server-side)
+        // Find the correct column: first .col-md-4 inside ot-balance-card row
+        const columns = document.querySelectorAll('#otBalanceContent .col-md-4');
+        if (!columns || columns.length < 1) return;
+
+        const weekCol = columns[0];
+
+        const currentWeekValueEl = weekCol.querySelector('.stat-main .stat-value');
+        const currentWeekLimitEl = weekCol.querySelector('.stat-main .stat-limit');
+        const currentWeekRemainingEl = weekCol.querySelector('.stat-remaining .stat-value-sm');
+        const currentWeekProgressBar = weekCol.querySelector('.progress .progress-bar');
+        const currentWeekPctText = weekCol.querySelector('.balance-progress small.text-muted');
+
+        if (!currentWeekValueEl || !currentWeekLimitEl || !currentWeekRemainingEl || !currentWeekProgressBar || !currentWeekPctText) return;
+
+        // Parse numbers (strip non-digit characters)
+        // Parse floats (allow decimals)
+        const parseHours = (text) => {
+            if (!text) return 0.0;
+            const m = text.match(/([0-9]+(?:\.[0-9]+)?)/);
+            return m ? parseFloat(m[1]) : 0.0;
+        };
+
+        const currentUsed = parseHours(currentWeekValueEl.textContent || '0') || 0.0;
+        const weeklyLimit = parseHours(currentWeekLimitEl.textContent || '0') || 48.0;
+        // read regular scheduled hours this week from hidden element (if available)
+        const regularEl = document.getElementById('regularHoursThisWeek');
+        const regularHoursThisWeek = regularEl ? parseHours(regularEl.textContent) : 0.0;
+
+        // We'll compute a preview: add requestedHours if selected date falls in same week
+        let previewUsed = currentUsed;
+        if (selectedDateStr) {
+            try {
+                const selDate = new Date(selectedDateStr);
+                const today = new Date();
+                // compute start of week (Monday)
+                const day = selDate.getDay();
+                const diffToMonday = (day + 6) % 7; // 0=>Monday
+                const monday = new Date(selDate);
+                monday.setDate(selDate.getDate() - diffToMonday);
+
+                const selWeekStart = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate());
+                const now = new Date();
+                const nowDay = now.getDay();
+                const diffNow = (nowDay + 6) % 7;
+                const thisMonday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                thisMonday.setDate(now.getDate() - diffNow);
+
+                // If selected date is in the same Monday-start week as today, include requestedHours
+                if (selWeekStart.getTime() === thisMonday.getTime()) {
+                    // Client preview should match server precision (use decimals)
+                    previewUsed = currentUsed + (requestedHours || 0.0);
+                }
+            } catch (e) {
+                // ignore parsing errors
+            }
+        }
+
+        // Compute allowed OT based on weeklyLimit minus regular scheduled hours
+        const allowedOT = Math.max(0, (weeklyLimit || 48.0) - (regularHoursThisWeek || 0.0));
+        const previewRemaining = Math.max(0, allowedOT - previewUsed);
+        const previewPct = Math.min(100, Math.round((previewUsed * 100) / (weeklyLimit || 48.0)));
+
+        // Update DOM
+        // Display one decimal place for hours
+        const fmt = (v) => Math.round(v * 10) / 10;
+        currentWeekValueEl.textContent = fmt(previewUsed) + 'h';
+        currentWeekRemainingEl.textContent = fmt(previewRemaining) + 'h';
+        currentWeekProgressBar.style.width = previewPct + '%';
+        currentWeekPctText.textContent = previewPct + '% used';
     }
 
     startTimeInput.addEventListener('change', updateOTHours);
@@ -299,7 +460,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Check consent checkbox
         if (!employeeConsentCheckbox.checked) {
             e.preventDefault();
-            alert('Please confirm your consent to work overtime');
+            showValidationToast('Please confirm your consent to work overtime', 'error');
             employeeConsentCheckbox.focus();
             isValid = false;
             return;
@@ -311,7 +472,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (startTime && !validateTimeRange(startTime)) {
             e.preventDefault();
-            alert('Start time must be between 06:00 - 22:00');
+            showValidationToast('Start time must be between 06:00 - 22:00', 'error');
             startTimeInput.focus();
             isValid = false;
             return;
@@ -319,7 +480,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (endTime && !validateTimeRange(endTime)) {
             e.preventDefault();
-            alert('End time must be between 06:00 - 22:00');
+            showValidationToast('End time must be between 06:00 - 22:00', 'error');
             endTimeInput.focus();
             isValid = false;
             return;
@@ -329,7 +490,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const hours = calculateOTHours(startTime, endTime);
         if (hours === null || hours <= 0) {
             e.preventDefault();
-            alert('End time must be after start time');
+            showValidationToast('End time must be after start time', 'error');
             endTimeInput.focus();
             isValid = false;
             return;
@@ -355,7 +516,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (hours > maxHours) {
                 e.preventDefault();
-                alert(limitMessage + '\nYou entered: ' + hours + ' hours');
+                showValidationToast(limitMessage + '. You entered: ' + hours + ' hours', 'error');
                 endTimeInput.focus();
                 isValid = false;
                 return;
@@ -370,7 +531,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (selectedDate < today) {
                 e.preventDefault();
-                alert('Cannot select past date');
+                showValidationToast('Cannot select past date. Please choose a future date.', 'error');
                 otDateInput.focus();
                 isValid = false;
                 return;

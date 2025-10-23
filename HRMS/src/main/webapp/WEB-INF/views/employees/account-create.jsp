@@ -286,14 +286,7 @@
                                     </div>
                                 </div>
 
-                                <!-- Note about permissions -->
-                                <div class="mb-3">
-                                    <div class="alert alert-info">
-                                        <i class="fas fa-info-circle me-2"></i>
-                                        <strong>Note:</strong> Account permissions will be automatically determined
-                                        based on the user's position.
-                                    </div>
-                                </div>
+
 
                                 <div class="row">
                                     <!-- Password -->
@@ -303,6 +296,25 @@
                                         </label>
                                         <input type="password" class="form-control" id="password" name="password"
                                             required maxlength="100" placeholder="Enter password">
+
+                                        <!-- Password Strength Indicator -->
+                                        <div id="passwordStrengthIndicator" class="mt-2" style="display: none;">
+                                            <div class="small mb-1">Password Requirements:</div>
+                                            <div class="password-requirements">
+                                                <div id="lengthReq" class="requirement-item">
+                                                    <i class="fas fa-times text-danger me-1"></i>
+                                                    <span>At least 6 characters</span>
+                                                </div>
+                                                <div id="uppercaseReq" class="requirement-item">
+                                                    <i class="fas fa-times text-danger me-1"></i>
+                                                    <span>At least one uppercase letter</span>
+                                                </div>
+                                                <div id="specialCharReq" class="requirement-item">
+                                                    <i class="fas fa-times text-danger me-1"></i>
+                                                    <span>At least one special character</span>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <!-- Confirm Password -->
@@ -449,9 +461,74 @@
                         }
                     });
 
+                    // Password strength validation function
+                    function validatePasswordStrength(password) {
+                        const requirements = {
+                            minLength: password.length >= 6,
+                            hasUpperCase: /[A-Z]/.test(password),
+                            hasSpecialChar: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+                        };
+
+                        return {
+                            isValid: requirements.minLength && requirements.hasUpperCase && requirements.hasSpecialChar,
+                            requirements: requirements
+                        };
+                    }
+
                     // Password validation
                     const passwordInput = document.getElementById('password');
                     const confirmPasswordInput = document.getElementById('confirmPassword');
+                    const strengthIndicator = document.getElementById('passwordStrengthIndicator');
+                    const lengthReq = document.getElementById('lengthReq');
+                    const uppercaseReq = document.getElementById('uppercaseReq');
+                    const specialCharReq = document.getElementById('specialCharReq');
+
+                    // Update password strength indicator
+                    function updatePasswordStrengthIndicator(password) {
+                        if (password.length === 0) {
+                            strengthIndicator.style.display = 'none';
+                            return;
+                        }
+
+                        strengthIndicator.style.display = 'block';
+                        const validation = validatePasswordStrength(password);
+
+                        // Update length requirement
+                        updateRequirementItem(lengthReq, validation.requirements.minLength);
+
+                        // Update uppercase requirement
+                        updateRequirementItem(uppercaseReq, validation.requirements.hasUpperCase);
+
+                        // Update special character requirement
+                        updateRequirementItem(specialCharReq, validation.requirements.hasSpecialChar);
+
+                        // Set custom validity for form validation
+                        if (!validation.isValid) {
+                            const unmetRequirements = [];
+                            if (!validation.requirements.minLength) unmetRequirements.push('at least 6 characters');
+                            if (!validation.requirements.hasUpperCase) unmetRequirements.push('at least one uppercase letter');
+                            if (!validation.requirements.hasSpecialChar) unmetRequirements.push('at least one special character');
+
+                            passwordInput.setCustomValidity('Password must contain: ' + unmetRequirements.join(', '));
+                        } else {
+                            passwordInput.setCustomValidity('');
+                        }
+                    }
+
+                    function updateRequirementItem(element, isMet) {
+                        const icon = element.querySelector('i');
+                        if (isMet) {
+                            element.classList.remove('unmet');
+                            element.classList.add('met');
+                            icon.classList.remove('fa-times', 'text-danger');
+                            icon.classList.add('fa-check', 'text-success');
+                        } else {
+                            element.classList.remove('met');
+                            element.classList.add('unmet');
+                            icon.classList.remove('fa-check', 'text-success');
+                            icon.classList.add('fa-times', 'text-danger');
+                        }
+                    }
 
                     function validatePassword() {
                         if (passwordInput.value !== confirmPasswordInput.value) {
@@ -461,8 +538,23 @@
                         }
                     }
 
+                    // Real-time password validation
+                    passwordInput.addEventListener('keyup', function () {
+                        updatePasswordStrengthIndicator(this.value);
+                    });
+
                     passwordInput.addEventListener('change', validatePassword);
                     confirmPasswordInput.addEventListener('keyup', validatePassword);
+
+                    // Prevent form submission if password is invalid
+                    form.addEventListener('submit', function (event) {
+                        const passwordValidation = validatePasswordStrength(passwordInput.value);
+                        if (!passwordValidation.isValid) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            passwordInput.focus();
+                        }
+                    });
                 });
             </script>
             <style>
@@ -476,6 +568,44 @@
 
                 .select2-container--bootstrap-5 .select2-dropdown {
                     border-color: #dee2e6;
+                }
+
+                /* Password Strength Indicator Styles */
+                .password-requirements {
+                    background-color: #f8f9fa;
+                    border: 1px solid #dee2e6;
+                    border-radius: 4px;
+                    padding: 0.75rem;
+                }
+
+                .requirement-item {
+                    font-size: 0.875rem;
+                    margin-bottom: 0.25rem;
+                    transition: color 0.2s ease;
+                }
+
+                .requirement-item:last-child {
+                    margin-bottom: 0;
+                }
+
+                .requirement-item.met {
+                    color: #28a745;
+                }
+
+                .requirement-item.met i {
+                    color: #28a745 !important;
+                }
+
+                .text-success {
+                    color: #28a745 !important;
+                }
+
+                .requirement-item.unmet {
+                    color: #dc3545;
+                }
+
+                .requirement-item.unmet i {
+                    color: #dc3545;
                 }
             </style>
         </body>
