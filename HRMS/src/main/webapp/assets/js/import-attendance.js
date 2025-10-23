@@ -1,43 +1,4 @@
 // ---------------------------
-// TAB FUNCTION
-// ---------------------------
-function showTab(tabId) {
-    // Ẩn tất cả tab
-    document.querySelectorAll(".tab-content").forEach(tab => {
-        tab.classList.remove("active");
-        tab.style.display = "none";
-    });
-
-    // Hiện tab được chọn
-    const selectedTab = document.getElementById(tabId);
-    if (selectedTab) {
-        selectedTab.classList.add("active");
-        selectedTab.style.display = "block";
-    }
-
-    // Cập nhật nút
-    document.querySelectorAll(".tab-btn").forEach(btn => {
-        btn.classList.remove("active");
-        btn.setAttribute("aria-selected", "false");
-    });
-
-    const activeBtn = document.getElementById(tabId + "-btn");
-    if (activeBtn) {
-        activeBtn.classList.add("active");
-        activeBtn.setAttribute("aria-selected", "true");
-    }
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-    document.querySelectorAll(".tab-btn").forEach(btn => {
-        const tabId = btn.id.replace("-btn", "");
-        btn.addEventListener("click", () => showTab(tabId));
-    });
-
-    showTab("upload");
-});
-
-// ---------------------------
 // MANUAL ROW DROPDOWN FUNCTIONS
 // ---------------------------
 function showEmployeeList(input) {
@@ -80,8 +41,8 @@ document.addEventListener("click", e => {
         const input = wrapper.querySelector(".employee-input");
         const hidden = wrapper.querySelector(".employee-id-hidden");
 
-        input.value = li.textContent.trim(); 
-        hidden.value = li.dataset.id;        
+        input.value = li.textContent.trim();
+        hidden.value = li.dataset.id;
         wrapper.querySelector(".custom-dropdown").style.display = "none";
     }
     // Click ra ngoài dropdown -> ẩn
