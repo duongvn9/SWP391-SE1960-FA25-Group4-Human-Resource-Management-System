@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
+<%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -177,10 +178,23 @@
                         <div class="info-value">
                             <c:choose>
                                 <c:when test="${not empty profile.lastLoginAt}">
-                                    ${profile.lastLoginAt}
+                                    ${fn:replace(profile.lastLoginAt, 'T', ' ')}
                                 </c:when>
                                 <c:otherwise>
                                     <span class="text-muted">Never</span>
+                                </c:otherwise>
+                            </c:choose>
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Last Password Change:</div>
+                        <div class="info-value">
+                            <c:choose>
+                                <c:when test="${not empty passwordUpdatedAt}">
+                                    ${fn:replace(passwordUpdatedAt, 'T', ' ')}
+                                </c:when>
+                                <c:otherwise>
+                                    <span class="text-muted">Not available</span>
                                 </c:otherwise>
                             </c:choose>
                         </div>
@@ -190,7 +204,7 @@
                         <div class="info-value">
                             <c:choose>
                                 <c:when test="${not empty profile.createdAt}">
-                                    ${profile.createdAt}
+                                    ${fn:replace(profile.createdAt, 'T', ' ')}
                                 </c:when>
                                 <c:otherwise>
                                     <span class="text-muted">Not available</span>
@@ -203,7 +217,7 @@
                         <div class="info-value">
                             <c:choose>
                                 <c:when test="${not empty profile.updatedAt}">
-                                    ${profile.updatedAt}
+                                    ${fn:replace(profile.updatedAt, 'T', ' ')}
                                 </c:when>
                                 <c:otherwise>
                                     <span class="text-muted">Not available</span>

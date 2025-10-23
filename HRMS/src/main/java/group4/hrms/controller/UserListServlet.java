@@ -25,6 +25,7 @@ import java.util.List;
 public class UserListServlet extends HttpServlet {
 
     private static final Logger logger = LoggerFactory.getLogger(UserListServlet.class);
+    private static final int DEFAULT_PAGE_SIZE = 10;
 
     private final UserDao userDao = new UserDao();
 
@@ -57,6 +58,7 @@ public class UserListServlet extends HttpServlet {
             String departmentIdStr = request.getParameter("department");
             String positionIdStr = request.getParameter("position");
             String status = request.getParameter("status");
+            String gender = request.getParameter("gender");
             String pageStr = request.getParameter("page");
             String pageSizeStr = request.getParameter("pageSize");
             String sortBy = request.getParameter("sortBy");
@@ -64,11 +66,11 @@ public class UserListServlet extends HttpServlet {
 
             // Parse pagination parameters
             int page = parseIntOrDefault(pageStr, 1);
-            int pageSize = parseIntOrDefault(pageSizeStr, 20);
+            int pageSize = parseIntOrDefault(pageSizeStr, DEFAULT_PAGE_SIZE);
 
             // Validate page size
             if (pageSize < 1 || pageSize > 100) {
-                pageSize = 20;
+                pageSize = DEFAULT_PAGE_SIZE;
             }
 
             // Parse filter parameters
@@ -97,24 +99,43 @@ public class UserListServlet extends HttpServlet {
             }
 
             logger.info(
-                    "Fetching users with filters - search: {}, dept: {}, pos: {}, status: {}, offset: {}, pageSize: {}",
-                    search, departmentId, positionId, status, offset, pageSize);
+                    "Fetching users with filters - search: {}, dept: {}, pos: {}, status: {}, gender: {}, offset: {}, pageSize: {}",
+                    search, departmentId, positionId, status, gender, offset, pageSize);
+
+            // Measure query execution time
+            long queryStartTime = System.currentTimeMillis();
 
             List<UserListDto> userDtos = userDao.findWithFiltersAsDto(
-                    search, departmentId, positionId, status,
+                    search, departmentId, positionId, status, gender,
                     offset, pageSize, sortBy, sortOrder);
 
-            logger.info("Found {} users", userDtos.size());
-
             // Get total count for pagination
-            int totalRecords = userDao.countWithFilters(search, departmentId, positionId, status);
+            int totalRecords = userDao.countWithFilters(search, departmentId, positionId, status, gender);
+
+            long queryEndTime = System.currentTimeMillis();
+            long queryExecutionTime = queryEndTime - queryStartTime;
+
             int totalPages = (int) Math.ceil((double) totalRecords / pageSize);
 
-            logger.info("Total records: {}, Total pages: {}", totalRecords, totalPages);
+            logger.info("Found {} users out of {} total records in {} ms",
+                    userDtos.size(), totalRecords, queryExecutionTime);
+            logger.info("Total pages: {}, Query execution time: {} ms", totalPages, queryExecutionTime);
 
-            // Fetch departments and positions for filter dropdowns (using cache)
-            List<Department> departments = DropdownCacheUtil.getCachedDepartments(getServletContext());
-            List<Position> positions = DropdownCacheUtil.getCachedPositions(getServletContext());
+            // Log performance warning if query is slow
+            if (queryExecutionTime > 1000) {
+                logger.warn("Slow query detected: {} ms for user list query with filters", queryExecutionTime);
+            }
+
+            // Fetch departments and positions for filter dropdowns (using optimized cache)
+            long cacheStartTime = System.currentTimeMillis();
+            List<Department> departments = DropdownCacheUtil.getDepartments(getServletContext());
+            List<Position> positions = DropdownCacheUtil.getPositions(getServletContext());
+            long cacheEndTime = System.currentTimeMillis();
+
+            // Log cache performance
+            logger.info("Cache lookup completed in {} ms", (cacheEndTime - cacheStartTime));
+            logger.debug("Cache statistics - {}", DropdownCacheUtil.getDepartmentsCacheStats(getServletContext()));
+            logger.debug("Cache statistics - {}", DropdownCacheUtil.getPositionsCacheStats(getServletContext()));
 
             // Set attributes for JSP
             request.setAttribute("users", userDtos);
@@ -128,6 +149,7 @@ public class UserListServlet extends HttpServlet {
             request.setAttribute("selectedDepartment", departmentId);
             request.setAttribute("selectedPosition", positionId);
             request.setAttribute("selectedStatus", status);
+            request.setAttribute("selectedGender", gender);
             request.setAttribute("sortBy", sortBy);
             request.setAttribute("sortOrder", sortOrder);
 

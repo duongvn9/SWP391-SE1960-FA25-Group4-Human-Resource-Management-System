@@ -33,7 +33,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
+import java.util.Map;
 import java.util.Optional;
 
 @WebServlet("/attendance/import")
@@ -48,7 +48,7 @@ public class ImportAttendanceServlet extends HttpServlet {
             resp.sendRedirect(req.getContextPath() + "/login");
             return;
         }
-        
+
         String action = req.getParameter("action");
         if ("Preview".equalsIgnoreCase(action)) {
             int page = 1;
@@ -77,6 +77,9 @@ public class ImportAttendanceServlet extends HttpServlet {
             }
         }
 
+        UserDao uDao = new UserDao();
+        List<User> uList = uDao.findAll();
+        req.setAttribute("uList", uList);
         req.getRequestDispatcher("/WEB-INF/views/attendance/import-attendance.jsp").forward(req, resp);
     }
 
@@ -84,6 +87,10 @@ public class ImportAttendanceServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String action = req.getParameter("action");
 
+        UserDao userDao = new UserDao();
+        DepartmentDao dDao = new DepartmentDao();
+        TimesheetPeriodDao tDao = new TimesheetPeriodDao();
+        AttendanceLogDao dao = new AttendanceLogDao();
         try {
             if ("ManualImport".equalsIgnoreCase(action)) {
                 String manualDataJson = req.getParameter("manualData");
@@ -91,58 +98,36 @@ public class ImportAttendanceServlet extends HttpServlet {
 
                 if (manualDataJson != null && !manualDataJson.trim().isEmpty()) {
                     manualDataJson = manualDataJson.trim();
-                    if (manualDataJson.startsWith("[") && manualDataJson.endsWith("]")) {
-                        manualDataJson = manualDataJson.substring(1, manualDataJson.length() - 1); 
-                        String[] records = manualDataJson.split("\\},\\{");
-                        for (String r : records) {
-                            r = r.replace("{", "").replace("}", "");
-                            String[] fields = r.split(",");
-                            AttendanceLogDto dto = new AttendanceLogDto();
+                    if (manualDataJson.startsWith("[")) {
+                        manualDataJson = manualDataJson.substring(1);
+                    }
+                    if (manualDataJson.endsWith("]")) {
+                        manualDataJson = manualDataJson.substring(0, manualDataJson.length() - 1);
+                    }
 
-                            for (String f : fields) {
-                                String[] kv = f.split(":", 2);
-                                if (kv.length == 2) {
-                                    String key = kv[0].trim().replaceAll("\"", "");
-                                    String value = kv[1].trim().replaceAll("\"", "");
+                    // Tách các object bằng "},{"
+                    String[] objects = manualDataJson.split("\\},\\{");
 
-                                    switch (key) {
-                                        case "employeeId" -> {
-                                            dto.setUserId(value.isEmpty() ? null : Long.valueOf(value));
-                                        }
-                                        case "date" -> {
-                                            if (!value.isEmpty()) {
-                                                DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-                                                dto.setDate(LocalDate.parse(value, dateFormatter));
-                                            }
-                                        }
-                                        case "checkIn" -> {
-                                            if (!value.isEmpty()) {
-                                                DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("H:mm");
-                                                dto.setCheckIn(LocalTime.parse(value, timeFormatter));
-                                            }
-                                        }
-                                        case "checkOut" -> {
-                                            if (!value.isEmpty()) {
-                                                DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("H:mm");
-                                                dto.setCheckOut(LocalTime.parse(value, timeFormatter));
-                                            }
-                                        }
-                                        case "status" -> {
-                                            dto.setStatus(value);
-                                        }
-                                    }
-                                }
-                            }
-
-                            manualLogs.add(dto);
+                    for (String obj : objects) {
+                        if (!obj.startsWith("{")) {
+                            obj = "{" + obj;
                         }
+                        if (!obj.endsWith("}")) {
+                            obj = obj + "}";
+                        }
+
+                        AttendanceLogDto dto = new AttendanceLogDto();
+                        dto.setUserId(extractLong(obj, "userId"));
+                        dto.setDate(extractDate(obj, "date"));
+                        dto.setCheckIn(extractTime(obj, "checkIn"));
+                        dto.setCheckOut(extractTime(obj, "checkOut"));
+                        dto.setStatus(extractString(obj, "status"));
+
+                        manualLogs.add(dto);
                     }
                 }
 
-                UserDao userDao = new UserDao();
-                DepartmentDao dDao = new DepartmentDao();
-                TimesheetPeriodDao tDao = new TimesheetPeriodDao();
-                AttendanceLogDao dao = new AttendanceLogDao();
+                // --- Bổ sung thông tin user, phòng ban, kỳ công ---
                 for (AttendanceLogDto dto : manualLogs) {
                     try {
                         if (dto.getUserId() != null) {
@@ -162,19 +147,38 @@ public class ImportAttendanceServlet extends HttpServlet {
                         } else {
                             dto.setPeriod("N/A");
                         }
+
                     } catch (SQLException e) {
                     }
                 }
 
-                List<AttendanceLog> record = AttendanceMapper.convertDtoToEntity(manualLogs);
-                dao.saveAttendanceLogs(record);
-                req.setAttribute("manualSuccess", "Import successfully");
+                // --- ✅ Validate dữ liệu ---
+                Map<String, List<AttendanceLogDto>> validatedMap = dao.validateManualLogs(manualLogs);
+                System.out.println(validatedMap);
+                List<AttendanceLogDto> validLogs = validatedMap.get("valid");
+                List<AttendanceLogDto> invalidLogs = validatedMap.get("invalid");
 
+                // --- ✅ Lưu các bản ghi hợp lệ ---
+                if (!validLogs.isEmpty()) {
+                    List<AttendanceLog> record = AttendanceMapper.convertDtoToEntity(validLogs);
+                    dao.saveAttendanceLogs(record);
+                }
+
+                // --- ✅ Đưa thông tin ra FE ---
+                if (!invalidLogs.isEmpty()) {
+                    req.setAttribute("invalidLogs", invalidLogs);
+                    req.setAttribute("manualError", "Some records are duplicate or invalid.");
+                } else {
+                    req.setAttribute("manualSuccess", "Import successfully");
+                }
+
+                List<User> uList = userDao.findAll();
+                req.setAttribute("uList", uList);
                 req.getRequestDispatcher("/WEB-INF/views/attendance/import-attendance.jsp").forward(req, resp);
                 return;
             }
         } catch (ServletException | IOException | NumberFormatException ex) {
-            req.setAttribute("manualError", "Lỗi server: " + ex.getMessage());
+            req.setAttribute("manualError", "Server error: " + ex.getMessage());
             req.getRequestDispatcher("/WEB-INF/views/attendance/import-attendance.jsp").forward(req, resp);
             return;
         } catch (SQLException ex) {
@@ -222,6 +226,8 @@ public class ImportAttendanceServlet extends HttpServlet {
                 AttendanceService.processImport(logsDto, action, tempFilePath, req);
             }
 
+            List<User> uList = userDao.findAll();
+            req.setAttribute("uList", uList);
             req.getRequestDispatcher("/WEB-INF/views/attendance/import-attendance.jsp").forward(req, resp);
         } catch (ServletException | IOException e) {
             req.setAttribute("error", "Lỗi: " + e.getMessage());
@@ -229,6 +235,46 @@ public class ImportAttendanceServlet extends HttpServlet {
         } catch (SQLException ex) {
             Logger.getLogger(ImportAttendanceServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    private Long extractLong(String json, String key) {
+        try {
+            String pattern = "\"" + key + "\":(\\d+)";
+            java.util.regex.Matcher m = java.util.regex.Pattern.compile(pattern).matcher(json);
+            if (m.find()) {
+                return Long.valueOf(m.group(1));
+            }
+        } catch (NumberFormatException e) {
+        }
+        return null;
+    }
+
+    private String extractString(String json, String key) {
+        try {
+            String pattern = "\"" + key + "\":\"(.*?)\"";
+            java.util.regex.Matcher m = java.util.regex.Pattern.compile(pattern).matcher(json);
+            if (m.find()) {
+                return m.group(1);
+            }
+        } catch (Exception e) {
+        }
+        return null;
+    }
+
+    private LocalDate extractDate(String json, String key) {
+        String val = extractString(json, key);
+        if (val != null) {
+            return LocalDate.parse(val);
+        }
+        return null;
+    }
+
+    private LocalTime extractTime(String json, String key) {
+        String val = extractString(json, key);
+        if (val != null) {
+            return LocalTime.parse(val);
+        }
+        return null;
     }
 
     private Path handleFileUpload(HttpServletRequest req) throws IOException, ServletException {

@@ -8,7 +8,22 @@
         <jsp:param name="pageCss" value="dashboard.css" />
     </jsp:include>
     <style>
-        .main-content { margin-left: 260px; padding: 2rem; }
+        .main-content { 
+            margin-left: 260px; 
+            padding: 2rem 2rem 0 2rem;
+            min-height: calc(100vh - 64px);
+            display: flex;
+            flex-direction: column;
+        }
+        .content-area {
+            flex: 1;
+            margin-bottom: 2rem;
+        }
+        .dashboard-footer {
+            margin-left: -2rem;
+            margin-right: -2rem;
+            margin-bottom: 0;
+        }
         .card { border: none; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
         .table th { background-color: #f8f9fa; font-weight: 600; }
         .btn-action { padding: 0.25rem 0.5rem; font-size: 0.875rem; }

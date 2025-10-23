@@ -1,12 +1,15 @@
 package group4.hrms.controller;
 
 import group4.hrms.dao.UserProfileDao;
+import group4.hrms.dao.AuthLocalCredentialsDao;
 import group4.hrms.model.UserProfile;
+import group4.hrms.model.AuthLocalCredentials;
 import group4.hrms.util.SessionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import jakarta.servlet.ServletException;
@@ -20,9 +23,11 @@ public class AccountController extends HttpServlet {
     
     private static final Logger logger = LoggerFactory.getLogger(AccountController.class);
     private final UserProfileDao userProfileDao;
+    private final AuthLocalCredentialsDao authLocalCredentialsDao;
     
     public AccountController() {
         this.userProfileDao = new UserProfileDao();
+        this.authLocalCredentialsDao = new AuthLocalCredentialsDao();
     }
 
     @Override
@@ -63,8 +68,21 @@ public class AccountController extends HttpServlet {
             UserProfile profile = profileOpt.get();
             logger.debug("Account info loaded successfully: {}", profile);
             
+            // Get password updated at from auth_local_credentials
+            LocalDateTime passwordUpdatedAt = null;
+            try {
+                Optional<AuthLocalCredentials> credentialsOpt = authLocalCredentialsDao.findByAccountId(accountId);
+                if (credentialsOpt.isPresent()) {
+                    passwordUpdatedAt = credentialsOpt.get().getPasswordUpdatedAt();
+                    logger.debug("Password last updated at: {}", passwordUpdatedAt);
+                }
+            } catch (Exception e) {
+                logger.warn("Could not load password updated timestamp: {}", e.getMessage());
+            }
+            
             // Set attributes for JSP
             req.setAttribute("profile", profile);
+            req.setAttribute("passwordUpdatedAt", passwordUpdatedAt);
             
             // Forward to my-account page
             req.getRequestDispatcher("/WEB-INF/views/account/my-account.jsp").forward(req, resp);

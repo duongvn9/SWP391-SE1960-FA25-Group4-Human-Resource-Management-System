@@ -30,7 +30,7 @@ public class UserDao {
     // SQL queries
     private static final String SELECT_ALL = """
             SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
-                   u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                   u.gender, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
                    u.start_work_date, u.created_at, u.updated_at,
                    d.name as department_name, p.name as position_name
             FROM users u
@@ -41,7 +41,7 @@ public class UserDao {
 
     private static final String SELECT_BY_ID = """
             SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
-                   u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                   u.gender, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
                    u.start_work_date, u.created_at, u.updated_at,
                    d.name as department_name, p.name as position_name
             FROM users u
@@ -52,7 +52,7 @@ public class UserDao {
 
     private static final String SELECT_BY_EMPLOYEE_CODE = """
             SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
-                   u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                   u.gender, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
                    u.start_work_date, u.created_at, u.updated_at,
                    d.name as department_name, p.name as position_name
             FROM users u
@@ -63,7 +63,7 @@ public class UserDao {
 
     private static final String SELECT_BY_EMAIL = """
             SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
-                   u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                   u.gender, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
                    u.start_work_date, u.created_at, u.updated_at,
                    d.name as department_name, p.name as position_name
             FROM users u
@@ -74,7 +74,7 @@ public class UserDao {
 
     private static final String SELECT_BY_DEPARTMENT = """
             SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
-                   u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                   u.gender, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
                    u.start_work_date, u.created_at, u.updated_at,
                    d.name as department_name, p.name as position_name
             FROM users u
@@ -86,14 +86,14 @@ public class UserDao {
 
     private static final String INSERT_USER = """
             INSERT INTO users (employee_code, full_name, cccd, email_company, phone,
-                              department_id, position_id, status, date_joined, start_work_date)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                              gender, department_id, position_id, status, date_joined, start_work_date)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
 
     private static final String UPDATE_USER = """
             UPDATE users SET
                 employee_code = ?, full_name = ?, cccd = ?, email_company = ?, phone = ?,
-                department_id = ?, position_id = ?, status = ?, date_joined = ?, start_work_date = ?,
+                gender = ?, department_id = ?, position_id = ?, status = ?, date_joined = ?, start_work_date = ?,
                 updated_at = NOW()
             WHERE id = ?
             """;
@@ -263,11 +263,12 @@ public class UserDao {
             ps.setString(3, user.getCccd());
             ps.setString(4, user.getEmailCompany());
             ps.setString(5, user.getPhone());
-            setLongOrNull(ps, 6, user.getDepartmentId());
-            setLongOrNull(ps, 7, user.getPositionId());
-            ps.setString(8, user.getStatus() != null ? user.getStatus() : "active");
-            setDateOrNull(ps, 9, user.getDateJoined());
-            setDateOrNull(ps, 10, user.getStartWorkDate());
+            ps.setString(6, user.getGender());
+            setLongOrNull(ps, 7, user.getDepartmentId());
+            setLongOrNull(ps, 8, user.getPositionId());
+            ps.setString(9, user.getStatus() != null ? user.getStatus() : "active");
+            setDateOrNull(ps, 10, user.getDateJoined());
+            setDateOrNull(ps, 11, user.getStartWorkDate());
 
             int affectedRows = ps.executeUpdate();
 
@@ -304,12 +305,13 @@ public class UserDao {
             ps.setString(3, user.getCccd());
             ps.setString(4, user.getEmailCompany());
             ps.setString(5, user.getPhone());
-            setLongOrNull(ps, 6, user.getDepartmentId());
-            setLongOrNull(ps, 7, user.getPositionId());
-            ps.setString(8, user.getStatus());
-            setDateOrNull(ps, 9, user.getDateJoined());
-            setDateOrNull(ps, 10, user.getStartWorkDate());
-            ps.setLong(11, user.getId());
+            ps.setString(6, user.getGender());
+            setLongOrNull(ps, 7, user.getDepartmentId());
+            setLongOrNull(ps, 8, user.getPositionId());
+            ps.setString(9, user.getStatus());
+            setDateOrNull(ps, 10, user.getDateJoined());
+            setDateOrNull(ps, 11, user.getStartWorkDate());
+            ps.setLong(12, user.getId());
 
             int affectedRows = ps.executeUpdate();
 
@@ -384,6 +386,7 @@ public class UserDao {
      * @param departmentId Department filter
      * @param positionId   Position filter
      * @param status       Status filter
+     * @param gender       Gender filter
      * @param offset       Offset for pagination
      * @param limit        Limit for pagination
      * @param sortBy       Column to sort by
@@ -391,12 +394,12 @@ public class UserDao {
      * @return List of users matching filters
      */
     public List<User> findWithFilters(String search, Long departmentId, Long positionId,
-            String status, int offset, int limit,
+            String status, String gender, int offset, int limit,
             String sortBy, String sortOrder) {
         List<User> users = new ArrayList<>();
         StringBuilder sql = new StringBuilder("""
                 SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
-                       u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                       u.gender, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
                        u.start_work_date, u.created_at, u.updated_at,
                        d.name as department_name, p.name as position_name
                 FROM users u
@@ -417,6 +420,9 @@ public class UserDao {
         }
         if (status != null && !status.trim().isEmpty()) {
             sql.append(" AND u.status = ?");
+        }
+        if (gender != null && !gender.trim().isEmpty()) {
+            sql.append(" AND u.gender = ?");
         }
 
         // Add ORDER BY
@@ -450,10 +456,13 @@ public class UserDao {
             if (status != null && !status.trim().isEmpty()) {
                 ps.setString(paramIndex++, status.trim());
             }
+            if (gender != null && !gender.trim().isEmpty()) {
+                ps.setString(paramIndex++, gender.trim());
+            }
 
             // Set pagination parameters (limit first, then offset for MySQL)
             ps.setInt(paramIndex++, limit);
-            ps.setInt(paramIndex++, limit);
+            ps.setInt(paramIndex++, offset);
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -476,9 +485,10 @@ public class UserDao {
      * @param departmentId Department filter
      * @param positionId   Position filter
      * @param status       Status filter
+     * @param gender       Gender filter
      * @return Total count of users matching filters
      */
-    public int countWithFilters(String search, Long departmentId, Long positionId, String status) {
+    public int countWithFilters(String search, Long departmentId, Long positionId, String status, String gender) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM users u WHERE 1=1");
 
         // Build dynamic WHERE clauses
@@ -493,6 +503,9 @@ public class UserDao {
         }
         if (status != null && !status.trim().isEmpty()) {
             sql.append(" AND u.status = ?");
+        }
+        if (gender != null && !gender.trim().isEmpty()) {
+            sql.append(" AND u.gender = ?");
         }
 
         try (Connection conn = DatabaseUtil.getConnection();
@@ -517,6 +530,9 @@ public class UserDao {
             }
             if (status != null && !status.trim().isEmpty()) {
                 ps.setString(paramIndex++, status.trim());
+            }
+            if (gender != null && !gender.trim().isEmpty()) {
+                ps.setString(paramIndex++, gender.trim());
             }
 
             try (ResultSet rs = ps.executeQuery()) {
@@ -570,6 +586,7 @@ public class UserDao {
      * @param departmentId Department filter
      * @param positionId   Position filter
      * @param status       Status filter
+     * @param gender       Gender filter
      * @param offset       Offset for pagination
      * @param limit        Limit for pagination
      * @param sortBy       Column to sort by
@@ -577,11 +594,11 @@ public class UserDao {
      * @return List of UserListDto matching filters
      */
     public List<group4.hrms.dto.UserListDto> findWithFiltersAsDto(String search, Long departmentId, Long positionId,
-            String status, int offset, int limit,
+            String status, String gender, int offset, int limit,
             String sortBy, String sortOrder) {
         List<group4.hrms.dto.UserListDto> userDtos = new ArrayList<>();
         StringBuilder sql = new StringBuilder("""
-                SELECT u.id, u.employee_code, u.full_name, u.email_company,
+                SELECT u.id, u.employee_code, u.full_name, u.email_company, u.gender,
                        d.name as department_name, p.name as position_name,
                        u.status, u.date_joined,
                        (SELECT COUNT(*) FROM accounts a
@@ -604,6 +621,9 @@ public class UserDao {
         }
         if (status != null && !status.trim().isEmpty()) {
             sql.append(" AND u.status = ?");
+        }
+        if (gender != null && !gender.trim().isEmpty()) {
+            sql.append(" AND u.gender = ?");
         }
 
         // Add ORDER BY
@@ -636,6 +656,9 @@ public class UserDao {
             }
             if (status != null && !status.trim().isEmpty()) {
                 ps.setString(paramIndex++, status.trim());
+            }
+            if (gender != null && !gender.trim().isEmpty()) {
+                ps.setString(paramIndex++, gender.trim());
             }
 
             // Set pagination parameters (limit first, then offset for MySQL)
@@ -716,6 +739,7 @@ public class UserDao {
         user.setCccd(rs.getString("cccd"));
         user.setEmailCompany(rs.getString("email_company"));
         user.setPhone(rs.getString("phone"));
+        user.setGender(rs.getString("gender"));
 
         long deptId = rs.getLong("department_id");
         if (!rs.wasNull()) {
@@ -772,7 +796,7 @@ public class UserDao {
 
         String query = """
                 SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
-                       u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                       u.gender, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
                        u.start_work_date, u.created_at, u.updated_at,
                        d.name as department_name, p.name as position_name, p.job_level
                 FROM users u
@@ -905,7 +929,7 @@ public class UserDao {
         List<User> users = new ArrayList<>();
         String sql = """
                 SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
-                       u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                       u.gender, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
                        u.start_work_date, u.created_at, u.updated_at
                 FROM users u
                 WHERE u.status = ?
@@ -926,6 +950,7 @@ public class UserDao {
                     user.setCccd(rs.getString("cccd"));
                     user.setEmailCompany(rs.getString("email_company"));
                     user.setPhone(rs.getString("phone"));
+                    user.setGender(rs.getString("gender"));
 
                     Long deptId = rs.getLong("department_id");
                     if (!rs.wasNull()) {
@@ -1193,7 +1218,7 @@ public class UserDao {
 
         String sql = """
                 SELECT u.id, u.employee_code, u.full_name, u.phone, u.email_company,
-                       u.department_id, u.position_id, u.status,
+                       u.gender, u.department_id, u.position_id, u.status,
                        u.date_joined, u.start_work_date, u.created_at, u.updated_at,
                        d.name as department_name, p.name as position_name
                 FROM users u
@@ -1233,7 +1258,7 @@ public class UserDao {
 
         String sql = """
                 SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
-                       u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                       u.gender, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
                        u.start_work_date, u.created_at, u.updated_at,
                        d.name as department_name, p.name as position_name
                 FROM users u
@@ -1275,7 +1300,7 @@ public class UserDao {
 
         String sql = """
                 SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
-                       u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                       u.gender, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
                        u.start_work_date, u.created_at, u.updated_at,
                        d.name as department_name, p.name as position_name
                 FROM users u
@@ -1301,6 +1326,83 @@ public class UserDao {
 
         } catch (SQLException e) {
             logger.error("Lỗi khi tìm users chưa có account: {}", e.getMessage(), e);
+            return users;
+        }
+    }
+
+    /**
+     * Tìm users chưa có account với giới hạn số lượng (for lazy loading)
+     * Optimized query that only fetches necessary fields and limits results
+     *
+     * @param limit Maximum number of users to return
+     * @return List of users without accounts (limited)
+     */
+    public List<User> findUsersWithoutAccountLimited(int limit) {
+        logger.debug("Tìm users chưa có account với limit: {}", limit);
+
+        // Validate limit
+        if (limit <= 0) {
+            limit = 10;
+        }
+        if (limit > 50) {
+            limit = 50;
+        }
+
+        String sql = """
+                SELECT u.id, u.employee_code, u.full_name, u.email_company, u.phone,
+                       u.department_id, u.position_id, u.status, u.date_joined,
+                       d.name as department_name, p.name as position_name
+                FROM users u
+                LEFT JOIN departments d ON u.department_id = d.id
+                LEFT JOIN positions p ON u.position_id = p.id
+                WHERE u.status = 'active'
+                  AND u.id NOT IN (SELECT user_id FROM accounts)
+                ORDER BY u.created_at DESC
+                LIMIT ?
+                """;
+
+        List<User> users = new ArrayList<>();
+
+        try (Connection conn = DatabaseUtil.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, limit);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    // Create user with only essential fields for performance
+                    User user = new User();
+                    user.setId(rs.getLong("id"));
+                    user.setEmployeeCode(rs.getString("employee_code"));
+                    user.setFullName(rs.getString("full_name"));
+                    user.setEmailCompany(rs.getString("email_company"));
+                    user.setPhone(rs.getString("phone"));
+                    user.setStatus(rs.getString("status"));
+
+                    long deptId = rs.getLong("department_id");
+                    if (!rs.wasNull()) {
+                        user.setDepartmentId(deptId);
+                    }
+
+                    long posId = rs.getLong("position_id");
+                    if (!rs.wasNull()) {
+                        user.setPositionId(posId);
+                    }
+
+                    Date dateJoined = rs.getDate("date_joined");
+                    if (dateJoined != null) {
+                        user.setDateJoined(dateJoined.toLocalDate());
+                    }
+
+                    users.add(user);
+                }
+            }
+
+            logger.debug("Tìm thấy {} users chưa có account (limited)", users.size());
+            return users;
+
+        } catch (SQLException e) {
+            logger.error("Lỗi khi tìm users chưa có account (limited): {}", e.getMessage(), e);
             return users;
         }
     }

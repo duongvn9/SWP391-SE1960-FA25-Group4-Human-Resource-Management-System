@@ -180,4 +180,37 @@ public class AuthLocalCredentialsDao extends BaseDao<AuthLocalCredentials, Long>
     public AuthLocalCredentials create(AuthLocalCredentials credentials) throws SQLException {
         return save(credentials);
     }
+    
+    /**
+     * Find credentials by account ID (via auth_identities join)
+     * @param accountId Account ID
+     * @return Optional of AuthLocalCredentials
+     */
+    public Optional<AuthLocalCredentials> findByAccountId(Long accountId) throws SQLException {
+        if (accountId == null) {
+            return Optional.empty();
+        }
+        
+        String sql = "SELECT alc.* FROM auth_local_credentials alc " +
+                    "INNER JOIN auth_identities ai ON alc.identity_id = ai.id " +
+                    "WHERE ai.account_id = ? AND ai.provider = 'local'";
+        
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setLong(1, accountId);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapResultSetToEntity(rs));
+                }
+            }
+            
+            return Optional.empty();
+            
+        } catch (SQLException e) {
+            logger.error("Error finding credentials by account ID {}: {}", accountId, e.getMessage(), e);
+            throw e;
+        }
+    }
 }

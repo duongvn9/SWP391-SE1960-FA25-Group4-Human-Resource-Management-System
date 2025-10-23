@@ -100,6 +100,7 @@ public class UserUpdateServlet extends HttpServlet {
             String fullName = request.getParameter("fullName");
             String phone = request.getParameter("phone");
             String emailCompany = request.getParameter("emailCompany");
+            String gender = request.getParameter("gender");
             String departmentIdStr = request.getParameter("departmentId");
             String positionIdStr = request.getParameter("positionId");
             String dateJoinedStr = request.getParameter("dateJoined");
@@ -127,6 +128,7 @@ public class UserUpdateServlet extends HttpServlet {
             user.setFullName(fullName.trim());
             user.setPhone(phone != null ? phone.trim() : null);
             user.setEmailCompany(emailCompany.trim());
+            user.setGender(gender != null ? gender.trim() : null);
             user.setStatus(status != null ? status.trim() : "active");
 
             // Parse and set department ID

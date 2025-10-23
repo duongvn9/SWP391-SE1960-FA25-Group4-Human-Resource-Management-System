@@ -12,7 +12,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-@WebServlet(name = "LogoutServlet", urlPatterns = { "/logout" })
+@WebServlet(name = "LogoutServlet", urlPatterns = { "/auth/logout" })
 public class LogoutServlet extends HttpServlet {
 
     private static final Logger logger = LoggerFactory.getLogger(LogoutServlet.class);
@@ -29,7 +29,7 @@ public class LogoutServlet extends HttpServlet {
             // Redirect về trang chủ với thông báo logout thành công
             response.sendRedirect(request.getContextPath() + "/?logoutMessage=" +
                     java.net.URLEncoder.encode("Logged out successfully!", "UTF-8"));
-                    
+
         } catch (Exception e) {
             logger.error("Error during logout", e);
             // Still redirect to home even if there's an error
