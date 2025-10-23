@@ -380,6 +380,40 @@
                             transform: rotate(180deg);
                         }
 
+                        /* Password Strength Indicator Styles */
+                        .password-requirements {
+                            background-color: #f8f9fa;
+                            border: 1px solid #dee2e6;
+                            border-radius: 4px;
+                            padding: 0.75rem;
+                        }
+
+                        .requirement-item {
+                            font-size: 0.875rem;
+                            margin-bottom: 0.25rem;
+                            transition: color 0.2s ease;
+                        }
+
+                        .requirement-item:last-child {
+                            margin-bottom: 0;
+                        }
+
+                        .requirement-item.met {
+                            color: #28a745;
+                        }
+
+                        .requirement-item.met i {
+                            color: #28a745 !important;
+                        }
+
+                        .requirement-item.unmet {
+                            color: #dc3545;
+                        }
+
+                        .requirement-item.unmet i {
+                            color: #dc3545;
+                        }
+
                         /* Responsive Design */
                         @media (max-width: 1023px) {
                             .table .last-login-col {
@@ -574,12 +608,6 @@
                                                 <option value="inactive" ${param.status=='inactive' ? 'selected' : '' }>
                                                     Inactive
                                                 </option>
-                                                <option value="locked" ${param.status=='locked' ? 'selected' : '' }>
-                                                    Locked
-                                                </option>
-                                                <option value="suspended" ${param.status=='suspended' ? 'selected' : ''
-                                                    }>
-                                                    Suspended</option>
                                             </select>
                                         </div>
                                         <div class="filter-group">
@@ -907,15 +935,6 @@
                                                 name="emailLogin" required>
                                         </div>
 
-                                        <!-- Note about permissions -->
-                                        <div class="mb-3">
-                                            <div class="alert alert-info">
-                                                <i class="fas fa-info-circle me-2"></i>
-                                                <strong>Note:</strong> Account permissions are determined by the user's
-                                                position.
-                                            </div>
-                                        </div>
-
                                         <!-- Status -->
                                         <div class="mb-3">
                                             <label for="edit-status" class="form-label">
@@ -924,8 +943,6 @@
                                             <select class="form-select" id="edit-status" name="status" required>
                                                 <option value="active">Active</option>
                                                 <option value="inactive">Inactive</option>
-                                                <option value="locked">Locked</option>
-                                                <option value="suspended">Suspended</option>
                                             </select>
                                         </div>
                                     </div>
@@ -969,7 +986,28 @@
                                                 New Password<span class="text-danger">*</span>
                                             </label>
                                             <input type="password" class="form-control" id="reset-newPassword"
-                                                name="newPassword" required placeholder="Enter new password">
+                                                name="newPassword" required placeholder="Enter new password"
+                                                minlength="6">
+
+                                            <!-- Password Strength Indicator -->
+                                            <div id="resetPasswordStrengthIndicator" class="mt-2"
+                                                style="display: none;">
+                                                <div class="small mb-1">Password Requirements:</div>
+                                                <div class="password-requirements">
+                                                    <div id="resetLengthReq" class="requirement-item">
+                                                        <i class="fas fa-times text-danger me-1"></i>
+                                                        <span>At least 6 characters</span>
+                                                    </div>
+                                                    <div id="resetUppercaseReq" class="requirement-item">
+                                                        <i class="fas fa-times text-danger me-1"></i>
+                                                        <span>At least one uppercase letter</span>
+                                                    </div>
+                                                    <div id="resetSpecialCharReq" class="requirement-item">
+                                                        <i class="fas fa-times text-danger me-1"></i>
+                                                        <span>At least one special character</span>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
 
                                         <!-- Confirm Password -->
@@ -979,7 +1017,7 @@
                                             </label>
                                             <input type="password" class="form-control" id="reset-confirmPassword"
                                                 required placeholder="Confirm new password">
-                                            <div class="invalid-feedback">
+                                            <div class="invalid-feedback" id="reset-password-mismatch">
                                                 Passwords do not match
                                             </div>
                                         </div>
@@ -1284,6 +1322,90 @@
                                     });
                             });
 
+                            // Password validation for reset password
+                            const resetPasswordInput = document.getElementById('reset-newPassword');
+                            const resetConfirmPasswordInput = document.getElementById('reset-confirmPassword');
+                            const resetStrengthIndicator = document.getElementById('resetPasswordStrengthIndicator');
+                            const resetLengthReq = document.getElementById('resetLengthReq');
+                            const resetUppercaseReq = document.getElementById('resetUppercaseReq');
+                            const resetSpecialCharReq = document.getElementById('resetSpecialCharReq');
+
+                            function validateResetPasswordStrength(password) {
+                                const requirements = {
+                                    minLength: password.length >= 6,
+                                    hasUpperCase: /[A-Z]/.test(password),
+                                    hasSpecialChar: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+                                };
+
+                                return {
+                                    isValid: requirements.minLength && requirements.hasUpperCase && requirements.hasSpecialChar,
+                                    requirements: requirements
+                                };
+                            }
+
+                            function updateResetRequirementItem(element, isMet) {
+                                const icon = element.querySelector('i');
+                                if (isMet) {
+                                    element.classList.remove('unmet');
+                                    element.classList.add('met');
+                                    icon.classList.remove('fa-times', 'text-danger');
+                                    icon.classList.add('fa-check', 'text-success');
+                                } else {
+                                    element.classList.remove('met');
+                                    element.classList.add('unmet');
+                                    icon.classList.remove('fa-check', 'text-success');
+                                    icon.classList.add('fa-times', 'text-danger');
+                                }
+                            }
+
+                            function updateResetPasswordStrengthIndicator(password) {
+                                if (password.length === 0) {
+                                    resetStrengthIndicator.style.display = 'none';
+                                    return;
+                                }
+
+                                resetStrengthIndicator.style.display = 'block';
+                                const validation = validateResetPasswordStrength(password);
+
+                                updateResetRequirementItem(resetLengthReq, validation.requirements.minLength);
+                                updateResetRequirementItem(resetUppercaseReq, validation.requirements.hasUpperCase);
+                                updateResetRequirementItem(resetSpecialCharReq, validation.requirements.hasSpecialChar);
+
+                                if (!validation.isValid) {
+                                    const unmetRequirements = [];
+                                    if (!validation.requirements.minLength) unmetRequirements.push('at least 6 characters');
+                                    if (!validation.requirements.hasUpperCase) unmetRequirements.push('at least one uppercase letter');
+                                    if (!validation.requirements.hasSpecialChar) unmetRequirements.push('at least one special character');
+
+                                    resetPasswordInput.setCustomValidity('Password must contain: ' + unmetRequirements.join(', '));
+                                } else {
+                                    resetPasswordInput.setCustomValidity('');
+                                }
+                            }
+
+                            // Real-time password validation for reset
+                            resetPasswordInput.addEventListener('keyup', function () {
+                                updateResetPasswordStrengthIndicator(this.value);
+                            });
+
+                            resetPasswordInput.addEventListener('change', function () {
+                                updateResetPasswordStrengthIndicator(this.value);
+                            });
+
+                            // Confirm password validation
+                            function validateResetPasswordMatch() {
+                                if (resetPasswordInput.value !== resetConfirmPasswordInput.value) {
+                                    resetConfirmPasswordInput.setCustomValidity('Passwords do not match');
+                                    resetConfirmPasswordInput.classList.add('is-invalid');
+                                } else {
+                                    resetConfirmPasswordInput.setCustomValidity('');
+                                    resetConfirmPasswordInput.classList.remove('is-invalid');
+                                }
+                            }
+
+                            resetConfirmPasswordInput.addEventListener('keyup', validateResetPasswordMatch);
+                            resetConfirmPasswordInput.addEventListener('change', validateResetPasswordMatch);
+
                             // Reset password form submission
                             document.getElementById('resetPasswordForm').addEventListener('submit', function (e) {
                                 e.preventDefault();
@@ -1291,6 +1413,14 @@
                                 const newPassword = document.getElementById('reset-newPassword').value;
                                 const confirmPassword = document.getElementById('reset-confirmPassword').value;
                                 const confirmInput = document.getElementById('reset-confirmPassword');
+
+                                // Validate password strength
+                                const passwordValidation = validateResetPasswordStrength(newPassword);
+                                if (!passwordValidation.isValid) {
+                                    resetPasswordInput.focus();
+                                    updateResetPasswordStrengthIndicator(newPassword);
+                                    return;
+                                }
 
                                 // Validate passwords match
                                 if (newPassword !== confirmPassword) {

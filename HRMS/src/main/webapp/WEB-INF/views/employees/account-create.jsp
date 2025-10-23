@@ -332,6 +332,9 @@
                                 <!-- Form Actions -->
                                 <div class="d-flex justify-content-end gap-2 mt-4 pt-3"
                                     style="border-top: 1px solid #dee2e6;">
+                                    <button type="button" class="btn btn-secondary" id="btnClearForm">
+                                        <i class="fas fa-eraser me-2"></i>Clear Form
+                                    </button>
                                     <button type="submit" class="btn btn-primary">
                                         <i class="fas fa-save me-2"></i>Create Account
                                     </button>
@@ -554,6 +557,35 @@
                             event.stopPropagation();
                             passwordInput.focus();
                         }
+                    });
+
+                    // Clear form button functionality
+                    document.getElementById('btnClearForm').addEventListener('click', function () {
+                        // Reset the form
+                        form.reset();
+
+                        // Clear Select2
+                        $('#userId').val(null).trigger('change');
+
+                        // Clear other fields
+                        document.getElementById('username').value = '';
+                        document.getElementById('emailCompany').value = '';
+                        document.getElementById('emailLogin').value = '';
+                        document.getElementById('password').value = '';
+                        document.getElementById('confirmPassword').value = '';
+
+                        // Hide password strength indicator
+                        strengthIndicator.style.display = 'none';
+
+                        // Remove validation classes
+                        form.classList.remove('was-validated');
+
+                        // Reset custom validity
+                        passwordInput.setCustomValidity('');
+                        confirmPasswordInput.setCustomValidity('');
+
+                        // Focus on first field
+                        $('#userId').select2('open');
                     });
                 });
             </script>
