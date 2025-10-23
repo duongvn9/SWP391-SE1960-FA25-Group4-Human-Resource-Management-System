@@ -2,15 +2,21 @@ package group4.hrms.controller;
 
 import java.io.IOException;
 
+import group4.hrms.dao.UserDao;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @WebServlet("/dashboard")
 public class DashboardServlet extends HttpServlet {
+
+    private static final Logger logger = LoggerFactory.getLogger(DashboardServlet.class);
+    private final UserDao userDao = new UserDao();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -22,6 +28,16 @@ public class DashboardServlet extends HttpServlet {
             // Chưa đăng nhập, redirect về login
             response.sendRedirect(request.getContextPath() + "/login");
             return;
+        }
+
+        try {
+            // Get total employees count
+            int totalEmployees = userDao.countAll();
+            request.setAttribute("totalEmployees", totalEmployees);
+            logger.info("Total employees: {}", totalEmployees);
+        } catch (Exception e) {
+            logger.error("Error getting total employees count", e);
+            request.setAttribute("totalEmployees", 0);
         }
 
         // Set permission flags for sidebar
