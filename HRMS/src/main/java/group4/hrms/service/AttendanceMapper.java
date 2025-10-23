@@ -106,37 +106,29 @@ public class AttendanceMapper {
             AttendanceLog logIn = new AttendanceLog();
             logIn.setUserId(dto.getUserId());
             logIn.setCheckType("IN");
-            logIn.setCheckedAt(LocalDateTime.of(date, oldCheckIn)); // giá trị cũ để tìm record
+            logIn.setCheckedAt(LocalDateTime.of(date, oldCheckIn)); 
             logIn.setSource(dto.getSource());
             logIn.setNote(dto.getStatus());
             logIn.setPeriodId(dao.findIdByName(dto.getPeriod()).orElse(null));
             logs.add(logIn);
 
             // Nếu muốn lưu giá trị mới (checkIn) cho update, sẽ được DAO dùng trong UPDATE
-            logIn.setCheckedAtNew(LocalDateTime.of(date, dto.getCheckIn())); // custom field để DAO update
+            logIn.setCheckedAtNew(LocalDateTime.of(date, dto.getCheckIn())); 
         }
 
         if (dto.getCheckOut() != null) {
             AttendanceLog logOut = new AttendanceLog();
             logOut.setUserId(dto.getUserId());
             logOut.setCheckType("OUT");
-            logOut.setCheckedAt(LocalDateTime.of(date, oldCheckOut)); // giá trị cũ để tìm record
+            logOut.setCheckedAt(LocalDateTime.of(date, oldCheckOut)); 
             logOut.setSource(dto.getSource());
             logOut.setNote(dto.getStatus());
             logOut.setPeriodId(dao.findIdByName(dto.getPeriod()).orElse(null));
             logs.add(logOut);
 
-            logOut.setCheckedAtNew(LocalDateTime.of(date, dto.getCheckOut())); // custom field
+            logOut.setCheckedAtNew(LocalDateTime.of(date, dto.getCheckOut())); 
         }
 
         return logs;
-    }
-
-    private static Long parsePeriodId(String periodStr) {
-        try {
-            return Long.valueOf(periodStr);
-        } catch (NumberFormatException e) {
-            return null;
-        }
     }
 }
