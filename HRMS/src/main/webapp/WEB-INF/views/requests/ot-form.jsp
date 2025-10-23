@@ -3,18 +3,21 @@
 <%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
 <%
     // Retrieve form data from session (if exists from previous error)
+    String savedRequestTitle = (String) session.getAttribute("formData_requestTitle");
     String savedOtDate = (String) session.getAttribute("formData_otDate");
     String savedStartTime = (String) session.getAttribute("formData_startTime");
     String savedEndTime = (String) session.getAttribute("formData_endTime");
     String savedReason = (String) session.getAttribute("formData_reason");
 
     // Clear form data from session after retrieving
+    session.removeAttribute("formData_requestTitle");
     session.removeAttribute("formData_otDate");
     session.removeAttribute("formData_startTime");
     session.removeAttribute("formData_endTime");
     session.removeAttribute("formData_reason");
 
     // Make available to JSTL
+    pageContext.setAttribute("savedRequestTitle", savedRequestTitle);
     pageContext.setAttribute("savedOtDate", savedOtDate);
     pageContext.setAttribute("savedStartTime", savedStartTime);
     pageContext.setAttribute("savedEndTime", savedEndTime);
@@ -79,39 +82,59 @@
                     <div class="row mb-4">
                         <div class="col-12">
                             <div class="card">
-                                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
-                                     style="cursor: pointer;" onclick="toggleOTBalance()">
+                                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                                     <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Your OT Balance
                                     </h5>
-                                    <button class="btn btn-sm btn-light" type="button" id="otBalanceToggle">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <button class="btn btn-sm btn-light" type="button" id="otBalanceToggle" onclick="toggleOTBalance()">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
                                 </div>
                                 <div class="card-body" id="otBalanceContent">
                                     <div class="row g-3">
                                         <!-- Weekly Balance -->
                                         <div class="col-md-4">
                                             <div class="ot-balance-card">
-                                                <div class="balance-header">
-                                                    <h6 class="balance-title">This Week</h6>
-                                                    <span class="balance-icon"><i
-                                                            class="fas fa-calendar-week"></i></span>
+                                                <div class="balance-header d-flex justify-content-between align-items-center">
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="changeWeek(-1)" title="Previous Week">
+                                                        <i class="fas fa-chevron-left"></i>
+                                                    </button>
+                                                    <div class="text-center flex-grow-1">
+                                                        <h6 class="balance-title mb-0">
+                                                            <c:choose>
+                                                                <c:when test="${empty param.weekOffset or param.weekOffset == '0'}">This Week</c:when>
+                                                                <c:when test="${param.weekOffset > 0}">Week +${param.weekOffset}</c:when>
+                                                                <c:otherwise>Week ${param.weekOffset}</c:otherwise>
+                                                            </c:choose>
+                                                        </h6>
+                                                        <small class="text-muted d-block" id="weekDateRange">
+                                                            <i class="fas fa-calendar"></i>
+                                                            <c:out value="${otBalance.weekStartDate}"/> - <c:out value="${otBalance.weekEndDate}"/>
+                                                        </small>
+                                                    </div>
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="changeWeek(1)" title="Next Week">
+                                                        <i class="fas fa-chevron-right"></i>
+                                                    </button>
                                                 </div>
-                                                <div class="balance-stats">
+
+                                                <div class="balance-stats mt-3">
                                                     <div class="stat-main">
                                                             <div>
-                                                                <span class="stat-value"><fmt:formatNumber value="${otBalance.currentWeekHours}" minFractionDigits="1" maxFractionDigits="1"/>h</span>
+                                                                <span class="stat-value" id="weeklyHours">
+                                                                    <fmt:formatNumber value="${otBalance.currentWeekHours}" minFractionDigits="1" maxFractionDigits="1"/>h
+                                                                    / <fmt:formatNumber value="${otBalance.weeklyLimit - otBalance.regularHoursThisWeek}" minFractionDigits="1" maxFractionDigits="1"/>h
+                                                                </span>
                                                             </div>
                                                         </div>
                                                     <!-- Expose regular scheduled hours this week for client-side preview -->
                                                     <span id="regularHoursThisWeek" style="display:none">${otBalance.regularHoursThisWeek}</span>
                                                     <div class="stat-remaining">
                                                         <span class="stat-label">Remaining:</span>
-                                                        <span
-                                                            class="stat-value-sm"><fmt:formatNumber value="${otBalance.weeklyRemaining}" minFractionDigits="1" maxFractionDigits="1"/>h</span>
+                                                        <span class="stat-value-sm" id="weeklyRemaining"><fmt:formatNumber value="${otBalance.weeklyRemaining}" minFractionDigits="1" maxFractionDigits="1"/>h</span>
                                                     </div>
                                                         <div class="stat-extra text-muted mt-1">
-                                                            <small>Approved requests: <c:out value="${otBalance.weeklyApprovedCount}"/></small>
+                                                            <small>Approved requests: <span id="weeklyApprovedCount"><c:out value="${otBalance.weeklyApprovedCount}"/></span></small>
                                                         </div>
                                                     <small class="text-muted d-block mt-1">
                                                         <i class="fas fa-info-circle"></i>
@@ -137,14 +160,14 @@
                                                                        value="bg-success" />
                                                             </c:otherwise>
                                                         </c:choose>
-                                                        <div class="progress-bar ${weeklyColor}"
+                                                        <div class="progress-bar ${weeklyColor}" id="weeklyProgressBar"
                                                              role="progressbar" style="width: ${weeklyPct}%"
                                                              aria-valuenow="${otBalance.currentWeekHours}"
                                                              aria-valuemin="0"
                                                              aria-valuemax="${otBalance.weeklyLimit}">
                                                         </div>
                                                     </div>
-                                                    <small class="text-muted">${weeklyPct}% used</small>
+                                                    <small class="text-muted"><span id="weeklyPercentage">${weeklyPct}</span>% used</small>
                                                 </div>
                                             </div>
                                         </div>
@@ -152,22 +175,41 @@
                                         <!-- Monthly Balance -->
                                         <div class="col-md-4">
                                             <div class="ot-balance-card">
-                                                <div class="balance-header">
-                                                    <h6 class="balance-title">This Month</h6>
-                                                    <span class="balance-icon"><i
-                                                            class="fas fa-calendar-alt"></i></span>
+                                                <div class="balance-header d-flex justify-content-between align-items-center">
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="changeMonth(-1)" title="Previous Month">
+                                                        <i class="fas fa-chevron-left"></i>
+                                                    </button>
+                                                    <div class="text-center flex-grow-1">
+                                                        <h6 class="balance-title mb-0">
+                                                            <c:choose>
+                                                                <c:when test="${empty param.monthOffset or param.monthOffset == '0'}">This Month</c:when>
+                                                                <c:when test="${param.monthOffset > 0}">Month +${param.monthOffset}</c:when>
+                                                                <c:otherwise>Month ${param.monthOffset}</c:otherwise>
+                                                            </c:choose>
+                                                        </h6>
+                                                        <small class="text-muted d-block" id="monthNameDisplay">
+                                                            <i class="fas fa-calendar"></i>
+                                                            <c:out value="${otBalance.monthName}"/>
+                                                        </small>
+                                                    </div>
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="changeMonth(1)" title="Next Month">
+                                                        <i class="fas fa-chevron-right"></i>
+                                                    </button>
                                                 </div>
-                                                <div class="balance-stats">
+
+                                                <div class="balance-stats mt-3">
                                                     <div class="stat-main">
-                                                                    <span class="stat-value"><fmt:formatNumber value="${otBalance.monthlyHours}" minFractionDigits="1" maxFractionDigits="1"/>h</span>
+                                                                    <span class="stat-value" id="monthlyHours">
+                                                                        <fmt:formatNumber value="${otBalance.monthlyHours}" minFractionDigits="1" maxFractionDigits="1"/>h
+                                                                        / <fmt:formatNumber value="${otBalance.monthlyLimit}" minFractionDigits="1" maxFractionDigits="1"/>h
+                                                                    </span>
                                                     </div>
                                                     <div class="stat-remaining">
                                                         <span class="stat-label">Remaining:</span>
-                                                        <span
-                                                            class="stat-value-sm"><fmt:formatNumber value="${otBalance.monthlyRemaining}" minFractionDigits="1" maxFractionDigits="1"/>h</span>
+                                                        <span class="stat-value-sm" id="monthlyRemaining"><fmt:formatNumber value="${otBalance.monthlyRemaining}" minFractionDigits="1" maxFractionDigits="1"/>h</span>
                                                     </div>
                                                                 <div class="stat-extra text-muted mt-1">
-                                                                    <small>Approved requests: <c:out value="${otBalance.monthlyApprovedCount}"/></small>
+                                                                    <small>Approved requests: <span id="monthlyApprovedCount"><c:out value="${otBalance.monthlyApprovedCount}"/></span></small>
                                                                 </div>
                                                                 <small class="text-muted d-block mt-1">
                                                                     <i class="fas fa-info-circle"></i>
@@ -192,14 +234,14 @@
                                                                        value="bg-success" />
                                                             </c:otherwise>
                                                         </c:choose>
-                                                        <div class="progress-bar ${monthlyColor}"
+                                                        <div class="progress-bar ${monthlyColor}" id="monthlyProgressBar"
                                                              role="progressbar" style="width: ${monthlyPct}%"
                                                              aria-valuenow="${otBalance.monthlyHours}"
                                                              aria-valuemin="0"
                                                              aria-valuemax="${otBalance.monthlyLimit}">
                                                         </div>
                                                     </div>
-                                                    <small class="text-muted">${monthlyPct}% used</small>
+                                                    <small class="text-muted"><span id="monthlyPercentage">${monthlyPct}</span>% used</small>
                                                 </div>
                                             </div>
                                         </div>
@@ -207,14 +249,32 @@
                                         <!-- Annual Balance -->
                                         <div class="col-md-4">
                                             <div class="ot-balance-card">
-                                                <div class="balance-header">
-                                                    <h6 class="balance-title">This Year</h6>
-                                                    <span class="balance-icon"><i
-                                                            class="fas fa-calendar"></i></span>
+                                                <div class="balance-header d-flex justify-content-between align-items-center">
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="changeYear(-1)" title="Previous Year">
+                                                        <i class="fas fa-chevron-left"></i>
+                                                    </button>
+                                                    <div class="text-center">
+                                                        <h6 class="balance-title mb-0">
+                                                            <c:choose>
+                                                                <c:when test="${empty param.yearOffset or param.yearOffset == '0'}">This Year</c:when>
+                                                                <c:when test="${param.yearOffset > 0}">Year +${param.yearOffset}</c:when>
+                                                                <c:otherwise>Year ${param.yearOffset}</c:otherwise>
+                                                            </c:choose>
+                                                        </h6>
+                                                        <small class="text-muted" id="yearLabel">
+                                                            <i class="fas fa-calendar"></i> ${empty param.yearOffset ? '2025' : (2025 + param.yearOffset)}
+                                                        </small>
+                                                    </div>
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="changeYear(1)" title="Next Year">
+                                                        <i class="fas fa-chevron-right"></i>
+                                                    </button>
                                                 </div>
                                                 <div class="balance-stats">
                                                     <div class="stat-main">
-                                                        <span class="stat-value"><fmt:formatNumber value="${otBalance.annualHours}" minFractionDigits="1" maxFractionDigits="1"/>h</span>
+                                                        <span class="stat-value">
+                                                            <fmt:formatNumber value="${otBalance.annualHours}" minFractionDigits="1" maxFractionDigits="1"/>h
+                                                            / <fmt:formatNumber value="${otBalance.annualLimit}" minFractionDigits="1" maxFractionDigits="1"/>h
+                                                        </span>
                                                     </div>
                                                     <div class="stat-remaining">
                                                         <span class="stat-label">Remaining:</span>
@@ -331,6 +391,21 @@
                                         </div>
                                     </div>
                                 </c:if>
+                            </div>
+
+                            <!-- Request Title -->
+                            <div class="mb-4">
+                                <label for="requestTitle" class="form-label">
+                                    <i class="fas fa-heading"></i> Request Title
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="requestTitle" name="requestTitle"
+                                       placeholder="Enter a brief title for your OT request (e.g., 'Urgent project deadline')"
+                                       maxlength="200" required value="${not empty savedRequestTitle ? savedRequestTitle : ''}">
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle"></i>
+                                    Provide a clear title that summarizes your OT request (max 200 characters)
+                                </div>
                             </div>
 
                             <!-- OT Date and Type Display in one row -->
@@ -789,6 +864,46 @@
                     icon.classList.remove('fa-eye');
                     icon.classList.add('fa-eye-slash');
                 }
+            }
+
+            // Week/Month Navigation for OT Balance
+            function changeWeek(offset) {
+                // Get current URL parameters
+                const urlParams = new URLSearchParams(window.location.search);
+                const currentWeekOffset = parseInt(urlParams.get('weekOffset') || '0');
+                const currentMonthOffset = parseInt(urlParams.get('monthOffset') || '0');
+                const currentYearOffset = parseInt(urlParams.get('yearOffset') || '0');
+                const newWeekOffset = currentWeekOffset + offset;
+
+                // Reload page with ALL offsets preserved
+                const contextPath = '${pageContext.request.contextPath}';
+                window.location.href = contextPath + '/requests/ot/create?weekOffset=' + newWeekOffset + '&monthOffset=' + currentMonthOffset + '&yearOffset=' + currentYearOffset;
+            }
+
+            function changeMonth(offset) {
+                // Get current URL parameters
+                const urlParams = new URLSearchParams(window.location.search);
+                const currentWeekOffset = parseInt(urlParams.get('weekOffset') || '0');
+                const currentMonthOffset = parseInt(urlParams.get('monthOffset') || '0');
+                const currentYearOffset = parseInt(urlParams.get('yearOffset') || '0');
+                const newMonthOffset = currentMonthOffset + offset;
+
+                // Reload page with ALL offsets preserved
+                const contextPath = '${pageContext.request.contextPath}';
+                window.location.href = contextPath + '/requests/ot/create?weekOffset=' + currentWeekOffset + '&monthOffset=' + newMonthOffset + '&yearOffset=' + currentYearOffset;
+            }
+
+            function changeYear(offset) {
+                // Get current URL parameters
+                const urlParams = new URLSearchParams(window.location.search);
+                const currentWeekOffset = parseInt(urlParams.get('weekOffset') || '0');
+                const currentMonthOffset = parseInt(urlParams.get('monthOffset') || '0');
+                const currentYearOffset = parseInt(urlParams.get('yearOffset') || '0');
+                const newYearOffset = currentYearOffset + offset;
+
+                // Reload page with ALL offsets preserved
+                const contextPath = '${pageContext.request.contextPath}';
+                window.location.href = contextPath + '/requests/ot/create?weekOffset=' + currentWeekOffset + '&monthOffset=' + currentMonthOffset + '&yearOffset=' + newYearOffset;
             }
 
             // File upload handler

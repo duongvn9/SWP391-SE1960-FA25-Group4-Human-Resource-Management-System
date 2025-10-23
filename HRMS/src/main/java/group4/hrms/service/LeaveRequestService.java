@@ -52,7 +52,7 @@ public class LeaveRequestService {
      * Create leave request - JSON-based approach with half-day support
      */
     public Long createLeaveRequest(Long accountId, Long userId, Long departmentId,
-            String leaveTypeCode, LocalDateTime startDate, LocalDateTime endDate, String reason,
+            String requestTitle, String leaveTypeCode, LocalDateTime startDate, LocalDateTime endDate, String reason,
             Boolean isHalfDay, String halfDayPeriod) throws SQLException {
 
         logger.info(String.format("Creating leave request: userId=%d, leaveType=%s, startDate=%s, endDate=%s, isHalfDay=%b, period=%s",
@@ -131,7 +131,9 @@ public class LeaveRequestService {
             // 6. Create request object
             Request leaveRequest = new Request();
             leaveRequest.setRequestTypeId(leaveRequestType.getId());
-            leaveRequest.setTitle("Leave Request - " + leaveType.getName());
+            leaveRequest.setTitle(requestTitle != null && !requestTitle.trim().isEmpty()
+                ? requestTitle.trim()
+                : "Leave Request - " + leaveType.getName());
             leaveRequest.setLeaveDetail(detail);  // Set JSON data
             leaveRequest.setCreatedByAccountId(accountId);
             leaveRequest.setCreatedByUserId(userId);
@@ -174,7 +176,7 @@ public class LeaveRequestService {
      * @param year Year to check balance
      * @throws IllegalArgumentException if balance is insufficient
      */
-    private void validateLeaveBalance(Long userId, String leaveTypeCode,
+    public void validateLeaveBalance(Long userId, String leaveTypeCode,
                                       int requestedDays, int year) {
         logger.fine(String.format("Validating leave balance: userId=%d, leaveType=%s, requestedDays=%d, year=%d",
                    userId, leaveTypeCode, requestedDays, year));

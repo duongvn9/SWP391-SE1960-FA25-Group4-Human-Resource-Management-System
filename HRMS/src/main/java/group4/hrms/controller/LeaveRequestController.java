@@ -261,6 +261,7 @@ public class LeaveRequestController extends HttpServlet {
 
             // Extract form parameters (declare outside try for catch block access)
             String leaveTypeCode = request.getParameter("leaveTypeCode");
+            String requestTitle = request.getParameter("requestTitle");
             String startDateStr = request.getParameter("startDate");
             String endDateStr = request.getParameter("endDate");
             String reason = request.getParameter("reason");
@@ -328,11 +329,42 @@ public class LeaveRequestController extends HttpServlet {
                     new LeaveTypeDao()
                 );
 
+                // Validate certificate requirement BEFORE creating request
+                LeaveTypeDao leaveTypeDao = new LeaveTypeDao();
+                java.util.Optional<group4.hrms.model.LeaveType> leaveTypeOpt = leaveTypeDao.findByCode(leaveTypeCode);
+                if (leaveTypeOpt.isPresent()) {
+                    group4.hrms.model.LeaveType leaveType = leaveTypeOpt.get();
+                    if (leaveType.isRequiresCertificate()) {
+                        // Check if attachment provided
+                        String attachmentType = request.getParameter("attachmentType");
+                        boolean hasAttachment;
+
+                        if ("link".equals(attachmentType)) {
+                            String driveLink = request.getParameter("driveLink");
+                            hasAttachment = (driveLink != null && !driveLink.trim().isEmpty());
+                        } else {
+                            // Check file uploads
+                            Collection<Part> fileParts = request.getParts().stream()
+                                .filter(part -> "attachments".equals(part.getName()) && part.getSize() > 0)
+                                .collect(Collectors.toList());
+                            hasAttachment = !fileParts.isEmpty();
+                        }
+
+                        if (!hasAttachment) {
+                            logger.warning(String.format("Certificate required but not provided: userId=%d, leaveType=%s",
+                                user.getId(), leaveTypeCode));
+                            throw new IllegalArgumentException("This leave type (" + leaveType.getName() +
+                                ") requires supporting documents (certificate). Please upload a file or provide a Google Drive link.");
+                        }
+                    }
+                }
+
                 // Call service.createLeaveRequest() with all parameters including half-day fields
                 Long requestId = service.createLeaveRequest(
                     account.getId(),
                     user.getId(),
                     user.getDepartmentId(),
+                    requestTitle,
                     leaveTypeCode,
                     startDate,
                     endDate,
@@ -435,7 +467,7 @@ public class LeaveRequestController extends HttpServlet {
                               user.getId(), account.getId(), e.getErrorType(), e.getShortMessage()));
 
                 // Save form data to session to preserve user input
-                saveFormDataToSession(session, leaveTypeCode, startDateStr, endDateStr, reason,
+                saveFormDataToSession(session, requestTitle, leaveTypeCode, startDateStr, endDateStr, reason,
                                      isHalfDay, halfDayPeriod);
 
                 // Set error attributes for JSP display
@@ -466,7 +498,7 @@ public class LeaveRequestController extends HttpServlet {
                 // Handle generic validation errors
                 logger.warning(String.format("Validation error creating leave request: userId=%d, accountId=%d, error=%s",
                               user.getId(), account.getId(), e.getMessage()));
-                saveFormDataToSession(session, leaveTypeCode, startDateStr, endDateStr, reason,
+                saveFormDataToSession(session, requestTitle, leaveTypeCode, startDateStr, endDateStr, reason,
                                      isHalfDay, halfDayPeriod);
                 request.setAttribute("error", e.getMessage());
                 request.setAttribute("errorType", "VALIDATION_ERROR");
@@ -476,7 +508,7 @@ public class LeaveRequestController extends HttpServlet {
                 logger.severe(String.format("Database error creating leave request: userId=%d, accountId=%d, error=%s",
                              user.getId(), account.getId(), e.getMessage()));
                 e.printStackTrace();
-                saveFormDataToSession(session, leaveTypeCode, startDateStr, endDateStr, reason,
+                saveFormDataToSession(session, requestTitle, leaveTypeCode, startDateStr, endDateStr, reason,
                                      isHalfDay, halfDayPeriod);
                 request.setAttribute("error", "Database error occurred. Please try again later. If the problem persists, contact IT support.");
                 request.setAttribute("errorType", "DATABASE_ERROR");
@@ -485,7 +517,7 @@ public class LeaveRequestController extends HttpServlet {
                 // Handle system errors: catch Exception, log error, set generic error message
                 logger.severe(String.format("Unexpected error creating leave request: userId=%d, accountId=%d, error=%s",
                              user.getId(), account.getId(), e.getMessage()));
-                saveFormDataToSession(session, leaveTypeCode, startDateStr, endDateStr, reason,
+                saveFormDataToSession(session, requestTitle, leaveTypeCode, startDateStr, endDateStr, reason,
                                      isHalfDay, halfDayPeriod);
                 e.printStackTrace();
                 request.setAttribute("error", "System error. Please try again later.");
@@ -666,9 +698,10 @@ public class LeaveRequestController extends HttpServlet {
     /**
      * Save form data to session to preserve user input when there's an error
      */
-    private void saveFormDataToSession(HttpSession session, String leaveTypeCode,
+    private void saveFormDataToSession(HttpSession session, String requestTitle, String leaveTypeCode,
                                       String startDate, String endDate, String reason,
                                       Boolean isHalfDay, String halfDayPeriod) {
+        session.setAttribute("formData_requestTitle", requestTitle);
         session.setAttribute("formData_leaveTypeCode", leaveTypeCode);
         session.setAttribute("formData_startDate", startDate);
         session.setAttribute("formData_endDate", endDate);
