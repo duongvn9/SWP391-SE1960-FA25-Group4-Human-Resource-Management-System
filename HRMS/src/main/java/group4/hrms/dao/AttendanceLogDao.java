@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * DAO class để xử lý các thao tác với bảng AttendanceLog
@@ -786,7 +787,6 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
         Map<String, List<AttendanceLogDto>> result = new HashMap<>();
         List<AttendanceLogDto> validLogs = new ArrayList<>();
         List<AttendanceLogDto> invalidLogs = new ArrayList<>();
-
         result.put("valid", validLogs);
         result.put("invalid", invalidLogs);
 
@@ -798,38 +798,32 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
             for (AttendanceLogDto log : manualLogs) {
                 boolean hasConflict = false;
 
-                // Kiểm tra dữ liệu bắt buộc
                 if (log.getUserId() == null || log.getDate() == null
                         || (log.getCheckIn() == null && log.getCheckOut() == null)) {
                     invalidLogs.add(log);
                     continue;
                 }
 
-                // Chuẩn hóa giờ check-in/check-out
-                LocalDateTime newCheckIn = null;
+                LocalDateTime newCheckIn = log.getCheckIn() != null ? log.getDate().atTime(log.getCheckIn()) : null;
                 LocalDateTime newCheckOut = null;
-                if (log.getCheckIn() != null) {
-                    newCheckIn = log.getDate().atTime(log.getCheckIn());
-                }
                 if (log.getCheckOut() != null) {
-                    newCheckOut = log.getCheckOut().isBefore(log.getCheckIn() != null ? log.getCheckIn() : LocalTime.MIDNIGHT)
-                            ? log.getDate().plusDays(1).atTime(log.getCheckOut())
-                            : log.getDate().atTime(log.getCheckOut());
+                    if (log.getCheckIn() != null && log.getCheckOut().isBefore(log.getCheckIn())) {
+                        newCheckOut = log.getDate().plusDays(1).atTime(log.getCheckOut());
+                    } else {
+                        newCheckOut = log.getDate().atTime(log.getCheckOut());
+                    }
                 }
 
-                // Lấy toàn bộ log hiện có của user ±1 ngày
-                String sql = "SELECT checked_at, check_type FROM attendance_logs WHERE user_id = ? AND checked_at BETWEEN ? AND ?";
+                // Lấy tất cả log của user trong cùng ngày
+                String sql = "SELECT checked_at, check_type FROM attendance_logs WHERE user_id = ? AND DATE(checked_at) = ?";
                 try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                    LocalDateTime rangeStart = (newCheckIn != null ? newCheckIn : newCheckOut).minusDays(1);
-                    LocalDateTime rangeEnd = (newCheckOut != null ? newCheckOut : newCheckIn).plusDays(1);
                     stmt.setLong(1, log.getUserId());
-                    stmt.setTimestamp(2, Timestamp.valueOf(rangeStart));
-                    stmt.setTimestamp(3, Timestamp.valueOf(rangeEnd));
+                    stmt.setDate(2, java.sql.Date.valueOf(log.getDate()));
+
+                    List<LocalDateTime> ins = new ArrayList<>();
+                    List<LocalDateTime> outs = new ArrayList<>();
 
                     try (ResultSet rs = stmt.executeQuery()) {
-                        List<LocalDateTime> ins = new ArrayList<>();
-                        List<LocalDateTime> outs = new ArrayList<>();
-
                         while (rs.next()) {
                             String type = rs.getString("check_type");
                             Timestamp ts = rs.getTimestamp("checked_at");
@@ -843,62 +837,80 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                                 outs.add(ts.toLocalDateTime());
                             }
                         }
+                    }
 
-                        // Sắp xếp để tìm lần chấm công cuối
-                        ins.sort(Comparator.naturalOrder());
-                        outs.sort(Comparator.naturalOrder());
+                    // Sắp xếp thời gian ascending
+                    ins.sort(Comparator.naturalOrder());
+                    outs.sort(Comparator.naturalOrder());
 
-                        LocalDateTime lastIn = ins.isEmpty() ? null : ins.get(ins.size() - 1);
-                        LocalDateTime lastOut = outs.isEmpty() ? null : outs.get(outs.size() - 1);
+                    // Ghép cặp theo logic: check-in đầu tiên → check-out gần nhất
+                    List<Pair<LocalDateTime, LocalDateTime>> existingPairs = new ArrayList<>();
+                    List<LocalDateTime> remainingIns = new ArrayList<>(ins);
+                    List<LocalDateTime> remainingOuts = new ArrayList<>(outs);
 
-                        // 1️⃣ Kiểm tra trùng/overlap
-                        for (int i = 0; i < ins.size(); i++) {
-                            LocalDateTime existIn = ins.get(i);
-                            LocalDateTime existOut = (i < outs.size()) ? outs.get(i) : existIn.plusHours(8); // ca mặc định
+                    while (!remainingIns.isEmpty()) {
+                        LocalDateTime in = remainingIns.remove(0);
+                        LocalDateTime out = null;
 
-                            boolean overlap = false;
-
-                            if (newCheckIn != null && newCheckOut != null) {
-                                overlap = newCheckIn.isBefore(existOut) && newCheckOut.isAfter(existIn);
-                            } else if (newCheckIn != null) {
-                                overlap = !newCheckIn.isBefore(existIn) && !newCheckIn.isAfter(existOut);
-                            } else if (newCheckOut != null) {
-                                overlap = !newCheckOut.isBefore(existIn) && !newCheckOut.isAfter(existOut);
-                            }
-
-                            if (overlap) {
-                                log.setOldCheckIn(existIn.toLocalTime());
-                                log.setOldCheckOut(existOut.toLocalTime());
-                                hasConflict = true;
+                        for (Iterator<LocalDateTime> it = remainingOuts.iterator(); it.hasNext();) {
+                            LocalDateTime candidateOut = it.next();
+                            if (!candidateOut.isBefore(in)) { // out >= in
+                                out = candidateOut;
+                                it.remove();
                                 break;
                             }
                         }
 
-                        if (!hasConflict) {
-                            // 2️⃣ Kiểm tra hạn chế thêm check-in hoặc check-out
-                            if (lastIn != null && lastOut != null) {
-                                // Lần cuối IN trước OUT → hợp lệ
-                                if (lastIn.isAfter(lastOut)) {
-                                    // Lần cuối là IN → không cho thêm IN
-                                    if (newCheckIn != null) {
-                                        hasConflict = true;
-                                    }
-                                } else {
-                                    // Lần cuối là OUT → không cho thêm OUT
-                                    if (newCheckOut != null) {
-                                        hasConflict = true;
-                                    }
-                                }
-                            } else if (lastIn != null && lastOut == null) {
-                                // Chưa có OUT → lastIn là lần cuối
-                                if (newCheckIn != null) {
-                                    hasConflict = true;
-                                }
-                            } else if (lastIn == null && lastOut != null) {
-                                // Chưa có IN → lastOut là lần cuối
-                                if (newCheckOut != null) {
-                                    hasConflict = true;
-                                }
+                        // Nếu không tìm được check-out phù hợp → out = in + 8h
+                        if (out == null) {
+                            out = in.plusHours(8);
+                        }
+
+                        existingPairs.add(Pair.of(in, out));
+                    }
+
+                    // Kiểm tra trùng với các cặp
+                    for (Pair<LocalDateTime, LocalDateTime> pair : existingPairs) {
+                        LocalDateTime existIn = pair.getLeft();
+                        LocalDateTime existOut = pair.getRight();
+
+                        boolean overlap = false;
+                        if (newCheckIn != null && newCheckOut != null) {
+                            overlap = newCheckIn.isBefore(existOut) && newCheckOut.isAfter(existIn);
+                        } else if (newCheckIn != null) {
+                            overlap = !newCheckIn.isBefore(existIn) && !newCheckIn.isAfter(existOut);
+                        } else if (newCheckOut != null) {
+                            overlap = !newCheckOut.isBefore(existIn) && !newCheckOut.isAfter(existOut);
+                        }
+
+                        if (overlap) {
+                            log.setOldCheckIn(existIn.toLocalTime());
+                            log.setOldCheckOut(existOut.toLocalTime());
+                            hasConflict = true;
+                            System.out.println("Invalid because overlap: " + log.getEmployeeName()
+                                    + ", newCheckIn=" + newCheckIn + ", newCheckOut=" + newCheckOut
+                                    + ", existIn=" + existIn + ", existOut=" + existOut);
+                            break;
+                        }
+                    }
+
+                    // Kiểm tra các check-in/check-out dư thừa (không ghép được)
+                    if (!hasConflict) {
+                        for (LocalDateTime extraIn : remainingIns) {
+                            if (newCheckIn != null && !newCheckIn.isBefore(extraIn) && !newCheckIn.isAfter(extraIn.plusHours(8))) {
+                                hasConflict = true;
+                                System.out.println("Invalid because extra IN: " + log.getEmployeeName()
+                                        + ", newCheckIn=" + newCheckIn + ", extraIn=" + extraIn);
+                                break;
+                            }
+                        }
+
+                        for (LocalDateTime extraOut : remainingOuts) {
+                            if (newCheckOut != null && !newCheckOut.isBefore(extraOut.minusHours(8)) && !newCheckOut.isAfter(extraOut)) {
+                                hasConflict = true;
+                                System.out.println("Invalid because extra OUT: " + log.getEmployeeName()
+                                        + ", newCheckOut=" + newCheckOut + ", extraOut=" + extraOut);
+                                break;
                             }
                         }
                     }
@@ -908,6 +920,138 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                     invalidLogs.add(log);
                 } else {
                     validLogs.add(log);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public Map<String, List<AttendanceLogDto>> validateAndImportExcelLogs(List<AttendanceLogDto> excelLogs) throws SQLException {
+        Map<String, List<AttendanceLogDto>> result = new HashMap<>();
+        List<AttendanceLogDto> validLogs = new ArrayList<>();
+        List<AttendanceLogDto> invalidLogs = new ArrayList<>();
+        result.put("valid", validLogs);
+        result.put("invalid", invalidLogs);
+
+        if (excelLogs == null || excelLogs.isEmpty()) {
+            return result;
+        }
+
+        try (Connection conn = DatabaseUtil.getConnection()) {
+            // Không cần transaction nữa vì không insert
+            for (AttendanceLogDto log : excelLogs) {
+                boolean hasConflict = false;
+
+                if (log.getUserId() == null || log.getDate() == null
+                        || (log.getCheckIn() == null && log.getCheckOut() == null)) {
+                    invalidLogs.add(log);
+                    continue;
+                }
+
+                LocalDateTime newCheckIn = log.getCheckIn() != null ? log.getDate().atTime(log.getCheckIn()) : null;
+                LocalDateTime newCheckOut = null;
+                if (log.getCheckOut() != null) {
+                    if (log.getCheckIn() != null && log.getCheckOut().isBefore(log.getCheckIn())) {
+                        newCheckOut = log.getDate().plusDays(1).atTime(log.getCheckOut());
+                    } else {
+                        newCheckOut = log.getDate().atTime(log.getCheckOut());
+                    }
+                }
+
+                // Lấy tất cả log của user cùng ngày
+                String sql = "SELECT checked_at, check_type FROM attendance_logs WHERE user_id = ? AND DATE(checked_at) = ?";
+                List<LocalDateTime> ins = new ArrayList<>();
+                List<LocalDateTime> outs = new ArrayList<>();
+
+                try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                    stmt.setLong(1, log.getUserId());
+                    stmt.setDate(2, java.sql.Date.valueOf(log.getDate()));
+
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        while (rs.next()) {
+                            String type = rs.getString("check_type");
+                            Timestamp ts = rs.getTimestamp("checked_at");
+                            if (ts == null || type == null) {
+                                continue;
+                            }
+
+                            if ("IN".equalsIgnoreCase(type)) {
+                                ins.add(ts.toLocalDateTime());
+                            } else if ("OUT".equalsIgnoreCase(type)) {
+                                outs.add(ts.toLocalDateTime());
+                            }
+                        }
+                    }
+                }
+
+                ins.sort(Comparator.naturalOrder());
+                outs.sort(Comparator.naturalOrder());
+
+                // Ghép cặp check-in/out
+                List<Pair<LocalDateTime, LocalDateTime>> existingPairs = new ArrayList<>();
+                List<LocalDateTime> remainingIns = new ArrayList<>(ins);
+                List<LocalDateTime> remainingOuts = new ArrayList<>(outs);
+
+                while (!remainingIns.isEmpty()) {
+                    LocalDateTime in = remainingIns.remove(0);
+                    LocalDateTime out = null;
+                    for (Iterator<LocalDateTime> it = remainingOuts.iterator(); it.hasNext();) {
+                        LocalDateTime candidateOut = it.next();
+                        if (!candidateOut.isBefore(in)) {
+                            out = candidateOut;
+                            it.remove();
+                            break;
+                        }
+                    }
+                    if (out == null) {
+                        out = in.plusHours(8);
+                    }
+                    existingPairs.add(Pair.of(in, out));
+                }
+
+                // Kiểm tra trùng với các cặp
+                for (Pair<LocalDateTime, LocalDateTime> pair : existingPairs) {
+                    LocalDateTime existIn = pair.getLeft();
+                    LocalDateTime existOut = pair.getRight();
+
+                    boolean overlap = false;
+                    if (newCheckIn != null && newCheckOut != null) {
+                        overlap = newCheckIn.isBefore(existOut) && newCheckOut.isAfter(existIn);
+                    } else if (newCheckIn != null) {
+                        overlap = !newCheckIn.isBefore(existIn) && !newCheckIn.isAfter(existOut);
+                    } else if (newCheckOut != null) {
+                        overlap = !newCheckOut.isBefore(existIn) && !newCheckOut.isAfter(existOut);
+                    }
+
+                    if (overlap) {
+                        log.setOldCheckIn(existIn.toLocalTime());
+                        log.setOldCheckOut(existOut.toLocalTime());
+                        hasConflict = true;
+                        break;
+                    }
+                }
+
+                // Kiểm tra các check-in/check-out dư thừa
+                if (!hasConflict) {
+                    for (LocalDateTime extraIn : remainingIns) {
+                        if (newCheckIn != null && !newCheckIn.isBefore(extraIn) && !newCheckIn.isAfter(extraIn.plusHours(8))) {
+                            hasConflict = true;
+                            break;
+                        }
+                    }
+                    for (LocalDateTime extraOut : remainingOuts) {
+                        if (newCheckOut != null && !newCheckOut.isBefore(extraOut.minusHours(8)) && !newCheckOut.isAfter(extraOut)) {
+                            hasConflict = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (hasConflict) {
+                    invalidLogs.add(log);
+                } else {
+                    validLogs.add(log); // Chỉ phân loại, không insert vào DB
                 }
             }
         }
