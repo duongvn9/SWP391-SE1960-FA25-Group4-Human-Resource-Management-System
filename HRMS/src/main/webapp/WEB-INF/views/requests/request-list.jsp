@@ -60,40 +60,11 @@
                 </div>
             </div>
 
-            <!-- Alerts -->
-            <!-- Check for error in request scope first, then session scope -->
-            <c:if test="${not empty error}">
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <i class="fas fa-exclamation-circle me-2"></i>
-                    <c:out value="${error}" />
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            </c:if>
-            <c:if test="${empty error and not empty sessionScope.error}">
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <i class="fas fa-exclamation-circle me-2"></i>
-                    <c:out value="${sessionScope.error}" />
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                <c:remove var="error" scope="session" />
-            </c:if>
-
-            <!-- Check for success in request scope first, then session scope -->
-            <c:if test="${not empty success}">
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <i class="fas fa-check-circle me-2"></i>
-                    <c:out value="${success}" />
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            </c:if>
-            <c:if test="${empty success and not empty sessionScope.success}">
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <i class="fas fa-check-circle me-2"></i>
-                    <c:out value="${sessionScope.success}" />
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                <c:remove var="success" scope="session" />
-            </c:if>
+            <!-- Hidden inputs for toast notifications -->
+            <input type="hidden" id="serverError" value="${not empty error ? error : sessionScope.error}">
+            <input type="hidden" id="serverSuccess" value="${not empty success ? success : sessionScope.success}">
+            <c:remove var="error" scope="session" />
+            <c:remove var="success" scope="session" />
 
             <!-- Statistics Cards (for all users) -->
             <!-- Counts are based on ALL requests in the current scope, not just the paginated results -->
@@ -411,5 +382,151 @@
 
     <!-- Page specific JS -->
     <script src="${pageContext.request.contextPath}/assets/js/request-list.js?v=2"></script>
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 11000;">
+        <div id="responseToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header" id="toastHeader">
+                <i class="fas fa-circle me-2" id="toastIcon"></i>
+                <strong class="me-auto" id="toastTitle">Notification</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="toastBody">
+                <!-- Message will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Styles -->
+    <style>
+        .toast-container {
+            z-index: 11000;
+        }
+
+        .toast {
+            min-width: 350px;
+            max-width: 550px;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            animation: slideInRight 0.3s ease-out;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .toast-header {
+            font-weight: 600;
+        }
+
+        .toast-header.bg-danger {
+            background-color: #dc3545 !important;
+            color: white;
+        }
+
+        .toast-header.bg-success {
+            background-color: #198754 !important;
+            color: white;
+        }
+
+        .toast-header.bg-warning {
+            background-color: #ffc107 !important;
+            color: #000;
+        }
+
+        .toast-header.bg-info {
+            background-color: #0dcaf0 !important;
+            color: #000;
+        }
+
+        .toast-header .btn-close {
+            filter: brightness(0) invert(1);
+        }
+
+        .toast-header.bg-warning .btn-close,
+        .toast-header.bg-info .btn-close {
+            filter: brightness(0);
+        }
+
+        .toast-body {
+            padding: 1rem;
+            font-size: 0.95rem;
+        }
+    </style>
+
+    <!-- Toast JavaScript -->
+    <script>
+        /**
+         * Show a toast notification
+         * @param {string} message - The message to display
+         * @param {string} type - Type of toast: 'success', 'danger', 'warning', 'info'
+         * @param {string} title - Optional title (default: 'Notification')
+         */
+        function showToast(message, type = 'info', title = 'Notification') {
+            const toastElement = document.getElementById('responseToast');
+            const toastHeader = document.getElementById('toastHeader');
+            const toastIcon = document.getElementById('toastIcon');
+            const toastTitle = document.getElementById('toastTitle');
+            const toastBody = document.getElementById('toastBody');
+
+            // Reset classes
+            toastHeader.className = 'toast-header';
+            toastIcon.className = 'fas fa-circle me-2';
+
+            // Set type-specific styling
+            switch(type) {
+                case 'success':
+                    toastHeader.classList.add('bg-success');
+                    toastIcon.classList.add('fa-check-circle');
+                    toastTitle.textContent = title || 'Success';
+                    break;
+                case 'danger':
+                case 'error':
+                    toastHeader.classList.add('bg-danger');
+                    toastIcon.classList.add('fa-exclamation-circle');
+                    toastTitle.textContent = title || 'Error';
+                    break;
+                case 'warning':
+                    toastHeader.classList.add('bg-warning');
+                    toastIcon.classList.add('fa-exclamation-triangle');
+                    toastTitle.textContent = title || 'Warning';
+                    break;
+                case 'info':
+                default:
+                    toastHeader.classList.add('bg-info');
+                    toastIcon.classList.add('fa-info-circle');
+                    toastTitle.textContent = title || 'Information';
+                    break;
+            }
+
+            // Set message
+            toastBody.textContent = message;
+
+            // Show toast
+            const toast = new bootstrap.Toast(toastElement, {
+                autohide: true,
+                delay: 5000
+            });
+            toast.show();
+        }
+
+        // Auto-show toast on page load if there's a server message
+        document.addEventListener('DOMContentLoaded', function() {
+            const errorInput = document.getElementById('serverError');
+            const successInput = document.getElementById('serverSuccess');
+
+            if (errorInput && errorInput.value && errorInput.value.trim() !== '') {
+                showToast(errorInput.value, 'danger', 'Error');
+            } else if (successInput && successInput.value && successInput.value.trim() !== '') {
+                showToast(successInput.value, 'success', 'Success');
+            }
+        });
+    </script>
 </body>
 </html>

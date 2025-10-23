@@ -18,7 +18,8 @@ function openApprovalModal(requestId, requestTitle, requestStatus) {
 
     // Get employee name from the page (displayed in the request information card)
     const employeeName = document.querySelector('.fw-semibold')?.textContent.trim() || 'N/A';
-    document.getElementById('modalEmployeeName').textContent = employeeName;
+    const modalEmployeeNameEl = document.getElementById('modalEmployeeName');
+    if (modalEmployeeNameEl) modalEmployeeNameEl.textContent = employeeName;
 
     // Reset form fields
     const approvalReasonEl = document.getElementById('approvalReason');
@@ -71,13 +72,15 @@ function submitApproval() {
     // Validate: reason is ALWAYS required for both accept and reject
     if (!reason) {
         reasonField.classList.add('is-invalid');
-        document.getElementById('reasonError').style.display = 'block';
+        const reasonErrorEl = document.getElementById('reasonError');
+        if (reasonErrorEl) reasonErrorEl.style.display = 'block';
         return;
     }
 
     // Clear validation state
     reasonField.classList.remove('is-invalid');
-    document.getElementById('reasonError').style.display = 'none';
+    const reasonErrorEl = document.getElementById('reasonError');
+    if (reasonErrorEl) reasonErrorEl.style.display = 'none';
 
     // Disable submit button to prevent double submission
     const submitBtn = event.target;
@@ -186,47 +189,68 @@ function showErrorMessage(message) {
 }
 
 /**
- * Show a message to the user using Bootstrap alert
+ * Show a toast notification using Bootstrap Toast API
  * @param {string} message - The message to display
  * @param {string} type - The Bootstrap alert type: 'success', 'danger', 'info', 'warning'
  */
 function showMessage(message, type) {
-    // Check if there's an existing message container
-    let messageContainer = document.getElementById('message-container');
-
-    if (!messageContainer) {
-        // Create message container if it doesn't exist
-        messageContainer = document.createElement('div');
-        messageContainer.id = 'message-container';
-        messageContainer.style.cssText = 'position: fixed; top: 80px; right: 20px; z-index: 10000; max-width: 400px;';
-        document.body.appendChild(messageContainer);
+    // Use the showToast function from the page if available
+    if (typeof showToast === 'function') {
+        showToast(message, type);
+        return;
     }
 
-    // Create alert element
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} alert-dismissible fade show shadow-sm`;
-    alertDiv.setAttribute('role', 'alert');
+    // Fallback: call showToast directly with proper parameters
+    const toastElement = document.getElementById('responseToast');
+    if (!toastElement) {
+        console.error('Toast element not found');
+        return;
+    }
 
-    // Add icon based on type
-    let icon = 'fa-info-circle';
-    if (type === 'success') icon = 'fa-check-circle';
-    if (type === 'danger') icon = 'fa-exclamation-circle';
-    if (type === 'warning') icon = 'fa-exclamation-triangle';
+    const toastHeader = document.getElementById('toastHeader');
+    const toastIcon = document.getElementById('toastIcon');
+    const toastTitle = document.getElementById('toastTitle');
+    const toastBody = document.getElementById('toastBody');
 
-    alertDiv.innerHTML = `
-        <i class="fas ${icon} me-2"></i>${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    `;
+    // Reset classes
+    toastHeader.className = 'toast-header';
+    toastIcon.className = 'fas fa-circle me-2';
 
-    messageContainer.appendChild(alertDiv);
+    // Set type-specific styling
+    switch(type) {
+        case 'success':
+            toastHeader.classList.add('bg-success');
+            toastIcon.classList.add('fa-check-circle');
+            toastTitle.textContent = 'Success';
+            break;
+        case 'error':
+        case 'danger':
+            toastHeader.classList.add('bg-danger');
+            toastIcon.classList.add('fa-exclamation-circle');
+            toastTitle.textContent = 'Error';
+            break;
+        case 'warning':
+            toastHeader.classList.add('bg-warning');
+            toastIcon.classList.add('fa-exclamation-triangle');
+            toastTitle.textContent = 'Warning';
+            break;
+        case 'info':
+        default:
+            toastHeader.classList.add('bg-info');
+            toastIcon.classList.add('fa-info-circle');
+            toastTitle.textContent = 'Information';
+            break;
+    }
 
-    // Auto-dismiss after 5 seconds
-    setTimeout(() => {
-        alertDiv.classList.remove('show');
-        setTimeout(() => {
-            alertDiv.remove();
-        }, 150);
-    }, 5000);
+    // Set message
+    toastBody.textContent = message;
+
+    // Show toast
+    const toast = new bootstrap.Toast(toastElement, {
+        autohide: true,
+        delay: 5000
+    });
+    toast.show();
 }
 
 /**
@@ -239,7 +263,8 @@ document.addEventListener('DOMContentLoaded', function () {
         reasonField.addEventListener('input', function () {
             if (this.value.trim()) {
                 this.classList.remove('is-invalid');
-                document.getElementById('reasonError').style.display = 'none';
+                const reasonErrorEl = document.getElementById('reasonError');
+                if (reasonErrorEl) reasonErrorEl.style.display = 'none';
             }
         });
     }

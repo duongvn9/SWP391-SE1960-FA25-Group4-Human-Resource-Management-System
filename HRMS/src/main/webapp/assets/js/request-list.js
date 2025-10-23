@@ -142,57 +142,68 @@ function getContextPath() {
 }
 
 /**
- * Show a message to the user
+ * Show a toast notification using Bootstrap Toast API
  * @param {string} message - The message to display
  * @param {string} type - The message type: 'success', 'error', 'info', 'warning'
  */
 function showMessage(message, type) {
-    // Check if there's an existing message container
-    let messageContainer = document.getElementById('message-container');
-
-    if (!messageContainer) {
-        // Create message container if it doesn't exist
-        messageContainer = document.createElement('div');
-        messageContainer.id = 'message-container';
-        messageContainer.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 400px;';
-        document.body.appendChild(messageContainer);
+    // Use the showToast function from the page if available
+    if (typeof showToast === 'function') {
+        showToast(message, type);
+        return;
     }
 
-    // Create message element
-    const messageDiv = document.createElement('div');
-    messageDiv.className = 'alert alert-' + getBootstrapAlertClass(type) + ' alert-dismissible fade show';
-    messageDiv.setAttribute('role', 'alert');
-    messageDiv.innerHTML = `
-        ${message}
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    `;
+    // Fallback: call showToast directly with proper parameters
+    const toastElement = document.getElementById('responseToast');
+    if (!toastElement) {
+        console.error('Toast element not found');
+        return;
+    }
 
-    messageContainer.appendChild(messageDiv);
+    const toastHeader = document.getElementById('toastHeader');
+    const toastIcon = document.getElementById('toastIcon');
+    const toastTitle = document.getElementById('toastTitle');
+    const toastBody = document.getElementById('toastBody');
 
-    // Auto-dismiss after 5 seconds
-    setTimeout(() => {
-        messageDiv.classList.remove('show');
-        setTimeout(() => {
-            messageDiv.remove();
-        }, 150);
-    }, 5000);
-}
+    // Reset classes
+    toastHeader.className = 'toast-header';
+    toastIcon.className = 'fas fa-circle me-2';
 
-/**
- * Convert message type to Bootstrap alert class
- * @param {string} type - Message type
- * @returns {string} Bootstrap alert class
- */
-function getBootstrapAlertClass(type) {
-    const typeMap = {
-        'success': 'success',
-        'error': 'danger',
-        'info': 'info',
-        'warning': 'warning'
-    };
-    return typeMap[type] || 'info';
+    // Set type-specific styling
+    switch(type) {
+        case 'success':
+            toastHeader.classList.add('bg-success');
+            toastIcon.classList.add('fa-check-circle');
+            toastTitle.textContent = 'Success';
+            break;
+        case 'error':
+        case 'danger':
+            toastHeader.classList.add('bg-danger');
+            toastIcon.classList.add('fa-exclamation-circle');
+            toastTitle.textContent = 'Error';
+            break;
+        case 'warning':
+            toastHeader.classList.add('bg-warning');
+            toastIcon.classList.add('fa-exclamation-triangle');
+            toastTitle.textContent = 'Warning';
+            break;
+        case 'info':
+        default:
+            toastHeader.classList.add('bg-info');
+            toastIcon.classList.add('fa-info-circle');
+            toastTitle.textContent = 'Information';
+            break;
+    }
+
+    // Set message
+    toastBody.textContent = message;
+
+    // Show toast
+    const toast = new bootstrap.Toast(toastElement, {
+        autohide: true,
+        delay: 5000
+    });
+    toast.show();
 }
 
 /**
