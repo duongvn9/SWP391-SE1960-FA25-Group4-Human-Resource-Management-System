@@ -102,9 +102,47 @@
                 pointer-events: auto;
             }
         </style>
+        <style>
+            .tab-header {
+                display: flex;
+                gap: 10px;
+                margin-bottom: 15px;
+                border-bottom: 2px solid #ddd;
+                padding-bottom: 8px;
+            }
+
+            .tab-btn {
+                background-color: #f5f5f5;
+                border: 1px solid #ccc;
+                border-radius: 8px;
+                padding: 8px 16px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: 500;
+                transition: all 0.25s ease;
+                color: #333;
+            }
+
+            .tab-btn:hover {
+                background-color: #007bff;
+                color: #fff;
+                border-color: #007bff;
+                transform: translateY(-2px);
+                box-shadow: 0 2px 6px rgba(0, 123, 255, 0.3);
+            }
+
+            /* Trạng thái tab đang được chọn */
+            .tab-btn.active {
+                background-color: #007bff;
+                color: #fff;
+                border-color: #007bff;
+                box-shadow: 0 2px 6px rgba(0, 123, 255, 0.3);
+            }
+        </style>
 
     </head>
     <body class="import-attendance-page">
+        <c:set var="activeTab" value="${activeTab != null ? activeTab : 'upload'}" />
         <jsp:include page="../layout/sidebar.jsp">
             <jsp:param name="currentPage" value="attendance-record-emp" />
         </jsp:include>
@@ -127,6 +165,7 @@
                     <h3 class="section-title">Upload File (Excel)</h3>
 
                     <form class="upload-form" action="${pageContext.request.contextPath}/attendance/import" method="post" enctype="multipart/form-data">
+                        <input type="hidden" name="activeTab" value="upload" />
                         <div class="form-group">
                             <label class="form-label" for="fileInput">Select File to Import:</label>
                             <div class="file-upload">
@@ -376,6 +415,7 @@
                                 <i class="fas fa-trash"></i> Delete Row
                             </button>
                             <form id="manualImportForm" action="${pageContext.request.contextPath}/attendance/import" method="post">
+                                <input type="hidden" name="activeTab" value="manual" />
                                 <input type="hidden" name="action" value="ManualImport" />
                                 <input type="hidden" id="manualData" name="manualData" />
                                 <button type="submit" class="btn btn-import">Import</button>
@@ -467,9 +507,9 @@
         </script>
         <script>
             document.addEventListener("DOMContentLoaded", () => {
-
                 const tbody = document.querySelector("#manualTable tbody");
                 const template = document.getElementById("manualRowTemplate");
+                const selectAll = document.getElementById("selectAllRows");
 
                 // Delete Row
                 document.getElementById("deleteRowBtn").addEventListener("click", () => {
@@ -482,16 +522,62 @@
                     if (confirm(`Are you sure you want to delete ${selectedRows.length} row(s)?`)) {
                         selectedRows.forEach(chk => chk.closest("tr").remove());
                     }
+
+                    // Sau khi xóa xong: bỏ chọn tất cả checkbox
+                    selectAll.checked = false;
+                    tbody.querySelectorAll(".row-select").forEach(chk => chk.checked = false);
                 });
 
                 // Select / Deselect All
-                const selectAll = document.getElementById("selectAllRows");
                 selectAll.addEventListener("change", () => {
                     tbody.querySelectorAll(".row-select").forEach(chk => chk.checked = selectAll.checked);
                 });
-
             });
+        </script>
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                function showTab(tabId) {
+                    // Ẩn tất cả tab
+                    document.querySelectorAll(".tab-content").forEach(tab => {
+                        tab.classList.remove("active");
+                        tab.style.display = "none";
+                    });
 
+                    // Hiện tab được chọn
+                    const selectedTab = document.getElementById(tabId);
+                    if (selectedTab) {
+                        selectedTab.classList.add("active");
+                        selectedTab.style.display = "block";
+                    }
+
+                    // Cập nhật nút
+                    document.querySelectorAll(".tab-btn").forEach(btn => {
+                        btn.classList.remove("active");
+                        btn.setAttribute("aria-selected", "false");
+                    });
+
+                    const activeBtn = document.getElementById(tabId + "-btn");
+                    if (activeBtn) {
+                        activeBtn.classList.add("active");
+                        activeBtn.setAttribute("aria-selected", "true");
+                    }
+
+                    // Cập nhật hidden input trong form để submit giữ tab
+                    document.querySelectorAll('input[name="activeTab"]').forEach(input => input.value = tabId);
+                }
+
+                // Lấy giá trị từ JSTL
+                const activeTab = "${activeTab}";
+                showTab(activeTab);
+
+                // Khi click nút tab
+                document.querySelectorAll(".tab-btn").forEach(btn => {
+                    btn.addEventListener("click", () => {
+                        const tabId = btn.id.replace("-btn", "");
+                        showTab(tabId);
+                    });
+                });
+            });
         </script>
     </body>
 </html>
