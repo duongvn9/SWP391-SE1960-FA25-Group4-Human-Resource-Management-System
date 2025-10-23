@@ -344,13 +344,13 @@
                                 <li>
                                     <a href="${pageContext.request.contextPath}/job-postings"
                                         class="nav-link ${param.currentPage == 'job-postings' ? 'active' : ''}">
-                                        <i class="fas fa-list"></i><span>Job Postings</span>
+                                        <i class="fas fa-list"></i><span>Job Postings List</span>
                                     </a>
                                 </li>
                                 <li>
                                     <a href="${pageContext.request.contextPath}/recruitment/approved"
                                         class="nav-link ${param.currentPage == 'approved-recruitment-requests' ? 'active' : ''}">
-                                        <i class="fas fa-check-circle"></i><span>Approved Recruitment Requests</span>
+                                        <i class="fas fa-plus-circle"></i><span>Create Job Posting</span>
                                     </a>
                                 </li>
                             </ul>

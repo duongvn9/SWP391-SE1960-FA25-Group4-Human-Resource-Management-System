@@ -1,23 +1,24 @@
 package group4.hrms.controller;
 
-import group4.hrms.service.JobPostingService;
-import group4.hrms.service.DepartmentService;
-import group4.hrms.model.JobPosting;
-import group4.hrms.model.Department;
-import group4.hrms.util.SecurityUtil;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import group4.hrms.model.Department;
+import group4.hrms.model.JobPosting;
+import group4.hrms.service.DepartmentService;
+import group4.hrms.service.JobPostingService;
+import group4.hrms.util.SecurityUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.List;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.ArrayList;
 
 @WebServlet("/job-postings")
 public class JobPostingListServlet extends HttpServlet {
@@ -50,13 +51,17 @@ public class JobPostingListServlet extends HttpServlet {
         String departmentIdStr = request.getParameter("departmentId");
         String jobType = request.getParameter("jobType");
         String jobLevel = request.getParameter("jobLevel");
+        String priority = request.getParameter("priority");
         String searchQuery = request.getParameter("q"); // For title/code search
         String sortBy = request.getParameter("sortBy"); // For sorting
         String pageStr = request.getParameter("page");
         
+        logger.info("Job Postings List - Filters: status={}, dept={}, type={}, level={}, priority={}", 
+                    status, departmentIdStr, jobType, jobLevel, priority);
+        
         // Parse pagination parameters
         int page = 1;
-        int pageSize = 10;
+        int pageSize = 20; // Increased from 10 to 20 for better view
         if (pageStr != null) {
             try {
                 page = Integer.parseInt(pageStr);
@@ -74,11 +79,14 @@ public class JobPostingListServlet extends HttpServlet {
 
         // Build search criteria map
         Map<String, Object> searchCriteria = new HashMap<>();
-        // If status is not specified, default to PENDING
-        searchCriteria.put("status", (status != null && !status.isEmpty()) ? status : "PENDING");
+        // Don't default to PENDING - show all if not specified
+        if (status != null && !status.isEmpty()) {
+            searchCriteria.put("status", status);
+        }
         if (departmentId != null) searchCriteria.put("departmentId", departmentId);
         if (jobType != null && !jobType.isEmpty()) searchCriteria.put("jobType", jobType);
         if (jobLevel != null && !jobLevel.isEmpty()) searchCriteria.put("jobLevel", jobLevel);
+        if (priority != null && !priority.isEmpty()) searchCriteria.put("priority", priority);
         if (searchQuery != null && !searchQuery.trim().isEmpty()) searchCriteria.put("searchQuery", searchQuery.trim());
         if (sortBy != null && !sortBy.isEmpty()) searchCriteria.put("sortBy", sortBy);
         
@@ -120,6 +128,7 @@ public class JobPostingListServlet extends HttpServlet {
         request.setAttribute("selectedDepartmentId", departmentId);
         request.setAttribute("selectedJobType", jobType);
         request.setAttribute("selectedJobLevel", jobLevel);
+        request.setAttribute("selectedPriority", priority);
         request.setAttribute("searchQuery", searchQuery);
         request.setAttribute("sortBy", sortBy);
         

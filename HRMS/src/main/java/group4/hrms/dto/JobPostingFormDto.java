@@ -42,6 +42,17 @@ public class JobPostingFormDto {
         if (isBlank(jobTitle) && isBlank(positionName)) {
             errors.put("positionName", "Position name or Job title is required");
         }
+        
+        // Job title validation - enhanced
+        if (!isBlank(jobTitle)) {
+            if (jobTitle.length() < 3) {
+                errors.put("jobTitle", "Job title must be at least 3 characters");
+            }
+            if (jobTitle.length() > 255) {
+                errors.put("jobTitle", "Job title cannot exceed 255 characters");
+            }
+        }
+        
         if (isBlank(jobLevel)) {
             errors.put("jobLevel", "Job level is required");
         }
@@ -55,22 +66,42 @@ public class JobPostingFormDto {
             errors.put("jobType", "Invalid job type");
         }
         
-        // Validate priority
-        if (!isBlank(priority) && !isValidPriority(priority)) {
+        // Validate priority - make it required
+        if (isBlank(priority)) {
+            errors.put("priority", "Priority level is required");
+        } else if (!isValidPriority(priority)) {
             errors.put("priority", "Invalid priority level");
         }
+        
         if (numberOfPositions == null || numberOfPositions < 1) {
             errors.put("numberOfPositions", "Number of positions must be at least 1");
+        } else if (numberOfPositions > 100) {
+            errors.put("numberOfPositions", "Number of positions cannot exceed 100");
         }
 
-        // Job title validation
-        if (isBlank(jobTitle) && !isBlank(positionName)) {
-            // OK - use positionName as fallback
-        }
-
-        // No-op use of code to avoid unused-field warnings (validation may allow blank code)
+        // Job code validation
         if (!isBlank(code) && code.length() > 128) {
             errors.put("code", "Code cannot exceed 128 characters");
+        }
+        
+        // Min Experience Years validation
+        if (minExperienceYears != null) {
+            if (minExperienceYears < 0) {
+                errors.put("minExperienceYears", "Experience years cannot be negative");
+            }
+            if (minExperienceYears > 50) {
+                errors.put("minExperienceYears", "Experience years cannot exceed 50 years");
+            }
+        }
+        
+        // Start date validation
+        if (startDate != null && startDate.isBefore(LocalDate.now())) {
+            errors.put("startDate", "Start date cannot be in the past");
+        }
+        
+        // Working hours validation
+        if (!isBlank(workingHours) && workingHours.length() > 255) {
+            errors.put("workingHours", "Working hours cannot exceed 255 characters");
         }
 
             // Salary validation
@@ -107,6 +138,8 @@ public class JobPostingFormDto {
 
         if (isBlank(location)) {
             errors.put("location", "Working location is required");
+        } else if (location.length() > 255) {
+            errors.put("location", "Working location cannot exceed 255 characters");
         }
 
         // Deadline validation

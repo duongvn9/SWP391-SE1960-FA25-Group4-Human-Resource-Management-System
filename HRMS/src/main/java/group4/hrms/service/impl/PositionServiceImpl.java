@@ -1,13 +1,13 @@
 package group4.hrms.service.impl;
 
-import group4.hrms.dao.PositionDao;
-import group4.hrms.model.Position;
-import group4.hrms.service.PositionService;
-import jakarta.inject.Inject;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
+import group4.hrms.dao.PositionDao;
+import group4.hrms.model.Position;
+import group4.hrms.service.PositionService;
 
 /**
  * Implementation of PositionService

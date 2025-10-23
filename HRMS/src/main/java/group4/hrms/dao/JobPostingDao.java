@@ -49,6 +49,12 @@ public class JobPostingDao extends BaseDao<JobPosting, Long> {
         return requestIds;
     }
     
+    @Override
+    public JobPosting update(JobPosting entity) throws SQLException {
+        // Reuse save() method which has full field mapping
+        return save(entity);
+    }
+    
     @Override 
     public JobPosting save(JobPosting entity) throws SQLException {
         logger.debug("Starting save operation for JobPosting: {}", entity);
@@ -165,38 +171,88 @@ public class JobPostingDao extends BaseDao<JobPosting, Long> {
         JobPosting job = new JobPosting();
         job.setId(rs.getLong("id"));
         
+        // Request ID
         Long requestId = rs.getLong("request_id");
         if (!rs.wasNull()) {
             job.setRequestId(requestId);
         }
         
+        // Basic info
         job.setTitle(rs.getString("title"));
+        job.setCode(rs.getString("code"));
         
+        // Department & Position
         Long departmentId = rs.getLong("department_id");
         if (!rs.wasNull()) {
             job.setDepartmentId(departmentId);
         }
         
-    job.setDescription(rs.getString("description"));
-    // Quantity (number of positions) column in DB is named 'quantity'
-    int qty = rs.getInt("quantity");
-    if (!rs.wasNull()) {
-        job.setNumberOfPositions(qty);
-    }
-    // Salary fields
-    java.math.BigDecimal minSalary = rs.getBigDecimal("min_salary");
-    if (minSalary != null) job.setMinSalary(minSalary);
-    java.math.BigDecimal maxSalary = rs.getBigDecimal("max_salary");
-    if (maxSalary != null) job.setMaxSalary(maxSalary);
-    String salaryType = rs.getString("salary_type");
-    if (salaryType != null) job.setSalaryType(salaryType);
+        Long positionId = rs.getLong("position_id");
+        if (!rs.wasNull()) {
+            job.setPositionId(positionId);
+        }
         
-    String workingLocation = rs.getString("working_location");
-    if (workingLocation != null) job.setWorkingLocation(workingLocation);
+        // Job details
+        job.setJobType(rs.getString("job_type"));
+        job.setLevel(rs.getString("job_level"));
+        job.setPriority(rs.getString("priority"));
         
-    job.setStatus(rs.getString("status"));
+        // Quantity (number of positions) column in DB is named 'quantity'
+        int qty = rs.getInt("quantity");
+        if (!rs.wasNull()) {
+            job.setNumberOfPositions(qty);
+        }
+        
+        // Experience and dates
+        Integer minExp = (Integer) rs.getObject("min_experience_years");
+        if (minExp != null) {
+            job.setMinExperienceYears(minExp);
+        }
+        
+        job.setStartDate(getLocalDate(rs, "start_date"));
+        job.setApplicationDeadline(getLocalDate(rs, "application_deadline"));
+        
+        // Salary fields
+        java.math.BigDecimal minSalary = rs.getBigDecimal("min_salary");
+        if (minSalary != null) job.setMinSalary(minSalary);
+        java.math.BigDecimal maxSalary = rs.getBigDecimal("max_salary");
+        if (maxSalary != null) job.setMaxSalary(maxSalary);
+        String salaryType = rs.getString("salary_type");
+        if (salaryType != null) job.setSalaryType(salaryType);
+        
+        // Text content
+        job.setDescription(rs.getString("description"));
+        job.setRequirements(rs.getString("requirements"));
+        job.setBenefits(rs.getString("benefits"));
+        
+        // Location and hours
+        String workingLocation = rs.getString("working_location");
+        if (workingLocation != null) job.setWorkingLocation(workingLocation);
+        job.setWorkingHours(rs.getString("working_hours"));
+        
+        // Contact info
+        job.setContactEmail(rs.getString("contact_email"));
+        job.setContactPhone(rs.getString("contact_phone"));
+        
+        // Status and workflow
+        job.setStatus(rs.getString("status"));
+        job.setRejectedReason(rs.getString("rejected_reason"));
+        
+        // Approval tracking
+        Long approvedByAccountId = rs.getLong("approved_by_account_id");
+        if (!rs.wasNull()) {
+            job.setApprovedByAccountId(approvedByAccountId);
+        }
+        job.setApprovedAt(getLocalDateTime(rs, "approved_at"));
+        
+        // Publishing tracking
+        Long publishedByAccountId = rs.getLong("published_by_account_id");
+        if (!rs.wasNull()) {
+            job.setPublishedByAccountId(publishedByAccountId);
+        }
         job.setPublishedAt(getLocalDateTime(rs, "published_at"));
         
+        // Audit fields
         Long createdByAccountId = rs.getLong("created_by_account_id");
         if (!rs.wasNull()) {
             job.setCreatedByAccountId(createdByAccountId);

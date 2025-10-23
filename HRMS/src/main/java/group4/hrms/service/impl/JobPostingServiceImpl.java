@@ -1,22 +1,22 @@
 package group4.hrms.service.impl;
 
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import group4.hrms.dao.JobPostingDao;
 import group4.hrms.model.JobPosting;
 import group4.hrms.service.DepartmentService;
 import group4.hrms.service.JobPostingService;
 import group4.hrms.service.PositionService;
-import jakarta.inject.Inject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 /**
  * Implementation of JobPostingService
@@ -140,11 +140,10 @@ public class JobPostingServiceImpl implements JobPostingService {
     @Override
     public List<JobPosting> findJobPostings(Map<String, Object> criteria, int page, int pageSize) {
         try {
-            // Prefer specialized DAO methods when possible
-            if (criteria == null || !criteria.containsKey("status")) {
-                // If no criteria or no status specified, only return PENDING jobs by default
-                List<JobPosting> pendingJobs = jobPostingDao.findByStatus("PENDING");
-                return paginate(pendingJobs, page, pageSize);
+            // If no criteria, return all jobs
+            if (criteria == null || criteria.isEmpty()) {
+                List<JobPosting> allJobs = jobPostingDao.findAll();
+                return paginate(allJobs, page, pageSize);
             }
 
             // Search by requestId
@@ -179,11 +178,12 @@ public class JobPostingServiceImpl implements JobPostingService {
             // Fallback: load all and filter in-memory by available criteria
             List<JobPosting> all = jobPostingDao.findAll();
 
-            // Apply simple filters: status, departmentId, jobType, jobLevel, searchQuery
+            // Apply simple filters: status, departmentId, jobType, jobLevel, priority, searchQuery
             String status = criteria.get("status") instanceof String ? ((String) criteria.get("status")).trim() : null;
             Long departmentId = criteria.get("departmentId") instanceof Long ? (Long) criteria.get("departmentId") : null;
             String jobType = criteria.get("jobType") instanceof String ? ((String) criteria.get("jobType")).trim() : null;
             String jobLevel = criteria.get("jobLevel") instanceof String ? ((String) criteria.get("jobLevel")).trim() : null;
+            String priority = criteria.get("priority") instanceof String ? ((String) criteria.get("priority")).trim() : null;
             String searchQuery = criteria.get("searchQuery") instanceof String ? ((String) criteria.get("searchQuery")).trim().toLowerCase() : null;
 
             List<JobPosting> filtered = new java.util.ArrayList<>();
@@ -199,6 +199,9 @@ public class JobPostingServiceImpl implements JobPostingService {
                 }
                 if (jobLevel != null && !jobLevel.isEmpty()) {
                     if (jp.getLevel() == null || !jobLevel.equalsIgnoreCase(jp.getLevel())) continue;
+                }
+                if (priority != null && !priority.isEmpty()) {
+                    if (jp.getPriority() == null || !priority.equalsIgnoreCase(jp.getPriority())) continue;
                 }
                 if (searchQuery != null && !searchQuery.isEmpty()) {
                     String title = jp.getTitle() != null ? jp.getTitle().toLowerCase() : "";
@@ -231,7 +234,7 @@ public class JobPostingServiceImpl implements JobPostingService {
                 if (status.equalsIgnoreCase("PUBLISHED")) {
                     return jobPostingDao.findPublishedJobs().size();
                 }
-                return jobPostingDao.findByStatus(status.toLowerCase()).size();
+                return jobPostingDao.findByStatus(status.toUpperCase()).size();
             }
 
             // Fallback: reuse in-memory filtering from findJobPostings

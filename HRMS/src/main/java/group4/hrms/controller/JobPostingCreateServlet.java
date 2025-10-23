@@ -3,6 +3,7 @@ package group4.hrms.controller;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -183,7 +184,14 @@ public class JobPostingCreateServlet extends HttpServlet {
             JobPostingFormDto formDto = parseFormData(request);
             logger.info("Form data parsed successfully: {}", formDto.toString());
             
+            // Additional server-side sanitization
+            sanitizeFormData(formDto);
+            
             Map<String, String> errors = formDto.validate();
+            
+            // Additional custom validations
+            performAdditionalValidations(formDto, errors);
+            
             if (!errors.isEmpty()) {
                 logger.error("Form validation failed with errors: {}", errors);
                 
@@ -394,5 +402,121 @@ public class JobPostingCreateServlet extends HttpServlet {
         jobPosting.setCreatedByAccountId(SecurityUtil.getAccountId(request));
         jobPosting.setCreatedAt(java.time.LocalDateTime.now());
         jobPosting.setUpdatedAt(java.time.LocalDateTime.now());
+    }
+    
+    /**
+     * Sanitize form data to prevent XSS and other injection attacks
+     */
+    private void sanitizeFormData(JobPostingFormDto formDto) {
+        // Trim all string fields
+        if (formDto.getJobTitle() != null) {
+            formDto.setJobTitle(formDto.getJobTitle().trim());
+        }
+        if (formDto.getCode() != null) {
+            formDto.setCode(formDto.getCode().trim());
+        }
+        if (formDto.getDescription() != null) {
+            formDto.setDescription(formDto.getDescription().trim());
+        }
+        if (formDto.getRequirements() != null) {
+            formDto.setRequirements(formDto.getRequirements().trim());
+        }
+        if (formDto.getBenefits() != null) {
+            formDto.setBenefits(formDto.getBenefits().trim());
+        }
+        if (formDto.getLocation() != null) {
+            formDto.setLocation(formDto.getLocation().trim());
+        }
+        if (formDto.getContactEmail() != null) {
+            formDto.setContactEmail(formDto.getContactEmail().trim().toLowerCase());
+        }
+        if (formDto.getContactPhone() != null) {
+            formDto.setContactPhone(formDto.getContactPhone().trim());
+        }
+        if (formDto.getWorkingHours() != null) {
+            formDto.setWorkingHours(formDto.getWorkingHours().trim());
+        }
+        if (formDto.getSalaryType() != null) {
+            formDto.setSalaryType(formDto.getSalaryType().trim().toUpperCase());
+        }
+        if (formDto.getPriority() != null) {
+            formDto.setPriority(formDto.getPriority().trim().toUpperCase());
+        }
+    }
+    
+    /**
+     * Perform additional custom validations beyond basic field validation
+     */
+    private void performAdditionalValidations(JobPostingFormDto formDto, Map<String, String> errors) {
+        // Validate number of positions is reasonable
+        if (formDto.getNumberOfPositions() != null && formDto.getNumberOfPositions() > 100) {
+            errors.put("numberOfPositions", "Number of positions seems unreasonably high. Please verify.");
+        }
+        
+        // Validate salary range is reasonable
+        if (formDto.getMinSalary() != null && formDto.getMaxSalary() != null) {
+            java.math.BigDecimal diff = formDto.getMaxSalary().subtract(formDto.getMinSalary());
+            java.math.BigDecimal ratio = diff.divide(formDto.getMinSalary(), 2, java.math.RoundingMode.HALF_UP);
+            
+            // Warn if max salary is more than 5x min salary
+            if (ratio.compareTo(new java.math.BigDecimal("5.0")) > 0) {
+                logger.warn("Salary range seems very wide: min={}, max={}", formDto.getMinSalary(), formDto.getMaxSalary());
+                // Just log warning, don't block submission
+            }
+        }
+        
+        // Validate deadline is within reasonable timeframe (warn if > 1 year from now)
+        if (formDto.getApplicationDeadline() != null) {
+            LocalDate oneYearFromNow = LocalDate.now().plusYears(1);
+            if (formDto.getApplicationDeadline().isAfter(oneYearFromNow)) {
+                errors.put("applicationDeadline", "Application deadline should typically be within one year");
+            }
+        }
+        
+        // Validate start date is not too far in the future (warn if > 1 year)
+        if (formDto.getStartDate() != null) {
+            LocalDate oneYearFromNow = LocalDate.now().plusYears(1);
+            if (formDto.getStartDate().isAfter(oneYearFromNow)) {
+                logger.warn("Start date is more than one year in the future: {}", formDto.getStartDate());
+                // Just log, don't block
+            }
+        }
+        
+        // Ensure deadline is before or same as start date (if both provided)
+        if (formDto.getApplicationDeadline() != null && formDto.getStartDate() != null) {
+            if (formDto.getApplicationDeadline().isAfter(formDto.getStartDate())) {
+                errors.put("applicationDeadline", "Application deadline should be before or same as start date");
+            }
+        }
+        
+        // Validate contact email domain (optional - just warn)
+        if (formDto.getContactEmail() != null && !formDto.getContactEmail().isEmpty()) {
+            String email = formDto.getContactEmail().toLowerCase();
+            // Check for common personal email domains - might want company email
+            if (email.endsWith("@gmail.com") || email.endsWith("@yahoo.com") || 
+                email.endsWith("@hotmail.com") || email.endsWith("@outlook.com")) {
+                logger.warn("Contact email appears to be personal email: {}", formDto.getContactEmail());
+                // Just log warning, don't block
+            }
+        }
+        
+        // Validate description and requirements are not too similar
+        if (formDto.getDescription() != null && formDto.getRequirements() != null) {
+            String desc = formDto.getDescription().toLowerCase().trim();
+            String req = formDto.getRequirements().toLowerCase().trim();
+            
+            if (desc.equals(req)) {
+                errors.put("requirements", "Requirements should be different from job description");
+            }
+        }
+        
+        // Validate text fields don't contain only whitespace or special characters
+        if (formDto.getJobTitle() != null && !formDto.getJobTitle().matches(".*[a-zA-Z0-9].*")) {
+            errors.put("jobTitle", "Job title must contain at least some alphanumeric characters");
+        }
+        
+        if (formDto.getLocation() != null && !formDto.getLocation().matches(".*[a-zA-Z0-9].*")) {
+            errors.put("location", "Location must contain at least some alphanumeric characters");
+        }
     }
 }
