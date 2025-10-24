@@ -338,8 +338,8 @@
                     Are you sure you want to cancel changes? Any unsaved changes will be lost.
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, Continue Editing</button>
                     <a href="${pageContext.request.contextPath}/user-profile" class="btn btn-primary">Yes, Cancel Changes</a>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, Continue Editing</button>
                 </div>
             </div>
         </div>
