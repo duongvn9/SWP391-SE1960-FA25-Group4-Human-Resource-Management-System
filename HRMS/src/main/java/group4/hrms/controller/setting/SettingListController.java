@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Controller hiển thị danh sách tất cả settings (Department, Position, Role)
+ * Controller hiển thị danh sách tất cả settings (Department, Position)
  */
 @WebServlet("/settings")
 public class SettingListController extends HttpServlet {

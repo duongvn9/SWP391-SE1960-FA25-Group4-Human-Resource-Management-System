@@ -82,17 +82,32 @@
                 <form method="post" action="${pageContext.request.contextPath}/change-password">
                     <div class="mb-3">
                         <label for="currentPassword" class="form-label">Current Password <span class="text-danger">*</span></label>
-                        <input type="password" class="form-control" id="currentPassword" name="currentPassword" required>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="currentPassword" name="currentPassword" required>
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('currentPassword', this)">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
                     </div>
                     
                     <div class="mb-3">
                         <label for="newPassword" class="form-label">New Password <span class="text-danger">*</span></label>
-                        <input type="password" class="form-control" id="newPassword" name="newPassword" required>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="newPassword" name="newPassword" required>
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('newPassword', this)">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
                     </div>
                     
                     <div class="mb-3">
                         <label for="confirmPassword" class="form-label">Confirm New Password <span class="text-danger">*</span></label>
-                        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirmPassword', this)">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
                     </div>
 
                     <div class="alert alert-info">
@@ -123,5 +138,21 @@
         <jsp:include page="../layout/dashboard-footer.jsp" />
     </div>
 
+    <script>
+        function togglePassword(fieldId, button) {
+            const field = document.getElementById(fieldId);
+            const icon = button.querySelector('i');
+            
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                field.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+    </script>
 </body>
 </html>

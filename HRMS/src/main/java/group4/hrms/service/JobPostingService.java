@@ -1,15 +1,24 @@
 package group4.hrms.service;
 
-import group4.hrms.model.JobPosting;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import group4.hrms.model.JobPosting;
+
 /**
  * Service for managing job postings
  */
 public interface JobPostingService {
+    
+    /**
+     * Update an existing job posting
+     * @param jobPosting The job posting to update (must be in PENDING state)
+     * @throws IllegalStateException if job posting is not in PENDING state
+     * @throws IllegalArgumentException if jobPosting or its ID is null
+     */
+    void update(JobPosting jobPosting);
     
     /**
      * Get all available job types

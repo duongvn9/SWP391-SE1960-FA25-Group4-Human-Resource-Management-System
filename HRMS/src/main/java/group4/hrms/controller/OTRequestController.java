@@ -126,8 +126,31 @@ public class OTRequestController extends HttpServlet {
             );
 
             logger.info("Loading OT balance for user " + user.getId());
-            // Load OT balance for the user (Requirement 8)
-            OTBalance otBalance = service.getOTBalance(user.getId());
+
+            // Get week/month/year offset from request parameters (default to 0 = current period)
+            int weekOffset = 0;
+            int monthOffset = 0;
+            int yearOffset = 0;
+            try {
+                String weekOffsetParam = request.getParameter("weekOffset");
+                if (weekOffsetParam != null && !weekOffsetParam.trim().isEmpty()) {
+                    weekOffset = Integer.parseInt(weekOffsetParam);
+                }
+                String monthOffsetParam = request.getParameter("monthOffset");
+                if (monthOffsetParam != null && !monthOffsetParam.trim().isEmpty()) {
+                    monthOffset = Integer.parseInt(monthOffsetParam);
+                }
+                String yearOffsetParam = request.getParameter("yearOffset");
+                if (yearOffsetParam != null && !yearOffsetParam.trim().isEmpty()) {
+                    yearOffset = Integer.parseInt(yearOffsetParam);
+                }
+            } catch (NumberFormatException e) {
+                logger.warning("Invalid offset parameter: " + e.getMessage());
+                // Keep default 0
+            }
+
+            // Load OT balance for the user with offset (Requirement 8)
+            OTBalance otBalance = service.getOTBalanceWithOffset(user.getId(), weekOffset, monthOffset, yearOffset);
             logger.info("Loaded OT balance: Week=" + otBalance.getCurrentWeekHours() + "h, Month="
                 + otBalance.getMonthlyHours() + "h, Annual=" + otBalance.getAnnualHours() + "h");
 
@@ -239,6 +262,7 @@ public class OTRequestController extends HttpServlet {
         // Extract form parameters (declare outside try for catch block access)
         String requestFor = request.getParameter("requestFor");
         String selectedEmployeeIdStr = request.getParameter("selectedEmployeeId");
+        String requestTitle = request.getParameter("requestTitle");
         String otDate = request.getParameter("otDate");
         String startTime = request.getParameter("startTime");
         String endTime = request.getParameter("endTime");
@@ -299,6 +323,7 @@ public class OTRequestController extends HttpServlet {
                 requestId = service.createOTRequestForEmployee(
                     account.getId(),
                     targetUserId,
+                    requestTitle,
                     otDate,
                     startTime,
                     endTime,
@@ -311,6 +336,7 @@ public class OTRequestController extends HttpServlet {
                     account.getId(),
                     targetUserId,
                     targetDepartmentId,
+                    requestTitle,
                     otDate,
                     startTime,
                     endTime,
@@ -411,7 +437,7 @@ public class OTRequestController extends HttpServlet {
             // Handle validation errors: catch IllegalArgumentException and set error message
             logger.warning(String.format("OT validation error: userId=%d, accountId=%d, error=%s",
                           user.getId(), account.getId(), e.getMessage()));
-            saveFormDataToSession(session, otDate, startTime, endTime, reason);
+            saveFormDataToSession(session, requestTitle, otDate, startTime, endTime, reason);
             request.setAttribute("error", e.getMessage());
             request.setAttribute("errorType", "VALIDATION_ERROR");
 
@@ -420,7 +446,7 @@ public class OTRequestController extends HttpServlet {
             logger.severe(String.format("Database error creating OT request: userId=%d, accountId=%d, error=%s",
                          user.getId(), account.getId(), e.getMessage()));
             e.printStackTrace();
-            saveFormDataToSession(session, otDate, startTime, endTime, reason);
+            saveFormDataToSession(session, requestTitle, otDate, startTime, endTime, reason);
             request.setAttribute("error", "Database error occurred. Please try again later. If the problem persists, contact IT support.");
             request.setAttribute("errorType", "DATABASE_ERROR");
 
@@ -429,7 +455,7 @@ public class OTRequestController extends HttpServlet {
             logger.severe(String.format("Unexpected error creating OT request: userId=%d, accountId=%d, error=%s",
                          user.getId(), account.getId(), e.getMessage()));
             e.printStackTrace();
-            saveFormDataToSession(session, otDate, startTime, endTime, reason);
+            saveFormDataToSession(session, requestTitle, otDate, startTime, endTime, reason);
             request.setAttribute("error", "System error. Please try again later.");
             request.setAttribute("errorType", "SYSTEM_ERROR");
         }
@@ -471,8 +497,9 @@ public class OTRequestController extends HttpServlet {
     /**
      * Save form data to session to preserve user input when there's an error
      */
-    private void saveFormDataToSession(HttpSession session, String otDate,
-                                      String startTime, String endTime, String reason) {
+    private void saveFormDataToSession(HttpSession session, String requestTitle,
+                                      String otDate, String startTime, String endTime, String reason) {
+        session.setAttribute("formData_requestTitle", requestTitle);
         session.setAttribute("formData_otDate", otDate);
         session.setAttribute("formData_startTime", startTime);
         session.setAttribute("formData_endTime", endTime);

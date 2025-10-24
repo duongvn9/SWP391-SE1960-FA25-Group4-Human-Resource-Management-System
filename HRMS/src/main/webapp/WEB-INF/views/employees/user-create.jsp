@@ -394,8 +394,9 @@
                                     <label for="phone">Phone<span class="required">*</span></label>
                                     <input type="tel" id="phone" name="phone"
                                         class="form-control ${not empty errors and empty phone ? 'is-invalid' : ''}"
-                                        placeholder="Enter phone number" value="${phone}" required
-                                        pattern="[0-9]{10,11}" title="Phone number must be 10-11 digits">
+                                        placeholder="Enter phone number (10 digits starting with 0)" value="${phone}"
+                                        required pattern="0[0-9]{9}"
+                                        title="Phone number must be exactly 10 digits and start with 0">
                                 </div>
 
                                 <!-- Company Email (Required) -->
@@ -459,10 +460,9 @@
 
                                 <!-- Form Actions -->
                                 <div class="form-actions">
-                                    <a href="${pageContext.request.contextPath}/employees/users"
-                                        class="btn btn-secondary">
-                                        <i class="fas fa-times me-2"></i>Cancel
-                                    </a>
+                                    <button type="button" class="btn btn-secondary" id="btnClearForm">
+                                        <i class="fas fa-eraser me-2"></i>Clear Form
+                                    </button>
                                     <button type="submit" class="btn btn-primary">
                                         <i class="fas fa-save me-2"></i>Create User
                                     </button>
@@ -545,7 +545,7 @@
                     // Phone validation function
                     function validatePhone(phone) {
                         if (!phone) return false;
-                        const phoneRegex = /^[0-9]{10,11}$/;
+                        const phoneRegex = /^0[0-9]{9}$/;
                         return phoneRegex.test(phone);
                     }
 
@@ -559,7 +559,7 @@
                         const phone = this.value;
                         const isValid = phone === '' || validatePhone(phone);
                         if (phone && !isValid) {
-                            this.setCustomValidity('Please enter a valid phone number (10-11 digits)');
+                            this.setCustomValidity('Please enter a valid phone number (10 digits starting with 0)');
                         } else {
                             this.setCustomValidity('');
                         }
@@ -595,7 +595,7 @@
                         if (this.validity.valueMissing) {
                             this.setCustomValidity('Please enter your phone number');
                         } else if (this.validity.patternMismatch || !validatePhone(this.value)) {
-                            this.setCustomValidity('Please enter a valid phone number (10-11 digits)');
+                            this.setCustomValidity('Please enter a valid phone number (10 digits starting with 0)');
                         }
                     });
 
@@ -655,7 +655,7 @@
                             this.setCustomValidity('Please enter the start work date');
                         }
                     });
-                    startWorkDateInput.addEventListener('input', function () {
+                    startWorkDateInput.addEventListener('change', function () {
                         this.setCustomValidity('');
                         const isValid = this.value !== '';
                         updateFieldValidation(this, isValid);
@@ -664,10 +664,39 @@
                     const genderSelect = document.getElementById('gender');
                     genderSelect.addEventListener('invalid', function () {
                         if (this.validity.valueMissing) {
-                            this.setCustomValidity('Please select your gender');
+                            this.setCustomValidity('Please select a gender');
                         }
                     });
                     genderSelect.addEventListener('change', function () {
+                        this.setCustomValidity('');
+                        const isValid = this.value !== '';
+                        updateFieldValidation(this, isValid);
+                    });
+
+                    // Clear form button functionality
+                    document.getElementById('btnClearForm').addEventListener('click', function () {
+                        // Reset the form
+                        form.reset();
+
+                        // Remove all validation classes
+                        form.classList.remove('was-validated');
+                        const inputs = form.querySelectorAll('.form-control, .form-select');
+                        inputs.forEach(input => {
+                            input.classList.remove('is-valid', 'is-invalid');
+                            input.setCustomValidity('');
+                        });
+
+                        // Hide password strength indicator if exists
+                        const strengthIndicator = document.getElementById('passwordStrengthIndicator');
+                        if (strengthIndicator) {
+                            strengthIndicator.style.display = 'none';
+                        }
+
+                        // Focus on first field
+                        document.getElementById('fullName').focus();
+                    });
+
+                    startWorkDateInput.addEventListener('input', function () {
                         this.setCustomValidity('');
                         const isValid = this.value !== '';
                         updateFieldValidation(this, isValid);

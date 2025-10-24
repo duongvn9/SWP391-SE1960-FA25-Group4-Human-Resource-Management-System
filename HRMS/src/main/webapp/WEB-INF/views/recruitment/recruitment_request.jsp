@@ -61,17 +61,17 @@
 
                             <div class="row mb-3">
                                 <div class="col-md-6">
-                                    <label class="form-label"><i class="bi bi-briefcase"></i>Job Title <span class="text-danger">*</span></label>
+                                    <label class="form-label"><i class="bi bi-briefcase"></i><i class="fas fa-briefcase"></i> Job Title <span class="text-danger">*</span></label>
                                     <input type="text" name="jobTitle" id="jobTitle" class="form-control" required />
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label"><i class="bi bi-diagram-3"></i>Position Name <span class="text-danger">*</span></label>
+                                    <label class="form-label"><i class="bi bi-diagram-3"></i><i class="fas fa-sitemap"></i> Position Name <span class="text-danger">*</span></label>
                                     <input type="text" name="positionName" id="positionName" class="form-control" placeholder="e.g. Software Engineer" required />
                                 </div>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">
-                                    <i class="bi bi-journal-text"></i> Job Summary <span class="text-danger">*</span>
+                                    <i class="bi bi-journal-text"></i><i class="fas fa-file-alt"></i> Job Summary <span class="text-danger">*</span>
                                 </label>
                                 <textarea name="jobSummary" id="jobSummary" class="form-control" rows="3"
                                         placeholder="Briefly describe what this job entails..." required></textarea>
@@ -79,11 +79,11 @@
 
                             <div class="row mb-3">
                                 <div class="col-md-4">
-                                    <label class="form-label"><i class="bi bi-people"></i>Quantity <span class="text-danger">*</span></label>
+                                    <label class="form-label"><i class="bi bi-people"></i><i class="fas fa-users"></i> Quantity <span class="text-danger">*</span></label>
                                     <input type="number" name="quantity" id="quantity" class="form-control" min="1" required />
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label"><i class="bi bi-layers"></i>Job Level <span class="text-danger">*</span></label>
+                                    <label class="form-label"><i class="bi bi-layers"></i><i class="fas fa-layer-group"></i> Job Level <span class="text-danger">*</span></label>
                                     <select name="jobLevel" id="jobLevel" class="form-select" required>
                                         <option value="">Select Level</option>
                                         <option>JUNIOR</option>
@@ -92,7 +92,7 @@
                                     </select>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label"><i class="bi bi-clock"></i>Job Type <span class="text-danger">*</span></label>
+                                    <label class="form-label"><i class="bi bi-clock"></i><i class="fas fa-clock"></i> Job Type <span class="text-danger">*</span></label>
                                     <select name="jobType" id="jobType" class="form-select" required>
                                         <option>Full-time</option>
                                         <option>Part-time</option>
@@ -103,21 +103,21 @@
 
                             <div class="row mb-3">
                                 <div class="col-md-6">
-                                    <label class="form-label"><i class="bi bi-chat-text"></i>Recruitment Reason</label>
+                                    <label class="form-label"><i class="bi bi-chat-text"></i><i class="fas fa-comment"></i> Recruitment Reason</label>
                                     <textarea name="recruitmentReason" id="recruitmentReason" class="form-control" rows="2" placeholder="Enter recruitment reason"></textarea>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="row">
                                         <div class="col-md-4">
-                                            <label class="form-label"><i class="bi bi-cash-stack"></i>Min Salary</label>
+                                            <label class="form-label"><i class="bi bi-cash-stack"></i><i class="fas fa-money-bill-wave"></i> Min Salary</label>
                                             <input type="number" name="minSalary" id="minSalary" class="form-control" placeholder="5000000" />
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label"><i class="bi bi-cash"></i>Max Salary</label>
+                                            <label class="form-label"><i class="bi bi-cash"></i><i class="fas fa-hand-holding-usd"></i> Max Salary</label>
                                             <input type="number" name="maxSalary" id="maxSalary" class="form-control" placeholder="8000000" />
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label"><i class="bi bi-coin"></i>Salary Type</label>
+                                            <label class="form-label"><i class="bi bi-coin"></i><i class="fas fa-coins"></i> Salary Type</label>
                                             <select name="salaryType" id="salaryType" class="form-select">
                                                 <option>Gross</option>
                                                 <option>Net</option>
@@ -128,26 +128,26 @@
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label"><i class="bi bi-geo-alt"></i>Working Location <span class="text-danger">*</span></label>
+                                <label class="form-label"><i class="bi bi-geo-alt"></i><i class="fas fa-map-marker-alt"></i> Working Location <span class="text-danger">*</span></label>
                                 <input type="text" name="workingLocation" id="workingLocation" class="form-control" placeholder="e.g. Ho Chi Minh" required />
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">
-                                    <i class="bi bi-paperclip"></i> Supporting Documents
+                                    <i class="bi bi-paperclip"></i><i class="fas fa-paperclip"></i> Supporting Documents
                                     <span class="text-muted">(Optional)</span>
                                 </label>
                                 <div class="btn-group w-100 mb-3" role="group" aria-label="Attachment Type">
                                     <input type="radio" class="btn-check" name="attachmentType" id="attachmentTypeFile"
                                            value="file" checked autocomplete="off">
                                     <label class="btn btn-outline-primary" for="attachmentTypeFile">
-                                        <i class="bi bi-upload me-1"></i> Upload File
+                                        <i class="bi bi-upload me-1"></i><i class="fas fa-upload me-1"></i> Upload File
                                     </label>
 
                                     <input type="radio" class="btn-check" name="attachmentType" id="attachmentTypeLink"
                                            value="link" autocomplete="off">
                                     <label class="btn btn-outline-primary" for="attachmentTypeLink">
-                                        <i class="bi bi-link-45deg me-1"></i> Google Drive Link
+                                        <i class="bi bi-link-45deg me-1"></i><i class="fas fa-link me-1"></i> Google Drive Link
                                     </label>
                                 </div>
 

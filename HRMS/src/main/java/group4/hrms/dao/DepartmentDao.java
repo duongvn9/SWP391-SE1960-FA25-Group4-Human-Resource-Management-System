@@ -20,25 +20,25 @@ public class DepartmentDao {
 
     // SQL queries
     private static final String INSERT_DEPARTMENT
-            = "INSERT INTO departments (name, head_account_id, created_at, updated_at) VALUES (?, ?, ?, ?)";
+            = "INSERT INTO departments (name, description, head_account_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)";
 
     private static final String UPDATE_DEPARTMENT
-            = "UPDATE departments SET name = ?, head_account_id = ?, updated_at = ? WHERE id = ?";
+            = "UPDATE departments SET name = ?, description = ?, head_account_id = ?, updated_at = ? WHERE id = ?";
 
     private static final String DELETE_DEPARTMENT = "DELETE FROM departments WHERE id = ?";
     
     private static final String SELECT_DEPARTMENT_BY_ID = 
-        "SELECT id, name, head_account_id, created_at, updated_at " +
+        "SELECT id, name, description, head_account_id, created_at, updated_at " +
         "FROM departments " +
         "WHERE id = ?";
     
     private static final String SELECT_ALL_DEPARTMENTS = 
-        "SELECT id, name, head_account_id, created_at, updated_at " +
+        "SELECT id, name, description, head_account_id, created_at, updated_at " +
         "FROM departments " +
         "ORDER BY name";
     
     private static final String SELECT_DEPARTMENTS_BY_HEAD = 
-        "SELECT id, name, head_account_id, created_at, updated_at " +
+        "SELECT id, name, description, head_account_id, created_at, updated_at " +
         "FROM departments " +
         "WHERE head_account_id = ? " +
         "ORDER BY name";
@@ -47,7 +47,7 @@ public class DepartmentDao {
         "SELECT COUNT(*) FROM users WHERE department_id = ?";
     
     private static final String SELECT_DEPARTMENT_BY_NAME = 
-        "SELECT id, name, head_account_id, created_at, updated_at " +
+        "SELECT id, name, description, head_account_id, created_at, updated_at " +
         "FROM departments " +
         "WHERE name = ?";
    
@@ -62,9 +62,10 @@ public class DepartmentDao {
             LocalDateTime now = LocalDateTime.now();
 
             stmt.setString(1, department.getName());
-            setNullableLong(stmt, 2, department.getHeadAccountId());
-            stmt.setTimestamp(3, Timestamp.valueOf(now));
+            setNullableString(stmt, 2, department.getDescription());
+            setNullableLong(stmt, 3, department.getHeadAccountId());
             stmt.setTimestamp(4, Timestamp.valueOf(now));
+            stmt.setTimestamp(5, Timestamp.valueOf(now));
 
             int affectedRows = stmt.executeUpdate();
 
@@ -102,9 +103,10 @@ public class DepartmentDao {
             LocalDateTime now = LocalDateTime.now();
 
             stmt.setString(1, department.getName());
-            setNullableLong(stmt, 2, department.getHeadAccountId());
-            stmt.setTimestamp(3, Timestamp.valueOf(now));
-            stmt.setLong(4, department.getId());
+            setNullableString(stmt, 2, department.getDescription());
+            setNullableLong(stmt, 3, department.getHeadAccountId());
+            stmt.setTimestamp(4, Timestamp.valueOf(now));
+            stmt.setLong(5, department.getId());
 
             int affectedRows = stmt.executeUpdate();
 
@@ -325,6 +327,7 @@ public class DepartmentDao {
 
         dept.setId(rs.getLong("id"));
         dept.setName(rs.getString("name"));
+        dept.setDescription(rs.getString("description"));
 
         // Head Account ID có thể null
         Long headAccountId = rs.getLong("head_account_id");
@@ -354,6 +357,17 @@ public class DepartmentDao {
             stmt.setLong(parameterIndex, value);
         } else {
             stmt.setNull(parameterIndex, Types.BIGINT);
+        }
+    }
+
+    /**
+     * Set nullable String parameter
+     */
+    private void setNullableString(PreparedStatement stmt, int parameterIndex, String value) throws SQLException {
+        if (value != null && !value.trim().isEmpty()) {
+            stmt.setString(parameterIndex, value);
+        } else {
+            stmt.setNull(parameterIndex, Types.VARCHAR);
         }
     }
 }

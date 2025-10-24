@@ -1406,4 +1406,30 @@ public class UserDao {
             return users;
         }
     }
+
+
+
+    /**
+     * Count total number of users
+     * 
+     * @return Total count of users
+     */
+    public int countAll() {
+        String sql = "SELECT COUNT(*) FROM users";
+
+        try (Connection conn = DatabaseUtil.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+            return 0;
+
+        } catch (SQLException e) {
+            logger.error("Error counting all users: {}", e.getMessage(), e);
+            return 0;
+        }
+    }
+
 }

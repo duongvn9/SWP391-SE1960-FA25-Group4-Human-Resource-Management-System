@@ -4,48 +4,228 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Job Postings - HRMS</title>
-    <jsp:include page="/WEB-INF/views/layout/links.jsp"/>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/job-posting.css"/>
+    <jsp:include page="../layout/head.jsp">
+        <jsp:param name="pageTitle" value="Job Postings - HRMS" />
+        <jsp:param name="pageCss" value="job-posting.css" />
+    </jsp:include>
+    <style>
+        /* Custom styles for Job Postings list */
+        .content-area {
+            padding: 1.5rem;
+        }
+
+        .page-title {
+            color: #2c3e50;
+            font-size: 1.75rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .page-subtitle {
+            color: #6c757d;
+            font-size: 0.875rem;
+        }
+
+        .filter-card {
+            background-color: #f8f9fa;
+            border: none;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            margin-bottom: 1.5rem;
+        }
+
+        .filter-card .card-body {
+            padding: 1.25rem;
+        }
+
+        .table {
+            background-color: #ffffff;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+
+        .table th {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            color: #495057;
+            font-weight: 600;
+        }
+
+        .badge {
+            font-weight: 500;
+            padding: 0.5em 0.75em;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .content-area {
+                padding: 1rem;
+            }
+
+            .page-head {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .filter-form {
+                flex-direction: column;
+            }
+
+            .filter-form .col-md-2 {
+                width: 100%;
+                margin-bottom: 1rem;
+            }
+
+            .table-responsive {
+                border: 0;
+                margin-bottom: 0;
+            }
+
+            .pagination {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 0.5rem;
+            }
+        }
+
+        /* Animation for status badges */
+        .badge {
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .badge:hover {
+            transform: scale(1.1);
+        }
+    </style>
 </head>
 <body>
-    <jsp:include page="/WEB-INF/views/layout/navbar.jsp"/>
-    
-    <div class="container my-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="h4 mb-0">Job Postings</h2>
-            
-            <!-- Only HR can create new job postings -->
-            <c:if test="${sessionScope.userRole == 'HR'}">
-                <a href="${pageContext.request.contextPath}/job-posting/create" 
-                   class="btn btn-primary">
-                    <i class="bi bi-plus-circle"></i> Create New
-                </a>
-            </c:if>
-        </div>
+    <!-- Sidebar -->
+    <jsp:include page="../layout/sidebar.jsp">
+        <jsp:param name="currentPage" value="job-postings" />
+    </jsp:include>
+
+    <!-- Main Content -->
+    <div class="main-content" id="main-content">
+        <!-- Header -->
+        <jsp:include page="../layout/dashboard-header.jsp" />
+
+        <!-- Content Area -->
+        <div class="content-area">
+           
+
+            <!-- Page Title -->
+            <div class="page-head d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="page-title"><i class="fas fa-briefcase me-2"></i>Job Postings</h2>
+                    <p class="page-subtitle">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Manage and track all job postings
+                        <c:if test="${not empty jobPostings}">
+                            <span class="badge bg-primary ms-2">${jobPostings.size()} Records</span>
+                        </c:if>
+                    </p>
+                </div>
+                
+                <!-- Only HR Staff (8) or HR Manager (7) can create new job postings -->
+                <c:if test="${sessionScope.user != null && (sessionScope.user.positionId == 7 || sessionScope.user.positionId == 8)}">
+                    <a href="${pageContext.request.contextPath}/recruitment/approved" 
+                       class="btn btn-primary">
+                        <i class="fas fa-plus-circle me-1"></i> Create New Posting
+                    </a>
+                </c:if>
+            </div>
 
         <!-- Success/Error Messages -->
         <c:if test="${not empty param.success}">
             <div class="alert alert-success alert-dismissible fade show" role="alert">
-                ${param.success}
+                <i class="fas fa-check-circle me-2"></i>${param.success}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         </c:if>
         <c:if test="${not empty param.error}">
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                ${param.error}
+                <i class="fas fa-exclamation-triangle me-2"></i>${param.error}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         </c:if>
 
+        <!-- Quick Stats -->
+        <c:if test="${not empty jobPostings}">
+            <div class="row mb-4">
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">Total Postings</h6>
+                                    <h3 class="mb-0">${totalItems}</h3>
+                                </div>
+                                <div class="text-primary">
+                                    <i class="fas fa-briefcase fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">Current Page</h6>
+                                    <h3 class="mb-0">${currentPage} / ${totalPages > 0 ? totalPages : 1}</h3>
+                                </div>
+                                <div class="text-info">
+                                    <i class="fas fa-file-alt fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">Page Size</h6>
+                                    <h3 class="mb-0">${jobPostings.size()} / ${pageSize}</h3>
+                                </div>
+                                <div class="text-success">
+                                    <i class="fas fa-list fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">Active Filters</h6>
+                                    <h3 class="mb-0">
+                                        ${(not empty param.status ? 1 : 0) + 
+                                          (not empty param.departmentId ? 1 : 0) + 
+                                          (not empty param.jobType ? 1 : 0) + 
+                                          (not empty param.jobLevel ? 1 : 0) + 
+                                          (not empty param.priority ? 1 : 0)}
+                                    </h3>
+                                </div>
+                                <div class="text-warning">
+                                    <i class="fas fa-filter fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </c:if>
+
         <!-- Filters -->
-        <div class="card mb-4">
+        <div class="card filter-card">
             <div class="card-body">
-                <form method="get" class="row g-3">
+                <form method="get" class="row g-3 filter-form">
                     <div class="col-md-2">
-                        <label class="form-label">Status</label>
+                        <label class="form-label">
+                            <i class="fas fa-filter me-1"></i> Status</label>
                         <select name="status" class="form-select">
                             <option value="">All</option>
                             <option value="PENDING" ${param.status == 'PENDING' ? 'selected' : ''}>Pending</option>
@@ -93,12 +273,17 @@
                             <option value="URGENT" ${param.priority == 'URGENT' ? 'selected' : ''}>Urgent</option>
                         </select>
                     </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-filter"></i> Filter
-                        </button>
-                        <a href="${pageContext.request.contextPath}/job-postings" 
-                           class="btn btn-outline-secondary ms-2">Clear</a>
+                    <div class="col-md-2">
+                        <label class="form-label d-block">&nbsp;</label>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary flex-grow-1">
+                                <i class="fas fa-filter me-1"></i> Apply Filters
+                            </button>
+                            <a href="${pageContext.request.contextPath}/job-postings" 
+                               class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i> Clear
+                            </a>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -106,36 +291,39 @@
 
         <!-- Job Postings Table -->
         <div class="table-responsive">
-            <table class="table table-striped table-hover table-bordered">
+            <table class="table table-striped table-hover align-middle">
                 <thead class="table-light">
                     <tr>
-                        <th>Title</th>
-                        <th>Department</th>
-                        <th>Type</th>
-                        <th>Level</th>
-                        <th>Positions</th>
-                        <th>Priority</th>
-                        <th>Status</th>
-                        <th>Created</th>
-                        <th>Deadline</th>
-                        <th>Actions</th>
+                        <th style="width: 20%;"><i class="fas fa-file-alt me-1"></i> Job Title & Code</th>
+                        <th style="width: 12%;"><i class="fas fa-briefcase me-1"></i> Type / Level</th>
+                        <th style="width: 8%;" class="text-center"><i class="fas fa-users me-1"></i> Positions</th>
+                        <th style="width: 10%;"><i class="fas fa-flag me-1"></i> Priority</th>
+                        <th style="width: 12%;"><i class="fas fa-info-circle me-1"></i> Status</th>
+                        <th style="width: 12%;"><i class="fas fa-clock me-1"></i> Deadline</th>
+                        <th style="width: 13%;"><i class="fas fa-user me-1"></i> Created By</th>
+                        <th style="width: 13%;" class="text-center"><i class="fas fa-cogs me-1"></i> Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     <c:forEach items="${jobPostings}" var="job">
                         <tr>
                             <td>
-                                <a href="${pageContext.request.contextPath}/job-posting/view?id=${job.id}"
-                                   class="text-decoration-none">
+                                <a href="${pageContext.request.contextPath}/job-postings/view?id=${job.id}"
+                                   class="text-decoration-none fw-semibold">
                                     ${job.title}
                                 </a>
                                 <br>
-                                <small class="text-muted">${job.code}</small>
+                                <small class="text-muted">
+                                    <i class="fas fa-hashtag"></i> ${job.code != null && !job.code.isEmpty() ? job.code : 'N/A'}
+                                </small>
                             </td>
-                            <td>${job.departmentName}</td>
-                            <td>${job.jobType}</td>
-                            <td>${job.level}</td>
-                            <td class="text-center">${job.numberOfPositions}</td>
+                            <td>
+                                <div>${job.jobType != null ? job.jobType : 'N/A'}</div>
+                                <small class="text-muted">${job.level != null ? job.level : 'N/A'}</small>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-secondary">${job.numberOfPositions}</span>
+                            </td>
                             <td>
                                 <c:choose>
                                     <c:when test="${job.priority == 'URGENT'}">
@@ -169,41 +357,82 @@
                                 </c:choose>
                             </td>
                             <td>
-                                <fmt:parseDate value="${job.applicationDeadline}" pattern="yyyy-MM-dd" var="deadline"/>
-                                <fmt:formatDate value="${deadline}" pattern="MMM d, yyyy"/>
+                                <c:choose>
+                                    <c:when test="${not empty job.applicationDeadline}">
+                                        <fmt:parseDate value="${job.applicationDeadline}" pattern="yyyy-MM-dd" var="deadline"/>
+                                        <div><fmt:formatDate value="${deadline}" pattern="MMM d, yyyy"/></div>
+                                        <c:set var="now" value="<%= new java.util.Date() %>"/>
+                                        <c:if test="${deadline.time < now.time}">
+                                            <small class="text-danger"><i class="fas fa-exclamation-triangle"></i> Expired</small>
+                                        </c:if>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <span class="text-muted">Not set</span>
+                                    </c:otherwise>
+                                </c:choose>
                             </td>
-                            <td class="text-nowrap">
-                                <!-- View button for all -->
-                                <a href="${pageContext.request.contextPath}/job-posting/view?id=${job.id}"
-                                   class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-eye"></i>
-                                </a>
-
-                                <!-- Edit button for HR (only if PENDING) -->
-                                <c:if test="${sessionScope.userRole == 'HR' && job.status == 'PENDING'}">
-                                    <a href="${pageContext.request.contextPath}/job-posting/edit?id=${job.id}"
-                                       class="btn btn-sm btn-outline-secondary">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
+                            <td>
+                                <c:choose>
+                                    <c:when test="${not empty job.createdByAccountId}">
+                                        <div class="small">
+                                            <i class="fas fa-user-circle"></i> ID: ${job.createdByAccountId}
+                                        </div>
+                                        <c:if test="${not empty job.createdAt}">
+                                            <small class="text-muted">
+                                                <fmt:parseDate value="${job.createdAt}" pattern="yyyy-MM-dd'T'HH:mm" var="createdDate"/>
+                                                <fmt:formatDate value="${createdDate}" pattern="MMM d, HH:mm"/>
+                                            </small>
+                                        </c:if>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <span class="text-muted">Unknown</span>
+                                    </c:otherwise>
+                                </c:choose>
+                            </td>
+                            <td class="text-center text-nowrap">
+                                <!-- View Details button - Everyone can view -->
+                                <button type="button" 
+                                        class="btn btn-sm btn-info" 
+                                        data-bs-toggle="tooltip" 
+                                        title="View Details"
+                                        onclick="window.location.href='${pageContext.request.contextPath}/job-postings/view?id=${job.id}'">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                
+                                <!-- Approve/Reject buttons for HR Manager (position_id = 7) when status is PENDING -->
+                                <c:if test="${sessionScope.user != null && sessionScope.user.positionId == 7 && job.status == 'PENDING'}">
+                                    <button type="button" class="btn btn-sm btn-success"
+                                            onclick="approveJobPosting('${job.id}')" 
+                                            data-bs-toggle="tooltip"
+                                            title="Approve Job Posting">
+                                        <i class="fas fa-check-circle"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-danger"
+                                            onclick="rejectJobPosting('${job.id}')"
+                                            data-bs-toggle="tooltip" 
+                                            title="Reject Job Posting">
+                                        <i class="fas fa-times-circle"></i>
+                                    </button>
+                                </c:if>
+                                
+                                <!-- Edit button for HR Staff (position_id = 8) when status is PENDING or REJECTED -->
+                                <c:if test="${sessionScope.user != null && sessionScope.user.positionId == 8 && (job.status == 'PENDING' || job.status == 'REJECTED')}">
+                                    <button type="button" 
+                                            class="btn btn-sm btn-warning"
+                                            data-bs-toggle="tooltip"
+                                            title="Edit Job Posting"
+                                            onclick="window.location.href='${pageContext.request.contextPath}/job-posting/edit?id=${job.id}'">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
                                 </c:if>
 
-                                <!-- Approve/Reject buttons for HRM (only if PENDING) -->
-                                <c:if test="${sessionScope.userRole == 'HRM' && job.status == 'PENDING'}">
-                                    <button type="button" class="btn btn-sm btn-outline-success"
-                                            onclick="approveJobPosting('${job.id}')">
-                                        <i class="bi bi-check-circle"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-outline-danger"
-                                            onclick="rejectJobPosting('${job.id}')">
-                                        <i class="bi bi-x-circle"></i>
-                                    </button>
-                                </c:if>
-
-                                <!-- Publish button for HRM (only if APPROVED) -->
-                                <c:if test="${sessionScope.userRole == 'HRM' && job.status == 'APPROVED'}">
-                                    <button type="button" class="btn btn-sm btn-outline-primary"
+                                <!-- Publish button for HR Manager (position_id = 7) when status is APPROVED -->
+                                <c:if test="${sessionScope.user != null && sessionScope.user.positionId == 7 && job.status == 'APPROVED'}">
+                                    <button type="button" class="btn btn-sm btn-primary"
                                             onclick="publishJobPosting('${job.id}')"
-                                        <i class="bi bi-globe"></i>
+                                            data-bs-toggle="tooltip" 
+                                            title="Publish to Public">
+                                        <i class="fas fa-globe"></i> Publish
                                     </button>
                                 </c:if>
                             </td>
@@ -212,8 +441,15 @@
                     
                     <c:if test="${empty jobPostings}">
                         <tr>
-                            <td colspan="8" class="text-center py-4">
-                                No job postings found.
+                            <td colspan="8" class="text-center py-5">
+                                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No Job Postings Found</h5>
+                                <p class="text-muted">Try adjusting your filters or create a new job posting.</p>
+                                <c:if test="${sessionScope.user != null && (sessionScope.user.positionId == 7 || sessionScope.user.positionId == 8)}">
+                                    <a href="${pageContext.request.contextPath}/recruitment/approved" class="btn btn-primary mt-2">
+                                        <i class="fas fa-plus-circle me-1"></i> Create New Posting
+                                    </a>
+                                </c:if>
                             </td>
                         </tr>
                     </c:if>
@@ -249,102 +485,167 @@
         </c:if>
     </div>
 
-    <jsp:include page="/WEB-INF/views/layout/footer.jsp"/>
+   
 
     <!-- Confirmation Modals -->
-    <div class="modal fade" id="approveModal" tabindex="-1">
-        <div class="modal-dialog">
+    <!-- Approve Modal -->
+    <div class="modal fade" id="approveModal" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Approve Job Posting</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="approveModalLabel">
+                        <i class="fas fa-check-circle me-2"></i>Approve Job Posting
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    Are you sure you want to approve this job posting?
-                </div>
-                <div class="modal-footer">
-                    <form method="post" action="${pageContext.request.contextPath}/job-posting/approve">
+                <form method="post" action="${pageContext.request.contextPath}/job-posting/approve">
+                    <div class="modal-body">
                         <input type="hidden" name="csrfToken" value="${csrfToken}"/>
                         <input type="hidden" name="id" id="approveJobId"/>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-success">Approve</button>
-                    </form>
-                </div>
+                        <div class="text-center py-3">
+                            <i class="fas fa-check-circle text-success fa-4x mb-3"></i>
+                            <p class="mb-0">Are you sure you want to approve this job posting?</p>
+                            <small class="text-muted d-block mt-2">
+                                After approval, HR Manager can publish it to make it visible to the public.
+                            </small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check me-1"></i>Approve
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 
-    <div class="modal fade" id="rejectModal" tabindex="-1">
-        <div class="modal-dialog">
+    <!-- Reject Modal -->
+    <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Reject Job Posting</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="rejectModalLabel">
+                        <i class="fas fa-times-circle me-2"></i>Reject Job Posting
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    <form method="post" action="${pageContext.request.contextPath}/job-posting/reject">
+                <form method="post" action="${pageContext.request.contextPath}/job-posting/reject">
+                    <div class="modal-body">
                         <input type="hidden" name="csrfToken" value="${csrfToken}"/>
                         <input type="hidden" name="id" id="rejectJobId"/>
                         <div class="mb-3">
-                            <label for="rejectReason" class="form-label">Reason for rejection</label>
-                            <textarea class="form-control" id="rejectReason" name="reason" rows="3" required></textarea>
+                            <label for="rejectReason" class="form-label fw-bold">
+                                <i class="fas fa-comment-alt me-1"></i>Reason for Rejection <span class="text-danger">*</span>
+                            </label>
+                            <textarea class="form-control" id="rejectReason" name="reason" rows="4" 
+                                      required placeholder="Please provide a clear reason for rejection..."
+                                      minlength="10" maxlength="500"></textarea>
+                            <div class="form-text">Minimum 10 characters, maximum 500 characters</div>
                         </div>
-                        <div class="text-end">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-danger">Reject</button>
+                        <div class="alert alert-warning mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <small>The HR staff will be notified about this rejection and the reason provided.</small>
                         </div>
-                    </form>
-                </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-ban me-1"></i>Reject
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 
-    <div class="modal fade" id="publishModal" tabindex="-1">
-        <div class="modal-dialog">
+    <!-- Publish Modal -->
+    <div class="modal fade" id="publishModal" tabindex="-1" aria-labelledby="publishModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Publish Job Posting</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="publishModalLabel">
+                        <i class="fas fa-globe me-2"></i>Publish Job Posting
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    Are you sure you want to publish this job posting?
-                    <br><br>
-                    <small class="text-muted">
-                        This will make the job posting visible to the public.
-                    </small>
-                </div>
-                <div class="modal-footer">
-                    <form method="post" action="${pageContext.request.contextPath}/job-posting/publish">
+                <form method="post" action="${pageContext.request.contextPath}/job-posting/publish">
+                    <div class="modal-body">
                         <input type="hidden" name="csrfToken" value="${csrfToken}"/>
                         <input type="hidden" name="id" id="publishJobId"/>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Publish</button>
-                    </form>
-                </div>
+                        <div class="text-center py-3">
+                            <i class="fas fa-globe text-primary fa-4x mb-3"></i>
+                            <p class="mb-0">Are you sure you want to publish this job posting?</p>
+                            <small class="text-muted d-block mt-2">
+                                This will make the job posting visible to the public on the careers page.
+                            </small>
+                        </div>
+                        <div class="alert alert-info mb-0 mt-3">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <small>Once published, candidates can start applying for this position.</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-globe me-1"></i>Publish Now
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 
-    <script>
-        // Initialize modals
-        const approveModal = new bootstrap.Modal(document.getElementById('approveModal'));
-        const rejectModal = new bootstrap.Modal(document.getElementById('rejectModal'));
-        const publishModal = new bootstrap.Modal(document.getElementById('publishModal'));
-        
-        function approveJobPosting(id) {
-            document.getElementById('approveJobId').value = id;
-            approveModal.show();
-        }
-        
-        function rejectJobPosting(id) {
-            document.getElementById('rejectJobId').value = id;
-            rejectModal.show();
-        }
-        
-        function publishJobPosting(id) {
-            document.getElementById('publishJobId').value = id;
-            publishModal.show();
-        }
-    </script>
+    <!-- Dashboard Footer -->
+    <jsp:include page="../layout/dashboard-footer.jsp"/>
+</div>
+
+<script>
+    // Initialize modals
+    const approveModal = new bootstrap.Modal(document.getElementById('approveModal'));
+    const rejectModal = new bootstrap.Modal(document.getElementById('rejectModal'));
+    const publishModal = new bootstrap.Modal(document.getElementById('publishModal'));
+    
+    function approveJobPosting(id) {
+        document.getElementById('approveJobId').value = id;
+        approveModal.show();
+    }
+    
+    function rejectJobPosting(id) {
+        document.getElementById('rejectJobId').value = id;
+        rejectModal.show();
+    }
+    
+    function publishJobPosting(id) {
+        document.getElementById('publishJobId').value = id;
+        publishModal.show();
+    }
+
+    // Add hover effect to action buttons
+    document.addEventListener('DOMContentLoaded', function() {
+        const buttons = document.querySelectorAll('.btn-sm');
+        buttons.forEach(btn => {
+            btn.addEventListener('mouseover', function() {
+                if (this.title) {
+                    this.setAttribute('data-bs-toggle', 'tooltip');
+                    new bootstrap.Tooltip(this).show();
+                }
+            });
+        });
+
+        // Initialize all tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+    });
+</script>
 </body>
 </html>
