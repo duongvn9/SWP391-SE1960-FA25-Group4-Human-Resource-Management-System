@@ -96,6 +96,18 @@ public class UserUpdateServlet extends HttpServlet {
                 return;
             }
 
+            // Store original values for comparison
+            User originalUser = new User();
+            originalUser.setFullName(user.getFullName());
+            originalUser.setPhone(user.getPhone());
+            originalUser.setEmailCompany(user.getEmailCompany());
+            originalUser.setGender(user.getGender());
+            originalUser.setDepartmentId(user.getDepartmentId());
+            originalUser.setPositionId(user.getPositionId());
+            originalUser.setDateJoined(user.getDateJoined());
+            originalUser.setStartWorkDate(user.getStartWorkDate());
+            originalUser.setStatus(user.getStatus());
+
             // Get form parameters
             String fullName = request.getParameter("fullName");
             String phone = request.getParameter("phone");
@@ -126,10 +138,10 @@ public class UserUpdateServlet extends HttpServlet {
 
             // Update user fields
             user.setFullName(fullName.trim());
-            user.setPhone(phone != null ? phone.trim() : null);
+            user.setPhone(phone != null && !phone.trim().isEmpty() ? phone.trim() : null);
             user.setEmailCompany(emailCompany.trim());
-            user.setGender(gender != null ? gender.trim() : null);
-            user.setStatus(status != null ? status.trim() : "active");
+            user.setGender(gender != null && !gender.trim().isEmpty() ? gender.trim() : null);
+            user.setStatus(status != null && !status.trim().isEmpty() ? status.trim() : "active");
 
             // Parse and set department ID
             if (departmentIdStr != null && !departmentIdStr.trim().isEmpty()) {
@@ -247,6 +259,25 @@ public class UserUpdateServlet extends HttpServlet {
                 result.put("success", false);
                 result.put("message", "Invalid date format");
                 response.getWriter().write(gson.toJson(result));
+                return;
+            }
+
+            // Check if any changes were made
+            boolean hasChanges = !user.getFullName().equals(originalUser.getFullName())
+                    || !java.util.Objects.equals(user.getPhone(), originalUser.getPhone())
+                    || !user.getEmailCompany().equals(originalUser.getEmailCompany())
+                    || !java.util.Objects.equals(user.getGender(), originalUser.getGender())
+                    || !java.util.Objects.equals(user.getDepartmentId(), originalUser.getDepartmentId())
+                    || !java.util.Objects.equals(user.getPositionId(), originalUser.getPositionId())
+                    || !java.util.Objects.equals(user.getDateJoined(), originalUser.getDateJoined())
+                    || !java.util.Objects.equals(user.getStartWorkDate(), originalUser.getStartWorkDate())
+                    || !java.util.Objects.equals(user.getStatus(), originalUser.getStatus());
+
+            if (!hasChanges) {
+                result.put("success", true);
+                result.put("message", "No changes detected. User information is already up to date.");
+                response.getWriter().write(gson.toJson(result));
+                logger.info("No changes detected for user ID: {}", userId);
                 return;
             }
 

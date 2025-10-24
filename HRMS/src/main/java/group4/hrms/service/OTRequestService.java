@@ -72,13 +72,21 @@ public class OTRequestService {
 
 
     public Long createOTRequest(Long accountId, Long userId, Long departmentId,
-                               String otDate, String startTime, String endTime,
-      String reason, Boolean employeeConsent) throws SQLException {
+                               String requestTitle, String otDate, String startTime, String endTime,
+                               String reason, Boolean employeeConsent) throws SQLException {
 
         logger.info(String.format("Creating OT request: userId=%d, date=%s, time=%s-%s, hours=%.1f",
                    userId, otDate, startTime, endTime, calculateOTHours(startTime, endTime)));
 
         try {
+            // Validate OT date - must be at least 1 day in advance
+            LocalDate requestedDate = LocalDate.parse(otDate);
+            LocalDate today = LocalDate.now();
+            if (!requestedDate.isAfter(today)) {
+                throw new IllegalArgumentException("OT request must be submitted at least 1 day in advance. " +
+                    "Requested date: " + otDate + ", Today: " + today);
+            }
+
             // Validate employee consent
             validateEmployeeConsent(employeeConsent);
 
@@ -141,7 +149,9 @@ public class OTRequestService {
             // Create request object
             Request otRequest = new Request();
             otRequest.setRequestTypeId(otRequestType.getId());
-            otRequest.setTitle("OT Request - " + otDate);
+            otRequest.setTitle(requestTitle != null && !requestTitle.trim().isEmpty()
+                ? requestTitle.trim()
+                : "OT Request - " + otDate);
             otRequest.setOtDetail(detail);
             otRequest.setCreatedByAccountId(accountId);
             otRequest.setCreatedByUserId(userId);
@@ -170,12 +180,20 @@ public class OTRequestService {
 
 
     public Long createOTRequestForEmployee(Long managerAccountId, Long employeeUserId,
-                                          String otDate, String startTime, String endTime,
+                                          String requestTitle, String otDate, String startTime, String endTime,
                                           String reason) throws SQLException {
 
         logger.info("Manager " + managerAccountId + " creating OT request for employee " + employeeUserId);
 
         try {
+            // Validate OT date - must be at least 1 day in advance
+            LocalDate requestedDate = LocalDate.parse(otDate);
+            LocalDate today = LocalDate.now();
+            if (!requestedDate.isAfter(today)) {
+                throw new IllegalArgumentException("OT request must be submitted at least 1 day in advance. " +
+                    "Requested date: " + otDate + ", Today: " + today);
+            }
+
             // Get employee information
             Optional<User> employeeOpt = userDao.findById(employeeUserId);
             if (!employeeOpt.isPresent()) {
@@ -242,7 +260,9 @@ public class OTRequestService {
             // Create request object
             Request otRequest = new Request();
             otRequest.setRequestTypeId(otRequestType.getId());
-            otRequest.setTitle("OT Request - " + otDate + " (Created by Manager)");
+            otRequest.setTitle(requestTitle != null && !requestTitle.trim().isEmpty()
+                ? requestTitle.trim()
+                : "OT Request - " + otDate + " (Created by Manager)");
             otRequest.setOtDetail(detail);
             otRequest.setCreatedByAccountId(managerAccountId);
             otRequest.setCreatedByUserId(employeeUserId);
@@ -327,6 +347,16 @@ public class OTRequestService {
             double regularHoursThisWeek = computeRegularHoursForWeek(userId, now);
             balance.setRegularHoursThisWeek(regularHoursThisWeek);
             balance.setWeeklyLimit((double) WEEKLY_LIMIT);
+
+            // Set week date range (Monday to Sunday)
+            java.time.format.DateTimeFormatter weekFormatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM");
+            balance.setWeekStartDate(weekStart.format(weekFormatter));
+            balance.setWeekEndDate(weekEnd.format(weekFormatter));
+
+            // Set month name
+            java.time.format.DateTimeFormatter monthFormatter = java.time.format.DateTimeFormatter.ofPattern("MMMM yyyy", java.util.Locale.ENGLISH);
+            balance.setMonthName(now.format(monthFormatter));
+
             balance.setMonthlyHours(monthlyHours);
             balance.setMonthlyLimit((double) MONTHLY_LIMIT);
             balance.setMonthlyApprovedCount(approvedCountInMonth);
@@ -339,6 +369,83 @@ public class OTRequestService {
         } catch (Exception e) {
             logger.log(Level.SEVERE, String.format("Error getting OT balance: userId=%d", userId), e);
             throw new RuntimeException("Error getting OT balance", e);
+        }
+    }
+
+    /**
+     * Get OT balance for a specific week/month offset from current date.
+     *
+     * @param userId the user ID
+     * @param weekOffset weeks from current week (0 = current, -1 = last week, +1 = next week)
+     * @param monthOffset months from current month (0 = current, -1 = last month, +1 = next month)
+     * @return OTBalance with calculated hours for the specified period
+     */
+    public OTBalance getOTBalanceWithOffset(Long userId, int weekOffset, int monthOffset, int yearOffset) {
+        logger.fine(String.format("Getting OT balance with offset: userId=%d, weekOffset=%d, monthOffset=%d, yearOffset=%d",
+                                  userId, weekOffset, monthOffset, yearOffset));
+
+        try {
+            LocalDate now = LocalDate.now();
+
+            // Calculate target week (apply weekOffset)
+            LocalDate targetWeekDate = now.plusWeeks(weekOffset);
+            java.time.LocalDate weekStart = targetWeekDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+            java.time.LocalDate weekEnd = targetWeekDate.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+
+            // Calculate target month (apply monthOffset)
+            LocalDate targetMonthDate = now.plusMonths(monthOffset);
+            java.time.LocalDate monthStart = targetMonthDate.with(TemporalAdjusters.firstDayOfMonth());
+            java.time.LocalDate monthEnd = targetMonthDate.with(TemporalAdjusters.lastDayOfMonth());
+
+            // Calculate target year (apply yearOffset)
+            int targetYear = now.getYear() + yearOffset;
+            java.time.LocalDate yearStart = java.time.LocalDate.of(targetYear, 1, 1);
+            java.time.LocalDate yearEnd = java.time.LocalDate.of(targetYear, 12, 31);
+
+            // Calculate week hours for target week
+            double currentWeekHours = calculateOTHoursInWeek(userId, targetWeekDate);
+            int approvedCountInWeek = countApprovedOTRequestsInRange(userId, weekStart, weekEnd);
+
+            // Calculate month hours for target month
+            double monthlyHours = calculateOTHoursInMonth(userId, targetMonthDate.getYear(), targetMonthDate.getMonthValue());
+            int approvedCountInMonth = countApprovedOTRequestsInRange(userId, monthStart, monthEnd);
+
+            // Calculate annual hours for target year (with offset)
+            double annualHours = calculateOTHoursInYear(userId, targetYear);
+            int approvedCountInYear = countApprovedOTRequestsInRange(userId, yearStart, yearEnd);
+
+            logger.info(String.format("OT balance with offset retrieved: userId=%d, week(offset=%d)=%.2f, month(offset=%d)=%.2f, year(offset=%d)=%.2f",
+                       userId, weekOffset, currentWeekHours, monthOffset, monthlyHours, yearOffset, annualHours));
+
+            OTBalance balance = new OTBalance();
+            balance.setCurrentWeekHours(currentWeekHours);
+            double regularHoursThisWeek = computeRegularHoursForWeek(userId, targetWeekDate);
+            balance.setRegularHoursThisWeek(regularHoursThisWeek);
+            balance.setWeeklyLimit((double) WEEKLY_LIMIT);
+
+            // Set week date range
+            java.time.format.DateTimeFormatter weekFormatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM");
+            balance.setWeekStartDate(weekStart.format(weekFormatter));
+            balance.setWeekEndDate(weekEnd.format(weekFormatter));
+
+            // Set month name
+            java.time.format.DateTimeFormatter monthFormatter = java.time.format.DateTimeFormatter.ofPattern("MMMM yyyy", java.util.Locale.ENGLISH);
+            balance.setMonthName(targetMonthDate.format(monthFormatter));
+
+            balance.setMonthlyHours(monthlyHours);
+            balance.setMonthlyLimit((double) MONTHLY_LIMIT);
+            balance.setMonthlyApprovedCount(approvedCountInMonth);
+            balance.setAnnualHours(annualHours);
+            balance.setAnnualLimit((double) ANNUAL_LIMIT);
+            balance.setAnnualApprovedCount(approvedCountInYear);
+            balance.setWeeklyApprovedCount(approvedCountInWeek);
+
+            return balance;
+
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, String.format("Error getting OT balance with offset: userId=%d, weekOffset=%d, monthOffset=%d",
+                                                    userId, weekOffset, monthOffset), e);
+            throw new RuntimeException("Error getting OT balance with offset", e);
         }
     }
 
@@ -736,7 +843,7 @@ public class OTRequestService {
 
 
     private double calculateApprovedOTHours(Long userId, LocalDate startDate, LocalDate endDate) {
-        logger.fine(String.format("Calculating approved OT hours: userId=%d, startDate=%s, endDate=%s",
+        logger.fine(String.format("Calculating approved and pending OT hours: userId=%d, startDate=%s, endDate=%s",
                    userId, startDate, endDate));
 
         try {
@@ -746,8 +853,9 @@ public class OTRequestService {
             int approvedCount = 0;
 
             for (Request request : otRequests) {
-                // Only count approved requests
-                if (!"APPROVED".equals(request.getStatus())) {
+                // Count both APPROVED and PENDING requests (PENDING requests are awaiting approval and should count toward limits)
+                String status = request.getStatus();
+                if (!"APPROVED".equals(status) && !"PENDING".equals(status)) {
                     continue;
                 }
 
@@ -910,7 +1018,7 @@ public class OTRequestService {
      * @param otHours Requested OT hours
      * @throws IllegalArgumentException if any limit would be exceeded
      */
-    private void validateOTBalance(Long userId, String otDate, Double otHours) {
+    public void validateOTBalance(Long userId, String otDate, Double otHours) {
         logger.fine(String.format("Validating OT balance: userId=%d, date=%s, requestedHours=%.1f",
                    userId, otDate, otHours));
 
@@ -919,16 +1027,23 @@ public class OTRequestService {
 
             // Calculate current weekly OT hours (double precision)
             double currentWeekHours = calculateOTHoursInWeek(userId, date);
-            logger.fine(String.format("Weekly balance: userId=%d, current=%.2f, requested=%.1f, limit=%d",
-                       userId, currentWeekHours, otHours, WEEKLY_LIMIT));
 
-            if (currentWeekHours + otHours > WEEKLY_LIMIT) {
-                logger.warning(String.format("Weekly OT limit exceeded: userId=%d, current=%.2f, requested=%.1f, limit=%d",
-                              userId, currentWeekHours, otHours, WEEKLY_LIMIT));
+            // IMPORTANT: Calculate regular work hours for the week to enforce 48h total limit
+            double regularHoursThisWeek = computeRegularHoursForWeek(userId, date);
+            double totalWorkHours = regularHoursThisWeek + currentWeekHours + otHours;
+
+            logger.fine(String.format("Weekly balance: userId=%d, regular=%.2f, currentOT=%.2f, requestedOT=%.1f, total=%.2f, limit=%d",
+                       userId, regularHoursThisWeek, currentWeekHours, otHours, totalWorkHours, WEEKLY_LIMIT));
+
+            // Check if total work hours (regular + OT) exceeds 48h/week limit
+            if (totalWorkHours > WEEKLY_LIMIT) {
+                double remainingHours = WEEKLY_LIMIT - regularHoursThisWeek - currentWeekHours;
+                logger.warning(String.format("Weekly work limit exceeded: userId=%d, regular=%.2f, currentOT=%.2f, requestedOT=%.1f, total=%.2f, limit=%d",
+                              userId, regularHoursThisWeek, currentWeekHours, otHours, totalWorkHours, WEEKLY_LIMIT));
                 throw new IllegalArgumentException(
-                    String.format("Weekly OT limit exceeded! Current: %.1fh, Requested: %.1fh, " +
-                        "Limit: %dh. Remaining: %.1fh.",
-                        currentWeekHours, otHours, WEEKLY_LIMIT, WEEKLY_LIMIT - currentWeekHours)
+                    String.format("Weekly work limit (48h) exceeded! Regular work: %.1fh, Current OT: %.1fh, Requested OT: %.1fh, " +
+                        "Total: %.1fh. You can only add %.1fh more OT this week.",
+                        regularHoursThisWeek, currentWeekHours, otHours, totalWorkHours, Math.max(0, remainingHours))
                 );
             }
 
@@ -962,8 +1077,8 @@ public class OTRequestService {
                 );
             }
 
-            logger.info(String.format("OT balance validation passed: userId=%d, date=%s, weekly=%.2f/%.0f, monthly=%.2f/%.0f, annual=%.2f/%.0f",
-                       userId, otDate, currentWeekHours, (double)WEEKLY_LIMIT, monthlyHours, (double)MONTHLY_LIMIT,
+            logger.info(String.format("OT balance validation passed: userId=%d, date=%s, regular=%.2f, weekly=%.2f/%.0f, monthly=%.2f/%.0f, annual=%.2f/%.0f",
+                       userId, otDate, regularHoursThisWeek, currentWeekHours, (double)WEEKLY_LIMIT, monthlyHours, (double)MONTHLY_LIMIT,
                        annualHours, (double)ANNUAL_LIMIT));
 
         } catch (IllegalArgumentException e) {

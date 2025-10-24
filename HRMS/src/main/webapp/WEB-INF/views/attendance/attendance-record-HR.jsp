@@ -105,26 +105,21 @@
                         <button type="button" id="exportPDFBtn" class="btn btn-export">Export PDF</button> 
                         <button id="editBtn" class="btn btn-edit" onclick="enableEdit()">Edit</button> 
 
-                        <c:if test="${selectedPeriod != null}">
-                            <div class="switch-container">
-                                <div class="toggle-switch">
-                                    <input type="checkbox" id="switchInput"
-                                           data-period-id="${selectedPeriod.id}"
-                                           ${selectedPeriod.isLocked ? "checked" : ""} />
-                                    <label for="switchInput" class="slider"></label>
+                        <c:if test="${sessionScope.user != null && sessionScope.user.positionId == 7}">
+                            <c:if test="${selectedPeriod != null}">
+                                <div class="switch-container">
+                                    <div class="toggle-switch">
+                                        <input type="checkbox" id="switchInput"
+                                               data-period-id="${selectedPeriod.id}"
+                                               ${selectedPeriod.isLocked ? "checked" : ""} />
+                                        <label for="switchInput" class="slider"></label>
+                                    </div>
+                                    <span id="sliderStatus">
+                                        ${selectedPeriod.isLocked ? "Locked" : "Unlocked"}
+                                    </span>
                                 </div>
-                                <span id="sliderStatus">
-                                    ${selectedPeriod.isLocked ? "Locked" : "Unlocked"}
-                                </span>
-                            </div>
-                        </c:if>
-
-                        <c:if test="${not empty error}">
-                            <div class="form-message error-message" style="color: red">${error}</div>
-                        </c:if>
-                        <c:if test="${not empty message}">
-                            <div class="form-message success-message" style="color: green">${message}</div>
-                        </c:if>
+                            </c:if>
+                        </c:if>                      
                     </div>
 
                     <form id="exportForm" class="export-form" action="${pageContext.request.contextPath}/attendance/record/HR" method="post">
@@ -138,6 +133,13 @@
                         <input type="hidden" name="periodSelect" id="exportPeriodSelect" 
                                value="${selectedPeriod != null ? selectedPeriod.id : ''}">
                     </form>
+
+                    <c:if test="${not empty error}">
+                        <div class="form-message error-message" style="color: red">${error}</div>
+                    </c:if>
+                    <c:if test="${not empty message}">
+                        <div class="form-message success-message" style="color: green">${message}</div>
+                    </c:if>
 
                     <!-- ========== MAIN TABLE ========== --> 
                     <div class="table-wrapper">

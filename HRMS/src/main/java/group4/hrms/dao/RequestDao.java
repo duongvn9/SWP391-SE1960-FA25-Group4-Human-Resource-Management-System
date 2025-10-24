@@ -637,9 +637,15 @@ public class RequestDao extends BaseDao<Request, Long> {
         }
 
         // Handle approve_reason (reason from approver when approve/reject)
-        String approveReason = rs.getString("approve_reason");
-        if (approveReason != null && !approveReason.trim().isEmpty()) {
-            request.setApproveReason(approveReason);
+        // Check if column exists before reading (for backward compatibility)
+        try {
+            String approveReason = rs.getString("approve_reason");
+            if (approveReason != null && !approveReason.trim().isEmpty()) {
+                request.setApproveReason(approveReason);
+            }
+        } catch (SQLException e) {
+            // Column doesn't exist, skip it (backward compatibility)
+            // This can happen if the database schema hasn't been updated yet
         }
 
         request.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
@@ -714,7 +720,7 @@ public class RequestDao extends BaseDao<Request, Long> {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT id, request_type_id, title, detail, created_by_account_id, ");
         sql.append("created_by_user_id, department_id, status, current_approver_account_id, ");
-        sql.append("created_at, updated_at FROM ").append(TABLE_NAME).append(" ");
+        sql.append("approve_reason, created_at, updated_at FROM ").append(TABLE_NAME).append(" ");
         sql.append("WHERE created_by_user_id = ? ");
 
         // Add status filter
@@ -976,7 +982,7 @@ public class RequestDao extends BaseDao<Request, Long> {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT r.id, r.request_type_id, r.title, r.detail, r.created_by_account_id, ");
         sql.append("r.created_by_user_id, r.department_id, r.status, r.current_approver_account_id, ");
-        sql.append("r.created_at, r.updated_at ");
+        sql.append("r.approve_reason, r.created_at, r.updated_at ");
         sql.append("FROM ").append(TABLE_NAME).append(" r ");
         sql.append("INNER JOIN request_types rt ON r.request_type_id = rt.id ");
         sql.append("WHERE r.created_by_user_id = ? ");
@@ -1013,7 +1019,7 @@ public class RequestDao extends BaseDao<Request, Long> {
         return requests;
     }
 
-    
+
 
     public List<Request> findPendingRecruitmentRequests() {
         List<Request> list = new ArrayList<>();

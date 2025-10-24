@@ -65,7 +65,11 @@
                                         <option value="Position" ${type == 'Position' ? 'selected' : ''}>Position</option>
                                     </select>
                                     <small class="text-info" id="department-note" style="display: none;">
+<<<<<<< HEAD
                                         <i class="fas fa-info-circle"></i> Department does not have value
+=======
+                                        <i class="fas fa-info-circle"></i> Department does not have value and priority
+>>>>>>> b5f801b424ead77451aea386622ea64858be49cc
                                     </small>
                                 </c:otherwise>
                             </c:choose>
@@ -122,10 +126,18 @@
     </div>
     
     <script>
+<<<<<<< HEAD
         // Show/hide Value field based on Type selection
         document.addEventListener('DOMContentLoaded', function() {
             var typeSelect = document.getElementById('type');
             var valueField = document.getElementById('value');
+=======
+        // Show/hide Value and Priority fields based on Type selection
+        document.addEventListener('DOMContentLoaded', function() {
+            var typeSelect = document.getElementById('type');
+            var valueField = document.getElementById('value');
+            var priorityField = document.getElementById('priority');
+>>>>>>> b5f801b424ead77451aea386622ea64858be49cc
             var departmentNote = document.getElementById('department-note');
             
             // Function to toggle fields
@@ -144,15 +156,28 @@
                 }
                 
                 if (selectedType === 'Department') {
+<<<<<<< HEAD
                     // Hide value for Department
                     valueGroup.style.display = 'none';
+=======
+                    // Hide value and priority for Department
+                    valueGroup.style.display = 'none';
+                    priorityGroup.style.display = 'none';
+>>>>>>> b5f801b424ead77451aea386622ea64858be49cc
                     // Show department note (only for create mode)
                     if (departmentNote) {
                         departmentNote.style.display = 'block';
                     }
+<<<<<<< HEAD
                 } else if (selectedType === 'Position') {
                     // Show value for Position
                     valueGroup.style.display = 'block';
+=======
+                } else if (selectedType === 'Position' || selectedType === 'Role') {
+                    // Show value and priority for Position and Role
+                    valueGroup.style.display = 'block';
+                    priorityGroup.style.display = 'block';
+>>>>>>> b5f801b424ead77451aea386622ea64858be49cc
                     // Hide department note
                     if (departmentNote) {
                         departmentNote.style.display = 'none';

@@ -75,12 +75,14 @@ public class RequestTypeInitializer {
             "OVERTIME"
         );
 
-        ensureRequestTypeExists(
-            "PERSONAL_INFO_UPDATE",
-            "Personal Information Update",
-            "Request to update personal information",
-            "PERSONAL"
-        );
+        // PERSONAL_INFO_UPDATE removed - not used in current system
+        // If needed in future, uncomment below:
+        // ensureRequestTypeExists(
+        //     "PERSONAL_INFO_UPDATE",
+        //     "Personal Information Update",
+        //     "Request to update personal information",
+        //     "PERSONAL"
+        // );
 
         logger.info("Common request types initialization completed");
     }
