@@ -134,15 +134,20 @@
                                         <td>${setting.value != null ? setting.value : ''}</td>
                                         <td>${setting.priority != null ? setting.priority : ''}</td>
                                         <td>
-                                            <a href="${pageContext.request.contextPath}/settings/edit?id=${setting.id}&type=${setting.type}" 
-                                               class="btn btn-sm btn-warning btn-action">
-                                                <i class="fas fa-edit"></i> Edit
-                                            </a>
-                                            <button type="button" class="btn btn-sm btn-danger btn-action" 
-                                                    data-bs-toggle="modal" data-bs-target="#deleteModal"
-                                                    data-id="${setting.id}" data-type="${setting.type}" data-name="${setting.name}">
-                                                <i class="fas fa-trash"></i> Delete
-                                            </button>
+                                            <c:if test="${setting.type == 'Department'}">
+                                                <a href="${pageContext.request.contextPath}/settings/edit?id=${setting.id}&type=${setting.type}" 
+                                                   class="btn btn-sm btn-warning btn-action">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </a>
+                                                <button type="button" class="btn btn-sm btn-danger btn-action" 
+                                                        data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                                        data-id="${setting.id}" data-type="${setting.type}" data-name="${setting.name}">
+                                                    <i class="fas fa-trash"></i> Delete
+                                                </button>
+                                            </c:if>
+                                            <c:if test="${setting.type == 'Position'}">
+                                                <span class="text-muted">No actions available</span>
+                                            </c:if>
                                         </td>
                                     </tr>
                                 </c:forEach>
