@@ -82,7 +82,6 @@
                                 <option value="all" ${typeFilter == 'all' ? 'selected' : ''}>All Types</option>
                                 <option value="Department" ${typeFilter == 'Department' ? 'selected' : ''}>Department</option>
                                 <option value="Position" ${typeFilter == 'Position' ? 'selected' : ''}>Position</option>
-                                <option value="Role" ${typeFilter == 'Role' ? 'selected' : ''}>Role</option>
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -92,14 +91,19 @@
                                 <option value="name" ${sortBy == 'name' ? 'selected' : ''}>Sort by Name</option>
                             </select>
                         </div>
-                        <div class="col-md-5">
+                        <div class="col-md-4">
                             <input type="text" name="search" class="form-control" 
                                    placeholder="Enter keyword(s) to search" value="${searchKeyword}">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <button type="submit" class="btn btn-primary w-100">
                                 <i class="fas fa-search"></i> Search
                             </button>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="${pageContext.request.contextPath}/settings" class="btn btn-secondary w-100">
+                                <i class="fas fa-times"></i> Clear Filter
+                            </a>
                         </div>
                     </form>
                     
