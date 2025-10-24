@@ -82,13 +82,6 @@
                                     </c:choose>
                                 </div>
 
-                                <div class="mb-3">
-                                    <label for="description" class="form-label">Description</label>
-                                    <textarea class="form-control" id="description" name="description"
-                                        rows="3">${setting != null ? setting.description : description}</textarea>
-                                    <small class="text-muted">Optional description for this setting</small>
-                                </div>
-
                                 <div class="d-flex gap-2">
                                     <button type="submit" class="btn btn-primary">
                                         <i class="fas fa-save"></i> ${setting != null ? 'Update' : 'Create'}
