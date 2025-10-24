@@ -360,13 +360,11 @@
                                     </li>
                                 </c:if>
 
-                                <!-- Job Management - HR Staff (8) and HRM Manager (7) only -->
-                                <c:if
-                                    test="${sessionScope.user != null && (sessionScope.user.positionId == 7 || sessionScope.user.positionId == 8)}">
+                                        <!-- Job Management - HR Staff (8) and HRM Manager (7) only -->
+                                <c:if test="${sessionScope.user != null && (sessionScope.user.positionId == 7 || sessionScope.user.positionId == 8)}">
                                     <li class="nav-item">
-                                        <a href="#" class="nav-link sidebar-dropdown-toggle"
-                                            data-target="job-management-submenu" aria-expanded="false"
-                                            data-tooltip="Job Management">
+                                        <a href="#" class="nav-link sidebar-dropdown-toggle" data-target="job-management-submenu"
+                                            aria-expanded="false" data-tooltip="Job Management">
                                             <i class="fas fa-briefcase"></i><span>Job Management</span>
                                             <i class="fas fa-chevron-right dropdown-arrow"></i>
                                         </a>
@@ -374,24 +372,15 @@
                                             <li>
                                                 <a href="${pageContext.request.contextPath}/job-postings"
                                                     class="nav-link ${param.currentPage == 'job-postings' ? 'active' : ''}">
-                                                    <i class="fas fa-list"></i><span>Job Postings</span>
+                                                    <i class="fas fa-list"></i><span>Job Postings List</span>
                                                 </a>
                                             </li>
                                             <li>
-                                                <a href="${pageContext.request.contextPath}/job-postings/create"
-                                                    class="nav-link ${param.currentPage == 'create-job-posting' ? 'active' : ''}">
+                                                <a href="${pageContext.request.contextPath}/recruitment/approved"
+                                                    class="nav-link ${param.currentPage == 'approved-recruitment-requests' ? 'active' : ''}">
                                                     <i class="fas fa-plus-circle"></i><span>Create Job Posting</span>
                                                 </a>
                                             </li>
-                                            <c:if test="${sessionScope.user.positionId == 7}">
-                                                <li>
-                                                    <a href="${pageContext.request.contextPath}/recruitment-approval"
-                                                        class="nav-link ${param.currentPage == 'recruitment-approval' ? 'active' : ''}">
-                                                        <i class="fas fa-check-circle"></i><span>Recruitment
-                                                            Approval</span>
-                                                    </a>
-                                                </li>
-                                            </c:if>
                                         </ul>
                                     </li>
                                 </c:if>

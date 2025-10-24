@@ -2,7 +2,6 @@ package group4.hrms.dao;
 
 import group4.hrms.model.Department;
 import group4.hrms.model.Position;
-import group4.hrms.model.Role;
 import group4.hrms.model.Setting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +12,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * DAO class cho Setting - Tổng hợp dữ liệu từ Department, Position, Role
+ * DAO class cho Setting - Tổng hợp dữ liệu từ Department, Position
  */
 public class SettingDao {
     
@@ -21,7 +20,6 @@ public class SettingDao {
     
     private final DepartmentDao departmentDao = new DepartmentDao();
     private final PositionDao positionDao = new PositionDao();
-    private final RoleDao roleDao = new RoleDao();
     
     /**
      * Tạo mới setting
@@ -32,21 +30,15 @@ public class SettingDao {
         switch (setting.getType()) {
             case "Department":
                 Department dept = new Department(setting.getName());
+                dept.setDescription(setting.getDescription());
                 dept = departmentDao.create(dept);
                 return convertDepartmentToSetting(dept);
                 
             case "Position":
                 Position pos = new Position(setting.getValue(), setting.getName(), setting.getPriority());
+                pos.setDescription(setting.getDescription());
                 pos = positionDao.create(pos);
                 return convertPositionToSetting(pos);
-                
-            case "Role":
-                Role role = new Role(setting.getValue(), setting.getName(), setting.getPriority());
-                role = roleDao.create(role).orElse(null);
-                if (role == null) {
-                    throw new RuntimeException("Không thể tạo role");
-                }
-                return convertRoleToSetting(role);
                 
             default:
                 throw new RuntimeException("Type không hợp lệ: " + setting.getType());
@@ -64,6 +56,7 @@ public class SettingDao {
                 Department dept = new Department();
                 dept.setId(setting.getId());
                 dept.setName(setting.getName());
+                dept.setDescription(setting.getDescription());
                 dept = departmentDao.update(dept);
                 return dept != null ? convertDepartmentToSetting(dept) : null;
                 
@@ -72,22 +65,10 @@ public class SettingDao {
                 pos.setId(setting.getId());
                 pos.setCode(setting.getValue());
                 pos.setName(setting.getName());
+                pos.setDescription(setting.getDescription());
                 pos.setJobLevel(setting.getPriority());
                 pos = positionDao.update(pos);
                 return pos != null ? convertPositionToSetting(pos) : null;
-                
-            case "Role":
-                Role role = new Role();
-                role.setId(setting.getId());
-                role.setCode(setting.getValue());
-                role.setName(setting.getName());
-                role.setPriority(setting.getPriority());
-                boolean updated = roleDao.update(role);
-                if (updated) {
-                    Optional<Role> updatedRole = roleDao.findById(setting.getId());
-                    return updatedRole.map(this::convertRoleToSetting).orElse(null);
-                }
-                return null;
                 
             default:
                 throw new RuntimeException("Type không hợp lệ: " + setting.getType());
@@ -97,7 +78,7 @@ public class SettingDao {
     /**
      * Đếm số lượng users đang sử dụng setting này
      * @param settingId ID của setting
-     * @param type Type của setting (Department, Position, Role)
+     * @param type Type của setting (Department, Position)
      * @return Số lượng users đang sử dụng
      * @throws Exception nếu có lỗi database
      */
@@ -109,8 +90,6 @@ public class SettingDao {
                 return departmentDao.countEmployees(settingId);
             case "Position":
                 return positionDao.countUsers(settingId);
-            case "Role":
-                return roleDao.countUsers(settingId);
             default:
                 throw new RuntimeException("Invalid setting type: " + type);
         }
@@ -127,8 +106,6 @@ public class SettingDao {
                 return departmentDao.delete(settingId);
             case "Position":
                 return positionDao.delete(settingId);
-            case "Role":
-                return roleDao.delete(settingId);
             default:
                 throw new RuntimeException("Type không hợp lệ: " + type);
         }
@@ -145,18 +122,16 @@ public class SettingDao {
                 return departmentDao.findById(settingId).map(this::convertDepartmentToSetting);
             case "Position":
                 return positionDao.findById(settingId).map(this::convertPositionToSetting);
-            case "Role":
-                return roleDao.findById(settingId).map(this::convertRoleToSetting);
             default:
                 return Optional.empty();
         }
     }
     
     /**
-     * Lấy tất cả settings từ 3 bảng
+     * Lấy tất cả settings từ 2 bảng
      */
     public List<Setting> findAll() {
-        logger.debug("Lấy tất cả settings từ Department, Position, Role");
+        logger.debug("Lấy tất cả settings từ Department, Position");
         
         List<Setting> settings = new ArrayList<>();
         
@@ -171,12 +146,6 @@ public class SettingDao {
             List<Position> positions = positionDao.findAll();
             for (Position pos : positions) {
                 settings.add(convertPositionToSetting(pos));
-            }
-            
-            // Lấy từ Role
-            List<Role> roles = roleDao.findAll();
-            for (Role role : roles) {
-                settings.add(convertRoleToSetting(role));
             }
             
             logger.debug("Tổng cộng: {} settings", settings.size());
@@ -208,13 +177,6 @@ public class SettingDao {
                 List<Position> positions = positionDao.findAll();
                 for (Position pos : positions) {
                     settings.add(convertPositionToSetting(pos));
-                }
-                break;
-                
-            case "Role":
-                List<Role> roles = roleDao.findAll();
-                for (Role role : roles) {
-                    settings.add(convertRoleToSetting(role));
                 }
                 break;
         }
@@ -262,6 +224,7 @@ public class SettingDao {
         setting.setType("Department");
         setting.setValue(null);
         setting.setPriority(null);
+        setting.setDescription(dept.getDescription());
         setting.setCreatedAt(dept.getCreatedAt());
         setting.setUpdatedAt(dept.getUpdatedAt());
         return setting;
@@ -274,20 +237,9 @@ public class SettingDao {
         setting.setType("Position");
         setting.setValue(pos.getCode());
         setting.setPriority(pos.getJobLevel());
+        setting.setDescription(pos.getDescription());
         setting.setCreatedAt(pos.getCreatedAt());
         setting.setUpdatedAt(pos.getUpdatedAt());
-        return setting;
-    }
-    
-    private Setting convertRoleToSetting(Role role) {
-        Setting setting = new Setting();
-        setting.setId(role.getId());
-        setting.setName(role.getName());
-        setting.setType("Role");
-        setting.setValue(role.getCode());
-        setting.setPriority(role.getPriority());
-        setting.setCreatedAt(role.getCreatedAt());
-        setting.setUpdatedAt(role.getUpdatedAt());
         return setting;
     }
 }

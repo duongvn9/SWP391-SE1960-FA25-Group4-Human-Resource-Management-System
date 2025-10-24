@@ -1,16 +1,18 @@
 package group4.hrms.controller;
 
-import group4.hrms.service.JobPostingService;
-import group4.hrms.util.SecurityUtil;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 
+import group4.hrms.model.User;
+import group4.hrms.service.JobPostingService;
+import group4.hrms.util.JobPostingPermissionHelper;
+import group4.hrms.util.SecurityUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
 
 @WebServlet("/job-posting/publish")
 public class JobPostingPublishServlet extends HttpServlet {
@@ -24,11 +26,12 @@ public class JobPostingPublishServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // 1. Validate Role and Get Publisher ID
-        String userRole = (String) request.getSession().getAttribute("userRole");
+        // 1. Validate Role (by position) and Get Publisher ID
         Long publisherId = SecurityUtil.getLoggedInUserId(request.getSession());
-        
-        if (!"HRM".equals(userRole) || publisherId == null) {
+        User logged = (User) request.getSession().getAttribute("user");
+        Long positionId = logged != null ? logged.getPositionId() : null;
+
+        if (publisherId == null || !JobPostingPermissionHelper.canApproveJobPosting(positionId)) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied. Must be logged in as HRM.");
             return;
         }
