@@ -1,5 +1,16 @@
 package group4.hrms.controller;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import group4.hrms.dao.AttachmentDao;
 import group4.hrms.dao.RequestDao;
 import group4.hrms.model.Attachment;
@@ -11,11 +22,6 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.*;
-import java.util.Optional;
 
 /**
  * Controller for serving attachment files
@@ -44,12 +50,15 @@ public class AttachmentController extends HttpServlet {
         this.requestDao = new RequestDao();
         this.attachmentService = new AttachmentService(attachmentDao);
 
-        // Get upload base path from context parameter or use default
-        this.uploadBasePath = getServletContext().getInitParameter("upload.base.path");
-        if (uploadBasePath == null || uploadBasePath.trim().isEmpty()) {
-            // Default to uploads directory outside webapp
-            String webappPath = getServletContext().getRealPath("/");
-            this.uploadBasePath = webappPath + File.separator + ".." + File.separator + "uploads";
+        // Set upload base path to match LeaveRequestController and OTRequestController
+        // Always use absolute path to assets/img/Request directory inside webapp
+        this.uploadBasePath = getServletContext().getRealPath("/assets/img/Request");
+
+        if (uploadBasePath == null) {
+            // Fallback: if realPath returns null (e.g., running from JAR/WAR without extraction)
+            // use temp directory as last resort
+            uploadBasePath = System.getProperty("java.io.tmpdir") + File.separator + "hrms-uploads";
+            logger.warn("Cannot resolve /assets/img/Request path, using temp directory: {}", uploadBasePath);
         }
 
         logger.info("AttachmentController initialized with upload base path: {}", uploadBasePath);

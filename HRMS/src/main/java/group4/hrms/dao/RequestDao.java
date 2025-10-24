@@ -1302,6 +1302,12 @@ public class RequestDao extends BaseDao<Request, Long> {
             params.add(filter.getEmployeeId());
         }
 
+        // Department filter
+        if (filter.hasDepartmentFilter()) {
+            sql.append("AND u.department_id = ? ");
+            params.add(filter.getDepartmentId());
+        }
+
         // Search filter
         if (filter.hasSearch()) {
             sql.append("AND (r.title LIKE ? OR r.detail LIKE ?) ");
@@ -1373,6 +1379,12 @@ public class RequestDao extends BaseDao<Request, Long> {
 
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT COUNT(*) FROM ").append(TABLE_NAME).append(" r ");
+
+        // Join users table if department filter is present
+        if (filter.hasDepartmentFilter()) {
+            sql.append("INNER JOIN users u ON r.created_by_user_id = u.id ");
+        }
+
         sql.append("WHERE 1=1 ");
 
         List<Object> params = new ArrayList<>();
@@ -1421,6 +1433,12 @@ public class RequestDao extends BaseDao<Request, Long> {
         if (filter.hasEmployeeFilter()) {
             sql.append("AND r.created_by_user_id = ? ");
             params.add(filter.getEmployeeId());
+        }
+
+        // Department filter
+        if (filter.hasDepartmentFilter()) {
+            sql.append("AND u.department_id = ? ");
+            params.add(filter.getDepartmentId());
         }
 
         // Search filter
@@ -1484,6 +1502,12 @@ public class RequestDao extends BaseDao<Request, Long> {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT r.request_type_id, COUNT(*) as count ");
         sql.append("FROM ").append(TABLE_NAME).append(" r ");
+
+        // Join users table if department filter is present
+        if (filter.hasDepartmentFilter()) {
+            sql.append("INNER JOIN users u ON r.created_by_user_id = u.id ");
+        }
+
         sql.append("WHERE 1=1 ");
 
         List<Object> params = new ArrayList<>();
@@ -1529,6 +1553,12 @@ public class RequestDao extends BaseDao<Request, Long> {
         if (filter.hasEmployeeFilter()) {
             sql.append("AND r.created_by_user_id = ? ");
             params.add(filter.getEmployeeId());
+        }
+
+        // Department filter
+        if (filter.hasDepartmentFilter()) {
+            sql.append("AND u.department_id = ? ");
+            params.add(filter.getDepartmentId());
         }
 
         // Search filter
