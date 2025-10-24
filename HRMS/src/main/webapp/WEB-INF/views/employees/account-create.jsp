@@ -294,8 +294,13 @@
                                         <label for="password" class="form-label required">
                                             <i class="fas fa-lock me-1"></i>Password
                                         </label>
-                                        <input type="password" class="form-control" id="password" name="password"
-                                            required maxlength="100" placeholder="Enter password">
+                                        <div class="position-relative">
+                                            <input type="password" class="form-control" id="password" name="password"
+                                                required maxlength="100" placeholder="Enter password"
+                                                style="padding-right: 40px;">
+                                            <i class="fas fa-eye position-absolute" id="togglePassword"
+                                                style="top: 50%; right: 10px; transform: translateY(-50%); cursor: pointer; color: #6c757d;"></i>
+                                        </div>
 
                                         <!-- Password Strength Indicator -->
                                         <div id="passwordStrengthIndicator" class="mt-2" style="display: none;">
@@ -322,9 +327,13 @@
                                         <label for="confirmPassword" class="form-label required">
                                             <i class="fas fa-lock me-1"></i>Confirm Password
                                         </label>
-                                        <input type="password" class="form-control" id="confirmPassword"
-                                            name="confirmPassword" required maxlength="100"
-                                            placeholder="Re-enter password">
+                                        <div class="position-relative">
+                                            <input type="password" class="form-control" id="confirmPassword"
+                                                name="confirmPassword" required maxlength="100"
+                                                placeholder="Re-enter password" style="padding-right: 40px;">
+                                            <i class="fas fa-eye position-absolute" id="toggleConfirmPassword"
+                                                style="top: 50%; right: 10px; transform: translateY(-50%); cursor: pointer; color: #6c757d;"></i>
+                                        </div>
                                         <div class="invalid-feedback">Passwords do not match</div>
                                     </div>
                                 </div>
@@ -548,6 +557,24 @@
 
                     passwordInput.addEventListener('change', validatePassword);
                     confirmPasswordInput.addEventListener('keyup', validatePassword);
+
+                    // Toggle password visibility
+                    const togglePassword = document.getElementById('togglePassword');
+                    const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+
+                    togglePassword.addEventListener('click', function () {
+                        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                        passwordInput.setAttribute('type', type);
+                        this.classList.toggle('fa-eye');
+                        this.classList.toggle('fa-eye-slash');
+                    });
+
+                    toggleConfirmPassword.addEventListener('click', function () {
+                        const type = confirmPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                        confirmPasswordInput.setAttribute('type', type);
+                        this.classList.toggle('fa-eye');
+                        this.classList.toggle('fa-eye-slash');
+                    });
 
                     // Prevent form submission if password is invalid
                     form.addEventListener('submit', function (event) {
