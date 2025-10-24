@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
  */
 public class ValidationUtil {
 
-    private static final Pattern PHONE_PATTERN = Pattern.compile("^[0-9]{10,11}$");
+    private static final Pattern PHONE_PATTERN = Pattern.compile("^0[0-9]{9}$");
     private static final Pattern UPPERCASE_PATTERN = Pattern.compile(".*[A-Z].*");
     private static final Pattern SPECIAL_CHAR_PATTERN = Pattern.compile(".*[!@#$%^&*(),.?\":{}|<>].*");
     private static final int MIN_PASSWORD_LENGTH = 6;
@@ -35,10 +35,10 @@ public class ValidationUtil {
     }
 
     /**
-     * Validate if a phone number has the correct format (10-11 digits)
+     * Validate if a phone number has the correct format (10 digits starting with 0)
      * 
      * @param phone The phone number to validate
-     * @return true if phone is valid (10 or 11 digits), false otherwise
+     * @return true if phone is valid (10 digits starting with 0), false otherwise
      */
     public static boolean isPhoneValid(String phone) {
         return phone != null && PHONE_PATTERN.matcher(phone).matches();

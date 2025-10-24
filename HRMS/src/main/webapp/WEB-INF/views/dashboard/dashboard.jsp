@@ -41,48 +41,13 @@
                                         <i class="fas fa-users"></i>
                                     </div>
                                     <span class="stat-number counter">${totalEmployees != null ? totalEmployees :
-                                        156}</span>
+                                        0}</span>
                                     <div class="stat-label">Total Employees</div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="col-lg-3 col-md-6 mb-3">
-                            <div class="dashboard-card">
-                                <div class="stat-card success">
-                                    <div class="icon">
-                                        <i class="fas fa-user-check"></i>
-                                    </div>
-                                    <span class="stat-number counter">${presentToday != null ? presentToday :
-                                        142}</span>
-                                    <div class="stat-label">Present Today</div>
-                                </div>
-                            </div>
-                        </div>
 
-                        <div class="col-lg-3 col-md-6 mb-3">
-                            <div class="dashboard-card">
-                                <div class="stat-card warning">
-                                    <div class="icon">
-                                        <i class="fas fa-calendar-times"></i>
-                                    </div>
-                                    <span class="stat-number counter">${onLeaveToday != null ? onLeaveToday : 8}</span>
-                                    <div class="stat-label">On Leave Today</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-lg-3 col-md-6 mb-3">
-                            <div class="dashboard-card">
-                                <div class="stat-card danger">
-                                    <div class="icon">
-                                        <i class="fas fa-user-times"></i>
-                                    </div>
-                                    <span class="stat-number counter">${absentToday != null ? absentToday : 6}</span>
-                                    <div class="stat-label">Absent Today</div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
                     <!-- Quick Actions for Admin -->
@@ -136,109 +101,7 @@
                         </div>
                     </c:if>
 
-                    <!-- Charts and Recent Activities -->
-                    <div class="row">
-                        <!-- Attendance Chart -->
-                        <div class="col-lg-8 mb-4">
-                            <div class="dashboard-card">
-                                <h5 class="mb-3"><i class="fas fa-chart-line me-2"></i>Attendance Statistics - Last 7
-                                    Days</h5>
-                                <div class="chart-container">
-                                    <canvas id="attendanceChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
 
-                        <!-- Recent Notifications -->
-                        <div class="col-lg-4 mb-4">
-                            <div class="dashboard-card">
-                                <h5 class="mb-3"><i class="fas fa-bell me-2"></i>Recent Notifications</h5>
-                                <div class="notification-list">
-                                    <div class="notification-item">
-                                        <div class="notification-icon info">
-                                            <i class="fas fa-info"></i>
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <strong>New Leave Request</strong>
-                                            <p class="mb-1 small">Nguyen Van A requested leave from Oct 15 - Oct 17</p>
-                                            <small class="text-muted">2 hours ago</small>
-                                        </div>
-                                    </div>
-
-                                    <div class="notification-item">
-                                        <div class="notification-icon success">
-                                            <i class="fas fa-check"></i>
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <strong>Payroll Generated</strong>
-                                            <p class="mb-1 small">September payroll is ready</p>
-                                            <small class="text-muted">1 day ago</small>
-                                        </div>
-                                    </div>
-
-                                    <div class="notification-item">
-                                        <div class="notification-icon warning">
-                                            <i class="fas fa-exclamation"></i>
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <strong>New Employee Approval Needed</strong>
-                                            <p class="mb-1 small">3 recruitment applications need review</p>
-                                            <small class="text-muted">2 days ago</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Recent Activities Table -->
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="table-card">
-                                <div class="card-header">
-                                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>Recent Activities</h5>
-                                </div>
-                                <div class="table-responsive">
-                                    <table class="table">
-                                        <thead>
-                                            <tr>
-                                                <th>Time</th>
-                                                <th>Employee</th>
-                                                <th>Activity</th>
-                                                <th>Status</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>08:30 - Today</td>
-                                                <td>Nguyen Van A</td>
-                                                <td>Checked in</td>
-                                                <td><span class="badge badge-status bg-success">Success</span></td>
-                                            </tr>
-                                            <tr>
-                                                <td>08:45 - Today</td>
-                                                <td>Tran Thi B</td>
-                                                <td>Submitted leave request</td>
-                                                <td><span class="badge badge-status bg-warning">Pending</span></td>
-                                            </tr>
-                                            <tr>
-                                                <td>09:00 - Today</td>
-                                                <td>Le Van C</td>
-                                                <td>Updated personal information</td>
-                                                <td><span class="badge badge-status bg-info">Completed</span></td>
-                                            </tr>
-                                            <tr>
-                                                <td>17:30 - Yesterday</td>
-                                                <td>Pham Thi D</td>
-                                                <td>Checked out</td>
-                                                <td><span class="badge badge-status bg-success">Success</span></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Footer -->

@@ -63,10 +63,13 @@
                                         <option value="">-- Select Type --</option>
                                         <option value="Department" ${type == 'Department' ? 'selected' : ''}>Department</option>
                                         <option value="Position" ${type == 'Position' ? 'selected' : ''}>Position</option>
-                                        <option value="Role" ${type == 'Role' ? 'selected' : ''}>Role</option>
                                     </select>
                                     <small class="text-info" id="department-note" style="display: none;">
+<<<<<<< HEAD
+                                        <i class="fas fa-info-circle"></i> Department does not have value
+=======
                                         <i class="fas fa-info-circle"></i> Department does not have value and priority
+>>>>>>> b5f801b424ead77451aea386622ea64858be49cc
                                     </small>
                                 </c:otherwise>
                             </c:choose>
@@ -76,14 +79,13 @@
                             <label for="value" class="form-label">Value (Code)</label>
                             <input type="text" class="form-control" id="value" name="value" 
                                    value="${setting != null ? setting.value : value}">
-                            <small class="text-muted">Used for Position Code or Role Code</small>
+                            <small class="text-muted">Used for Position Code</small>
                         </div>
 
                         <div class="mb-3">
-                            <label for="priority" class="form-label">Priority</label>
-                            <input type="number" class="form-control" id="priority" name="priority" 
-                                   value="${setting != null ? setting.priority : priority}">
-                            <small class="text-muted">Job Level for Position or Priority for Role</small>
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3">${setting != null ? setting.description : description}</textarea>
+                            <small class="text-muted">Optional description for this setting</small>
                         </div>
 
                         <div class="d-flex gap-2">
@@ -124,11 +126,18 @@
     </div>
     
     <script>
+<<<<<<< HEAD
+        // Show/hide Value field based on Type selection
+        document.addEventListener('DOMContentLoaded', function() {
+            var typeSelect = document.getElementById('type');
+            var valueField = document.getElementById('value');
+=======
         // Show/hide Value and Priority fields based on Type selection
         document.addEventListener('DOMContentLoaded', function() {
             var typeSelect = document.getElementById('type');
             var valueField = document.getElementById('value');
             var priorityField = document.getElementById('priority');
+>>>>>>> b5f801b424ead77451aea386622ea64858be49cc
             var departmentNote = document.getElementById('department-note');
             
             // Function to toggle fields
@@ -147,17 +156,28 @@
                 }
                 
                 if (selectedType === 'Department') {
+<<<<<<< HEAD
+                    // Hide value for Department
+                    valueGroup.style.display = 'none';
+=======
                     // Hide value and priority for Department
                     valueGroup.style.display = 'none';
                     priorityGroup.style.display = 'none';
+>>>>>>> b5f801b424ead77451aea386622ea64858be49cc
                     // Show department note (only for create mode)
                     if (departmentNote) {
                         departmentNote.style.display = 'block';
                     }
+<<<<<<< HEAD
+                } else if (selectedType === 'Position') {
+                    // Show value for Position
+                    valueGroup.style.display = 'block';
+=======
                 } else if (selectedType === 'Position' || selectedType === 'Role') {
                     // Show value and priority for Position and Role
                     valueGroup.style.display = 'block';
                     priorityGroup.style.display = 'block';
+>>>>>>> b5f801b424ead77451aea386622ea64858be49cc
                     // Hide department note
                     if (departmentNote) {
                         departmentNote.style.display = 'none';

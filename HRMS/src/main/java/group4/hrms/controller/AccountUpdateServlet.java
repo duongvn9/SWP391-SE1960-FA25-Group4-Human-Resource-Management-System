@@ -75,6 +75,10 @@ public class AccountUpdateServlet extends HttpServlet {
 
             Account account = accountOpt.get();
 
+            // Store original values for comparison
+            String originalEmailLogin = account.getEmailLogin();
+            String originalStatus = account.getStatus();
+
             // Update fields
             if (emailLogin != null && !emailLogin.trim().isEmpty()) {
                 // Check if email login already exists for another account
@@ -88,6 +92,17 @@ public class AccountUpdateServlet extends HttpServlet {
 
             if (status != null && !status.trim().isEmpty()) {
                 account.setStatus(status.trim());
+            }
+
+            // Check if any changes were made
+            boolean hasChanges = !account.getEmailLogin().equals(originalEmailLogin)
+                    || !account.getStatus().equals(originalStatus);
+
+            if (!hasChanges) {
+                out.write(
+                        "{\"success\":true,\"message\":\"No changes detected. Account information is already up to date.\"}");
+                logger.info("No changes detected for account ID: {}", accountId);
+                return;
             }
 
             // Update account
