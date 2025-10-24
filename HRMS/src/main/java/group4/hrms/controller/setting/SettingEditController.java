@@ -84,6 +84,7 @@ public class SettingEditController extends HttpServlet {
         String newType = request.getParameter("type");
         String value = request.getParameter("value");
         String priorityStr = request.getParameter("priority");
+        String description = request.getParameter("description");
         String oldType = request.getParameter("oldType");
         
         try {
@@ -106,7 +107,7 @@ public class SettingEditController extends HttpServlet {
             }
             
             // Validate type value
-            if (!newType.equals("Department") && !newType.equals("Position") && !newType.equals("Role")) {
+            if (!newType.equals("Department") && !newType.equals("Position")) {
                 response.sendRedirect(request.getContextPath() + "/settings?error=Invalid setting type");
                 return;
             }
@@ -189,6 +190,14 @@ public class SettingEditController extends HttpServlet {
                 hasChanges = true;
             }
             
+            // Check description changes (handle null cases)
+            String currentDescription = currentSetting.getDescription();
+            String newDescription = (description != null && !description.trim().isEmpty()) ? description.trim() : null;
+            if ((currentDescription == null && newDescription != null) ||
+                (currentDescription != null && !currentDescription.equals(newDescription))) {
+                hasChanges = true;
+            }
+            
             // A3: No changes made
             if (!hasChanges) {
                 logger.info("No changes detected for Setting ID: {}", id);
@@ -204,6 +213,7 @@ public class SettingEditController extends HttpServlet {
             setting.setType(newType);
             setting.setValue(value);
             setting.setPriority(priority);
+            setting.setDescription(description != null && !description.trim().isEmpty() ? description.trim() : null);
             
             settingDao.update(setting);
             

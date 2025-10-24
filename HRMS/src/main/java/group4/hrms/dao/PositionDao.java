@@ -21,27 +21,27 @@ public class PositionDao {
     
     // SQL queries
     private static final String INSERT_POSITION = 
-        "INSERT INTO positions (code, name, job_level, created_at, updated_at) VALUES (?, ?, ?, ?, ?)";
+        "INSERT INTO positions (code, name, description, job_level, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)";
     
     private static final String UPDATE_POSITION = 
-        "UPDATE positions SET code = ?, name = ?, job_level = ?, updated_at = ? WHERE id = ?";
+        "UPDATE positions SET code = ?, name = ?, description = ?, job_level = ?, updated_at = ? WHERE id = ?";
     
     private static final String DELETE_POSITION = "DELETE FROM positions WHERE id = ?";
     
     private static final String SELECT_POSITION_BY_ID = 
-        "SELECT id, code, name, job_level, created_at, updated_at FROM positions WHERE id = ?";
+        "SELECT id, code, name, description, job_level, created_at, updated_at FROM positions WHERE id = ?";
     
     private static final String SELECT_ALL_POSITIONS = 
-        "SELECT id, code, name, job_level, created_at, updated_at FROM positions ORDER BY name";
+        "SELECT id, code, name, description, job_level, created_at, updated_at FROM positions ORDER BY name";
     
     private static final String SELECT_POSITIONS_BY_LEVEL = 
-        "SELECT id, code, name, job_level, created_at, updated_at FROM positions WHERE job_level = ? ORDER BY name";
+        "SELECT id, code, name, description, job_level, created_at, updated_at FROM positions WHERE job_level = ? ORDER BY name";
     
     private static final String SELECT_POSITION_BY_CODE = 
-        "SELECT id, code, name, job_level, created_at, updated_at FROM positions WHERE code = ?";
+        "SELECT id, code, name, description, job_level, created_at, updated_at FROM positions WHERE code = ?";
     
     private static final String SELECT_POSITION_BY_NAME = 
-        "SELECT id, code, name, job_level, created_at, updated_at FROM positions WHERE name = ?";
+        "SELECT id, code, name, description, job_level, created_at, updated_at FROM positions WHERE name = ?";
     
     private static final String COUNT_USERS_IN_POSITION = 
         "SELECT COUNT(*) FROM users WHERE position_id = ?";
@@ -59,9 +59,10 @@ public class PositionDao {
             
             stmt.setString(1, position.getCode());
             stmt.setString(2, position.getName());
-            setNullableInteger(stmt, 3, position.getJobLevel());
-            stmt.setTimestamp(4, Timestamp.valueOf(now));
+            setNullableString(stmt, 3, position.getDescription());
+            setNullableInteger(stmt, 4, position.getJobLevel());
             stmt.setTimestamp(5, Timestamp.valueOf(now));
+            stmt.setTimestamp(6, Timestamp.valueOf(now));
             
             int affectedRows = stmt.executeUpdate();
             
@@ -101,9 +102,10 @@ public class PositionDao {
             
             stmt.setString(1, position.getCode());
             stmt.setString(2, position.getName());
-            setNullableInteger(stmt, 3, position.getJobLevel());
-            stmt.setTimestamp(4, Timestamp.valueOf(now));
-            stmt.setLong(5, position.getId());
+            setNullableString(stmt, 3, position.getDescription());
+            setNullableInteger(stmt, 4, position.getJobLevel());
+            stmt.setTimestamp(5, Timestamp.valueOf(now));
+            stmt.setLong(6, position.getId());
             
             int affectedRows = stmt.executeUpdate();
             
@@ -370,6 +372,7 @@ public class PositionDao {
         position.setId(rs.getLong("id"));
         position.setCode(rs.getString("code"));
         position.setName(rs.getString("name"));
+        position.setDescription(rs.getString("description"));
         
         // Job Level có thể null
         Integer jobLevel = rs.getInt("job_level");
@@ -402,5 +405,14 @@ public class PositionDao {
         }
     }
     
-    
+    /**
+     * Set nullable String parameter
+     */
+    private void setNullableString(PreparedStatement stmt, int parameterIndex, String value) throws SQLException {
+        if (value != null && !value.trim().isEmpty()) {
+            stmt.setString(parameterIndex, value);
+        } else {
+            stmt.setNull(parameterIndex, Types.VARCHAR);
+        }
+    }
 }
