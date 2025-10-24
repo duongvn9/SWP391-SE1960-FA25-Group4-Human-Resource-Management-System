@@ -416,7 +416,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // Compute allowed OT based on weeklyLimit minus regular scheduled hours
         const allowedOT = Math.max(0, (weeklyLimit || 48.0) - (regularHoursThisWeek || 0.0));
         const previewRemaining = Math.max(0, allowedOT - previewUsed);
-        const previewPct = Math.min(100, Math.round((previewUsed * 100) / (weeklyLimit || 48.0)));
+
+        // Calculate percentage based on OT hours used vs allowed OT (not total weekly limit)
+        const previewPct = allowedOT > 0
+            ? Math.min(100, Math.round((previewUsed * 100) / allowedOT))
+            : (previewUsed > 0 ? 100 : 0);
 
         // Update DOM
         // Display one decimal place for hours
