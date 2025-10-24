@@ -186,9 +186,12 @@
                         <c:if test="${not empty success}">
                             <div class="form-message success-message">${success}</div>
                         </c:if>
+                        <c:if test="${not empty warning}">
+                            <div class="form-message error-message">${warning}</div>
+                        </c:if>
 
                         <!-- Preview Table -->
-                        <c:if test="${not empty previewLogs}">
+                        <c:if test="${not empty previewLogs or not empty invalidLogsExcel}">
                             <h4 class="preview-title">Attendance Data (Preview)</h4>
 
                             <table class="preview-data-table">
@@ -206,8 +209,24 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    <!-- Hiển thị bản ghi hợp lệ (valid) -->
                                     <c:forEach var="log" items="${previewLogs}">
                                         <tr class="data-row">
+                                            <td>${log.userId}</td>
+                                            <td>${log.employeeName}</td>
+                                            <td>${log.department}</td>
+                                            <td>${log.date}</td>
+                                            <td>${log.checkIn}</td>
+                                            <td>${log.checkOut}</td>
+                                            <td>${log.status}</td>
+                                            <td>${log.source}</td>
+                                            <td>${log.period}</td>
+                                            <td></td> 
+                                        </tr>
+                                    </c:forEach>
+
+                                    <c:forEach var="log" items="${invalidLogsExcel}">
+                                        <tr class="data-row" style="background-color: #ffe6e6;">
                                             <td>${log.userId}</td>
                                             <td>${log.employeeName}</td>
                                             <td>${log.department}</td>
@@ -264,6 +283,51 @@
 
                                     <c:if test="${currentPage < totalPages}">
                                         <a href="?action=Preview&page=${currentPage + 1}" class="page-btn next-btn">Next</a>
+                                    </c:if>
+                                </div>
+                            </c:if>
+
+                            <!-- ✅ Pagination for Invalid Logs (reuse preview CSS) -->
+                            <c:if test="${not empty invalidLogsExcel and invalidTotalPages > 1}">
+                                <div class="pagination preview-pagination">
+                                    <c:if test="${invalidCurrentPage > 1}">
+                                        <a href="?action=Import&invalidPage=${invalidCurrentPage - 1}" class="page-btn prev-btn">Previous</a>
+                                    </c:if>
+
+                                    <c:set var="startPage" value="${invalidCurrentPage - 1}" />
+                                    <c:set var="endPage" value="${invalidCurrentPage + 1}" />
+
+                                    <c:if test="${startPage < 1}">
+                                        <c:set var="startPage" value="1" />
+                                    </c:if>
+
+                                    <c:if test="${endPage > invalidTotalPages}">
+                                        <c:set var="endPage" value="${invalidTotalPages}" />
+                                    </c:if>
+
+                                    <c:if test="${startPage > 1}">
+                                        <a href="?action=Import&invalidPage=1" class="page-btn">1</a>
+                                        <span>...</span>
+                                    </c:if>
+
+                                    <c:forEach var="i" begin="${startPage}" end="${endPage}">
+                                        <c:choose>
+                                            <c:when test="${i == invalidCurrentPage}">
+                                                <a href="javascript:void(0)" class="page-btn current-page">${i}</a>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <a href="?action=Import&invalidPage=${i}" class="page-btn">${i}</a>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </c:forEach>
+
+                                    <c:if test="${endPage < invalidTotalPages}">
+                                        <span>...</span>
+                                        <a href="?action=Import&invalidPage=${invalidTotalPages}" class="page-btn">${invalidTotalPages}</a>
+                                    </c:if>
+
+                                    <c:if test="${invalidCurrentPage < invalidTotalPages}">
+                                        <a href="?action=Import&invalidPage=${invalidCurrentPage + 1}" class="page-btn next-btn">Next</a>
                                     </c:if>
                                 </div>
                             </c:if>

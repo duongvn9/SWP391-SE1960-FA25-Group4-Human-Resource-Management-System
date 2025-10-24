@@ -949,6 +949,11 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                     continue;
                 }
 
+                if (log.getDate().isAfter(LocalDate.now())) {
+                    invalidLogs.add(log);
+                    continue;
+                }
+
                 LocalDateTime newCheckIn = log.getCheckIn() != null ? log.getDate().atTime(log.getCheckIn()) : null;
                 LocalDateTime newCheckOut = null;
                 if (log.getCheckOut() != null) {

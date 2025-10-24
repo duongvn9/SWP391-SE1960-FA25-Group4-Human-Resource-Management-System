@@ -77,6 +77,34 @@ public class ImportAttendanceServlet extends HttpServlet {
             }
         }
 
+        // --- Phân trang cho invalid logs ---
+        List<AttendanceLogDto> invalidLogsDto = (List<AttendanceLogDto>) req.getSession().getAttribute("invalidLogsAll");
+        System.out.println("---------------Invalid Log doGet-------------------------");
+        System.out.println(invalidLogsDto);
+        if (invalidLogsDto != null && !invalidLogsDto.isEmpty()) {
+            int invalidPage = 1;
+            String invalidPageParam = req.getParameter("invalidPage");
+            if (invalidPageParam != null) {
+                try {
+                    invalidPage = Integer.parseInt(invalidPageParam);
+                } catch (NumberFormatException e) {
+                    invalidPage = 1;
+                }
+            }
+
+            int recordsPerPage = 10;
+            int totalInvalid = invalidLogsDto.size();
+            int totalInvalidPages = (int) Math.ceil((double) totalInvalid / recordsPerPage);
+            int fromIndex = (invalidPage - 1) * recordsPerPage;
+            int toIndex = Math.min(fromIndex + recordsPerPage, totalInvalid);
+
+            List<AttendanceLogDto> pageInvalidLogs = invalidLogsDto.subList(fromIndex, toIndex);
+
+            req.setAttribute("invalidLogsExcel", pageInvalidLogs);
+            req.setAttribute("invalidCurrentPage", invalidPage);
+            req.setAttribute("invalidTotalPages", totalInvalidPages);
+        }
+
         UserDao uDao = new UserDao();
         List<User> uList = uDao.findAll();
         req.setAttribute("uList", uList);

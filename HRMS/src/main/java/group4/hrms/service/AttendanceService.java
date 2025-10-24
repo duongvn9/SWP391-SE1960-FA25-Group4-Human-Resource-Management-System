@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -96,9 +97,51 @@ public class AttendanceService {
 
         } else if ("Import".equalsIgnoreCase(action)) {
             AttendanceLogDao attendanceLogDAO = new AttendanceLogDao();
-            List<AttendanceLog> logs = AttendanceMapper.convertDtoToEntity(dtos);
+
+            Map<String, List<AttendanceLogDto>> validated = attendanceLogDAO.validateAndImportExcelLogs(dtos);
+            List<AttendanceLogDto> validLogsDto = validated.get("valid");
+            List<AttendanceLogDto> invalidLogsDto = validated.get("invalid");
+
+            System.out.println(validLogsDto);
+            System.out.println(invalidLogsDto);
+
+            List<AttendanceLog> logs = AttendanceMapper.convertDtoToEntity(validLogsDto);
+
             attendanceLogDAO.saveAttendanceLogs(logs);
-            req.setAttribute("success", "Imported " + logs.size() + " attendance logs successfully.");
+
+            req.setAttribute("success", "Imported " + validLogsDto.size() + " valid attendance logs successfully.");
+            if (invalidLogsDto != null && !invalidLogsDto.isEmpty()) {
+                int page = 1;
+                String pageParam = req.getParameter("invalidPage");
+                if (pageParam != null) {
+                    try {
+                        page = Integer.parseInt(pageParam);
+                        if (page < 1) {
+                            page = 1;
+                        }
+                    } catch (NumberFormatException e) {
+                        page = 1;
+                    }
+                }
+
+                int recordsPerPage = 10;
+                int totalInvalid = invalidLogsDto.size();
+                int totalPages = (int) Math.ceil((double) totalInvalid / recordsPerPage);
+
+                int fromIndex = (page - 1) * recordsPerPage;
+                int toIndex = Math.min(fromIndex + recordsPerPage, totalInvalid);
+
+                List<AttendanceLogDto> pageInvalidLogs = new ArrayList<>();
+                if (fromIndex < totalInvalid) {
+                    pageInvalidLogs = invalidLogsDto.subList(fromIndex, toIndex);
+                }
+
+                req.setAttribute("invalidLogsExcel", pageInvalidLogs);
+                req.setAttribute("invalidCurrentPage", page);
+                req.setAttribute("invalidTotalPages", totalPages);
+                req.getSession().setAttribute("invalidLogsAll", invalidLogsDto);
+                req.setAttribute("warning", invalidLogsDto.size() + " records were invalid and not imported.");
+            }
 
             Files.deleteIfExists(tempFilePath);
             req.getSession().removeAttribute("uploadedFile");
