@@ -223,6 +223,20 @@ public class ProfileController extends HttpServlet {
             }
             
             if (dto.getPhone() != null && !dto.getPhone().trim().isEmpty()) {
+                // Validate phone number format - must be exactly 10 digits
+                if (!dto.getPhone().matches("\\d{10}")) {
+                    logger.warn("Invalid phone number format: {}", dto.getPhone());
+                    req.setAttribute("error", "Phone number must be exactly 10 digits");
+                    UserProfile profileWithInput = createProfileFromDto(currentProfile, dto);
+                    req.setAttribute("profile", profileWithInput);
+                    // Generate new CSRF token and save to session
+                    String newCsrfToken = generateCsrfToken();
+                    req.getSession().setAttribute("_csrf_token", newCsrfToken);
+                    req.setAttribute("csrfToken", newCsrfToken);
+                    req.getRequestDispatcher("/WEB-INF/views/profile/edit-profile.jsp").forward(req, resp);
+                    return;
+                }
+                
                 if (userProfileDao.isPhoneExistsForOtherUser(dto.getPhone(), currentProfile.getUserId())) {
                     logger.warn("Phone number already exists: {}", dto.getPhone());
                     req.setAttribute("error", "Phone number already exists");
