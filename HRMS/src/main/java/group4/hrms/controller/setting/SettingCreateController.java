@@ -52,6 +52,7 @@ public class SettingCreateController extends HttpServlet {
         String type = request.getParameter("type");
         String value = request.getParameter("value");
         String priorityStr = request.getParameter("priority");
+        String description = request.getParameter("description");
         
         try {
             // E1: Validate required fields
@@ -76,7 +77,7 @@ public class SettingCreateController extends HttpServlet {
             }
             
             // Validate type value
-            if (!type.equals("Department") && !type.equals("Position") && !type.equals("Role")) {
+            if (!type.equals("Department") && !type.equals("Position")) {
                 request.setAttribute("errorMessage", "Invalid setting type");
                 request.setAttribute("name", name);
                 request.setAttribute("type", type);
@@ -126,6 +127,7 @@ public class SettingCreateController extends HttpServlet {
             // Tạo mới
             Setting setting = new Setting(name.trim(), type.trim(), 
                 value != null ? value.trim() : null, priority);
+            setting.setDescription(description != null && !description.trim().isEmpty() ? description.trim() : null);
             settingDao.create(setting);
             
             logger.info("Setting created successfully: {} - {}", type, name);

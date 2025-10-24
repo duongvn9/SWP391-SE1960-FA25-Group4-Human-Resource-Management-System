@@ -10,9 +10,10 @@ import java.util.Objects;
 public class Setting {
     private Long id;
     private String name;
-    private String type; // "Department", "Position", "Role"
-    private String value; // Code cho Position/Role, null cho Department
-    private Integer priority; // Job level cho Position, Priority cho Role
+    private String type; // "Department", "Position"
+    private String value; // Code cho Position, null cho Department
+    private Integer priority; // Job level cho Position
+    private String description; // Description cho Department và Position
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -70,6 +71,14 @@ public class Setting {
 
     public void setPriority(Integer priority) {
         this.priority = priority;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public LocalDateTime getCreatedAt() {

@@ -63,10 +63,9 @@
                                         <option value="">-- Select Type --</option>
                                         <option value="Department" ${type == 'Department' ? 'selected' : ''}>Department</option>
                                         <option value="Position" ${type == 'Position' ? 'selected' : ''}>Position</option>
-                                        <option value="Role" ${type == 'Role' ? 'selected' : ''}>Role</option>
                                     </select>
                                     <small class="text-info" id="department-note" style="display: none;">
-                                        <i class="fas fa-info-circle"></i> Department does not have value and priority
+                                        <i class="fas fa-info-circle"></i> Department does not have value
                                     </small>
                                 </c:otherwise>
                             </c:choose>
@@ -76,14 +75,13 @@
                             <label for="value" class="form-label">Value (Code)</label>
                             <input type="text" class="form-control" id="value" name="value" 
                                    value="${setting != null ? setting.value : value}">
-                            <small class="text-muted">Used for Position Code or Role Code</small>
+                            <small class="text-muted">Used for Position Code</small>
                         </div>
 
                         <div class="mb-3">
-                            <label for="priority" class="form-label">Priority</label>
-                            <input type="number" class="form-control" id="priority" name="priority" 
-                                   value="${setting != null ? setting.priority : priority}">
-                            <small class="text-muted">Job Level for Position or Priority for Role</small>
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3">${setting != null ? setting.description : description}</textarea>
+                            <small class="text-muted">Optional description for this setting</small>
                         </div>
 
                         <div class="d-flex gap-2">
@@ -124,11 +122,10 @@
     </div>
     
     <script>
-        // Show/hide Value and Priority fields based on Type selection
+        // Show/hide Value field based on Type selection
         document.addEventListener('DOMContentLoaded', function() {
             var typeSelect = document.getElementById('type');
             var valueField = document.getElementById('value');
-            var priorityField = document.getElementById('priority');
             var departmentNote = document.getElementById('department-note');
             
             // Function to toggle fields
@@ -147,17 +144,15 @@
                 }
                 
                 if (selectedType === 'Department') {
-                    // Hide value and priority for Department
+                    // Hide value for Department
                     valueGroup.style.display = 'none';
-                    priorityGroup.style.display = 'none';
                     // Show department note (only for create mode)
                     if (departmentNote) {
                         departmentNote.style.display = 'block';
                     }
-                } else if (selectedType === 'Position' || selectedType === 'Role') {
-                    // Show value and priority for Position and Role
+                } else if (selectedType === 'Position') {
+                    // Show value for Position
                     valueGroup.style.display = 'block';
-                    priorityGroup.style.display = 'block';
                     // Hide department note
                     if (departmentNote) {
                         departmentNote.style.display = 'none';

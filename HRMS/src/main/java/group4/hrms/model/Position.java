@@ -11,6 +11,7 @@ public class Position {
     private Long id;
     private String code;
     private String name;
+    private String description;
     private Integer jobLevel;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -52,6 +53,14 @@ public class Position {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public Integer getJobLevel() {
