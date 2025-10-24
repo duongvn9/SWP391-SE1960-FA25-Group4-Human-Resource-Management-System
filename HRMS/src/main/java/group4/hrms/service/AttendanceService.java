@@ -53,7 +53,7 @@ public class AttendanceService {
                     }
                 }
                 if (isEmpty) {
-                    continue; 
+                    continue;
                 }
                 AttendanceLogDto dto = new AttendanceLogDto();
 

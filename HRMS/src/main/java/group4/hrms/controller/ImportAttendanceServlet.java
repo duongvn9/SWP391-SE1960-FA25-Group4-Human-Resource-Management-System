@@ -80,6 +80,11 @@ public class ImportAttendanceServlet extends HttpServlet {
         UserDao uDao = new UserDao();
         List<User> uList = uDao.findAll();
         req.setAttribute("uList", uList);
+        String activeTab = req.getParameter("activeTab");
+        if (activeTab == null) {
+            activeTab = "upload"; // mặc định
+        }
+        req.setAttribute("activeTab", activeTab);
         req.getRequestDispatcher("/WEB-INF/views/attendance/import-attendance.jsp").forward(req, resp);
     }
 
@@ -174,6 +179,11 @@ public class ImportAttendanceServlet extends HttpServlet {
 
                 List<User> uList = userDao.findAll();
                 req.setAttribute("uList", uList);
+                String activeTab = req.getParameter("activeTab");
+                if (activeTab == null || activeTab.isEmpty()) {
+                    activeTab = "upload";
+                }
+                req.setAttribute("activeTab", activeTab);
                 req.getRequestDispatcher("/WEB-INF/views/attendance/import-attendance.jsp").forward(req, resp);
                 return;
             }

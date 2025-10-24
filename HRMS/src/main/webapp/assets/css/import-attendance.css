@@ -99,9 +99,15 @@
 
 /* Upload tab specific */
 .import-attendance-page .upload-tab .section-title {
-    margin-bottom: 0.75rem;
-    font-size: 1.1rem;
-    color: #0f172a;
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0 0 0.75rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-left: 4px solid #0d6efd; /* viền xanh bên trái */
+    padding-left: 0.75rem;          /* khoảng cách giữa viền và text */
 }
 
 .import-attendance-page .upload-form .form-group {
