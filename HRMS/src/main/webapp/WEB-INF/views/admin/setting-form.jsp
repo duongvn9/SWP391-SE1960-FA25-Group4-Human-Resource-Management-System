@@ -62,8 +62,7 @@
                                     <select class="form-select" id="type" name="type" >
                                         <option value="">-- Select Type --</option>
                                         <option value="Department" ${type == 'Department' ? 'selected' : ''}>Department</option>
-                                        <option value="Position" ${type == 'Position' ? 'selected' : ''}>Position</option>
-                                    </select>
+                                     </select>
                                     <small class="text-info" id="department-note" style="display: none;">
 <<<<<<< HEAD
                                         <i class="fas fa-info-circle"></i> Department does not have value
