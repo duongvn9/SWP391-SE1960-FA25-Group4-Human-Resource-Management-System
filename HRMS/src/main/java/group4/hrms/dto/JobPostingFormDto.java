@@ -11,9 +11,13 @@ import java.util.Map;
 public class JobPostingFormDto {
     private String positionCode;
     private String positionName;
+    private String jobTitle; // posting title editable by HR
     private String jobLevel;
     private String jobType;
     private Integer numberOfPositions;
+    private String code; // public job posting code
+    private Integer minExperienceYears;
+    private java.time.LocalDate startDate;
     private String salaryType;
     private BigDecimal minSalary;
     private BigDecimal maxSalary;
@@ -24,17 +28,31 @@ public class JobPostingFormDto {
     private LocalDate applicationDeadline;
     private String contactEmail;
     private String contactPhone;
+    private String priority;
+    private String workingHours;
+
+    // Minimum allowed salary (1,000,000 VND)
+    private static final BigDecimal MIN_VALID_SALARY = new BigDecimal("1000000");
 
     public Map<String, String> validate() {
         Map<String, String> errors = new HashMap<>();
 
         // Required fields validation
-        if (isBlank(positionCode)) {
-            errors.put("positionCode", "Position code is required");
+        // positionCode/positionName could be prefilled from recruitment request; still validate jobTitle
+        if (isBlank(jobTitle) && isBlank(positionName)) {
+            errors.put("positionName", "Position name or Job title is required");
         }
-        if (isBlank(positionName)) {
-            errors.put("positionName", "Position name is required");
+        
+        // Job title validation - enhanced
+        if (!isBlank(jobTitle)) {
+            if (jobTitle.length() < 3) {
+                errors.put("jobTitle", "Job title must be at least 3 characters");
+            }
+            if (jobTitle.length() > 255) {
+                errors.put("jobTitle", "Job title cannot exceed 255 characters");
+            }
         }
+        
         if (isBlank(jobLevel)) {
             errors.put("jobLevel", "Job level is required");
         }
@@ -47,11 +65,46 @@ public class JobPostingFormDto {
         if (!isValidJobType(jobType)) {
             errors.put("jobType", "Invalid job type");
         }
+        
+        // Validate priority - make it required
+        if (isBlank(priority)) {
+            errors.put("priority", "Priority level is required");
+        } else if (!isValidPriority(priority)) {
+            errors.put("priority", "Invalid priority level");
+        }
+        
         if (numberOfPositions == null || numberOfPositions < 1) {
             errors.put("numberOfPositions", "Number of positions must be at least 1");
+        } else if (numberOfPositions > 100) {
+            errors.put("numberOfPositions", "Number of positions cannot exceed 100");
         }
 
-        // Salary validation
+        // Job code validation
+        if (!isBlank(code) && code.length() > 128) {
+            errors.put("code", "Code cannot exceed 128 characters");
+        }
+        
+        // Min Experience Years validation
+        if (minExperienceYears != null) {
+            if (minExperienceYears < 0) {
+                errors.put("minExperienceYears", "Experience years cannot be negative");
+            }
+            if (minExperienceYears > 50) {
+                errors.put("minExperienceYears", "Experience years cannot exceed 50 years");
+            }
+        }
+        
+        // Start date validation
+        if (startDate != null && startDate.isBefore(LocalDate.now())) {
+            errors.put("startDate", "Start date cannot be in the past");
+        }
+        
+        // Working hours validation
+        if (!isBlank(workingHours) && workingHours.length() > 255) {
+            errors.put("workingHours", "Working hours cannot exceed 255 characters");
+        }
+
+            // Salary validation
         if (isBlank(salaryType)) {
             errors.put("salaryType", "Salary type is required");
         } else if (!isValidSalaryType(salaryType)) {
@@ -60,9 +113,7 @@ public class JobPostingFormDto {
             if ("RANGE".equals(salaryType)) {
                 if (minSalary == null || maxSalary == null) {
                     errors.put("salaryType", "Both minimum and maximum salary are required for range");
-                } else if (minSalary.compareTo(maxSalary) >= 0) {
-                    errors.put("maxSalary", "Maximum salary must be greater than minimum salary");
-                }
+                } 
             } else if ("FROM".equals(salaryType) && minSalary == null) {
                 errors.put("minSalary", "Minimum salary is required for 'From' type");
             }
@@ -87,6 +138,8 @@ public class JobPostingFormDto {
 
         if (isBlank(location)) {
             errors.put("location", "Working location is required");
+        } else if (location.length() > 255) {
+            errors.put("location", "Working location cannot exceed 255 characters");
         }
 
         // Deadline validation
@@ -107,9 +160,22 @@ public class JobPostingFormDto {
             errors.put("contactPhone", "Invalid phone number format");
         }
 
+        // Salary lower-bound validation
+        if (minSalary != null && minSalary.compareTo(MIN_VALID_SALARY) < 0) {
+            errors.put("minSalary", "Minimum salary must be at least 1,000,000 VND");
+        }
+        if (maxSalary != null && maxSalary.compareTo(MIN_VALID_SALARY) < 0) {
+            errors.put("maxSalary", "Maximum salary must be at least 1,000,000 VND");
+        }
+
+        // Validate min < max
+        if (minSalary != null && maxSalary != null && minSalary.compareTo(maxSalary) >= 0) {
+            errors.put("maxSalary", "Maximum salary must be greater than minimum salary");
+            errors.put("minSalary", "Minimum salary must be less than maximum salary");
+        }
+
         return errors;
     }
-
     // Helper methods for validation
     private boolean isBlank(String str) {
         return str == null || str.trim().isEmpty();
@@ -120,14 +186,29 @@ public class JobPostingFormDto {
         return level.matches("JUNIOR|MIDDLE|SENIOR");
     }
 
+    // Normalize input to canonical token used in DB/logic.
+    // Accepts user-friendly variants (e.g. "Full-time", "Full Time", "FULL_TIME", "full time")
+    private String normalizeToToken(String input) {
+        if (input == null) return null;
+        String s = input.trim();
+        if (s.isEmpty()) return null;
+        // Replace common separators with underscore and uppercase
+        s = s.replaceAll("[\\s\\-]+", "_");
+        s = s.replaceAll("[^A-Za-z0-9_]", "_");
+        s = s.replaceAll("__+", "_");
+        return s.toUpperCase();
+    }
+
     private boolean isValidJobType(String type) {
-        if (type == null) return false;
-        return type.matches("FULL_TIME|PART_TIME|CONTRACT|INTERN");
+        String tok = normalizeToToken(type);
+        if (tok == null) return false;
+        return tok.equals("FULL_TIME") || tok.equals("PART_TIME") || tok.equals("CONTRACT") || tok.equals("INTERN") || tok.equals("INTERNSHIP");
     }
 
     private boolean isValidSalaryType(String type) {
-        if (type == null) return false;
-        return type.matches("RANGE|FROM|NEGOTIABLE");
+        String tok = normalizeToToken(type);
+        if (tok == null) return false;
+        return tok.equals("RANGE") || tok.equals("FROM") || tok.equals("NEGOTIABLE") || tok.equals("GROSS") || tok.equals("NET");
     }
 
     private boolean isValidEmail(String email) {
@@ -139,6 +220,11 @@ public class JobPostingFormDto {
         if (phone == null) return false;
         return phone.matches("^[0-9+][0-9()-]{8,20}$");
     }
+    
+    private boolean isValidPriority(String priority) {
+        if (priority == null) return false;
+        return priority.matches("^(NORMAL|HIGH|URGENT)$");
+    }
 
     // Getters and setters
     public String getPositionCode() {
@@ -147,6 +233,39 @@ public class JobPostingFormDto {
 
     public void setPositionCode(String positionCode) {
         this.positionCode = positionCode;
+    }
+
+    public String getJobTitle() {
+        return jobTitle;
+    }
+
+    public void setJobTitle(String jobTitle) {
+        this.jobTitle = jobTitle;
+    }
+
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public Integer getMinExperienceYears() {
+        return minExperienceYears;
+    }
+
+    public void setMinExperienceYears(Integer minExperienceYears) {
+        this.minExperienceYears = minExperienceYears;
+    }
+
+    public java.time.LocalDate getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(java.time.LocalDate startDate) {
+        this.startDate = startDate;
     }
 
     public String getPositionName() {
@@ -187,6 +306,26 @@ public class JobPostingFormDto {
 
     public void setSalaryType(String salaryType) {
         this.salaryType = salaryType;
+    }
+
+    /**
+     * Return jobType normalized to canonical token used in DB/logic (e.g. FULL_TIME)
+     */
+    public String getNormalizedJobType() {
+        String tok = normalizeToToken(this.jobType);
+        if (tok == null) return null;
+        if (tok.equals("INTERNSHIP")) return "INTERN"; // normalize alternative
+        return tok;
+    }
+
+    /**
+     * Return salaryType normalized to canonical token used in DB/logic (e.g. GROSS, NET, RANGE, FROM, NEGOTIABLE)
+     */
+    public String getNormalizedSalaryType() {
+        String tok = normalizeToToken(this.salaryType);
+        if (tok == null) return null;
+        // Accept GROSS/NET directly; keep RANGE/FROM/NEGOTIABLE as-is
+        return tok;
     }
 
     public BigDecimal getMinSalary() {
@@ -259,5 +398,21 @@ public class JobPostingFormDto {
 
     public void setContactPhone(String contactPhone) {
         this.contactPhone = contactPhone;
+    }
+
+    public String getPriority() {
+        return priority;
+    }
+
+    public void setPriority(String priority) {
+        this.priority = priority;
+    }
+
+    public String getWorkingHours() {
+        return workingHours;
+    }
+
+    public void setWorkingHours(String workingHours) {
+        this.workingHours = workingHours;
     }
 }
