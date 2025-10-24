@@ -985,9 +985,13 @@
                                             <label for="reset-newPassword" class="form-label">
                                                 New Password<span class="text-danger">*</span>
                                             </label>
-                                            <input type="password" class="form-control" id="reset-newPassword"
-                                                name="newPassword" required placeholder="Enter new password"
-                                                minlength="6">
+                                            <div class="position-relative">
+                                                <input type="password" class="form-control" id="reset-newPassword"
+                                                    name="newPassword" required placeholder="Enter new password"
+                                                    minlength="6" style="padding-right: 40px;">
+                                                <i class="fas fa-eye position-absolute" id="toggleResetPassword"
+                                                    style="top: 50%; right: 10px; transform: translateY(-50%); cursor: pointer; color: #6c757d;"></i>
+                                            </div>
 
                                             <!-- Password Strength Indicator -->
                                             <div id="resetPasswordStrengthIndicator" class="mt-2"
@@ -1015,8 +1019,13 @@
                                             <label for="reset-confirmPassword" class="form-label">
                                                 Confirm Password<span class="text-danger">*</span>
                                             </label>
-                                            <input type="password" class="form-control" id="reset-confirmPassword"
-                                                required placeholder="Confirm new password">
+                                            <div class="position-relative">
+                                                <input type="password" class="form-control" id="reset-confirmPassword"
+                                                    required placeholder="Confirm new password"
+                                                    style="padding-right: 40px;">
+                                                <i class="fas fa-eye position-absolute" id="toggleResetConfirmPassword"
+                                                    style="top: 50%; right: 10px; transform: translateY(-50%); cursor: pointer; color: #6c757d;"></i>
+                                            </div>
                                             <div class="invalid-feedback" id="reset-password-mismatch">
                                                 Passwords do not match
                                             </div>
@@ -1405,6 +1414,28 @@
 
                             resetConfirmPasswordInput.addEventListener('keyup', validateResetPasswordMatch);
                             resetConfirmPasswordInput.addEventListener('change', validateResetPasswordMatch);
+
+                            // Toggle password visibility for reset password modal
+                            const toggleResetPassword = document.getElementById('toggleResetPassword');
+                            const toggleResetConfirmPassword = document.getElementById('toggleResetConfirmPassword');
+
+                            if (toggleResetPassword) {
+                                toggleResetPassword.addEventListener('click', function () {
+                                    const type = resetPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                                    resetPasswordInput.setAttribute('type', type);
+                                    this.classList.toggle('fa-eye');
+                                    this.classList.toggle('fa-eye-slash');
+                                });
+                            }
+
+                            if (toggleResetConfirmPassword) {
+                                toggleResetConfirmPassword.addEventListener('click', function () {
+                                    const type = resetConfirmPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                                    resetConfirmPasswordInput.setAttribute('type', type);
+                                    this.classList.toggle('fa-eye');
+                                    this.classList.toggle('fa-eye-slash');
+                                });
+                            }
 
                             // Reset password form submission
                             document.getElementById('resetPasswordForm').addEventListener('submit', function (e) {
