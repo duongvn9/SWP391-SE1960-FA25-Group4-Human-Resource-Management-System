@@ -15,6 +15,7 @@ public class RequestListFilter {
     private LocalDate fromDate;
     private LocalDate toDate;
     private Long employeeId;           // for employee filter
+    private Long departmentId;         // for department filter
     private String searchKeyword;
     private int page;                  // default 1
     private int pageSize;              // default 8
@@ -85,6 +86,14 @@ public class RequestListFilter {
         this.employeeId = employeeId;
     }
 
+    public Long getDepartmentId() {
+        return departmentId;
+    }
+
+    public void setDepartmentId(Long departmentId) {
+        this.departmentId = departmentId;
+    }
+
     public String getSearchKeyword() {
         return searchKeyword;
     }
@@ -118,6 +127,10 @@ public class RequestListFilter {
         return employeeId != null;
     }
 
+    public boolean hasDepartmentFilter() {
+        return departmentId != null;
+    }
+
     public boolean hasSearch() {
         return searchKeyword != null && !searchKeyword.trim().isEmpty();
     }
@@ -140,6 +153,7 @@ public class RequestListFilter {
                 ", fromDate=" + fromDate +
                 ", toDate=" + toDate +
                 ", employeeId=" + employeeId +
+                ", departmentId=" + departmentId +
                 ", searchKeyword='" + searchKeyword + '\'' +
                 ", page=" + page +
                 ", pageSize=" + pageSize +

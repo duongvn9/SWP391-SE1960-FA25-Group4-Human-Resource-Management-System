@@ -182,14 +182,15 @@ public class AttachmentService {
                 String checksum = calculateChecksum(new FileInputStream(file));
 
                 // 7. Create attachment metadata
-                // Store web-accessible path in database
-                String webPath = "assets/img/Request/" + relativePath.replace(File.separator, "/");
+                // Store RELATIVE path (from upload base) in database
+                // Don't include "assets/img/Request/" prefix because uploadBasePath already points to that folder
+                String dbPath = relativePath.replace(File.separator, "/");
 
                 Attachment attachment = new Attachment();
                 attachment.setOwnerType(ownerType);
                 attachment.setOwnerId(ownerId);
                 attachment.setAttachmentType("FILE");  // Mark as file upload
-                attachment.setPath(webPath);  // Store web-accessible path
+                attachment.setPath(dbPath);  // Store relative path only (e.g., "2025/10/uuid.jpg")
                 attachment.setExternalUrl(null);  // No external URL for file uploads
                 attachment.setOriginalName(originalFilename);
                 attachment.setContentType(part.getContentType());
