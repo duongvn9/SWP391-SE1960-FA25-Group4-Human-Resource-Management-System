@@ -134,6 +134,12 @@ public class RequestListController extends HttpServlet {
             List<RequestType> requestTypes = requestTypeDao.findAll();
             logger.info("Loaded " + requestTypes.size() + " request types");
 
+            // 6.1. Load departments for department filter dropdown
+            DepartmentDao departmentDao = new DepartmentDao();
+            List<group4.hrms.model.Department> departments = departmentDao.findAll();
+            request.setAttribute("departments", departments);
+            logger.info("Loaded " + departments.size() + " departments for filter");
+
             // 7. Load employees for employee filter (if user has permission)
             if (availableScopes.contains("subordinate") || availableScopes.contains("all")) {
                 List<User> employees = loadEmployeesForFilter(user, position);
@@ -330,6 +336,16 @@ public class RequestListController extends HttpServlet {
                 filter.setEmployeeId(Long.parseLong(employeeIdStr));
             } catch (NumberFormatException e) {
                 logger.warning("Invalid employee ID: " + employeeIdStr);
+            }
+        }
+
+        // Department filter
+        String departmentIdStr = request.getParameter("departmentId");
+        if (departmentIdStr != null && !departmentIdStr.trim().isEmpty()) {
+            try {
+                filter.setDepartmentId(Long.parseLong(departmentIdStr));
+            } catch (NumberFormatException e) {
+                logger.warning("Invalid department ID: " + departmentIdStr);
             }
         }
 
