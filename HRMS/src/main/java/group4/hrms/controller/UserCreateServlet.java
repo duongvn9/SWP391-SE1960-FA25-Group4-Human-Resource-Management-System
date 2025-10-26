@@ -176,6 +176,10 @@ public class UserCreateServlet extends HttpServlet {
                 }
             }
 
+            // Make departmentId and positionId effectively final for use in lambdas
+            final Long finalDepartmentId = departmentId;
+            final Long finalPositionId = positionId;
+
             // Validate date joined
             LocalDate dateJoined = null;
             if (isNullOrEmpty(dateJoinedStr)) {
@@ -227,9 +231,9 @@ public class UserCreateServlet extends HttpServlet {
             // - HR Manager position → HR_MANAGER role
             // - Department Manager in Human Resource → HR_MANAGER role
             // - Department Manager in other departments → DEPARTMENT_MANAGER role
+            // Note: Position filtering is now handled by JavaScript in the frontend
             boolean isManager = false;
-            if (positionId != null) {
-                final Long finalPositionId = positionId;
+            if (finalPositionId != null) {
                 var position = DropdownCacheUtil.getCachedPositions(getServletContext()).stream()
                         .filter(p -> p.getId().equals(finalPositionId))
                         .findFirst();
@@ -237,27 +241,27 @@ public class UserCreateServlet extends HttpServlet {
                 if (position.isPresent()) {
                     String positionName = position.get().getName();
 
-                    // Check if HR-specific positions are assigned to Human Resource department
-                    final Long finalDepartmentId = departmentId;
-                    if (("HR Manager".equalsIgnoreCase(positionName) || "HR Staff".equalsIgnoreCase(positionName))
-                            && finalDepartmentId != null) {
-                        var departments = DropdownCacheUtil.getCachedDepartments(getServletContext());
-                        var department = departments.stream()
-                                .filter(d -> d.getId().equals(finalDepartmentId))
-                                .findFirst();
-
-                        if (department.isPresent()
-                                && !"Human Resource".equalsIgnoreCase(department.get().getName())) {
-                            errors.add("Position '" + positionName
-                                    + "' can only be assigned to employees in the Human Resource department.");
-                        }
-                    }
+                    // Note: Position filtering is now handled by JavaScript in the frontend
 
                     // Check for Department Manager uniqueness (one per department)
                     if ("Department Manager".equalsIgnoreCase(positionName)) {
                         isManager = true;
-                        if (departmentId != null) {
-                            Optional<User> existingManager = userDao.findDepartmentManager(departmentId);
+                        if (finalDepartmentId != null) {
+                            // Do not allow Department Manager in Human Resource or Admin departments
+                            var departments = DropdownCacheUtil.getCachedDepartments(getServletContext());
+                            var department = departments.stream()
+                                    .filter(d -> d.getId().equals(finalDepartmentId))
+                                    .findFirst();
+                            
+                            if (department.isPresent()) {
+                                String deptName = department.get().getName();
+                                if ("Human Resource".equalsIgnoreCase(deptName) || "Admin".equalsIgnoreCase(deptName)) {
+                                    errors.add("Department Manager position is not allowed in " + deptName + " department.");
+                                    return; // Skip further validation for this position
+                                }
+                            }
+                            
+                            Optional<User> existingManager = userDao.findDepartmentManager(finalDepartmentId);
                             if (existingManager.isPresent()) {
                                 errors.add("This department already has a manager: " +
                                         existingManager.get().getFullName() +
@@ -428,17 +432,7 @@ public class UserCreateServlet extends HttpServlet {
             if ("HR Manager".equalsIgnoreCase(positionName)) {
                 roleName = "HR_MANAGER";
             }
-            // If Department Manager in Human Resource department, assign HR_MANAGER role
-            else if ("Department Manager".equalsIgnoreCase(positionName) && user.getDepartmentId() != null) {
-                var departments = DropdownCacheUtil.getCachedDepartments(getServletContext());
-                var department = departments.stream()
-                        .filter(d -> d.getId().equals(user.getDepartmentId()))
-                        .findFirst();
-
-                if (department.isPresent() && "Human Resource".equalsIgnoreCase(department.get().getName())) {
-                    roleName = "HR_MANAGER";
-                }
-            }
+            // Note: Department Manager is no longer allowed in Human Resource or Admin departments
         }
 
         // Assign role

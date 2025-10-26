@@ -40,9 +40,8 @@ import jakarta.servlet.http.Part;
  * @version 1.0
  */
 @WebServlet("/requests/leave/create")
-@MultipartConfig(
-    maxFileSize = 5 * 1024 * 1024,       // 5MB per file
-    maxRequestSize = 25 * 1024 * 1024    // 25MB total request size
+@MultipartConfig(maxFileSize = 5 * 1024 * 1024, // 5MB per file
+        maxRequestSize = 25 * 1024 * 1024 // 25MB total request size
 )
 public class LeaveRequestController extends HttpServlet {
     private static final Logger logger = Logger.getLogger(LeaveRequestController.class.getName());
@@ -64,18 +63,18 @@ public class LeaveRequestController extends HttpServlet {
 
         // Check authentication
         HttpSession session = request.getSession(false);
-            logger.info("Session exists: " + (session != null));
+        logger.info("Session exists: " + (session != null));
 
-            if (session == null) {
-                logger.warning("Session is null. Redirecting to login.");
-                response.sendRedirect(request.getContextPath() + "/login");
-                return;
-            }
+        if (session == null) {
+            logger.warning("Session is null. Redirecting to login.");
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
 
-            Object accountObj = session.getAttribute("account");
-            Object userObj = session.getAttribute("user");
-            logger.info("Account in session: " + (accountObj != null));
-            logger.info("User in session: " + (userObj != null));
+        Object accountObj = session.getAttribute("account");
+        Object userObj = session.getAttribute("user");
+        logger.info("Account in session: " + (accountObj != null));
+        logger.info("User in session: " + (userObj != null));
 
         if (accountObj == null) {
             logger.warning("Account not found in session. Redirecting to login.");
@@ -99,10 +98,9 @@ public class LeaveRequestController extends HttpServlet {
 
             // Initialize LeaveRequestService with required DAOs
             LeaveRequestService service = new LeaveRequestService(
-                new RequestDao(),
-                new RequestTypeDao(),
-                new LeaveTypeDao()
-            );
+                    new RequestDao(),
+                    new RequestTypeDao(),
+                    new LeaveTypeDao());
 
             // Load user profile to get gender
             group4.hrms.dao.UserProfileDao userProfileDao = new group4.hrms.dao.UserProfileDao();
@@ -129,6 +127,34 @@ public class LeaveRequestController extends HttpServlet {
             logger.info("Loading available leave types...");
             // Load available leave types using service.getAvailableLeaveTypes()
             Map<String, String> allLeaveTypes = service.getAvailableLeaveTypes();
+
+            // Load holidays for current year and next 2 years to pass to JavaScript
+            logger.info("Loading holidays for current and future years...");
+            int currentYear = java.time.Year.now().getValue();
+
+            java.util.List<String> allHolidays = new java.util.ArrayList<>();
+            java.util.List<String> allCompensatoryDays = new java.util.ArrayList<>();
+
+            // Use OTRequestService to get holiday data
+            group4.hrms.service.OTRequestService otService = new group4.hrms.service.OTRequestService(
+                    new group4.hrms.dao.RequestDao(),
+                    new group4.hrms.dao.RequestTypeDao(),
+                    new group4.hrms.dao.HolidayDao(),
+                    new group4.hrms.dao.HolidayCalendarDao(),
+                    new group4.hrms.dao.UserDao());
+
+            // Load holidays for current year, next year, and year after
+            // This ensures users can create leave requests for future dates
+            for (int year = currentYear; year <= currentYear + 2; year++) {
+                allHolidays.addAll(otService.getHolidaysForYear(year));
+                allCompensatoryDays.addAll(otService.getCompensatoryDaysForYear(year));
+            }
+
+            logger.info("Loaded " + allHolidays.size() + " holidays and "
+                    + allCompensatoryDays.size() + " compensatory days for years "
+                    + currentYear + "-" + (currentYear + 2));
+            request.setAttribute("holidays", allHolidays);
+            request.setAttribute("compensatoryDays", allCompensatoryDays);
 
             // Filter leave types based on gender (Maternity only for FEMALE)
             Map<String, String> leaveTypes = new java.util.LinkedHashMap<>();
@@ -175,12 +201,13 @@ public class LeaveRequestController extends HttpServlet {
                     leaveTypeRules.add(rules);
                 }
             }
-            logger.info("Loaded " + (leaveTypeRules != null ? leaveTypeRules.size() : 0) + " leave type rules (filtered by gender)");
+            logger.info("Loaded " + (leaveTypeRules != null ? leaveTypeRules.size() : 0)
+                    + " leave type rules (filtered by gender)");
 
             // Load leave balances from database
-            int currentYear = java.time.LocalDateTime.now().getYear();
             logger.info("Loading leave balances for user " + user.getId() + " in year " + currentYear);
-            List<group4.hrms.dto.LeaveBalance> allLeaveBalances = service.getAllLeaveBalances(user.getId(), currentYear);
+            List<group4.hrms.dto.LeaveBalance> allLeaveBalances = service.getAllLeaveBalances(user.getId(),
+                    currentYear);
             logger.info("Loaded " + (allLeaveBalances != null ? allLeaveBalances.size() : 0) + " leave balances");
 
             // Filter leave balances based on gender
@@ -217,11 +244,11 @@ public class LeaveRequestController extends HttpServlet {
             logger.info("Forwarding to leave-form.jsp...");
             // Forward to leave-form.jsp
             request.getRequestDispatcher("/WEB-INF/views/requests/leave-form.jsp")
-                   .forward(request, response);
+                    .forward(request, response);
 
         } catch (Exception e) {
             logger.severe(String.format("Unexpected error loading leave request form: userId=%d, error=%s",
-                         user.getId(), e.getMessage()));
+                    user.getId(), e.getMessage()));
             e.printStackTrace();
 
             // Set error message and forward to error page or dashboard
@@ -235,7 +262,7 @@ public class LeaveRequestController extends HttpServlet {
                 // If forward fails, send simple error response
                 if (!response.isCommitted()) {
                     response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                        "System error occurred. Please contact support.");
+                            "System error occurred. Please contact support.");
                 }
             }
         }
@@ -244,123 +271,124 @@ public class LeaveRequestController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-            // Check authentication
-            HttpSession session = request.getSession(false);
-            if (session == null || session.getAttribute("account") == null) {
-                response.sendRedirect(request.getContextPath() + "/login");
+        // Check authentication
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("account") == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+
+        group4.hrms.model.Account account = (group4.hrms.model.Account) session.getAttribute("account");
+        group4.hrms.model.User user = (group4.hrms.model.User) session.getAttribute("user");
+
+        if (account == null || user == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+
+        // Extract form parameters (declare outside try for catch block access)
+        String leaveTypeCode = request.getParameter("leaveTypeCode");
+        String requestTitle = request.getParameter("requestTitle");
+        String startDateStr = request.getParameter("startDate");
+        String endDateStr = request.getParameter("endDate");
+        String reason = request.getParameter("reason");
+        String isHalfDayParam = request.getParameter("isHalfDay");
+        Boolean isHalfDay = (isHalfDayParam != null && "true".equalsIgnoreCase(isHalfDayParam));
+        String halfDayPeriod = request.getParameter("halfDayPeriod");
+
+        try {
+            // Debug: Log received parameters
+            logger.info("Received parameters: startDate='" + startDateStr + "', endDate='" + endDateStr + "'");
+            logger.info(
+                    "Leave type: " + leaveTypeCode + ", isHalfDay: " + isHalfDay + ", halfDayPeriod: " + halfDayPeriod);
+
+            // Validate required date parameters
+            if (startDateStr == null || startDateStr.trim().isEmpty()) {
+                logger.severe("Start date is missing or empty");
+                request.setAttribute("error", "Start date is required");
+                request.getRequestDispatcher("/WEB-INF/views/requests/leave-form.jsp").forward(request, response);
                 return;
             }
 
-            group4.hrms.model.Account account = (group4.hrms.model.Account) session.getAttribute("account");
-            group4.hrms.model.User user = (group4.hrms.model.User) session.getAttribute("user");
-
-            if (account == null || user == null) {
-                response.sendRedirect(request.getContextPath() + "/login");
+            // For half-day leave, endDate should equal startDate (auto-filled by frontend)
+            // For full-day leave, endDate is required
+            if (!isHalfDay && (endDateStr == null || endDateStr.trim().isEmpty())) {
+                logger.severe("End date is missing or empty for full-day leave");
+                request.setAttribute("error", "End date is required for full-day leave");
+                request.getRequestDispatcher("/WEB-INF/views/requests/leave-form.jsp").forward(request, response);
                 return;
             }
 
-            // Extract form parameters (declare outside try for catch block access)
-            String leaveTypeCode = request.getParameter("leaveTypeCode");
-            String requestTitle = request.getParameter("requestTitle");
-            String startDateStr = request.getParameter("startDate");
-            String endDateStr = request.getParameter("endDate");
-            String reason = request.getParameter("reason");
-            String isHalfDayParam = request.getParameter("isHalfDay");
-            Boolean isHalfDay = (isHalfDayParam != null && "true".equalsIgnoreCase(isHalfDayParam));
-            String halfDayPeriod = request.getParameter("halfDayPeriod");
+            // If half-day and endDate is missing, set it equal to startDate
+            if (isHalfDay && (endDateStr == null || endDateStr.trim().isEmpty())) {
+                endDateStr = startDateStr;
+                logger.info("Half-day leave: auto-set endDate = startDate = " + endDateStr);
+            }
 
-            try {
-                // Debug: Log received parameters
-                logger.info("Received parameters: startDate='" + startDateStr + "', endDate='" + endDateStr + "'");
-                logger.info("Leave type: " + leaveTypeCode + ", isHalfDay: " + isHalfDay + ", halfDayPeriod: " + halfDayPeriod);
-
-                // Validate required date parameters
-                if (startDateStr == null || startDateStr.trim().isEmpty()) {
-                    logger.severe("Start date is missing or empty");
-                    request.setAttribute("error", "Start date is required");
-                    request.getRequestDispatcher("/WEB-INF/views/requests/leave-form.jsp").forward(request, response);
-                    return;
+            // Validate half-day specific rules
+            if (isHalfDay) {
+                if (halfDayPeriod == null || halfDayPeriod.trim().isEmpty()) {
+                    group4.hrms.exception.ValidationErrorMessage errorMsg = group4.hrms.exception.ValidationErrorMessage
+                            .invalidHalfDayPeriodError(null);
+                    throw new LeaveValidationException(errorMsg);
                 }
-
-                // For half-day leave, endDate should equal startDate (auto-filled by frontend)
-                // For full-day leave, endDate is required
-                if (!isHalfDay && (endDateStr == null || endDateStr.trim().isEmpty())) {
-                    logger.severe("End date is missing or empty for full-day leave");
-                    request.setAttribute("error", "End date is required for full-day leave");
-                    request.getRequestDispatcher("/WEB-INF/views/requests/leave-form.jsp").forward(request, response);
-                    return;
+                if (!"AM".equals(halfDayPeriod) && !"PM".equals(halfDayPeriod)) {
+                    group4.hrms.exception.ValidationErrorMessage errorMsg = group4.hrms.exception.ValidationErrorMessage
+                            .invalidHalfDayPeriodError(halfDayPeriod);
+                    throw new LeaveValidationException(errorMsg);
                 }
+            }
 
-                // If half-day and endDate is missing, set it equal to startDate
-                if (isHalfDay && (endDateStr == null || endDateStr.trim().isEmpty())) {
-                    endDateStr = startDateStr;
-                    logger.info("Half-day leave: auto-set endDate = startDate = " + endDateStr);
-                }
+            // Parse date strings to LocalDateTime
+            // Form sends date in format "yyyy-MM-dd", need to convert to LocalDateTime
+            logger.info("Parsing dates: startDate='" + startDateStr.trim() + "', endDate='" + endDateStr.trim() + "'");
+            java.time.LocalDate startLocalDate = java.time.LocalDate.parse(startDateStr.trim());
+            java.time.LocalDate endLocalDate = java.time.LocalDate.parse(endDateStr.trim());
+            logger.info("Dates parsed successfully: " + startLocalDate + " to " + endLocalDate);
 
-                // Validate half-day specific rules
-                if (isHalfDay) {
-                    if (halfDayPeriod == null || halfDayPeriod.trim().isEmpty()) {
-                        group4.hrms.exception.ValidationErrorMessage errorMsg =
-                            group4.hrms.exception.ValidationErrorMessage.invalidHalfDayPeriodError(null);
-                        throw new LeaveValidationException(errorMsg);
-                    }
-                    if (!"AM".equals(halfDayPeriod) && !"PM".equals(halfDayPeriod)) {
-                        group4.hrms.exception.ValidationErrorMessage errorMsg =
-                            group4.hrms.exception.ValidationErrorMessage.invalidHalfDayPeriodError(halfDayPeriod);
-                        throw new LeaveValidationException(errorMsg);
-                    }
-                }
+            // Convert to LocalDateTime (start of day)
+            java.time.LocalDateTime startDate = startLocalDate.atStartOfDay();
+            java.time.LocalDateTime endDate = endLocalDate.atTime(23, 59, 59);
 
-                // Parse date strings to LocalDateTime
-                // Form sends date in format "yyyy-MM-dd", need to convert to LocalDateTime
-                logger.info("Parsing dates: startDate='" + startDateStr.trim() + "', endDate='" + endDateStr.trim() + "'");
-                java.time.LocalDate startLocalDate = java.time.LocalDate.parse(startDateStr.trim());
-                java.time.LocalDate endLocalDate = java.time.LocalDate.parse(endDateStr.trim());
-                logger.info("Dates parsed successfully: " + startLocalDate + " to " + endLocalDate);
-
-                // Convert to LocalDateTime (start of day)
-                java.time.LocalDateTime startDate = startLocalDate.atStartOfDay();
-                java.time.LocalDateTime endDate = endLocalDate.atTime(23, 59, 59);
-
-                // Initialize service
-                LeaveRequestService service = new LeaveRequestService(
+            // Initialize service
+            LeaveRequestService service = new LeaveRequestService(
                     new RequestDao(),
                     new RequestTypeDao(),
-                    new LeaveTypeDao()
-                );
+                    new LeaveTypeDao());
 
-                // Validate certificate requirement BEFORE creating request
-                LeaveTypeDao leaveTypeDao = new LeaveTypeDao();
-                java.util.Optional<group4.hrms.model.LeaveType> leaveTypeOpt = leaveTypeDao.findByCode(leaveTypeCode);
-                if (leaveTypeOpt.isPresent()) {
-                    group4.hrms.model.LeaveType leaveType = leaveTypeOpt.get();
-                    if (leaveType.isRequiresCertificate()) {
-                        // Check if attachment provided
-                        String attachmentType = request.getParameter("attachmentType");
-                        boolean hasAttachment;
+            // Validate certificate requirement BEFORE creating request
+            LeaveTypeDao leaveTypeDao = new LeaveTypeDao();
+            java.util.Optional<group4.hrms.model.LeaveType> leaveTypeOpt = leaveTypeDao.findByCode(leaveTypeCode);
+            if (leaveTypeOpt.isPresent()) {
+                group4.hrms.model.LeaveType leaveType = leaveTypeOpt.get();
+                if (leaveType.isRequiresCertificate()) {
+                    // Check if attachment provided
+                    String attachmentType = request.getParameter("attachmentType");
+                    boolean hasAttachment;
 
-                        if ("link".equals(attachmentType)) {
-                            String driveLink = request.getParameter("driveLink");
-                            hasAttachment = (driveLink != null && !driveLink.trim().isEmpty());
-                        } else {
-                            // Check file uploads
-                            Collection<Part> fileParts = request.getParts().stream()
+                    if ("link".equals(attachmentType)) {
+                        String driveLink = request.getParameter("driveLink");
+                        hasAttachment = (driveLink != null && !driveLink.trim().isEmpty());
+                    } else {
+                        // Check file uploads
+                        Collection<Part> fileParts = request.getParts().stream()
                                 .filter(part -> "attachments".equals(part.getName()) && part.getSize() > 0)
                                 .collect(Collectors.toList());
-                            hasAttachment = !fileParts.isEmpty();
-                        }
+                        hasAttachment = !fileParts.isEmpty();
+                    }
 
-                        if (!hasAttachment) {
-                            logger.warning(String.format("Certificate required but not provided: userId=%d, leaveType=%s",
+                    if (!hasAttachment) {
+                        logger.warning(String.format("Certificate required but not provided: userId=%d, leaveType=%s",
                                 user.getId(), leaveTypeCode));
-                            throw new IllegalArgumentException("This leave type (" + leaveType.getName() +
+                        throw new IllegalArgumentException("This leave type (" + leaveType.getName() +
                                 ") requires supporting documents (certificate). Please upload a file or provide a Google Drive link.");
-                        }
                     }
                 }
+            }
 
-                // Call service.createLeaveRequest() with all parameters including half-day fields
-                Long requestId = service.createLeaveRequest(
+            // Call service.createLeaveRequest() with all parameters including half-day
+            // fields
+            Long requestId = service.createLeaveRequest(
                     account.getId(),
                     user.getId(),
                     user.getDepartmentId(),
@@ -370,243 +398,243 @@ public class LeaveRequestController extends HttpServlet {
                     endDate,
                     reason,
                     isHalfDay,
-                    halfDayPeriod
-                );
+                    halfDayPeriod);
 
-                logger.info("Leave request created successfully with ID: " + requestId);
+            logger.info("Leave request created successfully with ID: " + requestId);
 
-                // Handle attachments - both file uploads and external links
-                try {
-                    AttachmentService attachmentService = new AttachmentService();
+            // Handle attachments - both file uploads and external links
+            try {
+                AttachmentService attachmentService = new AttachmentService();
 
-                    // Check attachment type: "file" or "link"
-                    String attachmentType = request.getParameter("attachmentType");
+                // Check attachment type: "file" or "link"
+                String attachmentType = request.getParameter("attachmentType");
 
-                    if ("link".equals(attachmentType)) {
-                        // Handle Google Drive link
-                        String driveLink = request.getParameter("driveLink");
+                if ("link".equals(attachmentType)) {
+                    // Handle Google Drive link
+                    String driveLink = request.getParameter("driveLink");
 
-                        if (driveLink != null && !driveLink.trim().isEmpty()) {
-                            logger.info(String.format("Processing Google Drive link for request ID: %d - URL: %s",
+                    if (driveLink != null && !driveLink.trim().isEmpty()) {
+                        logger.info(String.format("Processing Google Drive link for request ID: %d - URL: %s",
                                 requestId, driveLink));
 
-                            // Save external link to database
-                            Attachment linkAttachment = attachmentService.saveExternalLink(
+                        // Save external link to database
+                        Attachment linkAttachment = attachmentService.saveExternalLink(
                                 driveLink.trim(),
                                 requestId,
                                 "REQUEST",
                                 account.getId(),
-                                "Google Drive Link"
-                            );
+                                "Google Drive Link");
 
-                            logger.info(String.format("Successfully saved external link attachment: id=%d",
+                        logger.info(String.format("Successfully saved external link attachment: id=%d",
                                 linkAttachment.getId()));
-                        }
+                    }
 
-                    } else {
-                        // Handle file uploads (default)
-                        Collection<Part> fileParts = request.getParts().stream()
+                } else {
+                    // Handle file uploads (default)
+                    Collection<Part> fileParts = request.getParts().stream()
                             .filter(part -> "attachments".equals(part.getName()) && part.getSize() > 0)
                             .collect(Collectors.toList());
 
-                        if (!fileParts.isEmpty()) {
-                            logger.info(String.format("Processing %d file attachment(s) for request ID: %d",
+                    if (!fileParts.isEmpty()) {
+                        logger.info(String.format("Processing %d file attachment(s) for request ID: %d",
                                 fileParts.size(), requestId));
 
-                            // Get upload base path - save to webapp/assets/img/Request/
-                            String uploadBasePath = getServletContext().getRealPath("/assets/img/Request");
-                            if (uploadBasePath == null) {
-                                // Fallback to system temp directory if realPath is not available
-                                uploadBasePath = System.getProperty("java.io.tmpdir");
-                                logger.warning("Using temp directory for uploads: " + uploadBasePath);
-                            } else {
-                                // Create directory if it doesn't exist
-                                java.io.File uploadDir = new java.io.File(uploadBasePath);
-                                if (!uploadDir.exists()) {
-                                    boolean created = uploadDir.mkdirs();
-                                    if (created) {
-                                        logger.info("Created upload directory: " + uploadBasePath);
-                                    } else {
-                                        logger.warning("Failed to create upload directory: " + uploadBasePath);
-                                    }
+                        // Get upload base path - save to webapp/assets/img/Request/
+                        String uploadBasePath = getServletContext().getRealPath("/assets/img/Request");
+                        if (uploadBasePath == null) {
+                            // Fallback to system temp directory if realPath is not available
+                            uploadBasePath = System.getProperty("java.io.tmpdir");
+                            logger.warning("Using temp directory for uploads: " + uploadBasePath);
+                        } else {
+                            // Create directory if it doesn't exist
+                            java.io.File uploadDir = new java.io.File(uploadBasePath);
+                            if (!uploadDir.exists()) {
+                                boolean created = uploadDir.mkdirs();
+                                if (created) {
+                                    logger.info("Created upload directory: " + uploadBasePath);
+                                } else {
+                                    logger.warning("Failed to create upload directory: " + uploadBasePath);
                                 }
                             }
+                        }
 
-                            // Save files to filesystem and database
-                            List<Attachment> attachments = attachmentService.saveFiles(
+                        // Save files to filesystem and database
+                        List<Attachment> attachments = attachmentService.saveFiles(
                                 fileParts,
                                 requestId,
                                 "REQUEST",
                                 account.getId(),
-                                uploadBasePath
-                            );
+                                uploadBasePath);
 
-                            logger.info(String.format("Successfully saved %d file attachment(s) for request ID: %d",
+                        logger.info(String.format("Successfully saved %d file attachment(s) for request ID: %d",
                                 attachments.size(), requestId));
-                        }
                     }
+                }
 
-                } catch (Exception fileError) {
-                    // Attachment handling failed - log error and rollback the request creation
-                    logger.severe(String.format("Attachment handling failed for request ID: %d, error: %s",
+            } catch (Exception fileError) {
+                // Attachment handling failed - log error and rollback the request creation
+                logger.severe(String.format("Attachment handling failed for request ID: %d, error: %s",
                         requestId, fileError.getMessage()));
-                    fileError.printStackTrace();
+                fileError.printStackTrace();
 
-                    // TODO: Implement transaction rollback - delete the created request
-                    // For now, we'll throw an exception to inform the user
-                    throw new Exception("Leave request was created but attachment handling failed. " +
+                // TODO: Implement transaction rollback - delete the created request
+                // For now, we'll throw an exception to inform the user
+                throw new Exception("Leave request was created but attachment handling failed. " +
                         "Please contact IT support with request ID: " + requestId, fileError);
-                }
-
-                // Handle success: set success message attribute
-                request.setAttribute("success", "Leave request submitted successfully! Request ID: " + requestId);
-
-            } catch (LeaveValidationException e) {
-                // Handle structured validation errors with detailed formatting
-                logger.warning(String.format("Leave validation error: userId=%d, accountId=%d, errorType=%s, message=%s",
-                              user.getId(), account.getId(), e.getErrorType(), e.getShortMessage()));
-
-                // Save form data to session to preserve user input
-                saveFormDataToSession(session, requestTitle, leaveTypeCode, startDateStr, endDateStr, reason,
-                                     isHalfDay, halfDayPeriod);
-
-                // Set error attributes for JSP display
-                request.setAttribute("error", e.getMessage());
-                request.setAttribute("errorType", e.getErrorType());
-                request.setAttribute("errorTitle", e.getShortMessage());
-                request.setAttribute("errorDetails", e.getDetailedMessage());
-
-                // Return HTTP 409 for conflict errors (Requirements: 5.2, 5.3, 5.4)
-                if ("HALF_DAY_FULL_DAY_CONFLICT".equals(e.getErrorType()) ||
-                    "HALF_DAY_SAME_PERIOD_CONFLICT".equals(e.getErrorType())) {
-                    response.setStatus(HttpServletResponse.SC_CONFLICT); // HTTP 409
-                }
-                // Return HTTP 400 for insufficient balance errors (Requirements: 3.5, 3.6, 14.3)
-                else if ("INSUFFICIENT_BALANCE".equals(e.getErrorType())) {
-                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST); // HTTP 400
-                }
-                // Return HTTP 400 for other validation errors (Requirements: 5.7, 2.1, 2.2, 2.3, 14.1, 14.4)
-                else if ("HALF_DAY_NON_WORKING_DAY".equals(e.getErrorType())) {
-                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST); // HTTP 400
-                }
-                // Return HTTP 400 for invalid period errors (Requirements: 2.1, 2.2, 2.3, 14.4)
-                else if ("INVALID_HALF_DAY_PERIOD".equals(e.getErrorType())) {
-                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST); // HTTP 400
-                }
-
-            } catch (IllegalArgumentException e) {
-                // Handle generic validation errors
-                logger.warning(String.format("Validation error creating leave request: userId=%d, accountId=%d, error=%s",
-                              user.getId(), account.getId(), e.getMessage()));
-                saveFormDataToSession(session, requestTitle, leaveTypeCode, startDateStr, endDateStr, reason,
-                                     isHalfDay, halfDayPeriod);
-                request.setAttribute("error", e.getMessage());
-                request.setAttribute("errorType", "VALIDATION_ERROR");
-
-            } catch (java.sql.SQLException e) {
-                // Handle database errors
-                logger.severe(String.format("Database error creating leave request: userId=%d, accountId=%d, error=%s",
-                             user.getId(), account.getId(), e.getMessage()));
-                e.printStackTrace();
-                saveFormDataToSession(session, requestTitle, leaveTypeCode, startDateStr, endDateStr, reason,
-                                     isHalfDay, halfDayPeriod);
-                request.setAttribute("error", "Database error occurred. Please try again later. If the problem persists, contact IT support.");
-                request.setAttribute("errorType", "DATABASE_ERROR");
-
-            } catch (Exception e) {
-                // Handle system errors: catch Exception, log error, set generic error message
-                logger.severe(String.format("Unexpected error creating leave request: userId=%d, accountId=%d, error=%s",
-                             user.getId(), account.getId(), e.getMessage()));
-                saveFormDataToSession(session, requestTitle, leaveTypeCode, startDateStr, endDateStr, reason,
-                                     isHalfDay, halfDayPeriod);
-                e.printStackTrace();
-                request.setAttribute("error", "System error. Please try again later.");
-                request.setAttribute("errorType", "SYSTEM_ERROR");
             }
 
-            try {
-                // Reload form data (leave types, rules, and balances) before forwarding
-                LeaveRequestService service = new LeaveRequestService(
+            // Handle success: set success message attribute
+            request.setAttribute("success", "Leave request submitted successfully! Request ID: " + requestId);
+
+        } catch (LeaveValidationException e) {
+            // Handle structured validation errors with detailed formatting
+            logger.warning(String.format("Leave validation error: userId=%d, accountId=%d, errorType=%s, message=%s",
+                    user.getId(), account.getId(), e.getErrorType(), e.getShortMessage()));
+
+            // Save form data to session to preserve user input
+            saveFormDataToSession(session, requestTitle, leaveTypeCode, startDateStr, endDateStr, reason,
+                    isHalfDay, halfDayPeriod);
+
+            // Set error attributes for JSP display
+            request.setAttribute("error", e.getMessage());
+            request.setAttribute("errorType", e.getErrorType());
+            request.setAttribute("errorTitle", e.getShortMessage());
+            request.setAttribute("errorDetails", e.getDetailedMessage());
+
+            // Return HTTP 409 for conflict errors (Requirements: 5.2, 5.3, 5.4)
+            if ("HALF_DAY_FULL_DAY_CONFLICT".equals(e.getErrorType()) ||
+                    "HALF_DAY_SAME_PERIOD_CONFLICT".equals(e.getErrorType())) {
+                response.setStatus(HttpServletResponse.SC_CONFLICT); // HTTP 409
+            }
+            // Return HTTP 400 for insufficient balance errors (Requirements: 3.5, 3.6,
+            // 14.3)
+            else if ("INSUFFICIENT_BALANCE".equals(e.getErrorType())) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST); // HTTP 400
+            }
+            // Return HTTP 400 for other validation errors (Requirements: 5.7, 2.1, 2.2,
+            // 2.3, 14.1, 14.4)
+            else if ("HALF_DAY_NON_WORKING_DAY".equals(e.getErrorType())) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST); // HTTP 400
+            }
+            // Return HTTP 400 for invalid period errors (Requirements: 2.1, 2.2, 2.3, 14.4)
+            else if ("INVALID_HALF_DAY_PERIOD".equals(e.getErrorType())) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST); // HTTP 400
+            }
+
+        } catch (IllegalArgumentException e) {
+            // Handle generic validation errors
+            logger.warning(String.format("Validation error creating leave request: userId=%d, accountId=%d, error=%s",
+                    user.getId(), account.getId(), e.getMessage()));
+            saveFormDataToSession(session, requestTitle, leaveTypeCode, startDateStr, endDateStr, reason,
+                    isHalfDay, halfDayPeriod);
+            request.setAttribute("error", e.getMessage());
+            request.setAttribute("errorType", "VALIDATION_ERROR");
+
+        } catch (java.sql.SQLException e) {
+            // Handle database errors
+            logger.severe(String.format("Database error creating leave request: userId=%d, accountId=%d, error=%s",
+                    user.getId(), account.getId(), e.getMessage()));
+            e.printStackTrace();
+            saveFormDataToSession(session, requestTitle, leaveTypeCode, startDateStr, endDateStr, reason,
+                    isHalfDay, halfDayPeriod);
+            request.setAttribute("error",
+                    "Database error occurred. Please try again later. If the problem persists, contact IT support.");
+            request.setAttribute("errorType", "DATABASE_ERROR");
+
+        } catch (Exception e) {
+            // Handle system errors: catch Exception, log error, set generic error message
+            logger.severe(String.format("Unexpected error creating leave request: userId=%d, accountId=%d, error=%s",
+                    user.getId(), account.getId(), e.getMessage()));
+            saveFormDataToSession(session, requestTitle, leaveTypeCode, startDateStr, endDateStr, reason,
+                    isHalfDay, halfDayPeriod);
+            e.printStackTrace();
+            request.setAttribute("error", "System error. Please try again later.");
+            request.setAttribute("errorType", "SYSTEM_ERROR");
+        }
+
+        try {
+            // Reload form data (leave types, rules, and balances) before forwarding
+            LeaveRequestService service = new LeaveRequestService(
                     new RequestDao(),
                     new RequestTypeDao(),
-                    new LeaveTypeDao()
-                );
+                    new LeaveTypeDao());
 
-                // Load user profile to get gender for filtering
-                group4.hrms.dao.UserProfileDao userProfileDao = new group4.hrms.dao.UserProfileDao();
-                group4.hrms.model.UserProfile userProfile = userProfileDao.findByUserId(user.getId());
-                String userGender = (userProfile != null && userProfile.getGender() != null)
+            // Load user profile to get gender for filtering
+            group4.hrms.dao.UserProfileDao userProfileDao = new group4.hrms.dao.UserProfileDao();
+            group4.hrms.model.UserProfile userProfile = userProfileDao.findByUserId(user.getId());
+            String userGender = (userProfile != null && userProfile.getGender() != null)
                     ? userProfile.getGender()
                     : "UNKNOWN";
 
-                // Get all leave types and filter by gender
-                Map<String, String> allLeaveTypes = service.getAvailableLeaveTypes();
-                Map<String, String> leaveTypes = new java.util.LinkedHashMap<>();
-                for (Map.Entry<String, String> entry : allLeaveTypes.entrySet()) {
-                    String code = entry.getKey();
-                    if ("MATERNITY".equals(code) || "MATERNITY_LEAVE".equals(code)) {
-                        if ("FEMALE".equalsIgnoreCase(userGender)) {
-                            leaveTypes.put(code, entry.getValue());
-                        }
-                    } else if ("PATERNITY".equals(code) || "PATERNITY_LEAVE".equals(code)) {
-                        if ("MALE".equalsIgnoreCase(userGender)) {
-                            leaveTypes.put(code, entry.getValue());
-                        }
-                    } else {
+            // Get all leave types and filter by gender
+            Map<String, String> allLeaveTypes = service.getAvailableLeaveTypes();
+            Map<String, String> leaveTypes = new java.util.LinkedHashMap<>();
+            for (Map.Entry<String, String> entry : allLeaveTypes.entrySet()) {
+                String code = entry.getKey();
+                if ("MATERNITY".equals(code) || "MATERNITY_LEAVE".equals(code)) {
+                    if ("FEMALE".equalsIgnoreCase(userGender)) {
                         leaveTypes.put(code, entry.getValue());
                     }
+                } else if ("PATERNITY".equals(code) || "PATERNITY_LEAVE".equals(code)) {
+                    if ("MALE".equalsIgnoreCase(userGender)) {
+                        leaveTypes.put(code, entry.getValue());
+                    }
+                } else {
+                    leaveTypes.put(code, entry.getValue());
                 }
+            }
 
-                // Get all leave type rules and filter by gender
-                List<LeaveTypeRules> allLeaveTypeRules = service.getAllLeaveTypeRules();
-                List<LeaveTypeRules> leaveTypeRules = new java.util.ArrayList<>();
-                for (LeaveTypeRules rules : allLeaveTypeRules) {
-                    String ruleCode = rules.getCode();
-                    if ("MATERNITY".equals(ruleCode) || "MATERNITY_LEAVE".equals(ruleCode)) {
-                        if ("FEMALE".equalsIgnoreCase(userGender)) {
-                            leaveTypeRules.add(rules);
-                        }
-                    } else if ("PATERNITY".equals(ruleCode) || "PATERNITY_LEAVE".equals(ruleCode)) {
-                        if ("MALE".equalsIgnoreCase(userGender)) {
-                            leaveTypeRules.add(rules);
-                        }
-                    } else {
+            // Get all leave type rules and filter by gender
+            List<LeaveTypeRules> allLeaveTypeRules = service.getAllLeaveTypeRules();
+            List<LeaveTypeRules> leaveTypeRules = new java.util.ArrayList<>();
+            for (LeaveTypeRules rules : allLeaveTypeRules) {
+                String ruleCode = rules.getCode();
+                if ("MATERNITY".equals(ruleCode) || "MATERNITY_LEAVE".equals(ruleCode)) {
+                    if ("FEMALE".equalsIgnoreCase(userGender)) {
                         leaveTypeRules.add(rules);
                     }
+                } else if ("PATERNITY".equals(ruleCode) || "PATERNITY_LEAVE".equals(ruleCode)) {
+                    if ("MALE".equalsIgnoreCase(userGender)) {
+                        leaveTypeRules.add(rules);
+                    }
+                } else {
+                    leaveTypeRules.add(rules);
                 }
+            }
 
-                // Reload leave balances for the current year and filter by gender
-                int currentYear = java.time.LocalDate.now().getYear();
-                List<group4.hrms.dto.LeaveBalance> allLeaveBalances = service.getAllLeaveBalances(user.getId(), currentYear);
-                List<group4.hrms.dto.LeaveBalance> leaveBalances = new java.util.ArrayList<>();
-                for (group4.hrms.dto.LeaveBalance balance : allLeaveBalances) {
-                    String balanceCode = balance.getLeaveTypeCode();
-                    if ("MATERNITY".equals(balanceCode) || "MATERNITY_LEAVE".equals(balanceCode)) {
-                        if ("FEMALE".equalsIgnoreCase(userGender)) {
-                            leaveBalances.add(balance);
-                        }
-                    } else if ("PATERNITY".equals(balanceCode) || "PATERNITY_LEAVE".equals(balanceCode)) {
-                        if ("MALE".equalsIgnoreCase(userGender)) {
-                            leaveBalances.add(balance);
-                        }
-                    } else {
+            // Reload leave balances for the current year and filter by gender
+            int currentYear = java.time.LocalDate.now().getYear();
+            List<group4.hrms.dto.LeaveBalance> allLeaveBalances = service.getAllLeaveBalances(user.getId(),
+                    currentYear);
+            List<group4.hrms.dto.LeaveBalance> leaveBalances = new java.util.ArrayList<>();
+            for (group4.hrms.dto.LeaveBalance balance : allLeaveBalances) {
+                String balanceCode = balance.getLeaveTypeCode();
+                if ("MATERNITY".equals(balanceCode) || "MATERNITY_LEAVE".equals(balanceCode)) {
+                    if ("FEMALE".equalsIgnoreCase(userGender)) {
                         leaveBalances.add(balance);
                     }
+                } else if ("PATERNITY".equals(balanceCode) || "PATERNITY_LEAVE".equals(balanceCode)) {
+                    if ("MALE".equalsIgnoreCase(userGender)) {
+                        leaveBalances.add(balance);
+                    }
+                } else {
+                    leaveBalances.add(balance);
                 }
-
-                request.setAttribute("leaveTypes", leaveTypes);
-                request.setAttribute("leaveTypeRules", leaveTypeRules);
-                request.setAttribute("leaveBalances", leaveBalances);
-                request.setAttribute("currentYear", currentYear);
-                request.setAttribute("userGender", userGender);
-
-            } catch (Exception e) {
-                logger.severe("Error reloading form data: " + e.getMessage());
             }
+
+            request.setAttribute("leaveTypes", leaveTypes);
+            request.setAttribute("leaveTypeRules", leaveTypeRules);
+            request.setAttribute("leaveBalances", leaveBalances);
+            request.setAttribute("currentYear", currentYear);
+            request.setAttribute("userGender", userGender);
+
+        } catch (Exception e) {
+            logger.severe("Error reloading form data: " + e.getMessage());
+        }
 
         // Forward back to leave-form.jsp with success/error message
         request.getRequestDispatcher("/WEB-INF/views/requests/leave-form.jsp")
-               .forward(request, response);
+                .forward(request, response);
     }
 
     /**
@@ -659,14 +687,12 @@ public class LeaveRequestController extends HttpServlet {
 
             // Check conflict
             LeaveRequestService service = new LeaveRequestService(
-                new RequestDao(),
-                new RequestTypeDao(),
-                new LeaveTypeDao()
-            );
+                    new RequestDao(),
+                    new RequestTypeDao(),
+                    new LeaveTypeDao());
 
             group4.hrms.dto.HalfDayConflict conflict = service.checkHalfDayConflict(
-                user.getId(), date, period
-            );
+                    user.getId(), date, period);
 
             // Build response
             result.put("hasConflict", conflict.hasConflict());
@@ -683,7 +709,7 @@ public class LeaveRequestController extends HttpServlet {
             }
 
             logger.info(String.format("Half-day conflict check: userId=%d, hasConflict=%b",
-                user.getId(), conflict.hasConflict()));
+                    user.getId(), conflict.hasConflict()));
 
         } catch (Exception e) {
             logger.severe("Error checking conflict: " + e.getMessage());
@@ -699,8 +725,8 @@ public class LeaveRequestController extends HttpServlet {
      * Save form data to session to preserve user input when there's an error
      */
     private void saveFormDataToSession(HttpSession session, String requestTitle, String leaveTypeCode,
-                                      String startDate, String endDate, String reason,
-                                      Boolean isHalfDay, String halfDayPeriod) {
+            String startDate, String endDate, String reason,
+            Boolean isHalfDay, String halfDayPeriod) {
         session.setAttribute("formData_requestTitle", requestTitle);
         session.setAttribute("formData_leaveTypeCode", leaveTypeCode);
         session.setAttribute("formData_startDate", startDate);

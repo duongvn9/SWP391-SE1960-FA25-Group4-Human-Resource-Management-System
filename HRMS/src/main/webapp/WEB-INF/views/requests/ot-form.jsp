@@ -239,6 +239,7 @@
                                                              aria-valuenow="${otBalance.monthlyHours}"
                                                              aria-valuemin="0"
                                                              aria-valuemax="${otBalance.monthlyLimit}">
+
                                                         </div>
                                                     </div>
                                                     <small class="text-muted"><span id="monthlyPercentage">${monthlyPct}</span>% used</small>

@@ -48,7 +48,7 @@
                 <div class="d-flex gap-2">
                     <!-- Export to Excel Button (HR only) -->
                     <c:if test="${canExport}">
-                        <a href="${pageContext.request.contextPath}/requests/export?scope=${filter.scope}&type=${filter.requestTypeId}&status=${filter.status}&fromDate=${filter.fromDate}&toDate=${filter.toDate}&employeeId=${filter.employeeId}&search=${filter.searchKeyword}&format=excel"
+                        <a href="${pageContext.request.contextPath}/requests/export?scope=${filter.scope}&type=${filter.requestTypeId}&status=${filter.status}&fromDate=${filter.fromDate}&toDate=${filter.toDate}&employeeId=${filter.employeeId}&departmentId=${filter.departmentId}&search=${filter.searchKeyword}&format=excel"
                            class="btn btn-success"
                            download>
                             <i class="fas fa-file-excel me-1"></i> Export Excel
@@ -163,6 +163,9 @@
                         <c:if test="${filter.employeeId != null}">
                             <c:set var="activeFilters" value="${activeFilters + 1}" />
                         </c:if>
+                        <c:if test="${filter.departmentId != null}">
+                            <c:set var="activeFilters" value="${activeFilters + 1}" />
+                        </c:if>
                         <c:if test="${filter.searchKeyword != null && filter.searchKeyword != ''}">
                             <c:set var="activeFilters" value="${activeFilters + 1}" />
                         </c:if>
@@ -223,8 +226,8 @@
                                 </select>
                             </div>
 
-                            <!-- Employee Filter (Manager/HR only) -->
-                            <c:if test="${not empty employees}">
+                            <!-- Employee Filter (Only show in 'all' and 'subordinate' scopes) -->
+                            <c:if test="${not empty employees && filter.scope != 'my'}">
                                 <div class="col-md-3">
                                     <label for="employeeId" class="form-label">
                                         <i class="fas fa-user"></i> Employee
@@ -234,6 +237,23 @@
                                         <c:forEach items="${employees}" var="emp">
                                             <option value="${emp.id}" ${filter.employeeId == emp.id ? 'selected' : ''}>
                                                 ${emp.employeeCode} - ${emp.fullName}
+                                            </option>
+                                        </c:forEach>
+                                    </select>
+                                </div>
+                            </c:if>
+
+                            <!-- Department Filter (Only show in 'all' scope) -->
+                            <c:if test="${not empty departments && filter.scope == 'all'}">
+                                <div class="col-md-3">
+                                    <label for="departmentId" class="form-label">
+                                        <i class="fas fa-building"></i> Department
+                                    </label>
+                                    <select name="departmentId" id="departmentId" class="form-select">
+                                        <option value="">All Departments</option>
+                                        <c:forEach items="${departments}" var="dept">
+                                            <option value="${dept.id}" ${filter.departmentId == dept.id ? 'selected' : ''}>
+                                                ${dept.name}
                                             </option>
                                         </c:forEach>
                                     </select>

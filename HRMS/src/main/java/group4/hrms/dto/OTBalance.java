@@ -137,14 +137,29 @@ public class OTBalance {
      * Calculates percentage of weekly OT hours used.
      * Used for progress bar display in UI.
      *
+     * Percentage is calculated based on OT hours used vs allowed OT hours in the week.
+     * Allowed OT = weeklyLimit (48h) - regularHoursThisWeek
+     *
      * @return percentage (0-100)
      */
     public Integer getWeeklyPercentage() {
         if (weeklyLimit == null || weeklyLimit <= 0.0) {
             return 0;
         }
+
+        // Calculate allowed OT hours in the week
+        double regularHours = (regularHoursThisWeek != null ? regularHoursThisWeek : 0.0);
+        double allowedOT = weeklyLimit - regularHours;
+
+        // If no OT allowed, return 100% if any OT used, otherwise 0%
+        if (allowedOT <= 0.0) {
+            double used = (currentWeekHours != null ? currentWeekHours : 0.0);
+            return used > 0.0 ? 100 : 0;
+        }
+
+        // Calculate percentage based on OT hours used vs allowed OT
         double used = (currentWeekHours != null ? currentWeekHours : 0.0);
-        return Math.min(100, (int) Math.round((used * 100.0) / weeklyLimit));
+        return Math.min(100, (int) Math.round((used * 100.0) / allowedOT));
     }
 
     /**
