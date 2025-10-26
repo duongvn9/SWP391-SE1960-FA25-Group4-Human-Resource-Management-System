@@ -61,6 +61,9 @@
                                 <option value="">All</option> 
                                 <option value="On time" <c:if test="${status eq 'On time'}">selected</c:if>>On time</option> 
                                 <option value="Late" <c:if test="${status eq 'Late'}">selected</c:if>>Late</option> 
+                                <option value="Shift day" <c:if test="${status eq 'Shift day'}">selected</c:if>>Shift day</option> 
+                                <option value="leaving early" <c:if test="${status eq 'leaving early'}">selected</c:if>>leaving early</option> 
+                                <option value="Over Time" <c:if test="${status eq 'Over Time'}">selected</c:if>>Over Time</option> 
                                 </select> 
                             </div>
 
