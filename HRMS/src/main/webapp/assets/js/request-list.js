@@ -117,7 +117,7 @@ function submitApproval() {
         submitBtn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Submit';
     });
 }
-s
+
 /**
  * Get the application context path
  * @returns {string} The context path
