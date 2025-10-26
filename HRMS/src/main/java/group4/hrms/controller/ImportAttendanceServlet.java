@@ -30,6 +30,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -205,6 +206,22 @@ public class ImportAttendanceServlet extends HttpServlet {
                     req.setAttribute("manualSuccess", "Import successfully");
                 }
 
+                List<User> uList = userDao.findAll();
+                req.setAttribute("uList", uList);
+                String activeTab = req.getParameter("activeTab");
+                if (activeTab == null || activeTab.isEmpty()) {
+                    activeTab = "upload";
+                }
+                req.setAttribute("activeTab", activeTab);
+                req.getRequestDispatcher("/WEB-INF/views/attendance/import-attendance.jsp").forward(req, resp);
+                return;
+            } else if ("Delete".equalsIgnoreCase(action)) {
+                // Xóa session chứa danh sách invalid logs
+                HttpSession session = req.getSession(false);
+                if (session != null) {
+                    session.removeAttribute("invalidLogsAll");
+                }
+                req.setAttribute("message", "Invalid logs have been cleared.");
                 List<User> uList = userDao.findAll();
                 req.setAttribute("uList", uList);
                 String activeTab = req.getParameter("activeTab");

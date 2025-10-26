@@ -177,6 +177,7 @@
                         <div class="form-group btn-group">
                             <button type="submit" id="preview" name="action" value="Preview" class="form-button btn-primary">Preview</button>
                             <button type="submit" id="import" name="action" value="Import" class="form-button btn-secondary">Import</button>
+                            <button type="submit" id="delete" name="action" value="Delete" class="form-button btn-danger">Delete</button>
                         </div>
 
                         <!-- Success/Error Messages -->
@@ -188,6 +189,9 @@
                         </c:if>
                         <c:if test="${not empty warning}">
                             <div class="form-message error-message">${warning}</div>
+                        </c:if>
+                        <c:if test="${not empty message}">
+                            <div class="form-message error-message">${message}</div>
                         </c:if>
 
                         <!-- Preview Table -->
@@ -206,6 +210,9 @@
                                         <th>Status</th>
                                         <th>Source</th>
                                         <th>Period</th>
+                                            <c:if test="${not empty invalidLogsExcel}">
+                                            <th>Error</th>
+                                            </c:if>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -236,6 +243,7 @@
                                             <td>${log.status}</td>
                                             <td>${log.source}</td>
                                             <td>${log.period}</td>
+                                            <td>${log.error}</td>
                                         </tr>
                                     </c:forEach>
                                 </tbody>
@@ -402,6 +410,8 @@
                                                         <option value="Late" ${log.status == 'Late' ? 'selected' : ''}>Late</option>
                                                         <option value="On Time" ${log.status == 'On Time' ? 'selected' : ''}>On Time</option>
                                                         <option value="Shift day" ${log.status == 'Shift day' ? 'selected' : ''}>Shift day</option>
+                                                        <option value="leaving early" ${log.status == 'leaving early' ? 'selected' : ''}>leaving early</option>
+                                                        <option value="Over Time" ${log.status == 'Over Time' ? 'selected' : ''}>Over Time</option>
                                                     </select>
                                                 </td>
                                             </tr>
@@ -434,6 +444,8 @@
                                                     <option value="Late">Late</option>
                                                     <option value="On Time">On Time</option>
                                                     <option value="Shift day">Shift day</option>
+                                                    <option value="leaving early">leaving early</option>
+                                                    <option value="Over Time">Over Time</option>
                                                 </select>
                                             </td>
                                         </tr>
@@ -469,6 +481,8 @@
                                         <option value="Late">Late</option>
                                         <option value="On Time">On Time</option>
                                         <option value="Shift day">Shift day</option>
+                                        <option value="leaving early">leaving early</option>
+                                        <option value="Over Time">Over Time</option>
                                     </select>
                                 </td>
                             </tr>
@@ -505,25 +519,25 @@
 
         <script>
             document.addEventListener("DOMContentLoaded", () => {
-
+                
                 function showEmployeeList(input) {
                     const row = input.closest('.manual-row');
                     const wrapper = input.closest('.employee-select-wrapper');
                     const dropdown = wrapper.querySelector('.custom-dropdown');
-
+                    
                     // Ẩn dropdown khác và remove class active
                     document.querySelectorAll('.manual-row').forEach(r => {
                         r.classList.remove('active-dropdown');
                         r.querySelectorAll('.custom-dropdown').forEach(dl => dl.style.display = 'none');
                     });
-
+                    
                     // Thêm class active cho row hiện tại
                     row.classList.add('active-dropdown');
-
+                    
                     // Hiển thị dropdown hiện tại
                     dropdown.style.display = 'block';
                 }
-
+                
                 function filterEmployeeList(input) {
                     const dropdown = input.closest('.employee-select-wrapper').querySelector('.custom-dropdown');
                     const filter = input.value.toLowerCase();
@@ -536,7 +550,7 @@
                     });
                     dropdown.style.display = hasMatch ? 'block' : 'none';
                 }
-
+                
                 // Chọn item
                 document.addEventListener('click', e => {
                     const li = e.target.closest('.custom-dropdown li');
@@ -544,20 +558,20 @@
                         const wrapper = li.closest('.employee-select-wrapper');
                         const input = wrapper.querySelector('.employee-input');
                         const hidden = wrapper.querySelector('.employee-id-hidden');
-
+                        
                         input.value = li.textContent.trim();
                         hidden.value = li.dataset.id;
-
+                        
                         wrapper.querySelector('.custom-dropdown').style.display = 'none';
                         return;
                     }
-
+                    
                     // Click ra ngoài → ẩn tất cả dropdown
                     if (!e.target.closest('.employee-select-wrapper')) {
                         document.querySelectorAll('.custom-dropdown').forEach(dl => dl.style.display = 'none');
                     }
                 });
-
+                
                 // Focus hoặc click vào input
                 document.addEventListener('focusin', e => {
                     if (e.target.matches('.employee-input')) {
@@ -569,7 +583,7 @@
                         showEmployeeList(e.target);
                     }
                 });
-
+                
             });
         </script>
         <script>
@@ -577,7 +591,7 @@
                 const tbody = document.querySelector("#manualTable tbody");
                 const template = document.getElementById("manualRowTemplate");
                 const selectAll = document.getElementById("selectAllRows");
-
+                
                 // Delete Row
                 document.getElementById("deleteRowBtn").addEventListener("click", () => {
                     const selectedRows = tbody.querySelectorAll(".row-select:checked");
@@ -585,16 +599,16 @@
                         alert("Please select at least one row to delete!");
                         return;
                     }
-
+                    
                     if (confirm(`Are you sure you want to delete ${selectedRows.length} row(s)?`)) {
                         selectedRows.forEach(chk => chk.closest("tr").remove());
                     }
-
+                    
                     // Sau khi xóa xong: bỏ chọn tất cả checkbox
                     selectAll.checked = false;
                     tbody.querySelectorAll(".row-select").forEach(chk => chk.checked = false);
                 });
-
+                
                 // Select / Deselect All
                 selectAll.addEventListener("change", () => {
                     tbody.querySelectorAll(".row-select").forEach(chk => chk.checked = selectAll.checked);
@@ -609,34 +623,34 @@
                         tab.classList.remove("active");
                         tab.style.display = "none";
                     });
-
+                    
                     // Hiện tab được chọn
                     const selectedTab = document.getElementById(tabId);
                     if (selectedTab) {
                         selectedTab.classList.add("active");
                         selectedTab.style.display = "block";
                     }
-
+                    
                     // Cập nhật nút
                     document.querySelectorAll(".tab-btn").forEach(btn => {
                         btn.classList.remove("active");
                         btn.setAttribute("aria-selected", "false");
                     });
-
+                    
                     const activeBtn = document.getElementById(tabId + "-btn");
                     if (activeBtn) {
                         activeBtn.classList.add("active");
                         activeBtn.setAttribute("aria-selected", "true");
                     }
-
+                    
                     // Cập nhật hidden input trong form để submit giữ tab
                     document.querySelectorAll('input[name="activeTab"]').forEach(input => input.value = tabId);
                 }
-
+                
                 // Lấy giá trị từ JSTL
                 const activeTab = "${activeTab}";
                 showTab(activeTab);
-
+                
                 // Khi click nút tab
                 document.querySelectorAll(".tab-btn").forEach(btn => {
                     btn.addEventListener("click", () => {
@@ -649,7 +663,7 @@
         <script>
             document.addEventListener("DOMContentLoaded", () => {
                 const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
-
+                
                 document.querySelectorAll(".date-input").forEach(input => {
                     input.setAttribute("max", today); // chỉ chọn ngày hiện tại trở về
                 });

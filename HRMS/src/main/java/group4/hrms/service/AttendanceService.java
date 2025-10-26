@@ -98,19 +98,29 @@ public class AttendanceService {
         } else if ("Import".equalsIgnoreCase(action)) {
             AttendanceLogDao attendanceLogDAO = new AttendanceLogDao();
 
-            Map<String, List<AttendanceLogDto>> validated = attendanceLogDAO.validateAndImportExcelLogs(dtos);
-            List<AttendanceLogDto> validLogsDto = validated.get("valid");
-            List<AttendanceLogDto> invalidLogsDto = validated.get("invalid");
+            // Bước 1: Kiểm tra mâu thuẫn nội bộ trong Excel
+            Map<String, List<AttendanceLogDto>> excelValidation = attendanceLogDAO.validateExcelInternalConsistency(dtos);
+            List<AttendanceLogDto> excelValidLogs = excelValidation.get("valid");
+            List<AttendanceLogDto> invalidLogsDto = excelValidation.get("invalid"); // lưu tạm danh sách invalid từ Excel
 
-            System.out.println(validLogsDto);
-            System.out.println(invalidLogsDto);
+            // Bước 2: Kiểm tra mâu thuẫn với DB
+            Map<String, List<AttendanceLogDto>> dbValidation = attendanceLogDAO.validateAndImportExcelLogs(excelValidLogs);
+            List<AttendanceLogDto> dbValidLogs = dbValidation.get("valid");
+            List<AttendanceLogDto> dbInvalidLogs = dbValidation.get("invalid");
 
-            List<AttendanceLog> logs = AttendanceMapper.convertDtoToEntity(validLogsDto);
+            // Gộp tất cả invalid từ Excel và DB
+            if (dbInvalidLogs != null && !dbInvalidLogs.isEmpty()) {
+                invalidLogsDto.addAll(dbInvalidLogs);
+            }
 
+            // Lưu lại danh sách valid để import
+            List<AttendanceLog> logs = AttendanceMapper.convertDtoToEntity(dbValidLogs);
             attendanceLogDAO.saveAttendanceLogs(logs);
 
-            req.setAttribute("success", "Imported " + validLogsDto.size() + " valid attendance logs successfully.");
-            if (invalidLogsDto != null && !invalidLogsDto.isEmpty()) {
+            req.setAttribute("success", "Imported " + dbValidLogs.size() + " valid attendance logs successfully.");
+
+            // Hiển thị invalid logs
+            if (!invalidLogsDto.isEmpty()) {
                 int page = 1;
                 String pageParam = req.getParameter("invalidPage");
                 if (pageParam != null) {

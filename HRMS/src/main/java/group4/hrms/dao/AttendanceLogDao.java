@@ -939,19 +939,46 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
         }
 
         try (Connection conn = DatabaseUtil.getConnection()) {
-            // Không cần transaction nữa vì không insert
             for (AttendanceLogDto log : excelLogs) {
                 boolean hasConflict = false;
 
-                if (log.getUserId() == null || log.getDate() == null
-                        || (log.getCheckIn() == null && log.getCheckOut() == null)) {
+                // Check cơ bản: thông tin bắt buộc
+                if (log.getUserId() == null) {
+                    log.setError("Invalid: userId is missing");
                     invalidLogs.add(log);
                     continue;
                 }
 
-                if (log.getDate().isAfter(LocalDate.now())) {
+                if (log.getDate() == null) {
+                    log.setError("Invalid: date is missing");
                     invalidLogs.add(log);
                     continue;
+                }
+
+                if (log.getCheckIn() == null && log.getCheckOut() == null) {
+                    log.setError("Invalid: both checkIn and checkOut are missing");
+                    invalidLogs.add(log);
+                    continue;
+                }
+
+                // Check ngày không được ở tương lai
+                if (log.getDate().isAfter(LocalDate.now())) {
+                    log.setError("Invalid: date is in the future");
+                    invalidLogs.add(log);
+                    continue;
+                }
+
+                // Check userId tồn tại trong DB
+                String checkUserSql = "SELECT COUNT(1) FROM users WHERE id = ?";
+                try (PreparedStatement stmt = conn.prepareStatement(checkUserSql)) {
+                    stmt.setLong(1, log.getUserId());
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        if (rs.next() && rs.getInt(1) == 0) {
+                            log.setError("Invalid: userId does not exist in the system");
+                            invalidLogs.add(log);
+                            continue;
+                        }
+                    }
                 }
 
                 LocalDateTime newCheckIn = log.getCheckIn() != null ? log.getDate().atTime(log.getCheckIn()) : null;
@@ -993,7 +1020,6 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                 ins.sort(Comparator.naturalOrder());
                 outs.sort(Comparator.naturalOrder());
 
-                // Ghép cặp check-in/out
                 List<Pair<LocalDateTime, LocalDateTime>> existingPairs = new ArrayList<>();
                 List<LocalDateTime> remainingIns = new ArrayList<>(ins);
                 List<LocalDateTime> remainingOuts = new ArrayList<>(outs);
@@ -1032,31 +1058,119 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                     if (overlap) {
                         log.setOldCheckIn(existIn.toLocalTime());
                         log.setOldCheckOut(existOut.toLocalTime());
+                        log.setError("Invalid: duplicate or overlapping attendance");
                         hasConflict = true;
                         break;
-                    }
-                }
-
-                // Kiểm tra các check-in/check-out dư thừa
-                if (!hasConflict) {
-                    for (LocalDateTime extraIn : remainingIns) {
-                        if (newCheckIn != null && !newCheckIn.isBefore(extraIn) && !newCheckIn.isAfter(extraIn.plusHours(8))) {
-                            hasConflict = true;
-                            break;
-                        }
-                    }
-                    for (LocalDateTime extraOut : remainingOuts) {
-                        if (newCheckOut != null && !newCheckOut.isBefore(extraOut.minusHours(8)) && !newCheckOut.isAfter(extraOut)) {
-                            hasConflict = true;
-                            break;
-                        }
                     }
                 }
 
                 if (hasConflict) {
                     invalidLogs.add(log);
                 } else {
-                    validLogs.add(log); // Chỉ phân loại, không insert vào DB
+                    validLogs.add(log);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public Map<String, List<AttendanceLogDto>> validateExcelInternalConsistency(List<AttendanceLogDto> excelLogs) {
+        Map<String, List<AttendanceLogDto>> result = new HashMap<>();
+        List<AttendanceLogDto> validLogs = new ArrayList<>();
+        List<AttendanceLogDto> invalidLogs = new ArrayList<>();
+        result.put("valid", validLogs);
+        result.put("invalid", invalidLogs);
+
+        if (excelLogs == null || excelLogs.isEmpty()) {
+            return result;
+        }
+
+        // Map để lưu danh sách log theo user + date
+        Map<String, List<AttendanceLogDto>> logsByUserDate = new HashMap<>();
+
+        for (AttendanceLogDto log : excelLogs) {
+            // Check cơ bản: thông tin bắt buộc
+            if (log.getUserId() == null) {
+                log.setError("Invalid: userId is missing");
+                invalidLogs.add(log);
+                continue;
+            }
+
+            if (log.getDate() == null) {
+                log.setError("Invalid: date is missing");
+                invalidLogs.add(log);
+                continue;
+            }
+
+            if (log.getCheckIn() == null && log.getCheckOut() == null) {
+                log.setError("Invalid: both checkIn and checkOut are missing");
+                invalidLogs.add(log);
+                continue;
+            }
+
+            // Check ngày không được ở tương lai
+            if (log.getDate().isAfter(LocalDate.now())) {
+                log.setError("Invalid: date is in the future");
+                invalidLogs.add(log);
+                continue;
+            }
+
+            String key = log.getUserId() + "_" + log.getDate();
+            logsByUserDate.computeIfAbsent(key, k -> new ArrayList<>()).add(log);
+        }
+
+        // Duyệt từng nhóm user + date
+        for (Map.Entry<String, List<AttendanceLogDto>> entry : logsByUserDate.entrySet()) {
+            List<AttendanceLogDto> group = entry.getValue();
+
+            // Chuẩn hóa thời gian checkIn/Out
+            List<Pair<AttendanceLogDto, Pair<LocalDateTime, LocalDateTime>>> times = new ArrayList<>();
+            for (AttendanceLogDto log : group) {
+                LocalDateTime checkIn = log.getCheckIn() != null ? log.getDate().atTime(log.getCheckIn()) : null;
+                LocalDateTime checkOut = null;
+                if (log.getCheckOut() != null) {
+                    if (log.getCheckIn() != null && log.getCheckOut().isBefore(log.getCheckIn())) {
+                        checkOut = log.getDate().plusDays(1).atTime(log.getCheckOut());
+                    } else {
+                        checkOut = log.getDate().atTime(log.getCheckOut());
+                    }
+                }
+                times.add(Pair.of(log, Pair.of(checkIn, checkOut)));
+            }
+
+            // Kiểm tra trùng lặp trong nhóm
+            int n = times.size();
+            for (int i = 0; i < n; i++) {
+                LocalDateTime in1 = times.get(i).getRight().getLeft();
+                LocalDateTime out1 = times.get(i).getRight().getRight();
+                for (int j = i + 1; j < n; j++) {
+                    LocalDateTime in2 = times.get(j).getRight().getLeft();
+                    LocalDateTime out2 = times.get(j).getRight().getRight();
+
+                    boolean overlap = false;
+                    if (in1 != null && out1 != null && in2 != null && out2 != null) {
+                        overlap = in1.isBefore(out2) && out1.isAfter(in2);
+                    } else if (in1 != null && in2 != null && out2 != null) {
+                        overlap = !in1.isBefore(in2) && !in1.isAfter(out2);
+                    } else if (out1 != null && in2 != null && out2 != null) {
+                        overlap = !out1.isBefore(in2) && !out1.isAfter(out2);
+                    }
+
+                    if (overlap) {
+                        times.get(i).getLeft().setError("Invalid: duplicate attendance in Excel");
+                        times.get(j).getLeft().setError("Invalid: duplicate attendance in Excel");
+                    }
+                }
+            }
+
+            // Phân loại valid/invalid
+            for (Pair<AttendanceLogDto, Pair<LocalDateTime, LocalDateTime>> pair : times) {
+                AttendanceLogDto log = pair.getLeft();
+                if (log.getError() != null) {
+                    invalidLogs.add(log);
+                } else {
+                    validLogs.add(log);
                 }
             }
         }
