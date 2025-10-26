@@ -379,11 +379,12 @@
                                     <div class="form-group">
                                         <label for="gender">Gender<span class="required">*</span></label>
                                         <select id="gender" name="gender"
-                                            class="form-select ${not empty errors and empty gender ? 'is-invalid' : ''}"
+                                            class="form-select ${not empty errors and empty selectedGender ? 'is-invalid' : ''}"
                                             required>
                                             <option value="">Select Gender</option>
-                                            <option value="male" ${gender=='male' ? 'selected' : '' }>Male</option>
-                                            <option value="female" ${gender=='female' ? 'selected' : '' }>Female
+                                            <option value="male" ${selectedGender=='male' ? 'selected' : '' }>Male
+                                            </option>
+                                            <option value="female" ${selectedGender=='female' ? 'selected' : '' }>Female
                                             </option>
                                         </select>
                                     </div>
