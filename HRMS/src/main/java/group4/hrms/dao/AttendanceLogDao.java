@@ -465,14 +465,7 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
 
         sql.append(" ORDER BY al.user_id, al.checked_at");
 
-        if (paged) {
-            sql.append(" LIMIT ? OFFSET ?");
-            params.add(limit);
-            params.add(offset);
-        }
-
-        List<AttendanceLogDto> results = new ArrayList<>();
-
+        List<AttendanceLog> logs = new ArrayList<>();
         try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
 
             for (int i = 0; i < params.size(); i++) {
@@ -483,14 +476,10 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                     stmt.setDate(i + 1, d);
                 } else if (param instanceof String s) {
                     stmt.setString(i + 1, s);
-                } else if (param instanceof Integer in) {
-                    stmt.setInt(i + 1, in);
                 }
             }
 
             try (ResultSet rs = stmt.executeQuery()) {
-                Map<Long, List<AttendanceLog>> logsByUser = new LinkedHashMap<>();
-
                 while (rs.next()) {
                     AttendanceLog log = new AttendanceLog();
                     log.setId(rs.getLong("id"));
@@ -501,91 +490,100 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                     log.setNote(rs.getString("note"));
                     log.setSource(rs.getString("source"));
                     log.setPeriodId(rs.getLong("period_id"));
-                    log.setCreatedAt(ts != null ? ts.toLocalDateTime() : null);
-
                     log.setEmployeeName(rs.getString("employee_name"));
                     log.setDepartmentName(rs.getString("department_name"));
                     log.setPeriodName(rs.getString("period_name"));
                     log.setPeriodLocked(rs.getBoolean("period_locked"));
-
-                    logsByUser.computeIfAbsent(log.getUserId(), k -> new ArrayList<>()).add(log);
-                }
-
-                for (List<AttendanceLog> logs : logsByUser.values()) {
-                    logs.sort(Comparator.comparing(AttendanceLog::getCheckedAt));
-
-                    // Group logs theo ngày
-                    Map<LocalDate, List<AttendanceLog>> logsByDate = logs.stream()
-                            .collect(Collectors.groupingBy(l -> l.getCheckedAt().toLocalDate(),
-                                    LinkedHashMap::new, Collectors.toList()));
-
-                    for (Map.Entry<LocalDate, List<AttendanceLog>> entry : logsByDate.entrySet()) {
-                        LocalDate date = entry.getKey();
-                        List<AttendanceLog> dayLogs = entry.getValue();
-
-                        Queue<AttendanceLog> pendingIns = new LinkedList<>();
-                        Queue<AttendanceLog> pendingOuts = new LinkedList<>();
-
-                        for (AttendanceLog log : dayLogs) {
-                            if ("IN".equalsIgnoreCase(log.getCheckType())) {
-                                pendingIns.add(log);
-                            } else {
-                                pendingOuts.add(log);
-                            }
-                        }
-
-                        while (!pendingIns.isEmpty() || !pendingOuts.isEmpty()) {
-                            AttendanceLog inLog = pendingIns.poll();
-                            AttendanceLog outLog = null;
-
-                            if (inLog != null) {
-                                for (Iterator<AttendanceLog> it = pendingOuts.iterator(); it.hasNext();) {
-                                    AttendanceLog candidate = it.next();
-                                    if (!candidate.getCheckedAt().isBefore(inLog.getCheckedAt())) {
-                                        outLog = candidate;
-                                        it.remove();
-                                        break;
-                                    }
-                                }
-                                if (outLog == null && !pendingOuts.isEmpty()) {
-                                    outLog = pendingOuts.poll();
-                                }
-                            } else if (!pendingOuts.isEmpty()) {
-                                outLog = pendingOuts.poll();
-                            }
-
-                            AttendanceLogDto dto = new AttendanceLogDto();
-                            if (inLog != null) {
-                                dto.setUserId(inLog.getUserId());
-                                dto.setEmployeeName(inLog.getEmployeeName());
-                                dto.setDepartment(inLog.getDepartmentName());
-                                dto.setDate(date);
-                                dto.setCheckIn(inLog.getCheckedAt().toLocalTime());
-                                dto.setStatus(inLog.getNote());
-                                dto.setSource(inLog.getSource());
-                                dto.setPeriod(inLog.getPeriodName());
-                                dto.setIsLocked(inLog.isPeriodLocked());
-                            }
-                            if (outLog != null) {
-                                dto.setUserId(dto.getUserId() != null ? dto.getUserId() : outLog.getUserId());
-                                dto.setEmployeeName(dto.getEmployeeName() != null ? dto.getEmployeeName() : outLog.getEmployeeName());
-                                dto.setDepartment(dto.getDepartment() != null ? dto.getDepartment() : outLog.getDepartmentName());
-                                dto.setDate(dto.getDate() != null ? dto.getDate() : date);
-                                dto.setCheckOut(outLog.getCheckedAt().toLocalTime());
-                                dto.setStatus(dto.getStatus() != null ? dto.getStatus() : outLog.getNote());
-                                dto.setSource(dto.getSource() != null ? dto.getSource() : outLog.getSource());
-                                dto.setPeriod(dto.getPeriod() != null ? dto.getPeriod() : outLog.getPeriodName());
-                                dto.setIsLocked(dto.isIsLocked() || outLog.isPeriodLocked());
-                            }
-
-                            results.add(dto);
-                        }
-                    }
+                    logs.add(log);
                 }
             }
         }
 
-        return results;
+        // -------------------------
+        //  Ghép IN/OUT thành DTO
+        // -------------------------
+        Map<Long, List<AttendanceLog>> logsByUser = logs.stream()
+                .collect(Collectors.groupingBy(AttendanceLog::getUserId, LinkedHashMap::new, Collectors.toList()));
+
+        List<AttendanceLogDto> allDtos = new ArrayList<>();
+
+        for (List<AttendanceLog> userLogs : logsByUser.values()) {
+            userLogs.sort(Comparator.comparing(AttendanceLog::getCheckedAt));
+            Map<LocalDate, List<AttendanceLog>> logsByDate = userLogs.stream()
+                    .collect(Collectors.groupingBy(l -> l.getCheckedAt().toLocalDate(),
+                            LinkedHashMap::new, Collectors.toList()));
+
+            for (Map.Entry<LocalDate, List<AttendanceLog>> entry : logsByDate.entrySet()) {
+                LocalDate date = entry.getKey();
+                List<AttendanceLog> dayLogs = entry.getValue();
+                Queue<AttendanceLog> pendingIns = new LinkedList<>();
+                Queue<AttendanceLog> pendingOuts = new LinkedList<>();
+
+                for (AttendanceLog log : dayLogs) {
+                    if ("IN".equalsIgnoreCase(log.getCheckType())) {
+                        pendingIns.add(log);
+                    } else {
+                        pendingOuts.add(log);
+                    }
+                }
+
+                while (!pendingIns.isEmpty() || !pendingOuts.isEmpty()) {
+                    AttendanceLog inLog = pendingIns.poll();
+                    AttendanceLog outLog = null;
+                    if (inLog != null) {
+                        for (Iterator<AttendanceLog> it = pendingOuts.iterator(); it.hasNext();) {
+                            AttendanceLog candidate = it.next();
+                            if (!candidate.getCheckedAt().isBefore(inLog.getCheckedAt())) {
+                                outLog = candidate;
+                                it.remove();
+                                break;
+                            }
+                        }
+                        if (outLog == null && !pendingOuts.isEmpty()) {
+                            outLog = pendingOuts.poll();
+                        }
+                    } else if (!pendingOuts.isEmpty()) {
+                        outLog = pendingOuts.poll();
+                    }
+
+                    AttendanceLogDto dto = new AttendanceLogDto();
+                    if (inLog != null) {
+                        dto.setUserId(inLog.getUserId());
+                        dto.setEmployeeName(inLog.getEmployeeName());
+                        dto.setDepartment(inLog.getDepartmentName());
+                        dto.setDate(date);
+                        dto.setCheckIn(inLog.getCheckedAt().toLocalTime());
+                        dto.setStatus(inLog.getNote());
+                        dto.setSource(inLog.getSource());
+                        dto.setPeriod(inLog.getPeriodName());
+                        dto.setIsLocked(inLog.isPeriodLocked());
+                    }
+                    if (outLog != null) {
+                        dto.setUserId(dto.getUserId() != null ? dto.getUserId() : outLog.getUserId());
+                        dto.setEmployeeName(dto.getEmployeeName() != null ? dto.getEmployeeName() : outLog.getEmployeeName());
+                        dto.setDepartment(dto.getDepartment() != null ? dto.getDepartment() : outLog.getDepartmentName());
+                        dto.setDate(dto.getDate() != null ? dto.getDate() : date);
+                        dto.setCheckOut(outLog.getCheckedAt().toLocalTime());
+                        dto.setStatus(dto.getStatus() != null ? dto.getStatus() : outLog.getNote());
+                        dto.setSource(dto.getSource() != null ? dto.getSource() : outLog.getSource());
+                        dto.setPeriod(dto.getPeriod() != null ? dto.getPeriod() : outLog.getPeriodName());
+                        dto.setIsLocked(dto.isIsLocked() || outLog.isPeriodLocked());
+                    }
+                    allDtos.add(dto);
+                }
+            }
+        }
+
+        // -------------------------
+        //  Pagination trên DTO
+        // -------------------------
+        if (paged) {
+            int start = Math.min(offset, allDtos.size());
+            int end = Math.min(offset + limit, allDtos.size());
+            return allDtos.subList(start, end);
+        } else {
+            return allDtos;
+        }
     }
 
     //Đếm số bản ghi để phân trang
@@ -601,22 +599,11 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
     ) throws SQLException {
 
         StringBuilder sql = new StringBuilder("""
-        SELECT 
-            al.id,
-            al.user_id,
-            al.check_type,
-            al.checked_at,
-            al.note,
-            al.source,
-            al.period_id,
-            u.full_name AS employee_name,
-            d.name AS department_name,
-            tp.name AS period_name,
-            COALESCE(tp.is_locked, FALSE) AS period_locked
+        SELECT al.id, al.user_id, al.check_type, al.checked_at, al.note, al.source, al.period_id,
+               u.full_name AS employee_name, d.name AS department_name
         FROM attendance_logs al
         LEFT JOIN users u ON al.user_id = u.id
         LEFT JOIN departments d ON u.department_id = d.id
-        LEFT JOIN timesheet_periods tp ON al.period_id = tp.id
         WHERE 1=1
     """);
 
@@ -681,8 +668,8 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
             }
 
             try (ResultSet rs = stmt.executeQuery()) {
-
-                Map<Long, List<AttendanceLog>> logsByUser = new LinkedHashMap<>();
+                // Map userId -> Map date -> List<AttendanceLog>
+                Map<Long, Map<LocalDate, List<AttendanceLog>>> logsByUserByDate = new LinkedHashMap<>();
 
                 while (rs.next()) {
                     AttendanceLog log = new AttendanceLog();
@@ -690,34 +677,38 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                     log.setUserId(rs.getLong("user_id"));
                     log.setCheckType(rs.getString("check_type"));
                     Timestamp ts = rs.getTimestamp("checked_at");
-                    log.setCheckedAt(ts != null ? ts.toLocalDateTime() : null);
+                    LocalDateTime dateTime = ts != null ? ts.toLocalDateTime() : null;
+                    log.setCheckedAt(dateTime);
                     log.setNote(rs.getString("note"));
                     log.setSource(rs.getString("source"));
                     log.setPeriodId(rs.getLong("period_id"));
 
-                    logsByUser.computeIfAbsent(log.getUserId(), k -> new ArrayList<>()).add(log);
+                    LocalDate date = dateTime.toLocalDate();
+
+                    logsByUserByDate
+                            .computeIfAbsent(log.getUserId(), k -> new LinkedHashMap<>())
+                            .computeIfAbsent(date, k -> new ArrayList<>())
+                            .add(log);
                 }
 
-                // Ghép check-in / check-out giống findByFilter
-                for (List<AttendanceLog> logs : logsByUser.values()) {
-                    logs.sort(Comparator.comparing(AttendanceLog::getCheckedAt));
-
-                    AttendanceLogDto currentDto = null;
-
-                    for (AttendanceLog log : logs) {
-                        if ("IN".equals(log.getCheckType())) {
-                            currentDto = new AttendanceLogDto();
-                            currentDto.setCheckIn(log.getCheckedAt().toLocalTime());
-                        } else if ("OUT".equals(log.getCheckType()) && currentDto != null) {
-                            currentDto.setCheckOut(log.getCheckedAt().toLocalTime());
-                            count++; // mỗi cặp IN/OUT là 1 record
-                            currentDto = null;
+                // Ghép check-in / check-out theo user + date
+                for (Map<LocalDate, List<AttendanceLog>> logsByDate : logsByUserByDate.values()) {
+                    for (List<AttendanceLog> logs : logsByDate.values()) {
+                        logs.sort(Comparator.comparing(AttendanceLog::getCheckedAt));
+                        AttendanceLogDto currentDto = null;
+                        for (AttendanceLog log : logs) {
+                            if ("IN".equals(log.getCheckType())) {
+                                currentDto = new AttendanceLogDto();
+                                currentDto.setCheckIn(log.getCheckedAt().toLocalTime());
+                            } else if ("OUT".equals(log.getCheckType()) && currentDto != null) {
+                                currentDto.setCheckOut(log.getCheckedAt().toLocalTime());
+                                count++; // mỗi cặp IN/OUT = 1 dòng FE
+                                currentDto = null;
+                            }
                         }
-                    }
-
-                    // Nếu còn IN chưa có OUT, vẫn đếm 1
-                    if (currentDto != null) {
-                        count++;
+                        if (currentDto != null) {
+                            count++; // còn IN chưa có OUT
+                        }
                     }
                 }
             }
@@ -797,6 +788,22 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
         try (Connection conn = DatabaseUtil.getConnection()) {
             for (AttendanceLogDto log : manualLogs) {
                 boolean hasConflict = false;
+
+                String checkPeriodSql = """
+                SELECT COALESCE(tp.is_locked, FALSE)
+                FROM timesheet_periods tp
+                WHERE ? BETWEEN tp.date_start AND tp.date_end
+                """;
+                try (PreparedStatement stmt = conn.prepareStatement(checkPeriodSql)) {
+                    stmt.setDate(1, java.sql.Date.valueOf(log.getDate()));
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        if (rs.next() && rs.getBoolean(1)) {
+                            log.setError("Invalid: period is locked");
+                            invalidLogs.add(log);
+                            continue; // bỏ qua log này
+                        }
+                    }
+                }
 
                 if (log.getUserId() == null || log.getDate() == null
                         || (log.getCheckIn() == null && log.getCheckOut() == null)) {
@@ -942,33 +949,33 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
             for (AttendanceLogDto log : excelLogs) {
                 boolean hasConflict = false;
 
-                // Check cơ bản: thông tin bắt buộc
+                // -----------------------------
+                // Kiểm tra bắt buộc
+                // -----------------------------
                 if (log.getUserId() == null) {
                     log.setError("Invalid: userId is missing");
                     invalidLogs.add(log);
                     continue;
                 }
-
                 if (log.getDate() == null) {
                     log.setError("Invalid: date is missing");
                     invalidLogs.add(log);
                     continue;
                 }
-
                 if (log.getCheckIn() == null && log.getCheckOut() == null) {
                     log.setError("Invalid: both checkIn and checkOut are missing");
                     invalidLogs.add(log);
                     continue;
                 }
-
-                // Check ngày không được ở tương lai
                 if (log.getDate().isAfter(LocalDate.now())) {
                     log.setError("Invalid: date is in the future");
                     invalidLogs.add(log);
                     continue;
                 }
 
-                // Check userId tồn tại trong DB
+                // -----------------------------
+                // Kiểm tra user tồn tại
+                // -----------------------------
                 String checkUserSql = "SELECT COUNT(1) FROM users WHERE id = ?";
                 try (PreparedStatement stmt = conn.prepareStatement(checkUserSql)) {
                     stmt.setLong(1, log.getUserId());
@@ -981,6 +988,28 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                     }
                 }
 
+                // -----------------------------
+                // Kiểm tra kỳ công đã khóa
+                // -----------------------------
+                String checkPeriodSql = """
+    SELECT COALESCE(tp.is_locked, FALSE)
+    FROM timesheet_periods tp
+    WHERE ? BETWEEN tp.date_start AND tp.date_end
+    """;
+                try (PreparedStatement stmt = conn.prepareStatement(checkPeriodSql)) {
+                    stmt.setDate(1, java.sql.Date.valueOf(log.getDate()));
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        if (rs.next() && rs.getBoolean(1)) {
+                            log.setError("Invalid: period is locked");
+                            invalidLogs.add(log);
+                            continue;
+                        }
+                    }
+                }
+
+                // -----------------------------
+                // Chuẩn bị check trùng IN/OUT
+                // -----------------------------
                 LocalDateTime newCheckIn = log.getCheckIn() != null ? log.getDate().atTime(log.getCheckIn()) : null;
                 LocalDateTime newCheckOut = null;
                 if (log.getCheckOut() != null) {
@@ -999,7 +1028,6 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                 try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                     stmt.setLong(1, log.getUserId());
                     stmt.setDate(2, java.sql.Date.valueOf(log.getDate()));
-
                     try (ResultSet rs = stmt.executeQuery()) {
                         while (rs.next()) {
                             String type = rs.getString("check_type");
@@ -1041,7 +1069,9 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                     existingPairs.add(Pair.of(in, out));
                 }
 
-                // Kiểm tra trùng với các cặp
+                // -----------------------------
+                // Kiểm tra trùng
+                // -----------------------------
                 for (Pair<LocalDateTime, LocalDateTime> pair : existingPairs) {
                     LocalDateTime existIn = pair.getLeft();
                     LocalDateTime existOut = pair.getRight();

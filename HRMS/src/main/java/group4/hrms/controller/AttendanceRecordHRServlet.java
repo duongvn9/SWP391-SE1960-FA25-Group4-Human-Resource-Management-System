@@ -81,10 +81,11 @@ public class AttendanceRecordHRServlet extends HttpServlet {
                 endDate = now.withDayOfMonth(now.lengthOfMonth());
             }
 
+            // 1. Lấy danh sách DTO có paginate trực tiếp
             List<AttendanceLogDto> attendanceList = attendanceLogDao.findByFilter(
                     null,
-                    department,
                     null,
+                    department,
                     startDate,
                     endDate,
                     status,
@@ -95,18 +96,26 @@ public class AttendanceRecordHRServlet extends HttpServlet {
                     true
             );
 
+            // 2. Đếm tổng số DTO (count phải tương thích với findByFilter)
             int totalRecords = attendanceLogDao.countByFilter(
                     null,
-                    department,
                     null,
+                    department,
                     startDate,
                     endDate,
                     status,
                     source,
                     periodId
             );
+
+            System.out.println("---------------------");
+            System.out.println("Số bản ghi khi filter xong: " + attendanceList.size());
+            System.out.println("Số bản ghi đếm được: " + totalRecords);
+            System.out.println("----------------------");
+            
             int totalPages = PaginationUtil.calculateTotalPages(totalRecords, recordsPerPage);
 
+            // 3. Đẩy dữ liệu ra JSP
             req.setAttribute("attendanceList", attendanceList);
             req.setAttribute("periodList", tDAO.findAll());
             req.setAttribute("departmentList", dDAO.findAll());
@@ -237,6 +246,10 @@ public class AttendanceRecordHRServlet extends HttpServlet {
                     offset,
                     true
             );
+
+            System.out.println("totalRecords=" + totalRecords);
+            System.out.println("recordsPerPage=" + recordsPerPage);
+            System.out.println("currentPage=" + currentPage);
 
             req.setAttribute("attendanceList", attendanceList);
             req.setAttribute("periodList", tDAO.findAll());
