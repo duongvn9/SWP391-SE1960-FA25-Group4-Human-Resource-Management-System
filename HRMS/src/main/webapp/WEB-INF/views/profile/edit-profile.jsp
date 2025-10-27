@@ -291,12 +291,12 @@
                     </div>
                 </div>
 
-                <!-- City & State -->
-                <div class="form-row two-columns">
+                <!-- City -->
+                <div class="form-row">
                     <label class="form-label">City: </label>
-                    <input type="text" name="city" class="form-control" value="${profile.city}">
-                    <label class="label-inline">State:</label>
-                    <input type="text" name="state" class="form-control" value="${profile.state}">
+                    <div class="form-input-wrapper">
+                        <input type="text" name="city" class="form-control" value="${profile.city}">
+                    </div>
                 </div>
 
                 <!-- Postal Code -->
