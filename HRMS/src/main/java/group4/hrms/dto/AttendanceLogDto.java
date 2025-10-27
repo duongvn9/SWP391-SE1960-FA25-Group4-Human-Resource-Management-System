@@ -26,8 +26,18 @@ public class AttendanceLogDto {
     
     private transient LocalTime oldCheckIn;
     private transient LocalTime oldCheckOut;
+    
+    private String error;
 
     public AttendanceLogDto() {
+    }
+
+    public String getError() {
+        return error;
+    }
+
+    public void setError(String error) {
+        this.error = error;
     }
 
     public LocalTime getOldCheckIn() {

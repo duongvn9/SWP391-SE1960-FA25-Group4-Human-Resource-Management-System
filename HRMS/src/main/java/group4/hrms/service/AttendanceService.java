@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -96,9 +97,61 @@ public class AttendanceService {
 
         } else if ("Import".equalsIgnoreCase(action)) {
             AttendanceLogDao attendanceLogDAO = new AttendanceLogDao();
-            List<AttendanceLog> logs = AttendanceMapper.convertDtoToEntity(dtos);
+
+            // Bước 1: Kiểm tra mâu thuẫn nội bộ trong Excel
+            Map<String, List<AttendanceLogDto>> excelValidation = attendanceLogDAO.validateExcelInternalConsistency(dtos);
+            List<AttendanceLogDto> excelValidLogs = excelValidation.get("valid");
+            List<AttendanceLogDto> invalidLogsDto = excelValidation.get("invalid"); // lưu tạm danh sách invalid từ Excel
+
+            // Bước 2: Kiểm tra mâu thuẫn với DB
+            Map<String, List<AttendanceLogDto>> dbValidation = attendanceLogDAO.validateAndImportExcelLogs(excelValidLogs);
+            List<AttendanceLogDto> dbValidLogs = dbValidation.get("valid");
+            List<AttendanceLogDto> dbInvalidLogs = dbValidation.get("invalid");
+
+            // Gộp tất cả invalid từ Excel và DB
+            if (dbInvalidLogs != null && !dbInvalidLogs.isEmpty()) {
+                invalidLogsDto.addAll(dbInvalidLogs);
+            }
+
+            // Lưu lại danh sách valid để import
+            List<AttendanceLog> logs = AttendanceMapper.convertDtoToEntity(dbValidLogs);
             attendanceLogDAO.saveAttendanceLogs(logs);
-            req.setAttribute("success", "Imported " + logs.size() + " attendance logs successfully.");
+
+            req.setAttribute("success", "Imported " + dbValidLogs.size() + " valid attendance logs successfully.");
+
+            // Hiển thị invalid logs
+            if (!invalidLogsDto.isEmpty()) {
+                int page = 1;
+                String pageParam = req.getParameter("invalidPage");
+                if (pageParam != null) {
+                    try {
+                        page = Integer.parseInt(pageParam);
+                        if (page < 1) {
+                            page = 1;
+                        }
+                    } catch (NumberFormatException e) {
+                        page = 1;
+                    }
+                }
+
+                int recordsPerPage = 10;
+                int totalInvalid = invalidLogsDto.size();
+                int totalPages = (int) Math.ceil((double) totalInvalid / recordsPerPage);
+
+                int fromIndex = (page - 1) * recordsPerPage;
+                int toIndex = Math.min(fromIndex + recordsPerPage, totalInvalid);
+
+                List<AttendanceLogDto> pageInvalidLogs = new ArrayList<>();
+                if (fromIndex < totalInvalid) {
+                    pageInvalidLogs = invalidLogsDto.subList(fromIndex, toIndex);
+                }
+
+                req.setAttribute("invalidLogsExcel", pageInvalidLogs);
+                req.setAttribute("invalidCurrentPage", page);
+                req.setAttribute("invalidTotalPages", totalPages);
+                req.getSession().setAttribute("invalidLogsAll", invalidLogsDto);
+                req.setAttribute("warning", invalidLogsDto.size() + " records were invalid and not imported.");
+            }
 
             Files.deleteIfExists(tempFilePath);
             req.getSession().removeAttribute("uploadedFile");
