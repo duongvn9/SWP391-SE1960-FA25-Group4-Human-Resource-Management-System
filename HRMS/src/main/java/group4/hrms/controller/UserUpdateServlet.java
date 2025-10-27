@@ -185,29 +185,28 @@ public class UserUpdateServlet extends HttpServlet {
                             ? Long.parseLong(departmentIdStr.trim())
                             : user.getDepartmentId();
 
-                    // Note: Position validation is now handled by JavaScript in the frontend
-                    // No need to check department-position assignment here
+                    // Check if HR-specific positions are assigned to Human Resource department
+                    if (("HR Manager".equalsIgnoreCase(positionName) || "HR Staff".equalsIgnoreCase(positionName))
+                            && newDepartmentId != null) {
+                        var departments = DropdownCacheUtil.getCachedDepartments(getServletContext());
+                        var department = departments.stream()
+                                .filter(d -> d.getId().equals(newDepartmentId))
+                                .findFirst();
+
+                        if (department.isPresent()
+                                && !"Human Resource".equalsIgnoreCase(department.get().getName())) {
+                            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                            result.put("success", false);
+                            result.put("message", "Position '" + positionName
+                                    + "' can only be assigned to employees in the Human Resource department.");
+                            response.getWriter().write(gson.toJson(result));
+                            return;
+                        }
+                    }
 
                     // Check for Department Manager uniqueness
                     if ("Department Manager".equalsIgnoreCase(positionName)) {
                         if (newDepartmentId != null) {
-                            // Do not allow Department Manager in Human Resource or Admin departments
-                            var departments = DropdownCacheUtil.getCachedDepartments(getServletContext());
-                            var department = departments.stream()
-                                    .filter(d -> d.getId().equals(newDepartmentId))
-                                    .findFirst();
-                            
-                            if (department.isPresent()) {
-                                String deptName = department.get().getName();
-                                if ("Human Resource".equalsIgnoreCase(deptName) || "Admin".equalsIgnoreCase(deptName)) {
-                                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                                    result.put("success", false);
-                                    result.put("message", "Department Manager position is not allowed in " + deptName + " department.");
-                                    response.getWriter().write(gson.toJson(result));
-                                    return;
-                                }
-                            }
-                            
                             java.util.Optional<User> existingManager = userDao.findDepartmentManager(newDepartmentId);
                             if (existingManager.isPresent() && !existingManager.get().getId().equals(userId)) {
                                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -319,12 +318,12 @@ public class UserUpdateServlet extends HttpServlet {
     }
 
     /**
-     * Update user's account role based on position
+     * Update user's account role based on position and department
      * Role assignment logic:
      * - HR Manager position → HR_MANAGER role
-     * - Department Manager → DEPARTMENT_MANAGER role
+     * - Department Manager in Human Resource → HR_MANAGER role
+     * - Department Manager in other departments → DEPARTMENT_MANAGER role
      * - Other positions → no role change
-     * Note: Department Manager is no longer allowed in Human Resource or Admin departments
      */
     private void updateUserRole(User user) {
         // Check if user has an account
@@ -351,10 +350,18 @@ public class UserUpdateServlet extends HttpServlet {
             if ("HR Manager".equalsIgnoreCase(positionName)) {
                 newRoleName = "HR_MANAGER";
             }
-            // If Department Manager, assign DEPARTMENT_MANAGER role
-            // Note: Department Manager is no longer allowed in Human Resource or Admin departments
-            else if ("Department Manager".equalsIgnoreCase(positionName)) {
-                newRoleName = "DEPARTMENT_MANAGER";
+            // If Department Manager, check department
+            else if ("Department Manager".equalsIgnoreCase(positionName) && user.getDepartmentId() != null) {
+                var departments = DropdownCacheUtil.getCachedDepartments(getServletContext());
+                var department = departments.stream()
+                        .filter(d -> d.getId().equals(user.getDepartmentId()))
+                        .findFirst();
+
+                if (department.isPresent() && "Human Resource".equalsIgnoreCase(department.get().getName())) {
+                    newRoleName = "HR_MANAGER";
+                } else {
+                    newRoleName = "DEPARTMENT_MANAGER";
+                }
             }
         }
 
