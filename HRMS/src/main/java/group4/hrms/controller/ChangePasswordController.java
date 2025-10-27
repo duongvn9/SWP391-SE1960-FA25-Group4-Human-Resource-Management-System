@@ -69,41 +69,11 @@ public class ChangePasswordController extends HttpServlet {
             String newPassword = req.getParameter("newPassword");
             String confirmPassword = req.getParameter("confirmPassword");
             
-            // Validate input - check empty fields
-            if (currentPassword == null || currentPassword.trim().isEmpty()) {
-                logger.warn("Current password is empty");
-                req.setAttribute("error", "Current password is required");
-                req.getRequestDispatcher("/WEB-INF/views/account/change-password.jsp").forward(req, resp);
-                return;
-            }
-            
-            if (newPassword == null || newPassword.trim().isEmpty()) {
-                logger.warn("New password is empty");
-                req.setAttribute("error", "New password is required");
-                req.getRequestDispatcher("/WEB-INF/views/account/change-password.jsp").forward(req, resp);
-                return;
-            }
-            
-            if (confirmPassword == null || confirmPassword.trim().isEmpty()) {
-                logger.warn("Confirm password is empty");
-                req.setAttribute("error", "Confirm password is required");
-                req.getRequestDispatcher("/WEB-INF/views/account/change-password.jsp").forward(req, resp);
-                return;
-            }
-            
-            // Check if new password matches confirm password
-            if (!newPassword.equals(confirmPassword)) {
-                logger.warn("New password and confirm password do not match");
-                req.setAttribute("error", "New password and confirm password do not match");
-                req.getRequestDispatcher("/WEB-INF/views/account/change-password.jsp").forward(req, resp);
-                return;
-            }
-            
-            // Validate password strength
-            String passwordError = validatePasswordStrength(newPassword);
-            if (passwordError != null) {
-                logger.warn("Password validation failed: {}", passwordError);
-                req.setAttribute("error", passwordError);
+            // Validate all password inputs
+            String validationError = validatePasswordInputs(currentPassword, newPassword, confirmPassword);
+            if (validationError != null) {
+                logger.warn("Password validation failed: {}", validationError);
+                req.setAttribute("error", validationError);
                 req.getRequestDispatcher("/WEB-INF/views/account/change-password.jsp").forward(req, resp);
                 return;
             }
@@ -151,37 +121,48 @@ public class ChangePasswordController extends HttpServlet {
         }
     }
     
-    /**
-     * Validate password strength
-     * Password must:
-     * - Be longer than 6 characters (minimum 7)
-     * - Contain at least 1 uppercase letter
-     * - Contain at least 1 number
-     * - Contain at least 1 special character
-     * 
-     * @param password Password to validate
-     * @return Error message if invalid, null if valid
-     */
-    private String validatePasswordStrength(String password) {
-        if (password == null || password.length() <= 6) {
+  
+    private String validatePasswordInputs(String currentPassword, String newPassword, String confirmPassword) {
+        // Check current password
+        if (currentPassword == null || currentPassword.isEmpty()) {
+            return "Current password is required";
+        }
+        
+        // Check new password
+        if (newPassword == null || newPassword.isEmpty()) {
+            return "New password is required";
+        }
+        
+        // Check confirm password
+        if (confirmPassword == null || confirmPassword.isEmpty()) {
+            return "Confirm password is required";
+        }
+        
+        // Check if passwords match
+        if (!newPassword.equals(confirmPassword)) {
+            return "New password and confirm password do not match";
+        }
+        
+        // Validate password strength - length
+        if (newPassword.length() <= 6) {
             return "Password must be longer than 6 characters";
         }
         
-        // Check for at least one uppercase letter
-        if (!password.matches(".*[A-Z].*")) {
+        // Validate password strength - uppercase letter
+        if (!newPassword.matches(".*[A-Z].*")) {
             return "Password must contain at least 1 uppercase letter";
         }
         
-        // Check for at least one number
-        if (!password.matches(".*[0-9].*")) {
+        // Validate password strength - number
+        if (!newPassword.matches(".*[0-9].*")) {
             return "Password must contain at least 1 number";
         }
         
-        // Check for at least one special character
-        if (!password.matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?].*")) {
+        // Validate password strength - special character
+        if (!newPassword.matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?].*")) {
             return "Password must contain at least 1 special character";
         }
         
-        return null; // Password is valid
+        return null; // All validations passed
     }
 }

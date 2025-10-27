@@ -206,6 +206,12 @@ public class UserProfileDto {
                 errors.add("Date of birth must not be in the future");
             } else if (dob.isBefore(minDate)) {
                 errors.add("Date of birth must be after 01/01/1900");
+            } else {
+                // Check age >= 18
+                LocalDate minAgeDate = today.minusYears(18);
+                if (dob.isAfter(minAgeDate)) {
+                    errors.add("Age must be at least 18 years old");
+                }
             }
         }
         
