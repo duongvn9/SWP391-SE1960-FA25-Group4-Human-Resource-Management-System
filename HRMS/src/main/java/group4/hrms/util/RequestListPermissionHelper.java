@@ -274,6 +274,7 @@ public class RequestListPermissionHelper {
 
         // Check if request is still valid for approval (not yet in effect)
         if (!isRequestValidForApproval(request)) {
+            System.out.println("[DEBUG] Request expired (effective date passed). RequestId=" + request.getId());
             return false;
         }
 
@@ -354,6 +355,32 @@ public class RequestListPermissionHelper {
 
         // Can approve PENDING requests (normal flow for non-manager-created requests)
         if (request.isPending()) {
+            return true;
+        }
+
+        // NEW: HR/HRM can override REJECTED requests (except manager-created OT rejected by employee)
+        if (request.isRejected() && jobLevel >= JOB_LEVEL_HR_MANAGER && jobLevel <= JOB_LEVEL_HR_STAFF) {
+            // EXCEPTION: If this is manager-created OT and employee rejected it, HR CANNOT override
+            if (isOTCreatedByManager) {
+                Long currentApprover = request.getCurrentApproverAccountId();
+                Long creatorAccountId = request.getCreatedByAccountId();
+
+                // If current approver is the employee (not the manager who created it)
+                // then employee has rejected it and we should NOT allow override
+                if (currentApprover != null && !currentApprover.equals(creatorAccountId)) {
+                    System.out.println("[DEBUG] Manager-created OT rejected by employee. HR cannot override. RequestId=" + request.getId());
+                    return false;
+                }
+            }
+
+            // Cannot override your own rejection
+            if (currentAccountId != null && request.getCurrentApproverAccountId() != null
+                    && currentAccountId.equals(request.getCurrentApproverAccountId())) {
+                return false;
+            }
+
+            // HR can override other people's rejections
+            System.out.println("[DEBUG] HR can override REJECTED request. RequestId=" + request.getId());
             return true;
         }
 

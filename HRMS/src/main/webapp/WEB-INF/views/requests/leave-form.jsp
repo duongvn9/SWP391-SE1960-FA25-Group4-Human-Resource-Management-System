@@ -116,7 +116,7 @@
                                                                             <div class="value-number text-danger">
                                                                                 <fmt:formatNumber
                                                                                     value="${balance.usedDays}"
-                                                                                    minFractionDigits="0"
+                                                                                    minFractionDigits="1"
                                                                                     maxFractionDigits="1" />
                                                                             </div>
                                                                             <div class="value-unit">days</div>
@@ -128,7 +128,7 @@
                                                                             <div class="value-number">
                                                                                 <fmt:formatNumber
                                                                                     value="${balance.availableDays}"
-                                                                                    minFractionDigits="0"
+                                                                                    minFractionDigits="1"
                                                                                     maxFractionDigits="1" />
                                                                             </div>
                                                                             <div class="value-unit">days</div>
@@ -1329,15 +1329,15 @@
 
                                 let statsHTML = '';
                                 if (code === 'UNPAID' || code === 'UNPAID_LEAVE') {
-                                    statsHTML = '<div class="stat-row"><span>Used:</span><strong class="text-danger">' + used + ' days</strong></div>' +
-                                        '<div class="stat-row"><span>Pending:</span><strong class="text-warning">' + pending + ' days</strong></div>' +
+                                    statsHTML = '<div class="stat-row"><span>Used:</span><strong class="text-danger">' + used.toFixed(1) + ' days</strong></div>' +
+                                        '<div class="stat-row"><span>Pending:</span><strong class="text-warning">' + pending.toFixed(1) + ' days</strong></div>' +
                                         '<div class="alert alert-warning mt-3"><i class="fas fa-info-circle"></i> Salary will be deducted for unpaid leave days</div>';
                                 } else {
-                                    statsHTML = '<div class="stat-row"><span>Total Allowed:</span><strong>' + total + ' days</strong></div>' +
-                                        '<div class="stat-row"><span>Used:</span><strong class="text-danger">' + used + ' days</strong></div>' +
-                                        '<div class="stat-row"><span>Pending:</span><strong class="text-warning">' + pending + ' days</strong></div>' +
-                                        '<div class="stat-row highlight"><span>Remaining:</span><strong class="text-info">' + remaining + ' days</strong></div>' +
-                                        '<div class="stat-row highlight primary"><span>Available:</span><strong class="text-primary">' + available + ' days</strong></div>';
+                                    statsHTML = '<div class="stat-row"><span>Total Allowed:</span><strong>' + total.toFixed(1) + ' days</strong></div>' +
+                                        '<div class="stat-row"><span>Used:</span><strong class="text-danger">' + used.toFixed(1) + ' days</strong></div>' +
+                                        '<div class="stat-row"><span>Pending:</span><strong class="text-warning">' + pending.toFixed(1) + ' days</strong></div>' +
+                                        '<div class="stat-row highlight"><span>Remaining:</span><strong class="text-info">' + remaining.toFixed(1) + ' days</strong></div>' +
+                                        '<div class="stat-row highlight primary"><span>Available:</span><strong class="text-primary">' + available.toFixed(1) + ' days</strong></div>';
                                 }
 
                                 document.getElementById('modalStats').innerHTML = statsHTML;
@@ -1347,7 +1347,7 @@
                                         '<div class="progress" style="height: 10px;">' +
                                         '<div class="progress-bar bg-success" style="width: ' + percentage + '%"></div>' +
                                         '</div>' +
-                                        '<small class="text-muted d-block mt-2 text-center">' + available + ' available / ' + remaining + ' remaining / ' + total + ' total</small>';
+                                        '<small class="text-muted d-block mt-2 text-center">' + available.toFixed(1) + ' available / ' + remaining.toFixed(1) + ' remaining / ' + total.toFixed(1) + ' total</small>';
                                 } else {
                                     document.getElementById('modalProgress').innerHTML = '';
                                 }

@@ -33,13 +33,15 @@
                             </p>
                         </div>
 
-                        <!-- Total Working Days -->
-                        <div class="col-md-6 mb-3">
-                            <label class="fw-bold text-muted">Total Working Days:</label>
-                            <p class="mb-0">
-                                <c:out value="${leaveDetail.dayCount}" />
-                            </p>
-                        </div>
+                        <!-- Total Working Days (hidden for half-day to avoid confusion) -->
+                        <c:if test="${not leaveDetail.isHalfDay}">
+                            <div class="col-md-6 mb-3">
+                                <label class="fw-bold text-muted">Total Working Days:</label>
+                                <p class="mb-0">
+                                    <c:out value="${leaveDetail.dayCount}" />
+                                </p>
+                            </div>
+                        </c:if>
 
                         <!-- Half-Day Indicator -->
                         <div class="col-md-6 mb-3">
@@ -61,7 +63,7 @@
                         <div class="col-md-6 mb-3">
                             <label class="fw-bold text-muted">Duration:</label>
                             <p class="mb-0">
-                                <c:out value="${leaveDetail.durationDays}" /> day(s)
+                                <fmt:formatNumber value="${leaveDetail.durationDays}" minFractionDigits="1" maxFractionDigits="1" /> day(s)
                             </p>
                         </div>
 
