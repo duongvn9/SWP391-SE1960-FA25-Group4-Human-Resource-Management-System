@@ -243,8 +243,8 @@
                                 </div>
                             </c:if>
 
-                            <!-- Department Filter (Only show in 'all' scope) -->
-                            <c:if test="${not empty departments && filter.scope == 'all'}">
+                            <!-- Department Filter (Show in 'all' and 'subordinate' scopes) -->
+                            <c:if test="${not empty departments && (filter.scope == 'all' || filter.scope == 'subordinate')}">
                                 <div class="col-md-3">
                                     <label for="departmentId" class="form-label">
                                         <i class="fas fa-building"></i> Department
@@ -401,7 +401,8 @@
     <jsp:include page="modals/approval-modal.jsp" />
 
     <!-- Page specific JS -->
-    <script src="${pageContext.request.contextPath}/assets/js/request-list.js?v=2"></script>
+    <script src="${pageContext.request.contextPath}/assets/js/approval-modal.js?v=1"></script>
+    <script src="${pageContext.request.contextPath}/assets/js/request-list.js?v=3"></script>
 
     <!-- Toast Container -->
     <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 11000;">
