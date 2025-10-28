@@ -235,11 +235,8 @@
         <div class="form-row">
             <label class="form-label">City:</label>
             <div class="form-value">${profile.city}</div>
-<<<<<<< HEAD
             </div>
             </div>
-=======
->>>>>>> e77eabc81a0f624e022587923c8a8ff7e76b3d15
         </div>
 
       <!-- Footer -->
