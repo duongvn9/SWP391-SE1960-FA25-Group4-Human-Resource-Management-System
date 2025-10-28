@@ -231,12 +231,10 @@
             <div class="form-value">${profile.addressLine2}</div>
         </div>
 
-        <!-- City & State -->
-        <div class="form-row two-columns">
+        <!-- City -->
+        <div class="form-row">
             <label class="form-label">City:</label>
             <div class="form-value">${profile.city}</div>
-            <label class="form-label">State/Province:</label>
-            <div class="form-value">${profile.state}</div>
             </div>
             </div>
         </div>

@@ -4,6 +4,7 @@ import group4.hrms.dao.UserProfileDao;
 import group4.hrms.dto.UserProfileDto;
 import group4.hrms.model.Account;
 import group4.hrms.model.UserProfile;
+import group4.hrms.service.UserProfileService;
 import group4.hrms.util.SessionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,9 +27,11 @@ public class ProfileController extends HttpServlet {
     
     private static final Logger logger = LoggerFactory.getLogger(ProfileController.class);
     private final UserProfileDao userProfileDao;
+    private final UserProfileService userProfileService;
     
     public ProfileController() {
         this.userProfileDao = new UserProfileDao();
+        this.userProfileService = new UserProfileService();
     }
 
     @Override
@@ -161,95 +164,21 @@ public class ProfileController extends HttpServlet {
             logger.info("CCCD in DB: '{}'", currentProfile.getCccd());
             logger.info("==================");
             
-            // Validate DTO first
-            boolean isValid = dto.validate();
-            logger.info("Validation result: {}", isValid);
-            if (!isValid) {
-                logger.warn("Validation failed: {}", dto.getErrors());
-                req.setAttribute("error", String.join(", ", dto.getErrors()));
-                // Set profile with user's input (not DB values) to show what they entered
+            // Validate all fields using UserProfileService
+            String validationError = userProfileService.validateProfile(dto, currentProfile.getUserId());
+            if (validationError != null) {
+                logger.warn("Validation failed: {}", validationError);
+                req.setAttribute("error", validationError);
                 UserProfile profileWithInput = createProfileFromDto(currentProfile, dto);
                 req.setAttribute("profile", profileWithInput);
-                // Generate new CSRF token and save to session
                 String newCsrfToken = generateCsrfToken();
                 req.getSession().setAttribute("_csrf_token", newCsrfToken);
                 req.setAttribute("csrfToken", newCsrfToken);
-                logger.info("Forwarding back to edit page with errors");
                 req.getRequestDispatcher("/WEB-INF/views/profile/edit-profile.jsp").forward(req, resp);
                 return;
             }
             
-            // E1: Validate age >= 18
-            if (dto.getDob() != null) {
-                LocalDate today = LocalDate.now();
-                int age = today.getYear() - dto.getDob().getYear();
-                
-                // Adjust age if birthday hasn't occurred this year yet
-                if (today.getMonthValue() < dto.getDob().getMonthValue() ||
-                    (today.getMonthValue() == dto.getDob().getMonthValue() && today.getDayOfMonth() < dto.getDob().getDayOfMonth())) {
-                    age--;
-                }
-                
-                if (age < 18) {
-                    logger.warn("Age validation failed: age={}, dob={}", age, dto.getDob());
-                    req.setAttribute("error", "Age must be at least 18 years old");
-                    UserProfile profileWithInput = createProfileFromDto(currentProfile, dto);
-                    req.setAttribute("profile", profileWithInput);
-                    // Generate new CSRF token and save to session
-                    String newCsrfToken = generateCsrfToken();
-                    req.getSession().setAttribute("_csrf_token", newCsrfToken);
-                    req.setAttribute("csrfToken", newCsrfToken);
-                    req.getRequestDispatcher("/WEB-INF/views/profile/edit-profile.jsp").forward(req, resp);
-                    return;
-                }
-            }
-            
             logger.info("Validation passed, continuing to update...");
-            
-            // Check uniqueness constraints
-            if (dto.getCccd() != null && !dto.getCccd().trim().isEmpty()) {
-                if (userProfileDao.isCccdExistsForOtherUser(dto.getCccd(), currentProfile.getUserId())) {
-                    logger.warn("CCCD already exists: {}", dto.getCccd());
-                    req.setAttribute("error", "CCCD already exists");
-                    UserProfile profileWithInput = createProfileFromDto(currentProfile, dto);
-                    req.setAttribute("profile", profileWithInput);
-                    // Generate new CSRF token and save to session
-                    String newCsrfToken = generateCsrfToken();
-                    req.getSession().setAttribute("_csrf_token", newCsrfToken);
-                    req.setAttribute("csrfToken", newCsrfToken);
-                    req.getRequestDispatcher("/WEB-INF/views/profile/edit-profile.jsp").forward(req, resp);
-                    return;
-                }
-            }
-            
-            if (dto.getPhone() != null && !dto.getPhone().trim().isEmpty()) {
-                // Validate phone number format - must be exactly 10 digits
-                if (!dto.getPhone().matches("\\d{10}")) {
-                    logger.warn("Invalid phone number format: {}", dto.getPhone());
-                    req.setAttribute("error", "Phone number must be exactly 10 digits");
-                    UserProfile profileWithInput = createProfileFromDto(currentProfile, dto);
-                    req.setAttribute("profile", profileWithInput);
-                    // Generate new CSRF token and save to session
-                    String newCsrfToken = generateCsrfToken();
-                    req.getSession().setAttribute("_csrf_token", newCsrfToken);
-                    req.setAttribute("csrfToken", newCsrfToken);
-                    req.getRequestDispatcher("/WEB-INF/views/profile/edit-profile.jsp").forward(req, resp);
-                    return;
-                }
-                
-                if (userProfileDao.isPhoneExistsForOtherUser(dto.getPhone(), currentProfile.getUserId())) {
-                    logger.warn("Phone number already exists: {}", dto.getPhone());
-                    req.setAttribute("error", "Phone number already exists");
-                    UserProfile profileWithInput = createProfileFromDto(currentProfile, dto);
-                    req.setAttribute("profile", profileWithInput);
-                    // Generate new CSRF token and save to session
-                    String newCsrfToken = generateCsrfToken();
-                    req.getSession().setAttribute("_csrf_token", newCsrfToken);
-                    req.setAttribute("csrfToken", newCsrfToken);
-                    req.getRequestDispatcher("/WEB-INF/views/profile/edit-profile.jsp").forward(req, resp);
-                    return;
-                }
-            }
             
             
              if (!hasChanges(currentProfile, dto)) {
