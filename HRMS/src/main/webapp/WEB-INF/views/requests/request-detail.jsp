@@ -57,13 +57,14 @@
                                 </a>
 
                                 <!-- Conditional Approve Button -->
-                                <!-- Show for PENDING or APPROVED status (APPROVED allows manager override rejection) -->
-                                <c:if test="${canApprove && (requestDto.status == 'PENDING' || requestDto.status == 'APPROVED')}">
+                                <!-- Show for PENDING, APPROVED, or REJECTED status (allows manager override) -->
+                                <c:if test="${canApprove && (requestDto.status == 'PENDING' || requestDto.status == 'APPROVED' || requestDto.status == 'REJECTED')}">
                                     <button onclick="openApprovalModal(${requestDto.id}, '${requestDto.title}', '${requestDto.status}')"
                                         class="btn btn-warning">
                                         <i class="fas fa-clipboard-check me-1"></i>
                                         <c:choose>
-                                            <c:when test="${requestDto.status == 'APPROVED'}">Override Request</c:when>
+                                            <c:when test="${requestDto.status == 'APPROVED'}">Override Approval</c:when>
+                                            <c:when test="${requestDto.status == 'REJECTED'}">Override Rejection</c:when>
                                             <c:otherwise>Approve Request</c:otherwise>
                                         </c:choose>
                                     </button>
@@ -621,7 +622,8 @@
                 </script>
 
                 <!-- Page-specific JavaScript -->
-                <script src="${pageContext.request.contextPath}/assets/js/request-detail.js"></script>
+                <script src="${pageContext.request.contextPath}/assets/js/approval-modal.js?v=1"></script>
+                <script src="${pageContext.request.contextPath}/assets/js/request-detail.js?v=2"></script>
             </body>
 
             </html>

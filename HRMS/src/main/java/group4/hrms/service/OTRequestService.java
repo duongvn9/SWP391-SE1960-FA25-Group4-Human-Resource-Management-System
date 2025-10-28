@@ -116,7 +116,8 @@ public class OTRequestService {
             // Validate OT balance (weekly/monthly/annual limits)
             validateOTBalance(userId, otDate, otHours);
 
-            // Check conflict with approved leave requests (including half-day leave)
+            // Check conflict with leave requests (including half-day leave)
+            // Check both PENDING and APPROVED to prevent conflicts early
             checkConflictWithLeave(userId, otDate, startTime, endTime);
 
             // EXISTING VALIDATIONS - Daily and weekly limits
@@ -162,6 +163,35 @@ public class OTRequestService {
 
             // Save to database
             Request savedRequest = requestDao.save(otRequest);
+
+            // Determine approver and auto-approve if top-level
+            try {
+                ApproverService approverService = new ApproverService(userDao, new group4.hrms.dao.AccountDao());
+
+                Long approverId = approverService.findApprover(userId);
+
+                if (approverId != null) {
+                    // Found approver - set and keep status PENDING
+                    savedRequest.setCurrentApproverAccountId(approverId);
+                    requestDao.update(savedRequest);
+                    logger.info(String.format("Approver set for OT request: requestId=%d, approverId=%d",
+                               savedRequest.getId(), approverId));
+                } else {
+                    // No approver found - user is top-level (HRM/Department Head)
+                    // Auto-approve immediately
+                    savedRequest.setStatus("APPROVED");
+                    savedRequest.setCurrentApproverAccountId(accountId);
+                    savedRequest.setApproveReason("Auto-approved (top-level manager)");
+                    requestDao.update(savedRequest);
+
+                    logger.info(String.format("Auto-approved OT request for top-level user: requestId=%d, userId=%d",
+                               savedRequest.getId(), userId));
+                }
+            } catch (Exception e) {
+                logger.log(Level.WARNING, String.format("Error setting approver for OT request: requestId=%d",
+                          savedRequest.getId()), e);
+                // Continue anyway - request is created, approver can be set manually
+            }
 
             logger.info(String.format("Successfully created OT request: id=%d, userId=%d, date=%s, hours=%.1f, type=%s, status=%s",
                        savedRequest.getId(), userId, otDate, otHours, otType, savedRequest.getStatus()));
@@ -1092,12 +1122,14 @@ public class OTRequestService {
 
 
     /**
-     * Check if OT request conflicts with approved leave requests
-     * OT cannot be created on dates when employee has approved leave
+     * Check if OT request conflicts with leave requests (PENDING + APPROVED)
+     * This checks both PENDING and APPROVED leaves to prevent conflicts early
+     * Used in both creation and approval flows
      *
-     * Half-day leave rules (Requirements: 5.8, 5.9, 5.10, 4.6):
-     * - Morning half-day (8:00-12:00): Allow OT in afternoon/evening
+     * Half-day leave rules (Requirements: 5.8, 5.9, 5.10, 4.6, BR-22, BR-LV-11):
+     * - Morning half-day (8:00-12:00): Allow OT in afternoon/evening (after 12:00)
      * - Afternoon half-day (13:00-17:00): Allow OT after 17:00
+     * - Two half-days (AM+PM) on same date: Treat as full-day, block all OT
      * - Full-day leave: Block all OT
      *
      * @param userId User ID
@@ -1106,7 +1138,7 @@ public class OTRequestService {
      * @param endTime OT end time (HH:mm format)
      * @throws IllegalArgumentException if conflict detected
      */
-    private void checkConflictWithLeave(Long userId, String otDate, String startTime, String endTime) {
+    public void checkConflictWithLeave(Long userId, String otDate, String startTime, String endTime) {
         try {
             LocalDate date = LocalDate.parse(otDate);
             LocalTime otStart = LocalTime.parse(startTime);
@@ -1115,6 +1147,67 @@ public class OTRequestService {
             // Get all requests for user
             List<Request> allRequests = requestDao.findByUserId(userId);
 
+            // FIRST PASS: Check if there are 2 half-days (AM+PM) on the same date
+            // If yes, treat as full-day leave → block all OT
+            // Check both PENDING and APPROVED leaves
+            boolean hasAMHalfDay = false;
+            boolean hasPMHalfDay = false;
+            String amStatus = null;
+            String pmStatus = null;
+
+            for (Request request : allRequests) {
+                // Check both PENDING and APPROVED leaves
+                if (!"APPROVED".equals(request.getStatus()) && !"PENDING".equals(request.getStatus())) {
+                    continue;
+                }
+
+                group4.hrms.dto.LeaveRequestDetail leaveDetail = request.getLeaveDetail();
+                if (leaveDetail == null) {
+                    continue;
+                }
+
+                // Check if this leave falls on OT date
+                String startDate = leaveDetail.getStartDate();
+                String endDate = leaveDetail.getEndDate();
+                if (startDate == null || endDate == null) {
+                    continue;
+                }
+
+                LocalDate leaveStart = LocalDate.parse(startDate.substring(0, 10));
+                LocalDate leaveEnd = LocalDate.parse(endDate.substring(0, 10));
+
+                if (date.isBefore(leaveStart) || date.isAfter(leaveEnd)) {
+                    continue; // Not on OT date
+                }
+
+                // Check if it's a half-day leave
+                Boolean isHalfDay = leaveDetail.getIsHalfDay();
+                String halfDayPeriod = leaveDetail.getHalfDayPeriod();
+
+                if (isHalfDay != null && isHalfDay && halfDayPeriod != null) {
+                    if ("AM".equals(halfDayPeriod)) {
+                        hasAMHalfDay = true;
+                        amStatus = request.getStatus();
+                    } else if ("PM".equals(halfDayPeriod)) {
+                        hasPMHalfDay = true;
+                        pmStatus = request.getStatus();
+                    }
+                }
+            }
+
+            // If both AM and PM half-days exist on the same date → treat as full-day leave
+            if (hasAMHalfDay && hasPMHalfDay) {
+                logger.warning(String.format("OT conflicts with 2 half-day leaves (AM+PM = full-day): userId=%d, date=%s, AM status=%s, PM status=%s",
+                              userId, otDate, amStatus, pmStatus));
+                throw new IllegalArgumentException(
+                    String.format("Cannot create OT on %s! You have half-day leave requests " +
+                        "for both morning (AM - %s) and afternoon (PM - %s) on this date, " +
+                        "which is equivalent to a full-day leave. No OT is allowed.",
+                        otDate, amStatus, pmStatus)
+                );
+            }
+
+            // SECOND PASS: Check individual leave conflicts
             for (Request request : allRequests) {
                 // Only check APPROVED leave requests
                 if (!"APPROVED".equals(request.getStatus())) {
