@@ -362,10 +362,33 @@ public class JobPosting {
     }
 
     /**
-     * Only allow edit when status is PENDING (HR can edit before HRM approval)
+     * Allow edit when status is PENDING or REJECTED
+     * - PENDING: HR can edit before HRM approval
+     * - REJECTED: Only creator (created_by_account_id) can edit
      */
     public boolean canBeEdited() {
-        return isPending();
+        return isPending() || isRejected();
+    }
+    
+    /**
+     * Check if a specific account can edit this job posting
+     * @param accountId The account ID to check
+     * @return true if account can edit
+     */
+    public boolean canBeEditedBy(Long accountId) {
+        if (accountId == null) return false;
+        
+        if (isPending()) {
+            // PENDING: Any HR can edit
+            return true;
+        }
+        
+        if (isRejected()) {
+            // REJECTED: Only creator can edit
+            return accountId.equals(this.createdByAccountId);
+        }
+        
+        return false;
     }
 
     /**

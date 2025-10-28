@@ -61,7 +61,7 @@ public class JobPostingListServlet extends HttpServlet {
         
         // Parse pagination parameters
         int page = 1;
-        int pageSize = 20; // Increased from 10 to 20 for better view
+        int pageSize = 6; // 6 items per page for better readability
         if (pageStr != null) {
             try {
                 page = Integer.parseInt(pageStr);

@@ -62,11 +62,11 @@
                             <div class="row mb-3">
                                 <div class="col-md-6">
                                     <label class="form-label"><i class="bi bi-briefcase"></i><i class="fas fa-briefcase"></i> Job Title <span class="text-danger">*</span></label>
-                                    <input type="text" name="jobTitle" id="jobTitle" class="form-control" required />
+                                    <input type="text" name="jobTitle" id="jobTitle" class="form-control" maxlength="100" required />
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label"><i class="bi bi-diagram-3"></i><i class="fas fa-sitemap"></i> Position Name <span class="text-danger">*</span></label>
-                                    <input type="text" name="positionName" id="positionName" class="form-control" placeholder="e.g. Software Engineer" required />
+                                    <input type="text" name="positionName" id="positionName" class="form-control" placeholder="e.g. Software Engineer" maxlength="100" required />
                                 </div>
                             </div>
                             <div class="mb-3">
@@ -74,29 +74,30 @@
                                     <i class="bi bi-journal-text"></i><i class="fas fa-file-alt"></i> Job Summary <span class="text-danger">*</span>
                                 </label>
                                 <textarea name="jobSummary" id="jobSummary" class="form-control" rows="3"
-                                        placeholder="Briefly describe what this job entails..." required></textarea>
+                                        placeholder="Briefly describe what this job entails..." maxlength="1000" required></textarea>
                             </div>
 
                             <div class="row mb-3">
                                 <div class="col-md-4">
                                     <label class="form-label"><i class="bi bi-people"></i><i class="fas fa-users"></i> Quantity <span class="text-danger">*</span></label>
-                                    <input type="number" name="quantity" id="quantity" class="form-control" min="1" required />
+                                    <input type="number" name="quantity" id="quantity" class="form-control" min="1" max="100" required />
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label"><i class="bi bi-layers"></i><i class="fas fa-layer-group"></i> Job Level <span class="text-danger">*</span></label>
                                     <select name="jobLevel" id="jobLevel" class="form-select" required>
                                         <option value="">Select Level</option>
-                                        <option>JUNIOR</option>
-                                        <option>MIDDLE</option>
-                                        <option>SENIOR</option>
+                                        <option value="JUNIOR">JUNIOR</option>
+                                        <option value="MIDDLE">MIDDLE</option>
+                                        <option value="SENIOR">SENIOR</option>
                                     </select>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label"><i class="bi bi-clock"></i><i class="fas fa-clock"></i> Job Type <span class="text-danger">*</span></label>
                                     <select name="jobType" id="jobType" class="form-select" required>
-                                        <option>Full-time</option>
-                                        <option>Part-time</option>
-                                        <option>Internship</option>
+                                        <option value="">Select Type</option>
+                                        <option value="Full-time">Full-time</option>
+                                        <option value="Part-time">Part-time</option>
+                                        <option value="Internship">Internship</option>
                                     </select>
                                 </div>
                             </div>
@@ -104,23 +105,24 @@
                             <div class="row mb-3">
                                 <div class="col-md-6">
                                     <label class="form-label"><i class="bi bi-chat-text"></i><i class="fas fa-comment"></i> Recruitment Reason</label>
-                                    <textarea name="recruitmentReason" id="recruitmentReason" class="form-control" rows="2" placeholder="Enter recruitment reason"></textarea>
+                                    <textarea name="recruitmentReason" id="recruitmentReason" class="form-control" rows="2" placeholder="Enter recruitment reason" maxlength="500"></textarea>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="row">
                                         <div class="col-md-4">
                                             <label class="form-label"><i class="bi bi-cash-stack"></i><i class="fas fa-money-bill-wave"></i> Min Salary</label>
-                                            <input type="number" name="minSalary" id="minSalary" class="form-control" placeholder="5000000" />
+                                            <input type="number" name="minSalary" id="minSalary" class="form-control" placeholder="5000000" min="1000000" step="100000" />
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label"><i class="bi bi-cash"></i><i class="fas fa-hand-holding-usd"></i> Max Salary</label>
-                                            <input type="number" name="maxSalary" id="maxSalary" class="form-control" placeholder="8000000" />
+                                            <input type="number" name="maxSalary" id="maxSalary" class="form-control" placeholder="8000000" min="1000000" step="100000" />
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label"><i class="bi bi-coin"></i><i class="fas fa-coins"></i> Salary Type</label>
                                             <select name="salaryType" id="salaryType" class="form-select">
-                                                <option>Gross</option>
-                                                <option>Net</option>
+                                                <option value="Gross">Gross</option>
+                                                <option value="Net">Net</option>
+                                                <option value="Negotiable">Negotiable</option>
                                             </select>
                                         </div>
                                     </div>
@@ -129,7 +131,12 @@
 
                             <div class="mb-3">
                                 <label class="form-label"><i class="bi bi-geo-alt"></i><i class="fas fa-map-marker-alt"></i> Working Location <span class="text-danger">*</span></label>
-                                <input type="text" name="workingLocation" id="workingLocation" class="form-control" placeholder="e.g. Ho Chi Minh" required />
+                                <select name="workingLocation" id="workingLocation" class="form-select" required>
+                                    <option value="">Select Location</option>
+                                    <option value="HRMS office, Hanoi">HRMS office, Hanoi</option>
+                                    <option value="HRMS office, Ho Chi Minh City">HRMS office, Ho Chi Minh City</option>
+                                    <option value="Remote">Remote</option>
+                                </select>
                             </div>
 
                             <div class="mb-3">
@@ -165,7 +172,7 @@
                                 <!-- Google Drive Link Section -->
                                 <div id="driveLinkSection" class="drive-link-wrapper d-none">
                                     <input type="url" class="form-control" id="driveLink" name="driveLink"
-                                        placeholder="Paste Google Drive link here (e.g., https://drive.google.com/file/d/...)" />
+                                        placeholder="Paste Google Drive link here (e.g., https://drive.google.com/file/d/...)" maxlength="500" />
                                     <div class="form-text">
                                         <i class="bi bi-info-circle"></i>
                                         Paste a shareable Google Drive link to your supporting document
@@ -234,6 +241,9 @@
                 const driveLink = document.getElementById('driveLink');
                 const driveLinkPreview = document.getElementById('driveLinkPreview');
                 const driveLinkText = document.getElementById('driveLinkText');
+                const minSalaryInput = document.getElementById('minSalary');
+                const maxSalaryInput = document.getElementById('maxSalary');
+                const form = document.getElementById('recruitmentRequestForm');
 
                 function showFileSection() {
                     fileUploadSection.classList.remove('d-none');
@@ -260,18 +270,43 @@
                 attachmentTypeFile.addEventListener('change', showFileSection);
                 attachmentTypeLink.addEventListener('change', showLinkSection);
 
-                // File preview
+                // File preview with size validation
                 attachmentsInput.addEventListener('change', function (e) {
                     filePreviewList.innerHTML = '';
                     const files = Array.from(e.target.files || []);
+                    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+                    let hasInvalidFile = false;
+
                     files.forEach((file, idx) => {
                         const li = document.createElement('div');
-                        li.className = 'd-flex align-items-center mb-1 p-2 border rounded bg-light';
-                        li.innerHTML = `<div class="me-2"><i class="bi bi-file-earmark-fill fs-4"></i></div>
-                                        <div class="flex-grow-1">${file.name} <small class="text-muted">(${Math.round(file.size/1024)} KB)</small></div>
-                                        <div><button type="button" class="btn btn-sm btn-outline-danger" data-idx="${idx}">Remove</button></div>`;
+                        const isOverSize = file.size > maxSize;
+                        
+                        if (isOverSize) {
+                            hasInvalidFile = true;
+                            const fileSizeMB = (file.size/1024/1024).toFixed(2);
+                            li.className = 'd-flex align-items-center mb-1 p-2 border rounded bg-danger bg-opacity-10 border-danger';
+                            li.innerHTML = '<div class="me-2"><i class="bi bi-file-earmark-fill fs-4 text-danger"></i></div>' +
+                                            '<div class="flex-grow-1">' +
+                                                file.name + ' ' +
+                                                '<small class="text-danger">(' + fileSizeMB + ' MB - Exceeds 5MB limit!)</small>' +
+                                            '</div>' +
+                                            '<div><button type="button" class="btn btn-sm btn-outline-danger" data-idx="' + idx + '">Remove</button></div>';
+                        } else {
+                            const fileSizeKB = Math.round(file.size/1024);
+                            li.className = 'd-flex align-items-center mb-1 p-2 border rounded bg-light';
+                            li.innerHTML = '<div class="me-2"><i class="bi bi-file-earmark-fill fs-4"></i></div>' +
+                                            '<div class="flex-grow-1">' + file.name + ' <small class="text-muted">(' + fileSizeKB + ' KB)</small></div>' +
+                                            '<div><button type="button" class="btn btn-sm btn-outline-danger" data-idx="' + idx + '">Remove</button></div>';
+                        }
                         filePreviewList.appendChild(li);
                     });
+
+                    if (hasInvalidFile) {
+                        const warning = document.createElement('div');
+                        warning.className = 'alert alert-danger alert-sm mt-2';
+                        warning.innerHTML = '<i class="bi bi-exclamation-triangle me-2"></i>Some files exceed the 5MB size limit. Please remove them before submitting.';
+                        filePreviewList.appendChild(warning);
+                    }
 
                     // Remove handler
                     filePreviewList.querySelectorAll('button[data-idx]').forEach(btn => {
@@ -284,6 +319,51 @@
                             attachmentsInput.dispatchEvent(new Event('change'));
                         });
                     });
+                });
+
+                // Salary validation
+                function validateSalary() {
+                    const minVal = parseFloat(minSalaryInput.value);
+                    const maxVal = parseFloat(maxSalaryInput.value);
+
+                    // Reset custom validity
+                    minSalaryInput.setCustomValidity('');
+                    maxSalaryInput.setCustomValidity('');
+
+                    if (minVal && minVal < 1000000) {
+                        minSalaryInput.setCustomValidity('Minimum salary must be at least 1,000,000 VND');
+                        return false;
+                    }
+
+                    if (minVal && maxVal && maxVal < minVal) {
+                        maxSalaryInput.setCustomValidity('Maximum salary must be greater than minimum salary');
+                        return false;
+                    }
+
+                    return true;
+                }
+
+                minSalaryInput.addEventListener('input', validateSalary);
+                maxSalaryInput.addEventListener('input', validateSalary);
+
+                // Form validation before submit
+                form.addEventListener('submit', function(e) {
+                    // Validate salary
+                    if (!validateSalary()) {
+                        e.preventDefault();
+                        return false;
+                    }
+
+                    // Validate file sizes
+                    const files = Array.from(attachmentsInput.files || []);
+                    const maxSize = 5 * 1024 * 1024; // 5MB
+                    const oversizedFiles = files.filter(f => f.size > maxSize);
+                    
+                    if (oversizedFiles.length > 0) {
+                        e.preventDefault();
+                        alert('Please remove files that exceed the 5MB size limit before submitting.');
+                        return false;
+                    }
                 });
 
                 // Drive link preview

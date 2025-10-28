@@ -96,12 +96,17 @@ public class JobPostingEditServlet extends HttpServlet {
             JobPosting jobPosting = jobPostingService.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Job posting not found: " + id));
             
-            // Verify job posting can be edited
-            if (!jobPosting.canBeEdited()) {
+            // Verify job posting can be edited by current user
+            Long currentAccountId = SecurityUtil.getAccountId(request);
+            if (!jobPosting.canBeEditedBy(currentAccountId)) {
+                logger.warn("User {} cannot access edit page for job posting {} (status: {}, creator: {})", 
+                    currentAccountId, id, jobPosting.getStatus(), jobPosting.getCreatedByAccountId());
                 response.sendRedirect(request.getContextPath() + 
-                    "/job-postings?error=Job posting cannot be edited in its current state");
+                    "/job-postings?error=You do not have permission to edit this job posting");
                 return;
             }
+            logger.info("✅ User {} accessing edit page for job posting {} (status: {})", 
+                currentAccountId, id, jobPosting.getStatus());
             
             // Load department and position lists
             request.setAttribute("departments", departmentService.getAllDepartments());
@@ -148,6 +153,14 @@ public class JobPostingEditServlet extends HttpServlet {
 
         // 3. Get job posting ID
         String idStr = request.getParameter("id");
+        logger.info("📝 POST request received - ID: {}", idStr);
+        
+        // Debug: Log all parameters
+        logger.debug("All request parameters:");
+        request.getParameterMap().forEach((key, values) -> {
+            logger.debug("  {} = {}", key, values.length > 0 ? values[0] : "");
+        });
+        
         if (idStr == null || idStr.trim().isEmpty()) {
             response.sendRedirect(request.getContextPath() + "/job-postings?error=Missing job posting ID");
             return;
@@ -159,19 +172,30 @@ public class JobPostingEditServlet extends HttpServlet {
             JobPosting jobPosting = jobPostingService.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Job posting not found: " + id));
             
-            // 5. Verify job posting can be edited
-            if (!jobPosting.canBeEdited()) {
+            // 5. Verify job posting can be edited by current user
+            Long currentAccountId = SecurityUtil.getAccountId(request);
+            if (!jobPosting.canBeEditedBy(currentAccountId)) {
+                logger.warn("User {} cannot edit job posting {} (status: {}, creator: {})", 
+                    currentAccountId, id, jobPosting.getStatus(), jobPosting.getCreatedByAccountId());
                 response.sendRedirect(request.getContextPath() + 
-                    "/job-postings?error=Job posting cannot be edited in its current state");
+                    "/job-postings?error=You do not have permission to edit this job posting");
                 return;
             }
+            logger.info("✅ User {} can edit job posting {} (status: {})", 
+                currentAccountId, id, jobPosting.getStatus());
 
             // 6. Parse and validate form data
             JobPostingFormDto formDto = parseFormData(request);
             sanitizeFormData(formDto);
             Map<String, String> errors = formDto.validate();
             
+            logger.info("Validation result: {} errors", errors.size());
             if (!errors.isEmpty()) {
+                logger.error("❌ Validation FAILED:");
+                errors.forEach((field, message) -> {
+                    logger.error("  - {}: {}", field, message);
+                });
+                
                 // Re-populate form with error messages
                 request.setAttribute("errors", errors);
                 request.setAttribute("formData", formDto);
@@ -190,13 +214,34 @@ public class JobPostingEditServlet extends HttpServlet {
                 return;
             }
             
-            // 7. Update job posting
-            populateJobPosting(jobPosting, formDto, request);
-            jobPostingService.update(jobPosting);
+            logger.info("✅ Validation PASSED - Proceeding with update");
             
-            // 8. Redirect to success page
+            // 7. Update job posting
+            logger.info("Updating job posting ID: {}", id);
+            String originalStatus = jobPosting.getStatus();
+            logger.debug("Form data before populate: title={}, description={}", formDto.getJobTitle(), formDto.getDescription());
+            populateJobPosting(jobPosting, formDto, request);
+            
+            // 7a. If job posting was REJECTED, set back to PENDING for re-approval
+            if ("REJECTED".equals(originalStatus)) {
+                logger.info("🔄 Job posting was REJECTED, resetting to PENDING for re-approval");
+                jobPosting.setStatus("PENDING");
+                jobPosting.setRejectedReason(null);
+                jobPosting.setApprovedByAccountId(null);
+                jobPosting.setApprovedAt(null);
+                logger.info("✅ Status reset: REJECTED → PENDING");
+            }
+            
+            logger.debug("Job posting after populate: {}", jobPosting);
+            jobPostingService.update(jobPosting);
+            logger.info("Job posting updated successfully: {}", id);
+            
+            // 8. Redirect to success page with appropriate message
+            String successMessage = "REJECTED".equals(originalStatus) 
+                ? "Job posting updated and resubmitted for approval" 
+                : "Job posting updated successfully";
             response.sendRedirect(request.getContextPath() + 
-                "/job-postings?success=Job posting updated successfully");
+                "/job-postings?success=" + java.net.URLEncoder.encode(successMessage, "UTF-8"));
                 
         } catch (NumberFormatException e) {
             response.sendRedirect(request.getContextPath() + "/job-postings?error=Invalid job posting ID");
@@ -211,8 +256,6 @@ public class JobPostingEditServlet extends HttpServlet {
         JobPostingFormDto dto = new JobPostingFormDto();
         
         // Basic information
-        dto.setPositionCode(request.getParameter("positionCode"));
-        dto.setPositionName(request.getParameter("positionName"));
         dto.setJobTitle(request.getParameter("jobTitle"));
         dto.setCode(request.getParameter("code"));
         dto.setJobLevel(request.getParameter("jobLevel"));
@@ -281,7 +324,6 @@ public class JobPostingEditServlet extends HttpServlet {
         dto.setContactPhone(request.getParameter("contactPhone"));
         
         // Additional fields
-        dto.setPriority(request.getParameter("priority"));
         dto.setWorkingHours(request.getParameter("workingHours"));
         
         return dto;
@@ -330,16 +372,25 @@ public class JobPostingEditServlet extends HttpServlet {
     private void populateJobPosting(JobPosting jobPosting, JobPostingFormDto formDto, 
             HttpServletRequest request) {
         // Basic information
-        jobPosting.setCode(formDto.getCode() != null && !formDto.getCode().isBlank() 
-            ? formDto.getCode() : formDto.getPositionCode());
-        jobPosting.setTitle(formDto.getJobTitle() != null && !formDto.getJobTitle().isBlank() 
-            ? formDto.getJobTitle() : formDto.getPositionName());
-        jobPosting.setLevel(formDto.getJobLevel());
+        if (formDto.getCode() != null && !formDto.getCode().isBlank()) {
+            jobPosting.setCode(formDto.getCode());
+        }
+        if (formDto.getJobTitle() != null && !formDto.getJobTitle().isBlank()) {
+            jobPosting.setTitle(formDto.getJobTitle());
+        }
+        
+        // Keep readonly fields as is (they come from form as hidden inputs)
+        if (formDto.getJobLevel() != null && !formDto.getJobLevel().isBlank()) {
+            jobPosting.setLevel(formDto.getJobLevel());
+        }
         
         // Use normalized canonical values for jobType/salaryType to match DB expectations
         String normalizedJobType = formDto.getNormalizedJobType();
         jobPosting.setJobType(normalizedJobType != null ? normalizedJobType : formDto.getJobType());
-        jobPosting.setNumberOfPositions(formDto.getNumberOfPositions());
+        
+        if (formDto.getNumberOfPositions() != null) {
+            jobPosting.setNumberOfPositions(formDto.getNumberOfPositions());
+        }
         
         // Experience and dates
         jobPosting.setMinExperienceYears(formDto.getMinExperienceYears());
@@ -362,8 +413,7 @@ public class JobPostingEditServlet extends HttpServlet {
         jobPosting.setContactEmail(formDto.getContactEmail());
         jobPosting.setContactPhone(formDto.getContactPhone());
         
-        // Add priority and working hours
-        jobPosting.setPriority(formDto.getPriority() != null ? formDto.getPriority() : "MEDIUM");
+        // Working hours
         jobPosting.setWorkingHours(formDto.getWorkingHours());
         
         // Update audit fields

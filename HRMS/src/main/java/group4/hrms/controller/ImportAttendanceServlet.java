@@ -221,7 +221,7 @@ public class ImportAttendanceServlet extends HttpServlet {
                 if (session != null) {
                     session.removeAttribute("invalidLogsAll");
                 }
-                req.setAttribute("message", "Invalid logs have been cleared.");
+                req.setAttribute("message", "Records have been cleared.");
                 List<User> uList = userDao.findAll();
                 req.setAttribute("uList", uList);
                 String activeTab = req.getParameter("activeTab");
