@@ -156,6 +156,7 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             Long periodId = parseLongSafe(periodIdStr);
 
             if ("reset".equalsIgnoreCase(action)) {
+                employeeId = null;
                 employeeKeyword = "";
                 department = "";
                 status = "";
