@@ -211,7 +211,7 @@
                 <div class="form-row">
                     <label class="form-label">Phone Number: </label>
                     <div class="form-input-wrapper">
-                        <input type="text" name="phone" class="form-control" value="${profile.phone}" autocomplete="off" maxlength="10" pattern="\d{10}" title="Phone number must be exactly 10 digits">
+                        <input type="text" name="phone" class="form-control" value="${profile.phone}" autocomplete="off" >
                     </div>
                 </div>
 

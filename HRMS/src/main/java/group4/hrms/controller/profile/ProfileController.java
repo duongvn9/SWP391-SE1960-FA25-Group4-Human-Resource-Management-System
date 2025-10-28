@@ -379,32 +379,116 @@ public class ProfileController extends HttpServlet {
 
     
     private String validateProfileUpdate(UserProfileDto dto, UserProfile currentProfile) {
-        // 1. Validate DTO fields (format, length, etc.)
-        boolean isValid = dto.validate();
-        if (!isValid) {
-            return String.join(", ", dto.getErrors());
+        // 1. Validate Full Name (Optional, max 100 chars, only letters and spaces)
+        if (dto.getFullName() != null && !dto.getFullName().trim().isEmpty()) {
+            if (dto.getFullName().trim().length() > 100) {
+                return "Full name must not exceed 100 characters";
+            } else if (!dto.getFullName().matches("^[a-zA-ZÀ-ỹ\\s]+$")) {
+                return "Name cannot contain digits or special characters";
+            }
         }
         
-        // 2. Validate age >= 18 (already in DTO.validate(), but keeping for clarity)
-        // This is now handled in UserProfileDto.validate()
+        // 2. Validate Phone Number (Optional, 10 digits if provided)
+        if (dto.getPhone() != null && !dto.getPhone().trim().isEmpty()) {
+            if (!dto.getPhone().matches("^[0-9]{10}$")) {
+                return "Phone number must be 10 digits";
+            }
+            // Check phone uniqueness
+            if (userProfileDao.isPhoneExistsForOtherUser(dto.getPhone(), currentProfile.getUserId())) {
+                return "Phone number already exists";
+            }
+        }
         
-        // 3. Check CCCD uniqueness
+        // 3. Validate Date of Birth (Optional, age 18-60)
+        if (dto.getDob() != null) {
+            LocalDate minDate = LocalDate.of(1900, 1, 1);
+            LocalDate today = LocalDate.now();
+            if (dto.getDob().isAfter(today)) {
+                return "Date of birth must not be in the future";
+            } else if (dto.getDob().isBefore(minDate)) {
+                return "Date of birth must be after 01/01/1900";
+            } else {
+                // Check age >= 18 and <= 60
+                LocalDate minAgeDate = today.minusYears(18);
+                LocalDate maxAgeDate = today.minusYears(60);
+                if (dto.getDob().isAfter(minAgeDate)) {
+                    return "Age must be at least 18 years old";
+                } else if (dto.getDob().isBefore(maxAgeDate)) {
+                    return "Age must not exceed 60 years old";
+                }
+            }
+        }
+        
+        // 4. Validate Gender (Optional, must be male/female/other)
+        if (dto.getGender() != null && !dto.getGender().trim().isEmpty()) {
+            String genderLower = dto.getGender().trim().toLowerCase();
+            if (!genderLower.equals("male") && !genderLower.equals("female") && !genderLower.equals("other")) {
+                return "Invalid gender value";
+            }
+        }
+        
+        // 5. Validate Hometown (Optional, max 50 chars)
+        if (dto.getHometown() != null && dto.getHometown().length() > 50) {
+            return "Hometown must not exceed 50 characters";
+        }
+        
+        // 6. Validate CCCD (Optional, 12 digits if provided)
         if (dto.getCccd() != null && !dto.getCccd().trim().isEmpty()) {
+            if (!dto.getCccd().matches("^[0-9]{12}$")) {
+                return "Citizen ID must be 12 digits";
+            }
+            // Check CCCD uniqueness
             if (userProfileDao.isCccdExistsForOtherUser(dto.getCccd(), currentProfile.getUserId())) {
                 return "CCCD already exists";
             }
         }
         
-        // 4. Check phone format and uniqueness
-        if (dto.getPhone() != null && !dto.getPhone().trim().isEmpty()) {
-            // Validate phone number format - must be exactly 10 digits
-            if (!dto.getPhone().matches("\\d{10}")) {
-                return "Phone number must be exactly 10 digits";
+        // 7. Validate CCCD Issued Date (Optional, from 01/01/2021 to today)
+        if (dto.getCccdIssuedDate() != null) {
+            LocalDate minCccdDate = LocalDate.of(2021, 1, 1);
+            LocalDate today = LocalDate.now();
+            if (dto.getCccdIssuedDate().isAfter(today)) {
+                return "CCCD issued date must not be in the future";
+            } else if (dto.getCccdIssuedDate().isBefore(minCccdDate)) {
+                return "CCCD issued date must be from 01/01/2021 onwards";
             }
-            
-            // Check uniqueness
-            if (userProfileDao.isPhoneExistsForOtherUser(dto.getPhone(), currentProfile.getUserId())) {
-                return "Phone number already exists";
+        }
+        
+        // 8. Validate CCCD Issued Place (Optional, max 100 chars)
+        if (dto.getCccdIssuedPlace() != null && !dto.getCccdIssuedPlace().trim().isEmpty()) {
+            if (dto.getCccdIssuedPlace().length() > 100) {
+                return "CCCD issued place must not exceed 100 characters";
+            }
+        }
+        
+        // 9. Validate Address Line 1 (Optional, max 100 chars)
+        if (dto.getAddressLine1() != null && !dto.getAddressLine1().trim().isEmpty()) {
+            if (dto.getAddressLine1().length() > 100) {
+                return "Address line 1 must not exceed 100 characters";
+            }
+        }
+        
+        // 10. Validate Address Line 2 (Optional, max 100 chars)
+        if (dto.getAddressLine2() != null && dto.getAddressLine2().length() > 100) {
+            return "Address line 2 must not exceed 100 characters";
+        }
+        
+        // 11. Validate City (Optional, max 50 chars)
+        if (dto.getCity() != null && !dto.getCity().trim().isEmpty()) {
+            if (dto.getCity().length() > 50) {
+                return "City must not exceed 50 characters";
+            }
+        }
+        
+        // 12. Validate State (Optional, max 50 chars)
+        if (dto.getState() != null && dto.getState().length() > 50) {
+            return "State must not exceed 50 characters";
+        }
+        
+        // 13. Validate Postal Code (Optional, 5-10 digits)
+        if (dto.getPostalCode() != null && !dto.getPostalCode().trim().isEmpty()) {
+            if (!dto.getPostalCode().matches("^[0-9]{5,10}$")) {
+                return "Postal code must be 5-10 digits";
             }
         }
         
