@@ -6,11 +6,11 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import group4.hrms.dao.RequestDao;
 import group4.hrms.dao.LeaveTypeDao;
+import group4.hrms.dao.RequestDao;
 import group4.hrms.dto.LeaveRequestDetail;
-import group4.hrms.model.Request;
 import group4.hrms.model.LeaveType;
+import group4.hrms.model.Request;
 
 /**
  * LeaveBalanceService - Handles leave balance calculations with half-day support
@@ -51,6 +51,10 @@ public class LeaveBalanceService {
             double totalUsedDays = 0.0;
             int approvedCount = 0;
 
+            // Track half-day leaves per date to detect AM+PM combinations
+            // Key: LocalDate, Value: Set of periods ("AM", "PM")
+            java.util.Map<java.time.LocalDate, java.util.Set<String>> halfDaysByDate = new java.util.HashMap<>();
+
             for (Request request : requests) {
                 // Only count APPROVED requests
                 if (!"APPROVED".equals(request.getStatus())) {
@@ -69,14 +73,24 @@ public class LeaveBalanceService {
                     try {
                         LocalDateTime startDate = LocalDateTime.parse(startDateStr);
                         if (startDate.getYear() == year) {
-                            // Sum full-day leaves as 1.0 days each
-                            // Sum half-day leaves as 0.5 days each
-                            if (detail.getIsHalfDay() != null && detail.getIsHalfDay()) {
-                                totalUsedDays += 0.5;
-                            } else {
+                            // Full-day leave: count as dayCount
+                            if (detail.getIsHalfDay() == null || !detail.getIsHalfDay()) {
                                 totalUsedDays += detail.getDayCount();
+                                approvedCount++;
+                            } else {
+                                // Half-day leave: track by date and period
+                                java.time.LocalDate leaveDate = startDate.toLocalDate();
+                                String period = detail.getHalfDayPeriod();
+
+                                if (period != null) {
+                                    halfDaysByDate.computeIfAbsent(leaveDate, k -> new java.util.HashSet<>()).add(period);
+                                    approvedCount++;
+                                } else {
+                                    // Period is null, count as 0.5 (fallback)
+                                    totalUsedDays += 0.5;
+                                    approvedCount++;
+                                }
                             }
-                            approvedCount++;
                         }
                     } catch (Exception e) {
                         logger.warning(String.format("Failed to parse startDate for request %d: %s. Falling back to createdAt",
@@ -101,6 +115,23 @@ public class LeaveBalanceService {
                         totalUsedDays += detail.getDayCount();
                     }
                     approvedCount++;
+                }
+            }
+
+            // Process half-days: if date has both AM and PM → count as 1.0, otherwise 0.5 each
+            for (java.util.Map.Entry<java.time.LocalDate, java.util.Set<String>> entry : halfDaysByDate.entrySet()) {
+                java.time.LocalDate date = entry.getKey();
+                java.util.Set<String> periods = entry.getValue();
+
+                if (periods.contains("AM") && periods.contains("PM")) {
+                    // Both AM and PM on same date → count as 1 full day
+                    totalUsedDays += 1.0;
+                    logger.fine(String.format("Date %s has both AM+PM half-days, counted as 1.0 day", date));
+                } else {
+                    // Only AM or only PM → count 0.5 for each
+                    totalUsedDays += periods.size() * 0.5;
+                    logger.fine(String.format("Date %s has %d half-day(s), counted as %.1f day(s)",
+                               date, periods.size(), periods.size() * 0.5));
                 }
             }
 

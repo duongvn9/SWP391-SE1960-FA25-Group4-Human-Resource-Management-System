@@ -639,11 +639,11 @@
                                 </div>
                             </div>
 
-                            <!-- Employee Consent -->
-                            <div class="mt-3">
+                            <!-- Employee Consent (only shown when creating for self) -->
+                            <div class="mt-3" id="employeeConsentDiv">
                                 <div class="form-check consent-checkbox">
                                     <input class="form-check-input" type="checkbox" id="employeeConsent"
-                                           name="employeeConsent" required>
+                                           name="employeeConsent">
                                     <label class="form-check-label" for="employeeConsent">
                                         <strong>I voluntarily agree to work overtime as requested</strong>
                                         <span class="text-danger">*</span>
@@ -759,18 +759,45 @@
                 const requestForSelf = document.getElementById('requestForSelf');
                 const requestForEmployee = document.getElementById('requestForEmployee');
                 const employeeSelectionDiv = document.getElementById('employeeSelectionDiv');
+                const employeeConsentDiv = document.getElementById('employeeConsentDiv');
+                const employeeConsentCheckbox = document.getElementById('employeeConsent');
+
+                // Initialize: consent is required by default (creating for self)
+                if (employeeConsentCheckbox) {
+                    employeeConsentCheckbox.required = true;
+                }
 
                 if (requestForSelf && requestForEmployee && employeeSelectionDiv) {
                     requestForSelf.addEventListener('change', function () {
                         if (this.checked) {
+                            // Creating for self
                             employeeSelectionDiv.classList.add('d-none');
                             document.getElementById('selectedEmployeeId').value = '';
+
+                            // Show consent and make it required
+                            if (employeeConsentDiv) {
+                                employeeConsentDiv.classList.remove('d-none');
+                            }
+                            if (employeeConsentCheckbox) {
+                                employeeConsentCheckbox.required = true;
+                                employeeConsentCheckbox.checked = false; // Uncheck so user must manually agree
+                            }
                         }
                     });
 
                     requestForEmployee.addEventListener('change', function () {
                         if (this.checked) {
+                            // Creating for subordinate
                             employeeSelectionDiv.classList.remove('d-none');
+
+                            // Hide consent and auto-check it (consent not required from manager)
+                            if (employeeConsentDiv) {
+                                employeeConsentDiv.classList.add('d-none');
+                            }
+                            if (employeeConsentCheckbox) {
+                                employeeConsentCheckbox.required = false;
+                                employeeConsentCheckbox.checked = true; // Auto-check when creating for subordinate
+                            }
                         }
                     });
                 }
