@@ -69,18 +69,27 @@
                             Basic Information
                         </div>
                         <div class="card-body">
-                            <!-- Position Code & Name (Read-only from Request) -->
+                            <!-- Department (Read-only from Request) -->
+                            <c:if test="${not empty sourceDepartmentId}">
                             <div class="row g-3 mb-3">
-                                <div class="col-md-4">
-                                    <label for="positionCode" class="form-label">
-                                        <i class="fas fa-hashtag"></i> Position Code
+                                <div class="col-md-12">
+                                    <label for="departmentName" class="form-label">
+                                        <i class="fas fa-building"></i> Department
                                     </label>
-                                    <input type="text" class="form-control" id="positionCode" 
-                                           value="${requestDetails.positionCode}" readonly>
-                                    <input type="hidden" name="positionCode" value="${requestDetails.positionCode}">
-                                    <div class="form-text">Auto-filled from recruitment request</div>
+                                    <c:forEach items="${departments}" var="dept">
+                                        <c:if test="${dept.id == sourceDepartmentId}">
+                                            <input type="text" class="form-control" id="departmentName" 
+                                                   value="${dept.name}" readonly>
+                                            <div class="form-text">Auto-filled from recruitment request creator's department</div>
+                                        </c:if>
+                                    </c:forEach>
                                 </div>
-                                <div class="col-md-8">
+                            </div>
+                            </c:if>
+                            
+                            <!-- Position Name (Read-only from Request) -->
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-12">
                                     <label for="positionName" class="form-label">
                                         <i class="fas fa-id-badge"></i> Position Name
                                     </label>
@@ -144,24 +153,9 @@
                                 </div>
                             </div>
 
-                            <!-- Priority -->
+                            <!-- Working Hours -->
                             <div class="row g-3 mb-3">
-                                <div class="col-md-4">
-                                    <label for="priority" class="form-label">
-                                        Priority Level <span class="text-danger">*</span>
-                                    </label>
-                                    <select class="form-select ${not empty errors.priority ? 'is-invalid' : ''}"
-                                            id="priority" name="priority" required>
-                                        <option value="">-- Select Priority --</option>
-                                        <option value="NORMAL" ${param.priority == 'NORMAL' || (empty param.priority && empty errors.priority) ? 'selected' : ''}>Normal</option>
-                                        <option value="HIGH" ${param.priority == 'HIGH' ? 'selected' : ''}>High</option>
-                                        <option value="URGENT" ${param.priority == 'URGENT' ? 'selected' : ''}>Urgent</option>
-                                    </select>
-                                    <div class="invalid-feedback">
-                                        ${not empty errors.priority ? errors.priority : 'Please select a priority level'}
-                                    </div>
-                                </div>
-                                <div class="col-md-8">
+                                <div class="col-md-12">
                                     <label for="workingHours" class="form-label">Working Hours</label>
                                     <input type="text" class="form-control ${not empty errors.workingHours ? 'is-invalid' : ''}"
                                            id="workingHours" name="workingHours" value="${param.workingHours}"
@@ -349,7 +343,6 @@
                                            id="contactEmail" name="contactEmail" 
                                            value="${param.contactEmail}" 
                                            required
-                                           pattern="^[A-Za-z0-9+_.-]+@(.+)$"
                                            placeholder="hr@company.com">
                                     <div class="form-text">Required (valid email format)</div>
                                     <div class="invalid-feedback">
@@ -361,7 +354,7 @@
                                     <input type="tel" class="form-control ${not empty errors.contactPhone ? 'is-invalid' : ''}"
                                            id="contactPhone" name="contactPhone" 
                                            value="${param.contactPhone}"
-                                           pattern="^[0-9+][0-9()-]{8,20}$"
+                                           pattern="^[0-9\+][0-9()\- ]{8,20}$"
                                            placeholder="+84 123 456 789">
                                     <div class="form-text">Optional (9-21 characters, numbers, +, -, ())</div>
                                     <div class="invalid-feedback">
