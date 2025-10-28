@@ -7,8 +7,79 @@
             <jsp:param name="pageTitle" value="Submit Attendance Dispute - HRMS" />
         </jsp:include>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/appeal-form.css"> 
-    </head>
+        <style>
+            /* Overlay cho popup */
+            #selectRecordPopup {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background-color: rgba(0,0,0,0.5);
+                z-index: 1050;
+            }
 
+            /* Ẩn popup mặc định */
+            #selectRecordPopup.d-none {
+                display: none;
+            }
+
+            /* Nội dung popup */
+            #selectRecordPopup .popup-content {
+                background-color: #fff;
+                padding: 20px;
+                width: 90%;
+                max-width: 900px;
+                max-height: 80vh;
+                overflow-y: auto;
+                border-radius: 8px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                position: relative;
+            }
+
+            /* Header popup */
+            #selectRecordPopup .popup-header {
+                border-bottom: 1px solid #ddd;
+                padding-bottom: 10px;
+                margin-bottom: 15px;
+            }
+
+            /* Các nút đóng */
+            #selectRecordPopup button#closePopupBtn,
+            #selectRecordPopup button#closePopupBtn2 {
+                background: none;
+                border: none;
+                font-weight: bold;
+                font-size: 1.2rem;
+                cursor: pointer;
+            }
+
+            /* Table responsive */
+            #selectRecordPopup table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+
+            #selectRecordPopup table th,
+            #selectRecordPopup table td {
+                text-align: center;
+                padding: 8px;
+                border: 1px solid #dee2e6;
+            }
+
+            #selectRecordPopup table th {
+                background-color: #f8f9fa;
+            }
+
+            /* Footer nút action */
+            #selectRecordPopup .popup-actions {
+                margin-top: 15px;
+            }
+        </style>
+    </head>
     <body>
         <!-- Sidebar -->
         <jsp:include page="../layout/sidebar.jsp">
@@ -66,22 +137,44 @@
                             <!-- Hidden Request Type -->
                             <input type="hidden" name="request_type_id" value="${requestTypeId}" />
 
-                            <!-- Attendance Date -->
+                            <!-- Select Attendance Record -->
                             <div class="mb-3">
-                                <label for="attendanceDate" class="form-label">
-                                    <i class="fas fa-calendar-alt"></i> Attendance Date
+                                <label class="form-label">
+                                    <i class="fas fa-calendar-alt"></i> Attendance Record
                                     <span class="text-danger">*</span>
                                 </label>
                                 <div class="d-flex gap-2 align-items-center">
-                                    <input type="date" class="form-control" id="attendanceDate" />
-                                    <button type="button" id="addDateBtn" class="btn btn-primary" disabled>Add</button>
+                                    <button type="button" id="selectRecordBtn" class="btn btn-primary">
+                                        Select record
+                                    </button>
                                 </div>
-                                <div id="attendanceDateError" class="invalid-feedback" style="display:none;"></div>
 
-                                <div id="selectedDatesList" class="mt-2"></div>
-                                <input type="hidden" id="selectedLogDates" name="selected_log_dates" />
+                                <!-- Selected records list -->
+                                <div id="selectedRecordsList" class="mt-3 row g-3">
+                                    <!-- Example of one selected record (template) -->
+                                    <!--
+                                    <div class="col-md-6">
+                                        <div class="card p-2">
+                                            <div class="mb-1"><strong>Date:</strong> 02/10/2025</div>
+                                            <div class="d-flex gap-2 align-items-center">
+                                                <label>Check-in:</label>
+                                                <input type="time" class="form-control" name="records[0][newCheckIn]" value="08:00">
+                                            </div>
+                                            <div class="d-flex gap-2 align-items-center mt-1">
+                                                <label>Check-out:</label>
+                                                <input type="time" class="form-control" name="records[0][newCheckOut]" value="17:30">
+                                            </div>
+                                            <div class="mt-1">
+                                                <textarea class="form-control" name="records[0][reason]" placeholder="Reason for change"></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    -->
+                                </div>
+
+                                <input type="hidden" id="selectedLogsData" name="selected_logs_data" />
                                 <div class="form-text">
-                                    Choose the date you wish to dispute or select from logs. Multiple dates allowed.
+                                    Click "Select record" to choose the attendance logs you want to dispute. Then fill in the corrected times.
                                 </div>
                             </div>
 
@@ -142,109 +235,107 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Attendance Record Selection Popup -->
+            <div id="selectRecordPopup" class="d-none">
+                <div class="popup-content">
+                    <div class="popup-header d-flex justify-content-between align-items-center mb-2">
+                        <h5>Select Attendance Records</h5>
+                        <button type="button" id="closePopupBtn">X</button>
+                    </div>
+
+                    <!-- Filter: Period -->
+                    <div class="mb-3">
+                        <label for="periodFilter">Filter by Period:</label>
+                        <select id="periodFilter" name="periodFilter" class="form-select">
+                            <option value="">-- All Periods --</option>
+                            <c:forEach var="p" items="${periodList}">
+                                <option value="${p.id}">${p.name}</option>
+                            </c:forEach>
+                        </select>
+                        <button type="button" id="filterBtn" class="btn btn-secondary btn-sm mt-1">Filter</button>
+                    </div>
+
+                    <!-- Attendance Table -->
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>Select</th>
+                                <th>Date</th>
+                                <th>Check-in</th>
+                                <th>Check-out</th>
+                                <th>Status</th>
+                                <th>Source</th>
+                                <th>Period</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <c:forEach var="log" items="${attendanceLogs}">
+                                <tr>
+                                    <td>
+                                        <input type="checkbox" name="selectedLogs" value="${log.id}" />
+                                    </td>
+                                    <td>${log.date}</td>
+                                    <td>${log.checkIn}</td>
+                                    <td>${log.checkOut}</td>
+                                    <td>${log.status}</td>
+                                    <td>${log.source}</td>
+                                    <td>${log.period}</td>
+                                </tr>
+                            </c:forEach>
+                        </tbody>
+                    </table>
+
+                    <!-- Pagination -->
+                    <div class="pagination-controls mt-2">
+                        <c:if test="${totalPages > 1}">
+                            <nav>
+                                <ul class="pagination">
+                                    <c:forEach begin="1" end="${totalPages}" var="i">
+                                        <li class="page-item <c:if test='${i == currentPage}'>active</c:if>">
+                                            <a class="page-link" href="?page=${i}&periodFilter=${selectedPeriod}">${i}</a>
+                                        </li>
+                                    </c:forEach>
+                                </ul>
+                            </nav>
+                        </c:if>
+                    </div>
+
+                    <!-- Popup Actions -->
+                    <div class="popup-actions mt-3 d-flex justify-content-end gap-2">
+                        <button type="button" id="submitSelectedRecords" class="btn btn-primary">Submit</button>
+                        <button type="button" id="closePopupBtn2" class="btn btn-secondary">X</button>
+                    </div>
+                </div>
+            </div>
+
             <script>
                 document.addEventListener("DOMContentLoaded", function () {
-                    const dateInput = document.getElementById("attendanceDate");
-                    const addBtn = document.getElementById("addDateBtn");
-                    const selectedList = document.getElementById("selectedDatesList");
-                    const hiddenInput = document.getElementById("selectedLogDates");
-                    const errorDiv = document.getElementById("attendanceDateError");
+                    const selectRecordBtn = document.getElementById("selectRecordBtn");
+                    const popup = document.getElementById("selectRecordPopup");
+                    const closeBtns = document.querySelectorAll("#closePopupBtn, #closePopupBtn2");
 
-                    // Chặn chọn ngày tương lai
-                    const todayStr = new Date().toISOString().slice(0, 10);
-                    dateInput.setAttribute("max", todayStr);
-
-                    let selectedDates = [];
-
-                    // --- Validation ---
-                    dateInput.addEventListener("input", validateInput);
-                    dateInput.addEventListener("change", validateInput);
-
-                    function validateInput() {
-                        clearError();
-                        const val = dateInput.value;
-                        if (!val) {
-                            showInvalid("Please select a date.");
-                            return false;
-                        }
-
-                        const sel = new Date(val);
-                        sel.setHours(0, 0, 0, 0);
-                        const today = new Date();
-                        today.setHours(0, 0, 0, 0);
-
-                        if (sel > today) {
-                            showInvalid("Attendance date must be today or in the past.");
-                            return false;
-                        }
-
-                        if (selectedDates.includes(val)) {
-                            showInvalid("This date has already been added.");
-                            return false;
-                        }
-
-                        addBtn.disabled = false;
-                        return true;
-                    }
-
-                    // --- Add date ---
-                    addBtn.addEventListener("click", function () {
-                        if (!validateInput()) {
-                            addBtn.disabled = true;
-                            return;
-                        }
-
-                        const val = dateInput.value;
-                        if (!val || selectedDates.includes(val))
-                            return;
-
-                        selectedDates.push(val);
-                        renderSelectedDates();
-
-                        dateInput.value = "";
-                        addBtn.disabled = true;
+                    // Mở popup khi click Select record
+                    selectRecordBtn.addEventListener("click", function () {
+                        popup.classList.remove("d-none");
                     });
 
-                    // --- Render danh sách ---
-                    function renderSelectedDates() {
-                        selectedList.innerHTML = "";
-                        selectedDates.forEach((date) => {
-                            const span = document.createElement("span");
-                            span.textContent = date;
-                            span.className = "badge bg-light text-dark border me-2 mb-2 p-2 clickable-date";
-                            span.style.cursor = "pointer";
-                            span.title = "Click to remove this date";
-                            selectedList.appendChild(span);
+                    // Đóng popup khi click nút X
+                    closeBtns.forEach(btn => {
+                        btn.addEventListener("click", function () {
+                            popup.classList.add("d-none");
                         });
-                        hiddenInput.value = selectedDates.join(",");
-                    }
-
-                    // --- Click để remove ---
-                    selectedList.addEventListener("click", function (e) {
-                        if (e.target.classList.contains("clickable-date")) {
-                            const date = e.target.textContent;
-                            selectedDates = selectedDates.filter((d) => d !== date);
-                            renderSelectedDates();
-                            validateInput();
-                        }
                     });
 
-                    // --- Error handling ---
-                    function showInvalid(msg) {
-                        errorDiv.textContent = msg;
-                        errorDiv.style.display = "block";
-                        dateInput.classList.add("is-invalid");
-                        addBtn.disabled = true;
-                    }
-
-                    function clearError() {
-                        errorDiv.textContent = "";
-                        errorDiv.style.display = "none";
-                        dateInput.classList.remove("is-invalid");
-                    }
+                    // Optional: click bên ngoài popup-content cũng đóng popup
+                    popup.addEventListener("click", function (event) {
+                        if (event.target === popup) {
+                            popup.classList.add("d-none");
+                        }
+                    });
                 });
             </script>
-            <!-- Footer -->
+
             <jsp:include page="../layout/dashboard-footer.jsp" />
         </div>
         <script src="${pageContext.request.contextPath}/assets/js/appeal-request.js"></script>
