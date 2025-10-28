@@ -148,31 +148,81 @@
                                         Select record
                                     </button>
                                 </div>
-
-                                <!-- Selected records list -->
-                                <div id="selectedRecordsList" class="mt-3 row g-3">
-                                    <!-- Example of one selected record (template) -->
-                                    <!--
-                                    <div class="col-md-6">
-                                        <div class="card p-2">
-                                            <div class="mb-1"><strong>Date:</strong> 02/10/2025</div>
-                                            <div class="d-flex gap-2 align-items-center">
-                                                <label>Check-in:</label>
-                                                <input type="time" class="form-control" name="records[0][newCheckIn]" value="08:00">
-                                            </div>
-                                            <div class="d-flex gap-2 align-items-center mt-1">
-                                                <label>Check-out:</label>
-                                                <input type="time" class="form-control" name="records[0][newCheckOut]" value="17:30">
-                                            </div>
-                                            <div class="mt-1">
-                                                <textarea class="form-control" name="records[0][reason]" placeholder="Reason for change"></textarea>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    -->
+                                <!-- Thông báo lỗi hiển thị tại đây -->
+                                <div id="attendanceRecordError" class="text-danger mt-1" style="display:none;">
+                                    Please select at least one attendance record.
                                 </div>
 
-                                <input type="hidden" id="selectedLogsData" name="selected_logs_data" />
+                                <!-- Selected records list -->
+                                <c:if test="${not empty records}">
+                                    <div id="selectedRecordsList" class="mt-3 row g-3">
+                                        <c:forEach var="rec" items="${records}">
+                                            <div class="col-12 border p-3 rounded mb-2 position-relative">
+                                                <!-- Nút xóa bản ghi -->
+                                                <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2 remove-record-btn" 
+                                                        data-userid="${rec.userId}" title="Remove Record">X</button>
+
+                                                <!-- Thông tin bản ghi đã chọn (không sửa) -->
+                                                <div class="mb-2">
+                                                    <strong>Selected Record:</strong>
+                                                    <table class="table table-sm table-bordered mt-1">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th>Date</th>
+                                                                <th>Check-in</th>
+                                                                <th>Check-out</th>
+                                                                <th>Status</th>
+                                                                <th>Source</th>
+                                                                <th>Period</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr>
+                                                                <td>${rec.date}</td>
+                                                                <td>${rec.checkIn}</td>
+                                                                <td>${rec.checkOut}</td>
+                                                                <td>${rec.status}</td>
+                                                                <td>${rec.source}</td>
+                                                                <td>${rec.period}</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+
+                                                <!-- Vùng chỉnh sửa thông tin -->
+                                                <div class="mb-2">
+                                                    <strong>Edit Fields:</strong>
+                                                    <div class="row g-2 mt-1">
+                                                        <div class="col-md-3">
+                                                            <label for="editDate" class="form-label">Date</label>
+                                                            <input type="date" id="editDate" name="editDate" class="form-control" value="${rec.date}" readonly/>
+                                                        </div>
+                                                        <div class="col-md-2">
+                                                            <label for="editCheckIn" class="form-label">Check-in</label>
+                                                            <input type="time" id="editCheckIn" name="editCheckIn" class="form-control" value="${rec.checkIn}" />
+                                                        </div>
+                                                        <div class="col-md-2">
+                                                            <label for="editCheckOut" class="form-label">Check-out</label>
+                                                            <input type="time" id="editCheckOut" name="editCheckOut" class="form-control" value="${rec.checkOut}" />
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <label for="editStatus" class="form-label">Status</label>
+                                                            <select id="editStatus" name="editStatus" class="form-select">
+                                                                <option value="Late" ${rec.status == 'Late' ? 'selected' : ''}>Late</option>
+                                                                <option value="On Time" ${rec.status == 'On Time' ? 'selected' : ''}>On Time</option>
+                                                                <option value="Shift day" ${rec.status == 'Shift day' ? 'selected' : ''}>Shift day</option>
+                                                                <option value="leaving early" ${rec.status == 'leaving early' ? 'selected' : ''}>leaving early</option>
+                                                                <option value="Over Time" ${rec.status == 'Over Time' ? 'selected' : ''}>Over Time</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </c:forEach>
+                                    </div>
+                                </c:if>
+                                <input type="hidden" id="selected_logs_data" name="selected_logs_data" />
+
                                 <div class="form-text">
                                     Click "Select record" to choose the attendance logs you want to dispute. Then fill in the corrected times.
                                 </div>
@@ -244,100 +294,326 @@
                         <button type="button" id="closePopupBtn">X</button>
                     </div>
 
-                    <!-- Filter: Period -->
-                    <div class="mb-3">
-                        <label for="periodFilter">Filter by Period:</label>
-                        <select id="periodFilter" name="periodFilter" class="form-select">
-                            <option value="">-- All Periods --</option>
-                            <c:forEach var="p" items="${periodList}">
-                                <option value="${p.id}">${p.name}</option>
-                            </c:forEach>
-                        </select>
-                        <button type="button" id="filterBtn" class="btn btn-secondary btn-sm mt-1">Filter</button>
-                    </div>
+                    <!-- Form để submit dữ liệu -->
+                    <form id="attendanceForm" method="post" action="${pageContext.request.contextPath}/requests/appeal/create">
 
-                    <!-- Attendance Table -->
-                    <table class="table table-bordered table-hover">
-                        <thead>
-                            <tr>
-                                <th>Select</th>
-                                <th>Date</th>
-                                <th>Check-in</th>
-                                <th>Check-out</th>
-                                <th>Status</th>
-                                <th>Source</th>
-                                <th>Period</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <c:forEach var="log" items="${attendanceLogs}">
+                        <!-- Filter: Period -->
+                        <div class="mb-3">
+                            <label for="periodFilter">Filter by Period:</label>
+                            <select id="periodFilter" name="periodFilter" class="form-select">
+                                <c:forEach var="p" items="${periodList}">
+                                    <option value="${p.id}" <c:if test="${p.id == currentPeriodId}">selected</c:if>>
+                                        ${p.name}
+                                    </option>
+                                </c:forEach>
+                            </select>
+                        </div>
+
+                        <!-- Attendance Table -->
+                        <table class="table table-bordered table-hover" id="attendanceTable">
+                            <thead>
                                 <tr>
-                                    <td>
-                                        <input type="checkbox" name="selectedLogs" value="${log.id}" />
-                                    </td>
-                                    <td>${log.date}</td>
-                                    <td>${log.checkIn}</td>
-                                    <td>${log.checkOut}</td>
-                                    <td>${log.status}</td>
-                                    <td>${log.source}</td>
-                                    <td>${log.period}</td>
+                                    <th>Select</th>
+                                    <th>Date</th>
+                                    <th>Check-in</th>
+                                    <th>Check-out</th>
+                                    <th>Status</th>
+                                    <th>Source</th>
+                                    <th>Period</th>
                                 </tr>
-                            </c:forEach>
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody id="attendanceTableBody">
+                                <c:forEach var="log" items="${attendanceList}">
+                                    <tr data-period-name="${log.period}">
+                                        <td>
+                                            <input type="checkbox" class="form-check-input select-checkbox" />
+                                        </td>
+                                        <td>${log.date}</td>
+                                        <td>${log.checkIn}</td>
+                                        <td>${log.checkOut}</td>
+                                        <td>${log.status}</td>
+                                        <td>${log.source}</td>
+                                        <td>${log.period}</td>
+                                    </tr>
+                                </c:forEach>
+                            </tbody>
+                        </table>
 
-                    <!-- Pagination -->
-                    <div class="pagination-controls mt-2">
-                        <c:if test="${totalPages > 1}">
-                            <nav>
-                                <ul class="pagination">
-                                    <c:forEach begin="1" end="${totalPages}" var="i">
-                                        <li class="page-item <c:if test='${i == currentPage}'>active</c:if>">
-                                            <a class="page-link" href="?page=${i}&periodFilter=${selectedPeriod}">${i}</a>
-                                        </li>
-                                    </c:forEach>
-                                </ul>
-                            </nav>
-                        </c:if>
-                    </div>
+                        <!-- Frontend Pagination Controls -->
+                        <div class="pagination-controls mt-2">
+                            <ul class="pagination" id="paginationContainer"></ul>
+                        </div>
 
-                    <!-- Popup Actions -->
-                    <div class="popup-actions mt-3 d-flex justify-content-end gap-2">
-                        <button type="button" id="submitSelectedRecords" class="btn btn-primary">Submit</button>
-                        <button type="button" id="closePopupBtn2" class="btn btn-secondary">X</button>
-                    </div>
+                        <!-- Ẩn input để gửi dữ liệu selected records -->
+                        <input type="hidden" name="action" value="submitSelectedRecords" />
+                        <input type="hidden" name="records" id="recordsInput" />
+
+                        <!-- Popup Actions -->
+                        <div class="popup-actions mt-3 d-flex justify-content-end gap-2">
+                            <button type="submit" id="submitSelectedRecords" class="btn btn-primary">Submit</button>
+                            <button type="button" id="closePopupBtn2" class="btn btn-secondary">X</button>
+                        </div>
+                    </form>
                 </div>
             </div>
-
-            <script>
-                document.addEventListener("DOMContentLoaded", function () {
-                    const selectRecordBtn = document.getElementById("selectRecordBtn");
-                    const popup = document.getElementById("selectRecordPopup");
-                    const closeBtns = document.querySelectorAll("#closePopupBtn, #closePopupBtn2");
-
-                    // Mở popup khi click Select record
-                    selectRecordBtn.addEventListener("click", function () {
-                        popup.classList.remove("d-none");
-                    });
-
-                    // Đóng popup khi click nút X
-                    closeBtns.forEach(btn => {
-                        btn.addEventListener("click", function () {
-                            popup.classList.add("d-none");
-                        });
-                    });
-
-                    // Optional: click bên ngoài popup-content cũng đóng popup
-                    popup.addEventListener("click", function (event) {
-                        if (event.target === popup) {
-                            popup.classList.add("d-none");
-                        }
-                    });
-                });
-            </script>
-
             <jsp:include page="../layout/dashboard-footer.jsp" />
         </div>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const selectRecordBtn = document.getElementById("selectRecordBtn");
+                const popup = document.getElementById("selectRecordPopup");
+                const closeBtns = document.querySelectorAll("#closePopupBtn, #closePopupBtn2");
+                const tableBody = document.getElementById("attendanceTableBody");
+                const periodFilter = document.getElementById("periodFilter");
+                const paginationContainer = document.getElementById("paginationContainer");
+                const submitBtn = document.getElementById("submitSelectedRecords");
+                const recordsInput = document.getElementById("recordsInput"); // hidden input in form
+                const rowsPerPage = 5;
+                let currentPage = 1;
+                let selectedRecords = [];
+
+                const allRows = Array.from(tableBody.querySelectorAll("tr"));
+
+                function renderRows() {
+                    const selectedPeriodName = periodFilter.options[periodFilter.selectedIndex]?.text;
+                    const filtered = allRows.filter(row =>
+                        !periodFilter.value || row.dataset.periodName === selectedPeriodName
+                    );
+                    const totalPages = Math.ceil(filtered.length / rowsPerPage) || 1;
+                    if (currentPage > totalPages)
+                        currentPage = totalPages;
+
+                    allRows.forEach(r => (r.style.display = "none"));
+
+                    const start = (currentPage - 1) * rowsPerPage;
+                    const end = start + rowsPerPage;
+                    const visible = filtered.slice(start, end);
+                    visible.forEach(row => (row.style.display = ""));
+
+                    // Render pagination
+                    paginationContainer.innerHTML = "";
+                    if (totalPages > 1) {
+                        if (currentPage > 1) {
+                            const prev = document.createElement("li");
+                            prev.className = "page-item";
+                            prev.innerHTML = `<a class="page-link" href="#">Prev</a>`;
+                            prev.addEventListener("click", e => {
+                                e.preventDefault();
+                                currentPage--;
+                                renderRows();
+                            });
+                            paginationContainer.appendChild(prev);
+                        }
+
+                        for (let i = 1; i <= totalPages; i++) {
+                            const li = document.createElement("li");
+                            li.className = "page-item" + (i === currentPage ? " active" : "");
+                            li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+                            li.addEventListener("click", e => {
+                                e.preventDefault();
+                                currentPage = i;
+                                renderRows();
+                            });
+                            paginationContainer.appendChild(li);
+                        }
+
+                        if (currentPage < totalPages) {
+                            const next = document.createElement("li");
+                            next.className = "page-item";
+                            next.innerHTML = `<a class="page-link" href="#">Next</a>`;
+                            next.addEventListener("click", e => {
+                                e.preventDefault();
+                                currentPage++;
+                                renderRows();
+                            });
+                            paginationContainer.appendChild(next);
+                        }
+                    }
+                }
+
+                // --- Popup events ---
+                selectRecordBtn?.addEventListener("click", () => popup.classList.remove("d-none"));
+                closeBtns.forEach(btn => btn.addEventListener("click", () => popup.classList.add("d-none")));
+                popup.addEventListener("click", e => {
+                    if (e.target === popup)
+                        popup.classList.add("d-none");
+                });
+                periodFilter?.addEventListener("change", () => {
+                    currentPage = 1;
+                    renderRows();
+                });
+
+                // --- Checkbox selection ---
+                tableBody.addEventListener("change", event => {
+                    const checkbox = event.target.closest(".select-checkbox");
+                    if (!checkbox)
+                        return;
+
+                    const row = checkbox.closest("tr");
+                    const cells = row.querySelectorAll("td");
+                    const record = {
+                        date: cells[1].innerText.trim(),
+                        checkIn: cells[2].innerText.trim(),
+                        checkOut: cells[3].innerText.trim(),
+                        status: cells[4].innerText.trim(),
+                        source: cells[5].innerText.trim(),
+                        period: cells[6].innerText.trim()
+                    };
+
+                    if (checkbox.checked) {
+                        const exists = selectedRecords.some(r =>
+                            r.date === record.date && r.checkIn === record.checkIn && r.checkOut === record.checkOut
+                        );
+                        if (!exists) {
+                            selectedRecords.push(record);
+                            row.classList.add("table-success");
+                        }
+                    } else {
+                        selectedRecords = selectedRecords.filter(r =>
+                            !(r.date === record.date && r.checkIn === record.checkIn && r.checkOut === record.checkOut)
+                        );
+                        row.classList.remove("table-success");
+                    }
+                });
+
+                // --- Submit form ---
+                submitBtn.closest("form").addEventListener("submit", function (e) {
+                    if (selectedRecords.length === 0) {
+                        e.preventDefault();
+                        alert("⚠️ Please select at least one record before submitting!");
+                        return;
+                    }
+
+                    // Set hidden input value trước khi submit
+                    recordsInput.value = JSON.stringify(selectedRecords);
+                });
+
+                // --- Initial render ---
+                renderRows();
+            });
+        </script>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const selectRecordBtn = document.getElementById("selectRecordBtn");
+                const popup = document.getElementById("selectRecordPopup");
+                const closeBtns = document.querySelectorAll("#closePopupBtn, #closePopupBtn2");
+
+                // Mở popup khi click Select record
+                selectRecordBtn.addEventListener("click", function () {
+                    popup.classList.remove("d-none");
+                });
+
+                // Đóng popup khi click nút X
+                closeBtns.forEach(btn => {
+                    btn.addEventListener("click", function () {
+                        popup.classList.add("d-none");
+                    });
+                });
+
+                // Optional: click bên ngoài popup-content cũng đóng popup
+                popup.addEventListener("click", function (event) {
+                    if (event.target === popup) {
+                        popup.classList.add("d-none");
+                    }
+                });
+            });
+
+            document.querySelectorAll('.remove-record-btn').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    const parentDiv = e.target.closest('.col-12');
+                    if (parentDiv)
+                        parentDiv.remove();
+                });
+            });
+        </script>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const form = document.getElementById("appealForm");
+
+                form.addEventListener("submit", function (e) {
+                    const recordsDiv = document.getElementById("selectedRecordsList");
+                    const records = [];
+
+                    if (recordsDiv) {
+                        const recordItems = recordsDiv.querySelectorAll(".col-12.border");
+
+                        recordItems.forEach(div => {
+                            const removeBtn = div.querySelector(".remove-record-btn");
+                            if (!removeBtn)
+                                return;
+
+                            // --- Lấy dữ liệu cũ từ table ---
+                            const tds = div.querySelectorAll("table tbody tr td");
+                            const oldRecord = {
+                                date: tds[0]?.innerText.trim() || "",
+                                checkIn: tds[1]?.innerText.trim() || "",
+                                checkOut: tds[2]?.innerText.trim() || "",
+                                status: tds[3]?.innerText.trim() || "",
+                                source: tds[4]?.innerText.trim() || "",
+                                period: tds[5]?.innerText.trim() || ""
+                            };
+
+                            // --- Lấy dữ liệu mới từ input edit trong div ---
+                            const editDateEl = div.querySelector("input[name='editDate']");
+                            const editCheckInEl = div.querySelector("input[name='editCheckIn']");
+                            const editCheckOutEl = div.querySelector("input[name='editCheckOut']");
+                            const editStatusEl = div.querySelector("select[name='editStatus']");
+
+                            const newRecord = {
+                                date: editDateEl?.value || "",
+                                checkIn: editCheckInEl?.value || "",
+                                checkOut: editCheckOutEl?.value || "",
+                                status: editStatusEl?.value || ""
+                            };
+
+                            records.push({
+                                oldRecord: oldRecord,
+                                newRecord: newRecord
+                            });
+                        });
+                    }
+
+                    // --- Gán JSON vào input hidden trong form ---
+                    const hiddenInput = document.getElementById("selected_logs_data");
+                    hiddenInput.value = JSON.stringify(records);
+                });
+
+                // --- Xử lý nút X để xóa bản ghi ---
+                const removeBtns = document.querySelectorAll(".remove-record-btn");
+                removeBtns.forEach(btn => {
+                    btn.addEventListener("click", function () {
+                        const div = btn.closest(".col-12.border");
+                        if (div)
+                            div.remove();
+                    });
+                });
+            });
+        </script>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const form = document.getElementById("appealForm");
+                const selectRecordBtn = document.getElementById("selectRecordBtn");
+                const recordsDiv = document.getElementById("selectedRecordsList");
+                const errorDiv = document.getElementById("attendanceRecordError");
+
+                form.addEventListener("submit", function (e) {
+                    // Kiểm tra nếu chưa có bản ghi nào được chọn
+                    if (!recordsDiv || recordsDiv.children.length === 0) {
+                        e.preventDefault(); // chặn submit
+                        errorDiv.style.display = "block"; // hiện thông báo
+                        recordsDiv?.scrollIntoView({behavior: "smooth"}); // scroll đến chỗ cần điền
+                    } else {
+                        errorDiv.style.display = "none"; // ẩn thông báo nếu có bản ghi
+                    }
+                });
+
+                // Nếu muốn, click vào selectRecordBtn có thể ẩn lỗi luôn
+                selectRecordBtn.addEventListener("click", function () {
+                    errorDiv.style.display = "none";
+                });
+            });
+        </script>
         <script src="${pageContext.request.contextPath}/assets/js/appeal-request.js"></script>
     </body>
 </html>
