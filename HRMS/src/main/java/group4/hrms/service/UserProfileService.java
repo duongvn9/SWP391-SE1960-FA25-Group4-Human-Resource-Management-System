@@ -25,22 +25,22 @@ public class UserProfileService {
 
     /**
      * Validate full name
-     * Rules: Optional, max 100 chars, only letters and spaces - no numbers
+     * Rules: Required, max 100 chars, only letters and spaces - no numbers
      */
     public boolean isValidFullName(String fullName) {
         if (fullName == null || fullName.trim().isEmpty()) {
-            return true; // Optional field
+            return false; // Required field
         }
         return fullName.trim().length() <= 100 && fullName.matches("^[a-zA-ZÀ-ỹ\\s]+$");
     }
 
     /**
      * Validate phone number format
-     * Rules: Must be exactly 10 digits
+     * Rules: Required, must be exactly 10 digits
      */
     public boolean isPhone10Digits(String phone) {
         if (phone == null || phone.trim().isEmpty()) {
-            return true; // Optional field
+            return false; // Required field
         }
         return phone.matches("^\\d{10}$");
     }
@@ -57,11 +57,11 @@ public class UserProfileService {
 
     /**
      * Validate date of birth
-     * Rules: Must be between 01/01/1900 and today
+     * Rules: Required, must be between 01/01/1900 and today
      */
     public boolean isValidDob(LocalDate dob) {
         if (dob == null) {
-            return true; // Optional field
+            return false; // Required field
         }
         LocalDate minDate = LocalDate.of(1900, 1, 1);
         LocalDate today = LocalDate.now();
@@ -70,11 +70,11 @@ public class UserProfileService {
 
     /**
      * Validate age from date of birth
-     * Rules: Age must be between 18 and 60 years old
+     * Rules: Required, age must be between 18 and 60 years old
      */
     public boolean isAgeBetween18And60(LocalDate dob) {
         if (dob == null) {
-            return true; // Optional field
+            return false; // Required field
         }
         LocalDate today = LocalDate.now();
         int age = today.getYear() - dob.getYear();
@@ -90,11 +90,11 @@ public class UserProfileService {
 
     /**
      * Validate gender
-     * Rules: Must be "male", "female", or "other" (case insensitive)
+     * Rules: Required, must be "male", "female", or "other" (case insensitive)
      */
     public boolean isValidGender(String gender) {
         if (gender == null || gender.trim().isEmpty()) {
-            return true; // Optional field
+            return false; // Required field
         }
         String genderLower = gender.trim().toLowerCase();
         return genderLower.equals("male") || genderLower.equals("female") || genderLower.equals("other");
@@ -116,11 +116,11 @@ public class UserProfileService {
 
     /**
      * Validate CCCD format
-     * Rules: Must be exactly 12 digits
+     * Rules: Required, must be exactly 12 digits
      */
     public boolean isCCCD12Digits(String cccd) {
         if (cccd == null || cccd.trim().isEmpty()) {
-            return true; // Optional field
+            return false; // Required field
         }
         return cccd.matches("^[0-9]{12}$");
     }
@@ -137,11 +137,11 @@ public class UserProfileService {
 
     /**
      * Validate CCCD issued date
-     * Rules: Must be from 01/01/2021 onwards and not in the future
+     * Rules: Required, must be from 01/01/2021 onwards and not in the future
      */
     public boolean isCCCDIssuedDateFrom2021(LocalDate cccdIssuedDate) {
         if (cccdIssuedDate == null) {
-            return true; // Optional field
+            return false; // Required field
         }
         LocalDate minIssuedDate = LocalDate.of(2021, 1, 1);
         LocalDate today = LocalDate.now();
@@ -150,11 +150,11 @@ public class UserProfileService {
 
     /**
      * Validate CCCD issued place - no special characters
-     * Rules: Optional, max 100 chars, no special characters
+     * Rules: Required, max 100 chars, no special characters
      */
     public boolean isValidCCCDIssuedPlace(String cccdIssuedPlace) {
         if (cccdIssuedPlace == null || cccdIssuedPlace.trim().isEmpty()) {
-            return true; // Optional field
+            return false; // Required field
         }
         if (cccdIssuedPlace.length() > 100) {
             return false;
