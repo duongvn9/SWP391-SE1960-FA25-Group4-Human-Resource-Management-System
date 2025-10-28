@@ -107,6 +107,11 @@ public class JobPostingCreateServlet extends HttpServlet {
                         request.setAttribute("requestDetails", details);
                         request.setAttribute("sourceRequestId", reqId);
                     }
+                    // Also load department from recruitment request for display
+                    if (reqEntity.getDepartmentId() != null) {
+                        request.setAttribute("sourceDepartmentId", reqEntity.getDepartmentId());
+                        logger.info("Loaded departmentId={} from recruitment request for prefill", reqEntity.getDepartmentId());
+                    }
                 }
             } catch (NumberFormatException e) {
                 // invalid id - ignore
@@ -257,10 +262,9 @@ public class JobPostingCreateServlet extends HttpServlet {
         JobPostingFormDto dto = new JobPostingFormDto();
         
         // Basic information
-    dto.setPositionCode(request.getParameter("positionCode"));
-    dto.setPositionName(request.getParameter("positionName"));
-    dto.setJobTitle(request.getParameter("jobTitle"));
-    dto.setCode(request.getParameter("code"));
+        dto.setPositionName(request.getParameter("positionName"));
+        dto.setJobTitle(request.getParameter("jobTitle"));
+        dto.setCode(request.getParameter("code"));
         dto.setJobLevel(request.getParameter("jobLevel"));
         dto.setJobType(request.getParameter("jobType"));
         try {
@@ -339,8 +343,7 @@ public class JobPostingCreateServlet extends HttpServlet {
         dto.setContactEmail(request.getParameter("contactEmail"));
         dto.setContactPhone(request.getParameter("contactPhone"));
         
-        // Add priority and working hours
-        dto.setPriority(request.getParameter("priority"));
+        // Add working hours
         dto.setWorkingHours(request.getParameter("workingHours"));
         
         return dto;
@@ -350,7 +353,9 @@ public class JobPostingCreateServlet extends HttpServlet {
             HttpServletRequest request) {
         // Basic information
         // Use explicit jobTitle if provided, otherwise use positionName
-        jobPosting.setCode(formDto.getCode() != null && !formDto.getCode().isBlank() ? formDto.getCode() : formDto.getPositionCode());
+        if (formDto.getCode() != null && !formDto.getCode().isBlank()) {
+            jobPosting.setCode(formDto.getCode());
+        }
         jobPosting.setTitle(formDto.getJobTitle() != null && !formDto.getJobTitle().isBlank() ? formDto.getJobTitle() : formDto.getPositionName());
     jobPosting.setLevel(formDto.getJobLevel());
     // Use normalized canonical values for jobType/salaryType to match DB expectations
@@ -361,15 +366,55 @@ public class JobPostingCreateServlet extends HttpServlet {
         jobPosting.setStartDate(formDto.getStartDate());
 
         // If a sourceRequestId attribute present, set requestId on jobPosting so association preserved
+        // Also load department and position from the recruitment request
         Object src = request.getAttribute("sourceRequestId");
         if (src instanceof Long) {
             Long srcLong = (Long) src;
             jobPosting.setRequestId(srcLong);
+            
+            // Load department and position from recruitment request
+            try {
+                group4.hrms.dao.RequestDao requestDao = new group4.hrms.dao.RequestDao();
+                java.util.Optional<group4.hrms.model.Request> reqOpt = requestDao.findById(srcLong);
+                if (reqOpt.isPresent()) {
+                    group4.hrms.model.Request req = reqOpt.get();
+                    // Set department from recruitment request
+                    if (req.getDepartmentId() != null) {
+                        jobPosting.setDepartmentId(req.getDepartmentId());
+                        logger.info("Set departmentId={} from recruitment request", req.getDepartmentId());
+                    }
+                    // Try to get position from recruitment details if available
+                    group4.hrms.dto.RecruitmentDetailsDto details = req.getRecruitmentDetail();
+                    if (details != null && details.getPositionCode() != null) {
+                        // Optionally map position code to position ID if needed
+                        logger.info("Recruitment request position code: {}", details.getPositionCode());
+                    }
+                }
+            } catch (Exception e) {
+                logger.error("Failed to load department from recruitment request", e);
+            }
         } else {
             String srcParam = request.getParameter("sourceRequestId");
             if (srcParam != null && !srcParam.isBlank()) {
                 try {
-                    jobPosting.setRequestId(Long.valueOf(srcParam));
+                    Long requestId = Long.valueOf(srcParam);
+                    jobPosting.setRequestId(requestId);
+                    
+                    // Load department and position from recruitment request
+                    try {
+                        group4.hrms.dao.RequestDao requestDao = new group4.hrms.dao.RequestDao();
+                        java.util.Optional<group4.hrms.model.Request> reqOpt = requestDao.findById(requestId);
+                        if (reqOpt.isPresent()) {
+                            group4.hrms.model.Request req = reqOpt.get();
+                            // Set department from recruitment request
+                            if (req.getDepartmentId() != null) {
+                                jobPosting.setDepartmentId(req.getDepartmentId());
+                                logger.info("Set departmentId={} from recruitment request", req.getDepartmentId());
+                            }
+                        }
+                    } catch (Exception e) {
+                        logger.error("Failed to load department from recruitment request", e);
+                    }
                 } catch (NumberFormatException e) {
                     // ignore
                 }
@@ -393,8 +438,7 @@ public class JobPostingCreateServlet extends HttpServlet {
         jobPosting.setContactEmail(formDto.getContactEmail());
         jobPosting.setContactPhone(formDto.getContactPhone());
         
-        // Add priority and working hours
-        jobPosting.setPriority(formDto.getPriority() != null ? formDto.getPriority() : "MEDIUM");
+        // Add working hours
         jobPosting.setWorkingHours(formDto.getWorkingHours());
         
         // Status and audit
@@ -438,9 +482,6 @@ public class JobPostingCreateServlet extends HttpServlet {
         }
         if (formDto.getSalaryType() != null) {
             formDto.setSalaryType(formDto.getSalaryType().trim().toUpperCase());
-        }
-        if (formDto.getPriority() != null) {
-            formDto.setPriority(formDto.getPriority().trim().toUpperCase());
         }
     }
     

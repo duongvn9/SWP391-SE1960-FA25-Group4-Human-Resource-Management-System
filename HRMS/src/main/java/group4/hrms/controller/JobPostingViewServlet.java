@@ -1,10 +1,13 @@
 package group4.hrms.controller;
 
 import java.io.IOException;
+import java.time.format.DateTimeFormatter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import group4.hrms.dao.AccountDao;
+import group4.hrms.model.Account;
 import group4.hrms.model.JobPosting;
 import group4.hrms.service.DepartmentService;
 import group4.hrms.service.JobPostingService;
@@ -21,6 +24,7 @@ public class JobPostingViewServlet extends HttpServlet {
     private JobPostingService jobPostingService;
     private DepartmentService departmentService;
     private PositionService positionService;
+    private AccountDao accountDao;
 
     @Override
     public void init() throws ServletException {
@@ -31,6 +35,9 @@ public class JobPostingViewServlet extends HttpServlet {
         if (ds instanceof DepartmentService) this.departmentService = (DepartmentService) ds;
         Object ps = getServletContext().getAttribute("positionService");
         if (ps instanceof PositionService) this.positionService = (PositionService) ps;
+        
+        // Initialize AccountDao directly
+        this.accountDao = new AccountDao();
     }
 
     @Override
@@ -51,6 +58,14 @@ public class JobPostingViewServlet extends HttpServlet {
             }
 
             request.setAttribute("jobPosting", jobPosting);
+            
+            // Debug: Log rejection info
+            logger.info("📋 Job Posting Debug Info:");
+            logger.info("  - ID: {}", jobPosting.getId());
+            logger.info("  - Status: {}", jobPosting.getStatus());
+            logger.info("  - Rejected Reason: {}", jobPosting.getRejectedReason());
+            logger.info("  - Approved By Account ID: {}", jobPosting.getApprovedByAccountId());
+            logger.info("  - Approved At: {}", jobPosting.getApprovedAt());
 
             // Add reference data used by the view (department/position lookup)
             if (departmentService != null) {
@@ -67,10 +82,29 @@ public class JobPostingViewServlet extends HttpServlet {
                     logger.warn("Failed to load positions for view: {}", ex.getMessage());
                 }
             }
-
-            // Add debug attributes to help trace missing fields in the JSP
-            request.setAttribute("debug_priority", jobPosting.getPriority());
-            request.setAttribute("debug_workingHours", jobPosting.getWorkingHours());
+            
+            // Load approver/rejector information
+            if (accountDao != null && jobPosting.getApprovedByAccountId() != null) {
+                try {
+                    Account approver = accountDao.findById(jobPosting.getApprovedByAccountId()).orElse(null);
+                    if (approver != null) {
+                        request.setAttribute("approverAccount", approver);
+                        logger.info("✅ Loaded approver account: {}", approver.getUsername());
+                    } else {
+                        logger.warn("⚠️ Approver account not found for ID: {}", jobPosting.getApprovedByAccountId());
+                    }
+                } catch (Exception ex) {
+                    logger.error("❌ Failed to load approver account: {}", ex.getMessage(), ex);
+                }
+            }
+            
+            // Format rejection date for display
+            if (jobPosting.getApprovedAt() != null) {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+                String formattedDate = jobPosting.getApprovedAt().format(formatter);
+                request.setAttribute("rejectionDateFormatted", formattedDate);
+                logger.info("✅ Formatted rejection date: {}", formattedDate);
+            }
 
             // forward to JSP
             request.getRequestDispatcher("/WEB-INF/views/job-postings/view.jsp").forward(request, response);
