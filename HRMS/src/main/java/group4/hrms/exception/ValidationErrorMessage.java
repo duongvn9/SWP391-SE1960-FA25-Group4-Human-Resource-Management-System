@@ -53,8 +53,8 @@ public class ValidationErrorMessage {
      */
     public static ValidationErrorMessage balanceExceededError(
             String leaveTypeName,
-            int remainingDays,
-            int usedDays,
+            double remainingDays,
+            double usedDays,
             int requestedDays,
             int totalAllowed) {
 
@@ -62,8 +62,8 @@ public class ValidationErrorMessage {
         String details = String.format(
             "Leave Type: %s\n" +
             "• Total Allowed: %d days\n" +
-            "• Already Used: %d days\n" +
-            "• Remaining: %d days\n" +
+            "• Already Used: %.1f days\n" +
+            "• Remaining: %.1f days\n" +
             "• You are requesting: %d days\n\n" +
             "Please reduce the number of days or choose a different leave type.",
             leaveTypeName,

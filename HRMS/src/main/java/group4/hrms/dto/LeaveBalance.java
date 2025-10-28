@@ -9,17 +9,17 @@ public class LeaveBalance {
     private int defaultDays;        // Số ngày được nghỉ cơ bản
     private int seniorityBonus;     // Số ngày thêm từ thâm niên
     private int totalAllowed;       // Tổng số ngày được phép nghỉ
-    private int usedDays;           // Số ngày đã nghỉ
-    private int remainingDays;      // Số ngày còn lại
-    private int pendingDays;        // Số ngày đang chờ duyệt
-    private int availableDays;      // Số ngày có thể xin (remaining - pending)
+    private double usedDays;        // Số ngày đã nghỉ (supports half-day: 0.5, 1.5, etc.)
+    private double remainingDays;   // Số ngày còn lại (supports decimal)
+    private double pendingDays;     // Số ngày đang chờ duyệt (supports half-day)
+    private double availableDays;   // Số ngày có thể xin (remaining - pending)
     private int year;               // Năm áp dụng
 
     public LeaveBalance() {
     }
 
     public LeaveBalance(String leaveTypeCode, String leaveTypeName, int defaultDays,
-                       int seniorityBonus, int usedDays, int year) {
+                       int seniorityBonus, double usedDays, int year) {
         this.leaveTypeCode = leaveTypeCode;
         this.leaveTypeName = leaveTypeName;
         this.defaultDays = defaultDays;
@@ -27,13 +27,13 @@ public class LeaveBalance {
         this.totalAllowed = defaultDays + seniorityBonus;
         this.usedDays = usedDays;
         this.remainingDays = totalAllowed - usedDays;
-        this.pendingDays = 0;
+        this.pendingDays = 0.0;
         this.availableDays = remainingDays;
         this.year = year;
     }
 
     public LeaveBalance(String leaveTypeCode, String leaveTypeName, int defaultDays,
-                       int seniorityBonus, int usedDays, int pendingDays, int year) {
+                       int seniorityBonus, double usedDays, double pendingDays, int year) {
         this.leaveTypeCode = leaveTypeCode;
         this.leaveTypeName = leaveTypeName;
         this.defaultDays = defaultDays;
@@ -87,30 +87,30 @@ public class LeaveBalance {
         return totalAllowed;
     }
 
-    public int getUsedDays() {
+    public double getUsedDays() {
         return usedDays;
     }
 
-    public void setUsedDays(int usedDays) {
+    public void setUsedDays(double usedDays) {
         this.usedDays = usedDays;
         this.remainingDays = this.totalAllowed - this.usedDays;
         this.availableDays = this.remainingDays - this.pendingDays;
     }
 
-    public int getRemainingDays() {
+    public double getRemainingDays() {
         return remainingDays;
     }
 
-    public int getPendingDays() {
+    public double getPendingDays() {
         return pendingDays;
     }
 
-    public void setPendingDays(int pendingDays) {
+    public void setPendingDays(double pendingDays) {
         this.pendingDays = pendingDays;
         this.availableDays = this.remainingDays - this.pendingDays;
     }
 
-    public int getAvailableDays() {
+    public double getAvailableDays() {
         return availableDays;
     }
 
