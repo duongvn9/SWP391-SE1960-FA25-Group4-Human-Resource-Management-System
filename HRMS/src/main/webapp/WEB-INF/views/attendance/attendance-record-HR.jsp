@@ -50,8 +50,18 @@
 
                         <!-- Employee -->
                         <div class="filter-group">
-                            <label class="filter-label">Employee:</label> 
-                            <input type="text" class="filter-input" name="employeeKeyword" value="${employeeKeyword}" placeholder="Name or ID" /> 
+                            <label class="filter-label">Employee:</label>
+                            <select name="employeeId" class="filter-select">
+                                <option value="">-- Select Employee --</option>
+                                <c:forEach var="emp" items="${uList}">
+                                    <option value="${emp.id}"
+                                            <c:if test="${employeeId == emp.id}">
+                                                selected
+                                            </c:if>>
+                                        ${emp.employeeCode} - ${emp.fullName}
+                                    </option>
+                                </c:forEach>
+                            </select>
                         </div>
 
                         <!-- Status -->
@@ -61,6 +71,9 @@
                                 <option value="">All</option> 
                                 <option value="On time" <c:if test="${status eq 'On time'}">selected</c:if>>On time</option> 
                                 <option value="Late" <c:if test="${status eq 'Late'}">selected</c:if>>Late</option> 
+                                <option value="Shift day" <c:if test="${status eq 'Shift day'}">selected</c:if>>Shift day</option> 
+                                <option value="leaving early" <c:if test="${status eq 'leaving early'}">selected</c:if>>leaving early</option> 
+                                <option value="Over Time" <c:if test="${status eq 'Over Time'}">selected</c:if>>Over Time</option> 
                                 </select> 
                             </div>
 
@@ -205,41 +218,43 @@
 
                     <!-- ========== PAGINATION ========== --> 
                     <div class="pagination-wrapper" style="margin-top: 10px;">
-                        <form id="paginationForm" method="post" action="${pageContext.request.contextPath}/attendance/record/HR">
-                            <!-- Giữ tất cả filter hiện tại trong input ẩn -->
+                        <form id="paginationForm" method="get" action="${pageContext.request.contextPath}/attendance/record/HR">
+                            <!-- Giữ tất cả filter hiện tại -->
                             <input type="hidden" name="employeeKeyword" value="${employeeKeyword}" />
                             <input type="hidden" name="department" value="${department}" />
                             <input type="hidden" name="status" value="${status}" />
                             <input type="hidden" name="source" value="${source}" />
                             <input type="hidden" name="startDate" value="${startDate}" />
                             <input type="hidden" name="endDate" value="${endDate}" />
-                            <input type="hidden" name="periodSelect" id="exportPeriodSelect" 
-                                   value="${selectedPeriod != null ? selectedPeriod.id : ''}">
+                            <input type="hidden" name="periodSelect" value="${selectedPeriod != null ? selectedPeriod.id : ''}" />
 
                             <!-- Previous -->
                             <c:if test="${currentPage > 1}">
                                 <button type="submit" name="page" value="${currentPage - 1}" class="pagination-link">Previous</button>
                             </c:if>
 
-                            <!-- Tính startPage và endPage -->
-                            <c:set var="startPage" value="${currentPage - 1}" />
-                            <c:set var="endPage" value="${currentPage + 1}" />
+                            <!-- Xác định startPage và endPage -->
+                            <c:set var="displayPages" value="5" />
+                            <c:set var="halfPages" value="${displayPages / 2}" />
 
+                            <c:set var="startPage" value="${currentPage - halfPages}" />
+                            <c:set var="endPage" value="${currentPage + halfPages}" />
+
+                            <!-- Điều chỉnh nếu startPage < 1 hoặc endPage > totalPages -->
                             <c:if test="${startPage < 1}">
                                 <c:set var="startPage" value="1" />
                             </c:if>
-
                             <c:if test="${endPage > totalPages}">
                                 <c:set var="endPage" value="${totalPages}" />
                             </c:if>
 
-                            <!-- Hiển thị trang đầu nếu startPage > 1 -->
+                            <!-- Trang đầu nếu startPage > 1 -->
                             <c:if test="${startPage > 1}">
                                 <button type="submit" name="page" value="1" class="pagination-link">1</button>
                                 <span>...</span>
                             </c:if>
 
-                            <!-- Vòng lặp hiển thị các trang xung quanh currentPage -->
+                            <!-- Các trang giữa -->
                             <c:forEach var="i" begin="${startPage}" end="${endPage}">
                                 <c:choose>
                                     <c:when test="${i == currentPage}">
@@ -251,7 +266,7 @@
                                 </c:choose>
                             </c:forEach>
 
-                            <!-- Hiển thị trang cuối nếu endPage < totalPages -->
+                            <!-- Trang cuối nếu endPage < totalPages -->
                             <c:if test="${endPage < totalPages}">
                                 <span>...</span>
                                 <button type="submit" name="page" value="${totalPages}" class="pagination-link">${totalPages}</button>

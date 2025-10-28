@@ -137,8 +137,8 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
             req.setAttribute("endDate", (endDate != null) ? endDate.toString() : "");
             req.setAttribute("status", status != null ? status : "");
             req.setAttribute("source", source != null ? source : "");
-            req.setAttribute("selectedPeriodId", selectedPeriodId); 
-            req.setAttribute("selectedPeriod", selectedPeriod);    
+            req.setAttribute("selectedPeriodId", selectedPeriodId);
+            req.setAttribute("selectedPeriod", selectedPeriod);
             req.setAttribute("currentPage", currentPage);
             req.setAttribute("totalPages", totalPages);
 
@@ -225,8 +225,8 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
             req.setAttribute("endDate", endDate.toString());
             req.setAttribute("status", status != null ? status : "");
             req.setAttribute("source", source != null ? source : "");
-            req.setAttribute("selectedPeriodId", selectedPeriodId); 
-            req.setAttribute("selectedPeriod", selectedPeriod);    
+            req.setAttribute("selectedPeriodId", selectedPeriodId);
+            req.setAttribute("selectedPeriod", selectedPeriod);
             req.setAttribute("currentPage", currentPage);
             req.setAttribute("totalPages", totalPages);
 

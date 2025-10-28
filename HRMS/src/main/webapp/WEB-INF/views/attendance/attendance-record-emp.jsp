@@ -42,6 +42,9 @@
                                 <option value="">All</option>
                                 <option value="On time" ${status == 'On time' ? 'selected' : ''}>On time</option>
                                 <option value="Late" ${status == 'Late' ? 'selected' : ''}>Late</option>
+                                <option value="Shift day" ${status == 'Shift day' ? 'selected' : ''}>Shift day</option>
+                                <option value="leaving early" ${status == 'leaving early' ? 'selected' : ''}>leaving early</option>
+                                <option value="Over Time" ${status == 'Over Time' ? 'selected' : ''}>Over Time</option>
                             </select>
                         </div>
 
