@@ -3,9 +3,11 @@ package group4.hrms.controller;
 import group4.hrms.dao.AttendanceLogDao;
 import group4.hrms.dao.DepartmentDao;
 import group4.hrms.dao.TimesheetPeriodDao;
+import group4.hrms.dao.UserDao;
 import group4.hrms.dto.AttendanceLogDto;
 import group4.hrms.model.AttendanceLog;
 import group4.hrms.model.TimesheetPeriod;
+import group4.hrms.model.User;
 import group4.hrms.service.AttendanceMapper;
 import group4.hrms.service.ExportService;
 import group4.hrms.util.PaginationUtil;
@@ -81,7 +83,6 @@ public class AttendanceRecordHRServlet extends HttpServlet {
                 endDate = now.withDayOfMonth(now.lengthOfMonth());
             }
 
-            // 1. Lấy danh sách DTO có paginate trực tiếp
             List<AttendanceLogDto> attendanceList = attendanceLogDao.findByFilter(
                     null,
                     null,
@@ -96,7 +97,6 @@ public class AttendanceRecordHRServlet extends HttpServlet {
                     true
             );
 
-            // 2. Đếm tổng số DTO (count phải tương thích với findByFilter)
             int totalRecords = attendanceLogDao.countByFilter(
                     null,
                     null,
@@ -108,14 +108,11 @@ public class AttendanceRecordHRServlet extends HttpServlet {
                     periodId
             );
 
-            System.out.println("---------------------");
-            System.out.println("Số bản ghi khi filter xong: " + attendanceList.size());
-            System.out.println("Số bản ghi đếm được: " + totalRecords);
-            System.out.println("----------------------");
-            
             int totalPages = PaginationUtil.calculateTotalPages(totalRecords, recordsPerPage);
 
-            // 3. Đẩy dữ liệu ra JSP
+            UserDao uDao = new UserDao();
+            List<User> uList = uDao.findAll();
+            req.setAttribute("uList", uList);
             req.setAttribute("attendanceList", attendanceList);
             req.setAttribute("periodList", tDAO.findAll());
             req.setAttribute("departmentList", dDAO.findAll());
@@ -144,7 +141,8 @@ public class AttendanceRecordHRServlet extends HttpServlet {
 
             String action = req.getParameter("action");
             String exportType = req.getParameter("exportType");
-
+            String employeeIdStr = req.getParameter("employeeId");
+            Long employeeId = Long.valueOf(employeeIdStr);
             String employeeKeyword = getParam(req, "employeeKeyword");
             String department = getParam(req, "department");
             String startDateStr = getParam(req, "startDate");
@@ -185,7 +183,7 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             } else if ("toggleLock".equalsIgnoreCase(action)) {
                 handleLockPeriod(req);
 
-                employeeKeyword = getParam(req, "employeeKeyword");
+                employeeKeyword = getParam(req, "employeeId");
                 department = getParam(req, "department");
                 startDateStr = getParam(req, "startDate");
                 endDateStr = getParam(req, "endDate");
@@ -200,7 +198,7 @@ public class AttendanceRecordHRServlet extends HttpServlet {
 
             if (exportType != null && !exportType.isEmpty()) {
                 List<AttendanceLogDto> filteredRecords = attendanceLogDao.findByFilter(
-                        null,
+                        employeeId,
                         employeeKeyword,
                         department,
                         startDate,
@@ -217,7 +215,7 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             }
 
             int totalRecords = attendanceLogDao.countByFilter(
-                    null,
+                    employeeId,
                     employeeKeyword,
                     department,
                     startDate,
@@ -234,7 +232,7 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             int offset = (currentPage - 1) * recordsPerPage;
 
             List<AttendanceLogDto> attendanceList = attendanceLogDao.findByFilter(
-                    null,
+                    employeeId,
                     employeeKeyword,
                     department,
                     startDate,
@@ -247,14 +245,13 @@ public class AttendanceRecordHRServlet extends HttpServlet {
                     true
             );
 
-            System.out.println("totalRecords=" + totalRecords);
-            System.out.println("recordsPerPage=" + recordsPerPage);
-            System.out.println("currentPage=" + currentPage);
-
+            UserDao uDao = new UserDao();
+            List<User> uList = uDao.findAll();
+            req.setAttribute("uList", uList);
             req.setAttribute("attendanceList", attendanceList);
             req.setAttribute("periodList", tDAO.findAll());
             req.setAttribute("departmentList", dDAO.findAll());
-            req.setAttribute("employeeKeyword", employeeKeyword);
+            req.setAttribute("employeeId", employeeId);
             req.setAttribute("department", department);
             req.setAttribute("startDate", (startDate != null) ? startDate.toString() : "");
             req.setAttribute("endDate", (endDate != null) ? endDate.toString() : "");

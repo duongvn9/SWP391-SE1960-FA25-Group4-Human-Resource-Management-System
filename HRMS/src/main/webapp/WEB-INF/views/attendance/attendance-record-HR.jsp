@@ -50,8 +50,18 @@
 
                         <!-- Employee -->
                         <div class="filter-group">
-                            <label class="filter-label">Employee:</label> 
-                            <input type="text" class="filter-input" name="employeeKeyword" value="${employeeKeyword}" placeholder="Name or ID" /> 
+                            <label class="filter-label">Employee:</label>
+                            <select name="employeeId" class="filter-select">
+                                <option value="">-- Select Employee --</option>
+                                <c:forEach var="emp" items="${uList}">
+                                    <option value="${emp.id}"
+                                            <c:if test="${employeeId == emp.id}">
+                                                selected
+                                            </c:if>>
+                                        ${emp.employeeCode} - ${emp.fullName}
+                                    </option>
+                                </c:forEach>
+                            </select>
                         </div>
 
                         <!-- Status -->
