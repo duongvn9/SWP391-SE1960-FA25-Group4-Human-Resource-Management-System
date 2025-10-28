@@ -4,6 +4,7 @@ import group4.hrms.dao.UserProfileDao;
 import group4.hrms.dto.UserProfileDto;
 import group4.hrms.model.Account;
 import group4.hrms.model.UserProfile;
+import group4.hrms.service.UserProfileService;
 import group4.hrms.util.SessionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,9 +27,11 @@ public class ProfileController extends HttpServlet {
     
     private static final Logger logger = LoggerFactory.getLogger(ProfileController.class);
     private final UserProfileDao userProfileDao;
+    private final UserProfileService userProfileService;
     
     public ProfileController() {
         this.userProfileDao = new UserProfileDao();
+        this.userProfileService = new UserProfileService();
     }
 
     @Override
@@ -149,107 +152,22 @@ public class ProfileController extends HttpServlet {
             
             logger.info("Updating profile for user_id: {}, username: {}", 
                 currentProfile.getUserId(), username);
-            logger.info("=== DEBUG INFO ===");
-            logger.info("Gender from request: '{}'", req.getParameter("gender"));
-            logger.info("Gender in DTO: '{}'", dto.getGender());
-            logger.info("Gender in DB: '{}'", currentProfile.getGender());
-            logger.info("Phone from request: '{}'", req.getParameter("phone"));
-            logger.info("Phone in DTO: '{}'", dto.getPhone());
-            logger.info("Phone in DB: '{}'", currentProfile.getPhone());
-            logger.info("CCCD from request: '{}'", req.getParameter("cccd"));
-            logger.info("CCCD in DTO: '{}'", dto.getCccd());
-            logger.info("CCCD in DB: '{}'", currentProfile.getCccd());
-            logger.info("==================");
             
-            // Validate DTO first
-            boolean isValid = dto.validate();
-            logger.info("Validation result: {}", isValid);
-            if (!isValid) {
-                logger.warn("Validation failed: {}", dto.getErrors());
-                req.setAttribute("error", String.join(", ", dto.getErrors()));
-                // Set profile with user's input (not DB values) to show what they entered
+            // Validate all fields using UserProfileService
+            String validationError = userProfileService.validateProfile(dto, currentProfile.getUserId());
+            if (validationError != null) {
+                logger.warn("Validation failed: {}", validationError);
+                req.setAttribute("error", validationError);
                 UserProfile profileWithInput = createProfileFromDto(currentProfile, dto);
                 req.setAttribute("profile", profileWithInput);
-                // Generate new CSRF token and save to session
                 String newCsrfToken = generateCsrfToken();
                 req.getSession().setAttribute("_csrf_token", newCsrfToken);
                 req.setAttribute("csrfToken", newCsrfToken);
-                logger.info("Forwarding back to edit page with errors");
                 req.getRequestDispatcher("/WEB-INF/views/profile/edit-profile.jsp").forward(req, resp);
                 return;
             }
             
-            // E1: Validate age >= 18
-            if (dto.getDob() != null) {
-                LocalDate today = LocalDate.now();
-                int age = today.getYear() - dto.getDob().getYear();
-                
-                // Adjust age if birthday hasn't occurred this year yet
-                if (today.getMonthValue() < dto.getDob().getMonthValue() ||
-                    (today.getMonthValue() == dto.getDob().getMonthValue() && today.getDayOfMonth() < dto.getDob().getDayOfMonth())) {
-                    age--;
-                }
-                
-                if (age < 18) {
-                    logger.warn("Age validation failed: age={}, dob={}", age, dto.getDob());
-                    req.setAttribute("error", "Age must be at least 18 years old");
-                    UserProfile profileWithInput = createProfileFromDto(currentProfile, dto);
-                    req.setAttribute("profile", profileWithInput);
-                    // Generate new CSRF token and save to session
-                    String newCsrfToken = generateCsrfToken();
-                    req.getSession().setAttribute("_csrf_token", newCsrfToken);
-                    req.setAttribute("csrfToken", newCsrfToken);
-                    req.getRequestDispatcher("/WEB-INF/views/profile/edit-profile.jsp").forward(req, resp);
-                    return;
-                }
-            }
-            
             logger.info("Validation passed, continuing to update...");
-            
-            // Check uniqueness constraints
-            if (dto.getCccd() != null && !dto.getCccd().trim().isEmpty()) {
-                if (userProfileDao.isCccdExistsForOtherUser(dto.getCccd(), currentProfile.getUserId())) {
-                    logger.warn("CCCD already exists: {}", dto.getCccd());
-                    req.setAttribute("error", "CCCD already exists");
-                    UserProfile profileWithInput = createProfileFromDto(currentProfile, dto);
-                    req.setAttribute("profile", profileWithInput);
-                    // Generate new CSRF token and save to session
-                    String newCsrfToken = generateCsrfToken();
-                    req.getSession().setAttribute("_csrf_token", newCsrfToken);
-                    req.setAttribute("csrfToken", newCsrfToken);
-                    req.getRequestDispatcher("/WEB-INF/views/profile/edit-profile.jsp").forward(req, resp);
-                    return;
-                }
-            }
-            
-            if (dto.getPhone() != null && !dto.getPhone().trim().isEmpty()) {
-                // Validate phone number format - must be exactly 10 digits
-                if (!dto.getPhone().matches("\\d{10}")) {
-                    logger.warn("Invalid phone number format: {}", dto.getPhone());
-                    req.setAttribute("error", "Phone number must be exactly 10 digits");
-                    UserProfile profileWithInput = createProfileFromDto(currentProfile, dto);
-                    req.setAttribute("profile", profileWithInput);
-                    // Generate new CSRF token and save to session
-                    String newCsrfToken = generateCsrfToken();
-                    req.getSession().setAttribute("_csrf_token", newCsrfToken);
-                    req.setAttribute("csrfToken", newCsrfToken);
-                    req.getRequestDispatcher("/WEB-INF/views/profile/edit-profile.jsp").forward(req, resp);
-                    return;
-                }
-                
-                if (userProfileDao.isPhoneExistsForOtherUser(dto.getPhone(), currentProfile.getUserId())) {
-                    logger.warn("Phone number already exists: {}", dto.getPhone());
-                    req.setAttribute("error", "Phone number already exists");
-                    UserProfile profileWithInput = createProfileFromDto(currentProfile, dto);
-                    req.setAttribute("profile", profileWithInput);
-                    // Generate new CSRF token and save to session
-                    String newCsrfToken = generateCsrfToken();
-                    req.getSession().setAttribute("_csrf_token", newCsrfToken);
-                    req.setAttribute("csrfToken", newCsrfToken);
-                    req.getRequestDispatcher("/WEB-INF/views/profile/edit-profile.jsp").forward(req, resp);
-                    return;
-                }
-            }
             
             
              if (!hasChanges(currentProfile, dto)) {
@@ -460,6 +378,124 @@ public class ProfileController extends HttpServlet {
     }
     
 
+    
+    private String validateProfileUpdate(UserProfileDto dto, UserProfile currentProfile) {
+        // 1. Validate Full Name (Optional, max 100 chars, only letters and spaces)
+        if (dto.getFullName() != null && !dto.getFullName().trim().isEmpty()) {
+            if (dto.getFullName().trim().length() > 100) {
+                return "Full name must not exceed 100 characters";
+            } else if (!dto.getFullName().matches("^[a-zA-ZÀ-ỹ\\s]+$")) {
+                return "Name cannot contain digits or special characters";
+            }
+        }
+        
+        // 2. Validate Phone Number (Optional, 10 digits if provided)
+        if (dto.getPhone() != null && !dto.getPhone().trim().isEmpty()) {
+            if (!dto.getPhone().matches("^[0-9]{10}$")) {
+                return "Phone number must be 10 digits";
+            }
+            // Check phone uniqueness
+            if (userProfileDao.isPhoneExistsForOtherUser(dto.getPhone(), currentProfile.getUserId())) {
+                return "Phone number already exists";
+            }
+        }
+        
+        // 3. Validate Date of Birth (Optional, age 18-60)
+        if (dto.getDob() != null) {
+            LocalDate minDate = LocalDate.of(1900, 1, 1);
+            LocalDate today = LocalDate.now();
+            if (dto.getDob().isAfter(today)) {
+                return "Date of birth must not be in the future";
+            } else if (dto.getDob().isBefore(minDate)) {
+                return "Date of birth must be after 01/01/1900";
+            } else {
+                // Check age >= 18 and <= 60
+                LocalDate minAgeDate = today.minusYears(18);
+                LocalDate maxAgeDate = today.minusYears(60);
+                if (dto.getDob().isAfter(minAgeDate)) {
+                    return "Age must be at least 18 years old";
+                } else if (dto.getDob().isBefore(maxAgeDate)) {
+                    return "Age must not exceed 60 years old";
+                }
+            }
+        }
+        
+        // 4. Validate Gender (Optional, must be male/female/other)
+        if (dto.getGender() != null && !dto.getGender().trim().isEmpty()) {
+            String genderLower = dto.getGender().trim().toLowerCase();
+            if (!genderLower.equals("male") && !genderLower.equals("female") && !genderLower.equals("other")) {
+                return "Invalid gender value";
+            }
+        }
+        
+        // 5. Validate Hometown (Optional, max 50 chars)
+        if (dto.getHometown() != null && dto.getHometown().length() > 50) {
+            return "Hometown must not exceed 50 characters";
+        }
+        
+        // 6. Validate CCCD (Optional, 12 digits if provided)
+        if (dto.getCccd() != null && !dto.getCccd().trim().isEmpty()) {
+            if (!dto.getCccd().matches("^[0-9]{12}$")) {
+                return "Citizen ID must be 12 digits";
+            }
+            // Check CCCD uniqueness
+            if (userProfileDao.isCccdExistsForOtherUser(dto.getCccd(), currentProfile.getUserId())) {
+                return "CCCD already exists";
+            }
+        }
+        
+        // 7. Validate CCCD Issued Date (Optional, from 01/01/2021 to today)
+        if (dto.getCccdIssuedDate() != null) {
+            LocalDate minCccdDate = LocalDate.of(2021, 1, 1);
+            LocalDate today = LocalDate.now();
+            if (dto.getCccdIssuedDate().isAfter(today)) {
+                return "CCCD issued date must not be in the future";
+            } else if (dto.getCccdIssuedDate().isBefore(minCccdDate)) {
+                return "CCCD issued date must be from 01/01/2021 onwards";
+            }
+        }
+        
+        // 8. Validate CCCD Issued Place (Optional, max 100 chars)
+        if (dto.getCccdIssuedPlace() != null && !dto.getCccdIssuedPlace().trim().isEmpty()) {
+            if (dto.getCccdIssuedPlace().length() > 100) {
+                return "CCCD issued place must not exceed 100 characters";
+            }
+        }
+        
+        // 9. Validate Address Line 1 (Optional, max 100 chars)
+        if (dto.getAddressLine1() != null && !dto.getAddressLine1().trim().isEmpty()) {
+            if (dto.getAddressLine1().length() > 100) {
+                return "Address line 1 must not exceed 100 characters";
+            }
+        }
+        
+        // 10. Validate Address Line 2 (Optional, max 100 chars)
+        if (dto.getAddressLine2() != null && dto.getAddressLine2().length() > 100) {
+            return "Address line 2 must not exceed 100 characters";
+        }
+        
+        // 11. Validate City (Optional, max 50 chars)
+        if (dto.getCity() != null && !dto.getCity().trim().isEmpty()) {
+            if (dto.getCity().length() > 50) {
+                return "City must not exceed 50 characters";
+            }
+        }
+        
+        // 12. Validate State (Optional, max 50 chars)
+        if (dto.getState() != null && dto.getState().length() > 50) {
+            return "State must not exceed 50 characters";
+        }
+        
+        // 13. Validate Postal Code (Optional, 5-10 digits)
+        if (dto.getPostalCode() != null && !dto.getPostalCode().trim().isEmpty()) {
+            if (!dto.getPostalCode().matches("^[0-9]{5,10}$")) {
+                return "Postal code must be 5-10 digits";
+            }
+        }
+        
+        return null; // All validations passed
+    }
+    
     /**
      * Convert empty string to null (for database storage)
      */

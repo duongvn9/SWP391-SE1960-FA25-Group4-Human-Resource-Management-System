@@ -124,13 +124,25 @@ public class ApproveRequestController extends HttpServlet {
             String reason = request.getParameter("reason");
 
             if ("approve".equals(action)) {
-                // Only allow approving PENDING requests
-                if (!"PENDING".equals(req.getStatus())) {
-                    out.print("{\"success\": false, \"message\": \"Can only approve PENDING requests\"}");
+                // Allow approving PENDING and REJECTED requests (HR override)
+                // Permission helper already checks if user can override REJECTED
+                if (!"PENDING".equals(req.getStatus()) && !"REJECTED".equals(req.getStatus())) {
+                    out.print("{\"success\": false, \"message\": \"Can only approve PENDING or REJECTED requests\"}");
                     return;
                 }
 
-                // Validate OT balance before approving OT requests
+                // Check if this is an override of REJECTED request
+                boolean isOverride = "REJECTED".equals(req.getStatus());
+                if (isOverride) {
+                    logger.info(String.format("HR override detected: User %d overriding REJECTED request %d",
+                               currentUser.getId(), requestId));
+
+                    // IMPORTANT: When overriding REJECTED, need to re-validate for conflicts
+                    // because the situation may have changed since rejection
+                    // This validation will happen in the type-specific validation below
+                }
+
+                // Validate OT balance before approving OT requests (includes conflict checks)
                 if (req.getRequestTypeId() != null && req.getRequestTypeId() == 7L) {
                     try {
                         // Initialize OTRequestService with required DAOs
@@ -151,13 +163,22 @@ public class ApproveRequestController extends HttpServlet {
                                 otDetail.getOtDate(),
                                 otDetail.getOtHours()
                             );
+
+                            // Check conflict with existing leave requests
+                            // This is critical when approving, especially for override cases
+                            otService.checkConflictWithLeave(
+                                req.getUserId(),
+                                otDetail.getOtDate(),
+                                otDetail.getStartTime(),
+                                otDetail.getEndTime()
+                            );
                         }
                     } catch (IllegalArgumentException e) {
                         out.print("{\"success\": false, \"message\": \"Cannot approve: " + e.getMessage() + "\"}");
                         return;
                     } catch (Exception e) {
-                        logger.log(Level.WARNING, "Error validating OT balance during approval", e);
-                        out.print("{\"success\": false, \"message\": \"Cannot approve: Unable to validate OT balance\"}");
+                        logger.log(Level.WARNING, "Error validating OT request during approval", e);
+                        out.print("{\"success\": false, \"message\": \"Cannot approve: Unable to validate OT request\"}");
                         return;
                     }
                 }
@@ -176,8 +197,11 @@ public class ApproveRequestController extends HttpServlet {
                         if (leaveDetail != null && leaveDetail.getLeaveTypeCode() != null) {
                             // Parse dates to calculate requested days and year
                             try {
-                                java.time.LocalDate startDate = java.time.LocalDate.parse(leaveDetail.getStartDate());
-                                java.time.LocalDate endDate = java.time.LocalDate.parse(leaveDetail.getEndDate());
+                                // Parse as LocalDateTime first since the format includes time component
+                                java.time.LocalDateTime startDateTime = java.time.LocalDateTime.parse(leaveDetail.getStartDate());
+                                java.time.LocalDateTime endDateTime = java.time.LocalDateTime.parse(leaveDetail.getEndDate());
+                                java.time.LocalDate startDate = startDateTime.toLocalDate();
+                                java.time.LocalDate endDate = endDateTime.toLocalDate();
 
                                 // Calculate requested days (inclusive)
                                 int requestedDays = (int) java.time.temporal.ChronoUnit.DAYS.between(startDate, endDate) + 1;
@@ -190,6 +214,21 @@ public class ApproveRequestController extends HttpServlet {
                                     requestedDays,
                                     year
                                 );
+
+                                // Check conflicts with OT and other leave requests
+                                // This is critical when approving, especially for half-day leaves
+                                Boolean isHalfDay = leaveDetail.getIsHalfDay();
+                                String halfDayPeriod = leaveDetail.getHalfDayPeriod();
+
+                                // Validate all conflicts (OT + overlapping leaves)
+                                leaveService.validateLeaveConflictsForApproval(
+                                    req.getUserId(),
+                                    startDateTime,
+                                    endDateTime,
+                                    req.getId(), // exclude this request from overlap check
+                                    isHalfDay,
+                                    halfDayPeriod
+                                );
                             } catch (java.time.format.DateTimeParseException e) {
                                 logger.log(Level.WARNING, "Invalid date format in leave detail", e);
                                 out.print("{\"success\": false, \"message\": \"Cannot approve: Invalid date format\"}");
@@ -197,11 +236,13 @@ public class ApproveRequestController extends HttpServlet {
                             }
                         }
                     } catch (IllegalArgumentException e) {
+                        // This catches both IllegalArgumentException and LeaveValidationException
+                        // (LeaveValidationException extends IllegalArgumentException)
                         out.print("{\"success\": false, \"message\": \"Cannot approve: " + e.getMessage() + "\"}");
                         return;
                     } catch (Exception e) {
-                        logger.log(Level.WARNING, "Error validating leave balance during approval", e);
-                        out.print("{\"success\": false, \"message\": \"Cannot approve: Unable to validate leave balance\"}");
+                        logger.log(Level.WARNING, "Error validating leave request during approval", e);
+                        out.print("{\"success\": false, \"message\": \"Cannot approve: Unable to validate leave request\"}");
                         return;
                     }
                 }

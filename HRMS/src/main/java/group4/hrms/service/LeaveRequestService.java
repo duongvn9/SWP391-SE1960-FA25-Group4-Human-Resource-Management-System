@@ -145,6 +145,44 @@ public class LeaveRequestService {
             // 7. Save to database
             Request savedRequest = requestDao.save(leaveRequest);
 
+            // 8. Determine approver and auto-approve if top-level
+            try {
+                group4.hrms.dao.UserDao userDao = new group4.hrms.dao.UserDao();
+                group4.hrms.dao.AccountDao accountDao = new group4.hrms.dao.AccountDao();
+                ApproverService approverService = new ApproverService(userDao, accountDao);
+
+                Long approverId = approverService.findApprover(userId);
+
+                if (approverId != null) {
+                    // Found approver - set and keep status PENDING
+                    savedRequest.setCurrentApproverAccountId(approverId);
+                    requestDao.update(savedRequest);
+                    logger.info(String.format("Approver set for request: requestId=%d, approverId=%d",
+                               savedRequest.getId(), approverId));
+                } else {
+                    // No approver found - user is top-level (HRM/Department Head)
+                    // Auto-approve immediately
+                    savedRequest.setStatus("APPROVED");
+                    savedRequest.setCurrentApproverAccountId(accountId);
+                    savedRequest.setApproveReason("Auto-approved (top-level manager)");
+                    requestDao.update(savedRequest);
+
+                    logger.info(String.format("Auto-approved leave request for top-level user: requestId=%d, userId=%d",
+                               savedRequest.getId(), userId));
+
+                    // Process leave balance for paid leave types
+                    if (leaveType.isPaid()) {
+                        processLeaveApproval(savedRequest.getId());
+                        logger.info(String.format("Leave balance updated for auto-approved request: requestId=%d",
+                                   savedRequest.getId()));
+                    }
+                }
+            } catch (Exception e) {
+                logger.log(Level.WARNING, String.format("Error setting approver for request: requestId=%d",
+                          savedRequest.getId()), e);
+                // Continue anyway - request is created, approver can be set manually
+            }
+
             logger.info(String.format("Successfully created leave request: id=%d, userId=%d, leaveType=%s, days=%d, status=%s",
                        savedRequest.getId(), userId, leaveTypeCode, dayCount, savedRequest.getStatus()));
             return savedRequest.getId();
@@ -207,18 +245,18 @@ public class LeaveRequestService {
             // Calculate total allowed days
             int totalAllowed = defaultDays + seniorityBonus;
 
-            // Calculate used days from APPROVED requests in the year
-            int usedDays = calculateUsedDays(userId, leaveTypeCode, year);
+            // Calculate used days from APPROVED requests in the year (supports half-day decimal)
+            double usedDays = calculateUsedDays(userId, leaveTypeCode, year);
 
-            // Calculate remaining days
-            int remainingDays = totalAllowed - usedDays;
+            // Calculate remaining days (supports decimal)
+            double remainingDays = totalAllowed - usedDays;
 
-            logger.fine(String.format("Balance calculation: userId=%d, leaveType=%s, total=%d, used=%d, remaining=%d, requested=%d",
+            logger.fine(String.format("Balance calculation: userId=%d, leaveType=%s, total=%d, used=%.1f, remaining=%.1f, requested=%d",
                        userId, leaveTypeCode, totalAllowed, usedDays, remainingDays, requestedDays));
 
             // Validate if requested days exceed remaining days
             if (requestedDays > remainingDays) {
-                logger.warning(String.format("Insufficient leave balance: userId=%d, leaveType=%s, requested=%d, remaining=%d, used=%d, total=%d",
+                logger.warning(String.format("Insufficient leave balance: userId=%d, leaveType=%s, requested=%d, remaining=%.1f, used=%.1f, total=%d",
                               userId, leaveTypeCode, requestedDays, remainingDays, usedDays, totalAllowed));
                 ValidationErrorMessage errorMsg = ValidationErrorMessage.balanceExceededError(
                     leaveType.getName(),
@@ -230,7 +268,7 @@ public class LeaveRequestService {
                 throw new LeaveValidationException(errorMsg);
             }
 
-            logger.info(String.format("Leave balance validation passed: userId=%d, leaveType=%s, requested=%d, remaining=%d",
+            logger.info(String.format("Leave balance validation passed: userId=%d, leaveType=%s, requested=%d, remaining=%.1f",
                        userId, leaveTypeCode, requestedDays, remainingDays));
 
         } catch (IllegalArgumentException e) {
@@ -244,19 +282,59 @@ public class LeaveRequestService {
     }
 
     /**
-     * Check for overlapping leave requests
+     * Validate leave request for conflicts when approving
+     * This method is called during the approval process to ensure no conflicts exist
+     * Checks conflicts with both PENDING and APPROVED requests to prevent conflicts early
+     *
+     * @param userId User ID
+     * @param startDateTime Start date/time of leave request
+     * @param endDateTime End date/time of leave request
+     * @param excludeRequestId Request ID to exclude from checks (the request being approved)
+     * @param isHalfDay Whether this is a half-day leave
+     * @param halfDayPeriod Period for half-day leave ("AM" or "PM")
+     * @throws IllegalArgumentException if conflicts are detected
+     * @throws LeaveValidationException if validation fails
+     */
+    public void validateLeaveConflictsForApproval(Long userId, LocalDateTime startDateTime,
+                                                   LocalDateTime endDateTime, Long excludeRequestId,
+                                                   Boolean isHalfDay, String halfDayPeriod) {
+        logger.info(String.format("Validating leave conflicts for approval: userId=%d, requestId=%d, isHalfDay=%s, period=%s",
+                   userId, excludeRequestId, isHalfDay, halfDayPeriod));
+
+        // Check for overlapping leave requests
+        // This already checks PENDING and APPROVED leaves
+        checkLeaveOverlap(userId, startDateTime, endDateTime, excludeRequestId, isHalfDay, halfDayPeriod);
+
+        // Check for conflicts with OT requests (PENDING + APPROVED)
+        // The main method now checks both PENDING and APPROVED
+        checkConflictWithOT(userId, startDateTime, endDateTime, isHalfDay, halfDayPeriod);
+
+        logger.info(String.format("Leave conflict validation passed for approval: userId=%d, requestId=%d",
+                   userId, excludeRequestId));
+    }
+
+    /**
+     * Check for overlapping leave requests (with half-day support)
      * Requirements: 1
+     *
+     * Half-day overlap rules:
+     * - Half-day AM + Half-day PM (same date) = ALLOWED (different periods)
+     * - Half-day AM + Half-day AM (same date) = BLOCKED (same period)
+     * - Full-day + Any half-day (same date) = BLOCKED
      *
      * @param userId User ID
      * @param startDate Start date of leave request
      * @param endDate End date of leave request
      * @param excludeRequestId Request ID to exclude (for update scenarios)
+     * @param isHalfDay Whether the new request is a half-day leave
+     * @param halfDayPeriod Period of the new half-day leave ("AM" or "PM")
      * @throws IllegalArgumentException if overlap is detected
      */
     private void checkLeaveOverlap(Long userId, LocalDateTime startDate,
-                                   LocalDateTime endDate, Long excludeRequestId) {
-        logger.info(String.format("=== CHECKING LEAVE OVERLAP === userId=%d, startDate=%s, endDate=%s, excludeId=%s",
-                   userId, startDate, endDate, excludeRequestId));
+                                   LocalDateTime endDate, Long excludeRequestId,
+                                   Boolean isHalfDay, String halfDayPeriod) {
+        logger.info(String.format("=== CHECKING LEAVE OVERLAP === userId=%d, startDate=%s, endDate=%s, excludeId=%s, isHalfDay=%s, period=%s",
+                   userId, startDate, endDate, excludeRequestId, isHalfDay, halfDayPeriod));
 
         try {
             // Query all PENDING and APPROVED requests in the date range
@@ -273,33 +351,15 @@ public class LeaveRequestService {
 
             logger.info(String.format("Found %d overlapping requests", overlappingRequests.size()));
 
-            // Check if any overlapping requests exist
-            if (!overlappingRequests.isEmpty()) {
-                Request existingRequest = overlappingRequests.get(0);
-
-                // Get leave detail from existing request
+            // Check each overlapping request
+            for (Request existingRequest : overlappingRequests) {
                 LeaveRequestDetail existingDetail = existingRequest.getLeaveDetail();
 
-                if (existingDetail != null) {
-                    String existingStartDate = existingDetail.getStartDate();
-                    String existingEndDate = existingDetail.getEndDate();
-                    String existingLeaveType = existingDetail.getLeaveTypeName();
-
-                    logger.warning(String.format("Leave overlap detected: userId=%d, existingRequestId=%d, existingType=%s, existingDates=%s to %s, status=%s",
-                                  userId, existingRequest.getId(), existingLeaveType, existingStartDate, existingEndDate, existingRequest.getStatus()));
-
-                    ValidationErrorMessage errorMsg = ValidationErrorMessage.overlapError(
-                        existingLeaveType,
-                        existingRequest.getStatus(),
-                        existingStartDate,
-                        existingEndDate
-                    );
-                    throw new LeaveValidationException(errorMsg);
-                } else {
+                if (existingDetail == null) {
+                    // No detail available, assume overlap
                     logger.warning(String.format("Leave overlap detected (no detail): userId=%d, existingRequestId=%d, status=%s",
                                   userId, existingRequest.getId(), existingRequest.getStatus()));
 
-                    // Fallback if detail is not available
                     ValidationErrorMessage errorMsg = ValidationErrorMessage.overlapError(
                         existingRequest.getTitle(),
                         existingRequest.getStatus(),
@@ -308,6 +368,53 @@ public class LeaveRequestService {
                     );
                     throw new LeaveValidationException(errorMsg);
                 }
+
+                    String existingStartDate = existingDetail.getStartDate();
+                    String existingEndDate = existingDetail.getEndDate();
+                    String existingLeaveType = existingDetail.getLeaveTypeName();
+                Boolean existingIsHalfDay = existingDetail.getIsHalfDay();
+                String existingPeriod = existingDetail.getHalfDayPeriod();
+
+                // CASE 1: Both are half-day leaves on the same date
+                if (isHalfDay != null && isHalfDay && existingIsHalfDay != null && existingIsHalfDay) {
+                    // Check if they're on the same date
+                    java.time.LocalDate newLeaveDate = startDate.toLocalDate();
+                    java.time.LocalDate existingLeaveDate = java.time.LocalDateTime.parse(existingStartDate).toLocalDate();
+
+                    if (newLeaveDate.equals(existingLeaveDate)) {
+                        // Same date: check if different periods
+                        if (halfDayPeriod != null && existingPeriod != null && !halfDayPeriod.equals(existingPeriod)) {
+                            // Different periods (AM vs PM) → ALLOWED
+                            logger.info(String.format("✓ Half-day leaves on same date but different periods: new=%s, existing=%s. ALLOWED.",
+                                       halfDayPeriod, existingPeriod));
+                            continue; // Skip this overlap, it's allowed
+                        } else {
+                            // Same period (AM+AM or PM+PM) → BLOCKED
+                            logger.warning(String.format("Half-day overlap - same period: userId=%d, date=%s, period=%s",
+                                          userId, newLeaveDate, halfDayPeriod));
+
+                    ValidationErrorMessage errorMsg = ValidationErrorMessage.overlapError(
+                                existingLeaveType + " (" + existingPeriod + " half-day)",
+                        existingRequest.getStatus(),
+                        existingStartDate,
+                        existingEndDate
+                    );
+                    throw new LeaveValidationException(errorMsg);
+                        }
+                    }
+                }
+
+                // CASE 2: At least one is full-day, or different dates → normal overlap check
+                logger.warning(String.format("Leave overlap detected: userId=%d, existingRequestId=%d, existingType=%s, existingDates=%s to %s, status=%s",
+                              userId, existingRequest.getId(), existingLeaveType, existingStartDate, existingEndDate, existingRequest.getStatus()));
+
+                    ValidationErrorMessage errorMsg = ValidationErrorMessage.overlapError(
+                    existingLeaveType,
+                        existingRequest.getStatus(),
+                    existingStartDate,
+                    existingEndDate
+                    );
+                    throw new LeaveValidationException(errorMsg);
             }
 
             logger.info(String.format("✓ No leave overlap found: userId=%d, dateRange=%s to %s",
@@ -357,71 +464,209 @@ public class LeaveRequestService {
     }
 
     /**
-     * Check for conflicts with approved OT requests
-     * Requirements: 4
+     * Check for conflicts with OT requests (PENDING + APPROVED, with half-day support)
+     * This checks both PENDING and APPROVED OT to prevent conflicts early
+     * Used in both creation and approval flows
+     * Requirements: 4, BR-22, BR-LV-11
      *
-     * Kiểm tra xem có đơn OT APPROVED nào trùng với khoảng thời gian nghỉ phép không
+     * Rules:
+     * - Full-day leave: Block all OT on that date
+     * - Half-day AM (8:00-12:00): Block OT overlapping with morning, allow after 12:00
+     * - Half-day PM (13:00-17:00): Block OT overlapping with afternoon, allow after 17:00
+     * - Two half-days (AM+PM): Treat as full-day, block all OT
      *
      * @param userId User ID
      * @param startDate Start date of leave request
      * @param endDate End date of leave request
+     * @param isHalfDay Whether this is a half-day leave
+     * @param halfDayPeriod Period of half-day ("AM" or "PM")
      * @throws IllegalArgumentException if conflict with OT is detected
      */
     private void checkConflictWithOT(Long userId, LocalDateTime startDate,
-                                     LocalDateTime endDate) {
-        logger.fine(String.format("Checking OT conflict: userId=%d, startDate=%s, endDate=%s",
-                   userId, startDate, endDate));
+                                     LocalDateTime endDate, Boolean isHalfDay, String halfDayPeriod) {
+        logger.fine(String.format("Checking OT conflict (PENDING + APPROVED): userId=%d, startDate=%s, endDate=%s, isHalfDay=%s, period=%s",
+                   userId, startDate, endDate, isHalfDay, halfDayPeriod));
 
         try {
-            // Query APPROVED OT requests in the date range
-            List<Request> otRequests = requestDao.findOTRequestsByUserIdAndDateRange(
-                userId, startDate, endDate
-            );
+            // Query BOTH PENDING and APPROVED OT requests in the date range
+            List<Request> allOTRequests = requestDao.findByUserId(userId);
 
-            // Check if any OT requests exist in the date range
-            if (!otRequests.isEmpty()) {
+            List<Request> otRequests = allOTRequests.stream()
+                .filter(r -> r.getRequestTypeId() != null && r.getRequestTypeId() == 7L) // OT requests
+                .filter(r -> "PENDING".equals(r.getStatus()) || "APPROVED".equals(r.getStatus()))
+                .filter(r -> {
+                    group4.hrms.dto.OTRequestDetail otDetail = r.getOtDetail();
+                    if (otDetail == null || otDetail.getOtDate() == null) return false;
+
+                    java.time.LocalDate otDate = java.time.LocalDate.parse(otDetail.getOtDate());
+                    java.time.LocalDate leaveStart = startDate.toLocalDate();
+                    java.time.LocalDate leaveEnd = endDate.toLocalDate();
+
+                    return !otDate.isBefore(leaveStart) && !otDate.isAfter(leaveEnd);
+                })
+                .collect(java.util.stream.Collectors.toList());
+
+            if (otRequests.isEmpty()) {
+                logger.fine("No OT requests found in date range");
+                return; // No conflict
+            }
+
+            // If creating full-day leave → block all OT in date range
+            if (isHalfDay == null || !isHalfDay) {
                 Request otRequest = otRequests.get(0);
-
-                // Get OT detail from request
                 group4.hrms.dto.OTRequestDetail otDetail = otRequest.getOtDetail();
+                String otStatus = otRequest.getStatus();
 
                 if (otDetail != null) {
-                    String otDate = otDetail.getOtDate();
-                    Double otHours = otDetail.getOtHours();
-                    String startTime = otDetail.getStartTime();
-                    String endTime = otDetail.getEndTime();
+                    logger.warning(String.format("Full-day leave conflicts with %s OT: userId=%d, otDate=%s, time=%s-%s",
+                                  otStatus, userId, otDetail.getOtDate(), otDetail.getStartTime(), otDetail.getEndTime()));
 
-                    logger.warning(String.format("OT conflict detected: userId=%d, otRequestId=%d, otDate=%s, hours=%.1f, time=%s-%s",
-                                  userId, otRequest.getId(), otDate, otHours, startTime, endTime));
-
-                    ValidationErrorMessage errorMsg = ValidationErrorMessage.otConflictError(
-                        otDate,
-                        otHours,
-                        startTime,
-                        endTime
+                    throw new IllegalArgumentException(
+                        String.format("Cannot create leave request! There is a %s OT request on %s (%s-%s, %.1f hours). " +
+                                     "Please cancel or wait for the OT request to be resolved first.",
+                                     otStatus, otDetail.getOtDate(), otDetail.getStartTime(), otDetail.getEndTime(), otDetail.getOtHours())
                     );
-                    throw new LeaveValidationException(errorMsg);
                 } else {
-                    logger.warning(String.format("OT conflict detected (no detail): userId=%d, otRequestId=%d",
-                                  userId, otRequest.getId()));
-
-                    // Fallback if detail is not available
-                    ValidationErrorMessage errorMsg = ValidationErrorMessage.genericError(
-                        "Không thể xin nghỉ phép trong ngày đã có đơn OT được duyệt"
+                    throw new IllegalArgumentException(
+                        "Cannot create leave request! There is a " + otStatus + " OT request on the same date."
                     );
-                    throw new LeaveValidationException(errorMsg);
                 }
             }
 
-            logger.fine(String.format("No OT conflict found: userId=%d, dateRange=%s to %s",
-                       userId, startDate, endDate));
+            // Half-day leave: Check if combined with existing APPROVED half-day creates full-day
+            // that would conflict with OT
+            java.time.LocalDate leaveDate = startDate.toLocalDate();
+
+            // Check if there's already another APPROVED half-day leave on the same date
+            List<Request> allRequests = requestDao.findByUserId(userId);
+            boolean hasOtherApprovedHalfDay = false;
+            String otherPeriod = null;
+
+            for (Request request : allRequests) {
+                // Only check APPROVED leaves (not PENDING, as they might be rejected)
+                if (!"APPROVED".equals(request.getStatus())) {
+                    continue;
+                }
+
+                group4.hrms.dto.LeaveRequestDetail existingLeave = request.getLeaveDetail();
+                if (existingLeave == null) {
+                    continue;
+                }
+
+                // Check if this leave is on the same date
+                String existingStartStr = existingLeave.getStartDate();
+                if (existingStartStr == null || existingStartStr.length() < 10) {
+                    continue;
+                }
+
+                java.time.LocalDate existingDate = java.time.LocalDate.parse(existingStartStr.substring(0, 10));
+                if (!existingDate.equals(leaveDate)) {
+                    continue; // Different date
+                }
+
+                // Check if it's a half-day
+                Boolean existingIsHalfDay = existingLeave.getIsHalfDay();
+                String existingPeriod = existingLeave.getHalfDayPeriod();
+
+                if (existingIsHalfDay != null && existingIsHalfDay && existingPeriod != null) {
+                    // Found another APPROVED half-day on same date
+                    if (!existingPeriod.equals(halfDayPeriod)) {
+                        // Different period (AM vs PM) → would create full-day when approved
+                        hasOtherApprovedHalfDay = true;
+                        otherPeriod = existingPeriod;
+                        break;
+                    }
+                }
+            }
+
+            // If creating second half-day that would combine with APPROVED one to make full-day
+            // → check if this would conflict with OT
+            if (hasOtherApprovedHalfDay && !otRequests.isEmpty()) {
+                Request otRequest = otRequests.get(0);
+                group4.hrms.dto.OTRequestDetail otDetail = otRequest.getOtDetail();
+                String otStatus = otRequest.getStatus();
+
+                logger.warning(String.format("Two half-days (AM+PM) would conflict with %s OT: userId=%d, date=%s, existing=%s, new=%s",
+                              otStatus, userId, leaveDate, otherPeriod, halfDayPeriod));
+
+                String errorMsg = String.format(
+                    "Cannot create %s half-day leave on %s! " +
+                    "You already have an APPROVED %s half-day leave on this date. " +
+                    "When both are approved, this equals a full-day leave and conflicts with " +
+                    "a %s OT request at %s-%s (%.1f hours). " +
+                    "Please cancel or wait for the OT request to be resolved first, or choose a different date.",
+                    halfDayPeriod, leaveDate, otherPeriod, otStatus,
+                    otDetail != null ? otDetail.getStartTime() : "?",
+                    otDetail != null ? otDetail.getEndTime() : "?",
+                    otDetail != null ? otDetail.getOtHours() : 0.0
+                );
+
+                throw new IllegalArgumentException(errorMsg);
+            }
+
+            // Half-day leave: Check OT time overlap
+            for (Request otRequest : otRequests) {
+                group4.hrms.dto.OTRequestDetail otDetail = otRequest.getOtDetail();
+                if (otDetail == null) {
+                    continue;
+                }
+
+                String otStartTime = otDetail.getStartTime();
+                String otEndTime = otDetail.getEndTime();
+
+                if (otStartTime == null || otEndTime == null) {
+                    continue;
+                }
+
+                java.time.LocalTime otStart = java.time.LocalTime.parse(otStartTime);
+                java.time.LocalTime otEnd = java.time.LocalTime.parse(otEndTime);
+
+                // Check overlap based on half-day period
+                boolean hasOverlap = false;
+
+                if ("AM".equals(halfDayPeriod)) {
+                    // Morning: 8:00-12:00
+                    java.time.LocalTime amStart = java.time.LocalTime.of(8, 0);
+                    java.time.LocalTime amEnd = java.time.LocalTime.of(12, 0);
+
+                    // Check if OT overlaps with AM period
+                    if (otStart.isBefore(amEnd) && amStart.isBefore(otEnd)) {
+                        hasOverlap = true;
+                    }
+                } else if ("PM".equals(halfDayPeriod)) {
+                    // Afternoon: 13:00-17:00
+                    java.time.LocalTime pmStart = java.time.LocalTime.of(13, 0);
+                    java.time.LocalTime pmEnd = java.time.LocalTime.of(17, 0);
+
+                    // Check if OT overlaps with PM period
+                    if (otStart.isBefore(pmEnd) && pmStart.isBefore(otEnd)) {
+                        hasOverlap = true;
+                    }
+                }
+
+                if (hasOverlap) {
+                    String otStatus = otRequest.getStatus();
+                    logger.warning(String.format("Half-day leave conflicts with %s OT: userId=%d, period=%s, otTime=%s-%s",
+                                  otStatus, userId, halfDayPeriod, otStartTime, otEndTime));
+
+                    throw new IllegalArgumentException(
+                        String.format("Cannot create %s half-day leave on %s! " +
+                                     "There is a %s OT request at %s-%s (%.1f hours) that overlaps with the %s leave period. " +
+                                     "Please cancel or wait for the OT request to be resolved first.",
+                                     halfDayPeriod, otDetail.getOtDate(), otStatus,
+                                     otStartTime, otEndTime, otDetail.getOtHours(), halfDayPeriod)
+                    );
+                }
+            }
+
+            logger.fine(String.format("No OT conflict for half-day leave: userId=%d, period=%s",
+                       userId, halfDayPeriod));
 
         } catch (IllegalArgumentException e) {
-            // Re-throw validation exceptions (includes LeaveValidationException)
-            throw e;
+            throw e; // Re-throw validation exceptions
         } catch (Exception e) {
-            logger.log(Level.SEVERE, String.format("Error checking OT conflict: userId=%d, startDate=%s, endDate=%s",
-                      userId, startDate, endDate), e);
+            logger.log(Level.SEVERE, String.format("Error checking OT conflict: userId=%d, startDate=%s",
+                      userId, startDate), e);
             throw new RuntimeException("Error checking conflict with OT", e);
         }
     }
@@ -615,13 +860,13 @@ public class LeaveRequestService {
                        + " days may require certificate documentation");
         }
 
-        // Requirement 1: Check for overlapping leave requests
+        // Requirement 1: Check for overlapping leave requests (with half-day support)
         // Call after date logic validation
-        checkLeaveOverlap(userId, startDate, endDate, null);
+        checkLeaveOverlap(userId, startDate, endDate, null, isHalfDay, halfDayPeriod);
 
-        // Requirement 4: Check for conflict with approved OT requests
+        // Requirement 4: Check for conflict with approved OT requests (with half-day support)
         // Call after overlap check
-        checkConflictWithOT(userId, startDate, endDate);
+        checkConflictWithOT(userId, startDate, endDate, isHalfDay, halfDayPeriod);
     }
 
     /**
@@ -894,11 +1139,11 @@ public class LeaveRequestService {
             // For now, assume 1 extra day per 2 years of service
             int seniorityBonus = 0; // TODO: Calculate based on user's join date
 
-            // Calculate used days from approved requests in the year
-            int usedDays = calculateUsedDays(userId, leaveTypeCode, year);
+            // Calculate used days from approved requests in the year (supports decimal for half-day)
+            double usedDays = calculateUsedDays(userId, leaveTypeCode, year);
 
-            // Calculate pending days from PENDING requests in the year
-            int pendingDays = calculatePendingDays(userId, leaveTypeCode, year);
+            // Calculate pending days from PENDING requests in the year (supports decimal for half-day)
+            double pendingDays = calculatePendingDays(userId, leaveTypeCode, year);
 
             return new group4.hrms.dto.LeaveBalance(
                 leaveType.getCode(),
@@ -922,7 +1167,7 @@ public class LeaveRequestService {
      *
      * Uses optimized DAO method with SQL aggregation instead of loading all requests
      */
-    private int calculateUsedDays(Long userId, String leaveTypeCode, int year) {
+    private double calculateUsedDays(Long userId, String leaveTypeCode, int year) {
         logger.fine(String.format("Calculating used days: userId=%d, leaveType=%s, year=%d",
                    userId, leaveTypeCode, year));
 
@@ -933,13 +1178,13 @@ public class LeaveRequestService {
             logger.info(String.format("Calculated used days (optimized): userId=%d, leaveType=%s, year=%d, usedDays=%.1f",
                        userId, leaveTypeCode, year, totalUsedDays));
 
-            // Round up to nearest integer for safety
-            return (int) Math.ceil(totalUsedDays);
+            // Return exact value (supports half-day: 0.5, 1.5, etc.)
+            return totalUsedDays;
 
         } catch (Exception e) {
             logger.log(Level.SEVERE, String.format("Error calculating used days: userId=%d, leaveType=%s, year=%d",
                       userId, leaveTypeCode, year), e);
-            return 0;
+            return 0.0;
         }
     }
 
@@ -949,7 +1194,7 @@ public class LeaveRequestService {
      *
      * Uses optimized DAO method with SQL aggregation instead of loading all requests
      */
-    private int calculatePendingDays(Long userId, String leaveTypeCode, int year) {
+    private double calculatePendingDays(Long userId, String leaveTypeCode, int year) {
         logger.fine(String.format("Calculating pending days: userId=%d, leaveType=%s, year=%d",
                    userId, leaveTypeCode, year));
 
@@ -960,13 +1205,13 @@ public class LeaveRequestService {
             logger.info(String.format("Calculated pending days (optimized): userId=%d, leaveType=%s, year=%d, pendingDays=%.1f",
                        userId, leaveTypeCode, year, totalPendingDays));
 
-            // Round up to nearest integer for safety
-            return (int) Math.ceil(totalPendingDays);
+            // Return exact value (supports half-day: 0.5, 1.5, etc.)
+            return totalPendingDays;
 
         } catch (Exception e) {
             logger.log(Level.SEVERE, String.format("Error calculating pending days: userId=%d, leaveType=%s, year=%d",
                       userId, leaveTypeCode, year), e);
-            return 0;
+            return 0.0;
         }
     }
 
@@ -1061,7 +1306,7 @@ public class LeaveRequestService {
             // Only check balance for paid leave types with limits
             if (leaveType.isPaid() && leaveType.getDefaultDays() != null && leaveType.getDefaultDays() > 0) {
                 int year = date.getYear();
-                int usedDays = calculateUsedDays(userId, leaveTypeCode, year);
+                double usedDays = calculateUsedDays(userId, leaveTypeCode, year);
                 int defaultDays = leaveType.getDefaultDays();
                 double remainingDays = defaultDays - usedDays;
 

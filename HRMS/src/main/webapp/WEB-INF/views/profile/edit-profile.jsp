@@ -211,7 +211,7 @@
                 <div class="form-row">
                     <label class="form-label">Phone Number: </label>
                     <div class="form-input-wrapper">
-                        <input type="text" name="phone" class="form-control" value="${profile.phone}" autocomplete="off" maxlength="10" pattern="\d{10}" title="Phone number must be exactly 10 digits">
+                        <input type="text" name="phone" class="form-control" value="${profile.phone}" autocomplete="off" >
                     </div>
                 </div>
 
@@ -291,20 +291,12 @@
                     </div>
                 </div>
 
-                <!-- City & State -->
+                <!-- City & Postal Code -->
                 <div class="form-row two-columns">
                     <label class="form-label">City: </label>
                     <input type="text" name="city" class="form-control" value="${profile.city}">
-                    <label class="label-inline">State:</label>
-                    <input type="text" name="state" class="form-control" value="${profile.state}">
-                </div>
-
-                <!-- Postal Code -->
-                <div class="form-row">
-                    <label class="form-label">Postal Code:</label>
-                    <div class="form-input-wrapper">
-                        <input type="text" name="postalCode" class="form-control" value="${profile.postalCode}">
-                    </div>
+                    <label class="label-inline">Postal Code:</label>
+                    <input type="text" name="postalCode" class="form-control" value="${profile.postalCode}">
                 </div>
 
                 <!-- Save and Cancel buttons centered -->

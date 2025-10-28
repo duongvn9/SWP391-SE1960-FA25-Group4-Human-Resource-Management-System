@@ -479,8 +479,9 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Check consent checkbox
-        if (!employeeConsentCheckbox.checked) {
+        // Check consent checkbox (only when creating for self)
+        const requestForSelf = document.getElementById('requestForSelf');
+        if (requestForSelf && requestForSelf.checked && !employeeConsentCheckbox.checked) {
             e.preventDefault();
             showValidationToast('Please confirm your consent to work overtime', 'error');
             employeeConsentCheckbox.focus();
