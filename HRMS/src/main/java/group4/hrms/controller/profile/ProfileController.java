@@ -153,20 +153,11 @@ public class ProfileController extends HttpServlet {
             logger.info("Updating profile for user_id: {}, username: {}", 
                 currentProfile.getUserId(), username);
             
-<<<<<<< HEAD
             // Validate all fields using UserProfileService
             String validationError = userProfileService.validateProfile(dto, currentProfile.getUserId());
             if (validationError != null) {
                 logger.warn("Validation failed: {}", validationError);
                 req.setAttribute("error", validationError);
-=======
-            // Validate profile update
-            String validationError = validateProfileUpdate(dto, currentProfile);
-            if (validationError != null) {
-                logger.warn("Validation failed: {}", validationError);
-                req.setAttribute("error", validationError);
-                // Set profile with user's input (not DB values) to show what they entered
->>>>>>> e77eabc81a0f624e022587923c8a8ff7e76b3d15
                 UserProfile profileWithInput = createProfileFromDto(currentProfile, dto);
                 req.setAttribute("profile", profileWithInput);
                 String newCsrfToken = generateCsrfToken();
