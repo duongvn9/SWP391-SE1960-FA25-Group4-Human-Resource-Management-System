@@ -205,8 +205,7 @@
                                         ${(not empty param.status ? 1 : 0) + 
                                           (not empty param.departmentId ? 1 : 0) + 
                                           (not empty param.jobType ? 1 : 0) + 
-                                          (not empty param.jobLevel ? 1 : 0) + 
-                                          (not empty param.priority ? 1 : 0)}
+                                          (not empty param.jobLevel ? 1 : 0)}
                                     </h3>
                                 </div>
                                 <div class="text-warning">
@@ -255,7 +254,7 @@
                             <option value="INTERN" ${param.jobType == 'INTERN' ? 'selected' : ''}>Intern</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-3">
                         <label class="form-label">Level</label>
                         <select name="jobLevel" class="form-select">
                             <option value="">All</option>
@@ -264,16 +263,7 @@
                             <option value="SENIOR" ${param.jobLevel == 'SENIOR' ? 'selected' : ''}>Senior</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Priority</label>
-                        <select name="priority" class="form-select">
-                            <option value="">All</option>
-                            <option value="NORMAL" ${param.priority == 'NORMAL' ? 'selected' : ''}>Normal</option>
-                            <option value="HIGH" ${param.priority == 'HIGH' ? 'selected' : ''}>High</option>
-                            <option value="URGENT" ${param.priority == 'URGENT' ? 'selected' : ''}>Urgent</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
+                    <div class="col-md-3">
                         <label class="form-label d-block">&nbsp;</label>
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-primary flex-grow-1">
@@ -294,14 +284,13 @@
             <table class="table table-striped table-hover align-middle">
                 <thead class="table-light">
                     <tr>
-                        <th style="width: 20%;"><i class="fas fa-file-alt me-1"></i> Job Title & Code</th>
-                        <th style="width: 12%;"><i class="fas fa-briefcase me-1"></i> Type / Level</th>
-                        <th style="width: 8%;" class="text-center"><i class="fas fa-users me-1"></i> Positions</th>
-                        <th style="width: 10%;"><i class="fas fa-flag me-1"></i> Priority</th>
+                        <th style="width: 25%;"><i class="fas fa-file-alt me-1"></i> Job Title & Code</th>
+                        <th style="width: 15%;"><i class="fas fa-briefcase me-1"></i> Type / Level</th>
+                        <th style="width: 10%;" class="text-center"><i class="fas fa-users me-1"></i> Positions</th>
                         <th style="width: 12%;"><i class="fas fa-info-circle me-1"></i> Status</th>
-                        <th style="width: 12%;"><i class="fas fa-clock me-1"></i> Deadline</th>
+                        <th style="width: 13%;"><i class="fas fa-clock me-1"></i> Deadline</th>
                         <th style="width: 13%;"><i class="fas fa-user me-1"></i> Created By</th>
-                        <th style="width: 13%;" class="text-center"><i class="fas fa-cogs me-1"></i> Actions</th>
+                        <th style="width: 12%;" class="text-center"><i class="fas fa-cogs me-1"></i> Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -323,19 +312,6 @@
                             </td>
                             <td class="text-center">
                                 <span class="badge bg-secondary">${job.numberOfPositions}</span>
-                            </td>
-                            <td>
-                                <c:choose>
-                                    <c:when test="${job.priority == 'URGENT'}">
-                                        <span class="badge bg-danger">Urgent</span>
-                                    </c:when>
-                                    <c:when test="${job.priority == 'HIGH'}">
-                                        <span class="badge bg-warning">High</span>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <span class="badge bg-secondary">Normal</span>
-                                    </c:otherwise>
-                                </c:choose>
                             </td>
                             <td>
                                 <c:choose>
@@ -457,27 +433,70 @@
             </table>
         </div>
 
-        <!-- Pagination if needed -->
+        <!-- Pagination -->
         <c:if test="${totalPages > 1}">
             <nav aria-label="Job postings pagination" class="mt-4">
                 <ul class="pagination justify-content-center">
-                    <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
-                        <a class="page-link" href="?page=${currentPage - 1}&status=${param.status}&departmentId=${param.departmentId}">
-                            Previous
+                    <!-- Previous button -->
+                    <li class="page-item ${currentPage <= 1 ? 'disabled' : ''}">
+                        <a class="page-link" href="?page=${currentPage - 1}&status=${param.status}&departmentId=${param.departmentId}&jobType=${param.jobType}&jobLevel=${param.jobLevel}">
+                            «
                         </a>
                     </li>
                     
-                    <c:forEach begin="1" end="${totalPages}" var="page">
+                    <!-- Smart page numbers with ellipsis -->
+                    <c:set var="startPage" value="${currentPage - 2}" />
+                    <c:set var="endPage" value="${currentPage + 2}" />
+                    
+                    <c:if test="${startPage < 1}">
+                        <c:set var="startPage" value="1" />
+                    </c:if>
+                    
+                    <c:if test="${endPage > totalPages}">
+                        <c:set var="endPage" value="${totalPages}" />
+                    </c:if>
+                    
+                    <!-- First page -->
+                    <c:if test="${startPage > 1}">
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1&status=${param.status}&departmentId=${param.departmentId}&jobType=${param.jobType}&jobLevel=${param.jobLevel}">
+                                1
+                            </a>
+                        </li>
+                        <c:if test="${startPage > 2}">
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        </c:if>
+                    </c:if>
+                    
+                    <!-- Page numbers around current page -->
+                    <c:forEach begin="${startPage}" end="${endPage}" var="page">
                         <li class="page-item ${currentPage == page ? 'active' : ''}">
-                            <a class="page-link" href="?page=${page}&status=${param.status}&departmentId=${param.departmentId}">
+                            <a class="page-link" href="?page=${page}&status=${param.status}&departmentId=${param.departmentId}&jobType=${param.jobType}&jobLevel=${param.jobLevel}">
                                 ${page}
                             </a>
                         </li>
                     </c:forEach>
                     
-                    <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
-                        <a class="page-link" href="?page=${currentPage + 1}&status=${param.status}&departmentId=${param.departmentId}">
-                            Next
+                    <!-- Last page -->
+                    <c:if test="${endPage < totalPages}">
+                        <c:if test="${endPage < totalPages - 1}">
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        </c:if>
+                        <li class="page-item">
+                            <a class="page-link" href="?page=${totalPages}&status=${param.status}&departmentId=${param.departmentId}&jobType=${param.jobType}&jobLevel=${param.jobLevel}">
+                                ${totalPages}
+                            </a>
+                        </li>
+                    </c:if>
+                    
+                    <!-- Next button -->
+                    <li class="page-item ${currentPage >= totalPages ? 'disabled' : ''}">
+                        <a class="page-link" href="?page=${currentPage + 1}&status=${param.status}&departmentId=${param.departmentId}&jobType=${param.jobType}&jobLevel=${param.jobLevel}">
+                            »
                         </a>
                     </li>
                 </ul>

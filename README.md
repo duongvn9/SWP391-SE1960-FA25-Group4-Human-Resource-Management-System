@@ -85,6 +85,14 @@ The HRMS is a full-featured human resource management system that provides compr
 - **Interview Scheduling** and management
 - **Recruitment Workflow** with approval levels
 
+### 🤖 AI-Powered Chatbot
+- **Gemini AI Integration** for intelligent HR assistance
+- **Vietnamese Language Support** for natural conversations
+- **Context-Aware Responses** based on company policies
+- **Quick Suggestions** for common HR questions
+- **Real-time Support** for leave, overtime, and attendance queries
+- **Responsive Widget** accessible from any page
+
 ### ⚙️ System Administration
 - **System Settings** configuration
 - **Role & Permission Management**
@@ -121,6 +129,7 @@ The HRMS is a full-featured human resource management system that provides compr
 
 ### External Integrations
 - **Google OAuth2** - Authentication provider
+- **Google Gemini AI** - AI-powered chatbot (gemini-2.0-flash-exp)
 - **Lunar Calendar Library** - Vietnamese holiday calculations
 - **Apache HttpClient** - HTTP client for external APIs
 
@@ -183,6 +192,134 @@ google.oauth.client.id=your_google_client_id
 google.oauth.client.secret=your_google_client_secret
 google.oauth.redirect.uri=http://localhost:8080/HRMS/login-google
 ```
+
+### Gemini AI Chatbot Configuration
+
+The HRMS includes an AI-powered chatbot using Google's Gemini 2.0 Flash model to provide intelligent assistance for HR-related questions.
+
+#### 1. Obtain Gemini API Key
+
+1. Visit [Google AI Studio](https://aistudio.google.com/app/apikey)
+2. Sign in with your Google account
+3. Click **"Get API Key"** or **"Create API Key"**
+4. Copy the generated API key (format: `AIza...`)
+
+**Important**: Keep your API key secure and never commit it to version control.
+
+#### 2. Configure API Key
+
+**Option A: Using Environment Variable (Recommended for Production)**
+```bash
+# Linux/Mac
+export GEMINI_API_KEY=your_actual_api_key_here
+
+# Windows (Command Prompt)
+set GEMINI_API_KEY=your_actual_api_key_here
+
+# Windows (PowerShell)
+$env:GEMINI_API_KEY="your_actual_api_key_here"
+```
+
+**Option B: Direct Configuration (Development Only)**
+
+Update `src/main/resources/application.properties`:
+```properties
+# Gemini AI Chatbot Configuration
+gemini.api.key=${GEMINI_API_KEY}
+gemini.api.url=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent
+gemini.api.timeout=10000
+
+# Chatbot QA Data File
+chatbot.qa.file.path=/docs/chatbot-qa.json
+```
+
+**For development testing only**, you can temporarily set the key directly:
+```properties
+gemini.api.key=AIza...your_key_here
+```
+
+⚠️ **Security Warning**: Never commit actual API keys to Git. Always use environment variables in production.
+
+#### 3. Prepare Chatbot Knowledge Base
+
+The chatbot uses a JSON file containing company-specific HR policies and Q&A data. Ensure the file exists at:
+```
+HRMS/docs/chatbot-qa.json
+```
+
+The file should follow this structure:
+```json
+{
+  "system_prompt": {
+    "role": "Trợ lý nội bộ về chính sách và quy trình nhân sự",
+    "guidelines": [
+      "Trả lời bằng tiếng Việt",
+      "Chỉ trả lời về chính sách công ty",
+      "Nếu không biết, hãy thừa nhận"
+    ]
+  },
+  "categories": [
+    {
+      "category": "Chính sách Nghỉ phép",
+      "qa_pairs": [
+        {
+          "id": "leave_001",
+          "question": "Làm sao để gửi đơn nghỉ phép?",
+          "answer": "Để gửi đơn nghỉ phép, bạn thực hiện các bước sau...",
+          "keywords": ["gửi đơn", "nghỉ phép"]
+        }
+      ]
+    }
+  ]
+}
+```
+
+#### 4. Verify Installation
+
+After configuration, restart the application and:
+1. Login to the HRMS system
+2. Look for the chatbot toggle button (💬) at the bottom-right corner
+3. Click to open the chatbot widget
+4. Try asking: "Làm sao để gửi đơn nghỉ phép?"
+
+If the chatbot responds, the integration is successful!
+
+#### 5. Troubleshooting
+
+**Chatbot button not appearing:**
+- Verify you are logged in (chatbot only available for authenticated users)
+- Check browser console for JavaScript errors
+- Ensure `chatbot-widget.jsp` is included in your layout
+
+**"API key invalid" error:**
+- Verify the API key is correctly set in environment variable or properties file
+- Check that the key has not expired or been revoked
+- Ensure no extra spaces or quotes in the key value
+
+**Timeout errors:**
+- Check your internet connection
+- Verify the Gemini API endpoint is accessible
+- Consider increasing `gemini.api.timeout` value
+
+**Empty or incorrect responses:**
+- Verify `chatbot-qa.json` file exists and is properly formatted
+- Check application logs for JSON parsing errors
+- Ensure the file path in `chatbot.qa.file.path` is correct
+
+#### 6. API Usage and Limits
+
+- **Free Tier**: 15 requests per minute, 1,500 requests per day
+- **Model**: gemini-2.0-flash-exp (experimental, subject to change)
+- **Timeout**: 10 seconds per request
+- **Rate Limiting**: Automatic retry with exponential backoff
+
+For production use with higher limits, consider upgrading to a paid Google Cloud plan.
+
+#### 7. Additional Documentation
+
+For detailed setup and deployment information, see:
+- **[Quick Setup Guide](docs/CHATBOT_SETUP_GUIDE.md)** - Get started in 5 minutes
+- **[Deployment Checklist](docs/CHATBOT_DEPLOYMENT_CHECKLIST.md)** - Complete production deployment guide
 
 ### Application Settings
 Configure other settings in `application.properties`:
@@ -371,6 +508,17 @@ Test data is automatically seeded using H2 in-memory database for testing scenar
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Documentation
+
+### Core Documentation
+- **[README](README.md)** - Main project documentation
+- **[Database Schema](docs/)** - Database design and structure
+- **[API Documentation](docs/)** - REST API endpoints (updating...)
+
+### Feature-Specific Guides
+- **[Chatbot Setup Guide](docs/CHATBOT_SETUP_GUIDE.md)** - Quick setup for AI chatbot
+- **[Chatbot Deployment Checklist](docs/CHATBOT_DEPLOYMENT_CHECKLIST.md)** - Production deployment guide
 
 ## Support
 

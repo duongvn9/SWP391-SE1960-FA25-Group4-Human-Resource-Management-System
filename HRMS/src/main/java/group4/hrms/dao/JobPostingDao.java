@@ -74,7 +74,8 @@ public class JobPostingDao extends BaseDao<JobPosting, Long> {
                 "created_by_account_id=?, updated_at=?, code=?, job_level=?, job_type=?, " +
                 "quantity=?, min_salary=?, max_salary=?, min_experience_years=?, requirements=?, " +
                 "benefits=?, working_location=?, application_deadline=?, contact_email=?, contact_phone=?, " +
-                "salary_type=?, priority=?, working_hours=?, start_date=?, expiry_date=? " +
+                "salary_type=?, priority=?, working_hours=?, start_date=?, expiry_date=?, " +
+                "rejected_reason=?, approved_by_account_id=?, approved_at=?, published_by_account_id=?, published_at=? " +
                 "WHERE id=?";
             }
 
@@ -119,11 +120,31 @@ public class JobPostingDao extends BaseDao<JobPosting, Long> {
                 stmt.setObject(paramIndex++, entity.getStartDate());
                 stmt.setObject(paramIndex++, entity.getApplicationDeadline()); // expiry_date = application_deadline
                 
+                // Add approval/rejection fields (only for UPDATE)
                 if (entity.getId() != null) {
+                    logger.debug("💾 Setting rejection fields in UPDATE:");
+                    logger.debug("  [{}] rejectedReason: {}", paramIndex, entity.getRejectedReason());
+                    stmt.setString(paramIndex++, entity.getRejectedReason());
+                    
+                    logger.debug("  [{}] approvedByAccountId: {}", paramIndex, entity.getApprovedByAccountId());
+                    setNullableLong(stmt, paramIndex++, entity.getApprovedByAccountId());
+                    
+                    logger.debug("  [{}] approvedAt: {}", paramIndex, entity.getApprovedAt());
+                    stmt.setObject(paramIndex++, entity.getApprovedAt());
+                    
+                    logger.debug("  [{}] publishedByAccountId: {}", paramIndex, entity.getPublishedByAccountId());
+                    setNullableLong(stmt, paramIndex++, entity.getPublishedByAccountId());
+                    
+                    logger.debug("  [{}] publishedAt: {}", paramIndex, entity.getPublishedAt());
+                    stmt.setObject(paramIndex++, entity.getPublishedAt());
+                    
+                    logger.debug("  [{}] id (WHERE): {}", paramIndex, entity.getId());
                     stmt.setLong(paramIndex++, entity.getId());
                 }
 
+                logger.debug("🚀 Executing UPDATE SQL...");
                 int affectedRows = stmt.executeUpdate();
+                logger.info("✅ UPDATE affected {} rows", affectedRows);
                 if (affectedRows == 0) {
                     throw new SQLException("Creating/Updating job posting failed, no rows affected.");
                 }
