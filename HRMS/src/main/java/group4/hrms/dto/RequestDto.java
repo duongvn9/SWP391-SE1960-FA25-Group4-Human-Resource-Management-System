@@ -86,7 +86,8 @@ public class RequestDto {
                 }
             } catch (Exception e) {
                 // Ignore parsing errors - detail will be null
-                // Log at debug level if needed
+                System.err.println("[ERROR RequestDto Constructor] Failed to parse detail: " + e.getMessage());
+                e.printStackTrace();
             }
         }
 
@@ -224,6 +225,8 @@ public class RequestDto {
         // Clear cached parsed objects when JSON changes
         this.leaveDetail = null;
         this.otDetail = null;
+        this.appealDetail = null;
+        this.recruitmentDetail = null;
     }
 
     /**

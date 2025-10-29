@@ -280,6 +280,8 @@ public class RequestListPermissionHelper {
 
         // SPECIAL RULE: ADJUSTMENT_REQUEST (Appeal) - Only HR/HRM can approve
         // Department Manager CANNOT approve appeal requests
+        // Hierarchy: Employee → HR_STAFF → HR_MANAGER (can override)
+        // ONE-TIME APPROVAL: HR_STAFF duyệt xong thì chỉ HR_MANAGER mới được override
         if (request.getRequestTypeId() != null && request.getRequestTypeId() == 8L) {
             // Only HR_MANAGER (level 2) and HR_STAFF (level 3) can approve
             // DEPT_MANAGER (level 4) and below CANNOT approve
@@ -292,12 +294,38 @@ public class RequestListPermissionHelper {
                 return false;
             }
 
-            // Can approve PENDING requests
-            return request.isPending();
+            // HR_STAFF (level 3) can ONLY approve PENDING requests
+            if (jobLevel == JOB_LEVEL_HR_STAFF) {
+                return request.isPending();
+            }
+
+            // HR_MANAGER (level 2) can approve PENDING requests AND override HR_STAFF decisions
+            if (jobLevel == JOB_LEVEL_HR_MANAGER) {
+                // Can approve PENDING requests
+                if (request.isPending()) {
+                    return true;
+                }
+
+                // Can override APPROVED/REJECTED requests ONLY if decided by HR_STAFF
+                if (request.isApproved() || request.isRejected()) {
+                    // Check if current approver is HR_STAFF (not HR_MANAGER)
+                    Long currentApprover = request.getCurrentApproverAccountId();
+                    if (currentApprover != null) {
+                        Integer approverJobLevel = getJobLevelFromAccountId(currentApprover);
+                        // Only allow override if previous approver was HR_STAFF (level 3)
+                        // If previous approver was HR_MANAGER (level 2), cannot override
+                        return approverJobLevel != null && approverJobLevel == JOB_LEVEL_HR_STAFF;
+                    }
+                    return true; // If no approver info, allow override
+                }
+            }
+
+            return false;
         }
 
         // SPECIAL RULE: RECRUITMENT_REQUEST - Only HR/HRM can approve
         // Department Manager CANNOT approve recruitment requests
+        // Hierarchy: Employee → HR_STAFF → HR_MANAGER (can override)
         if (request.getRequestTypeId() != null && request.getRequestTypeId() == 9L) {
             // Only HR_MANAGER (level 2) and HR_STAFF (level 3) can approve
             // DEPT_MANAGER (level 4) and below CANNOT approve
@@ -310,8 +338,17 @@ public class RequestListPermissionHelper {
                 return false;
             }
 
-            // Can approve PENDING requests
-            return request.isPending();
+            // HR_STAFF (level 3) can approve PENDING requests
+            if (jobLevel == JOB_LEVEL_HR_STAFF && request.isPending()) {
+                return true;
+            }
+
+            // HR_MANAGER (level 2) can approve PENDING requests AND override APPROVED/REJECTED
+            if (jobLevel == JOB_LEVEL_HR_MANAGER) {
+                return request.isPending() || request.isApproved() || request.isRejected();
+            }
+
+            return false;
         }
 
         // SPECIAL CASE: OT Request created by manager for employee
@@ -520,13 +557,10 @@ public class RequestListPermissionHelper {
             }
 
             // Check Appeal request (type_id=8)
-            if (request.getRequestTypeId() != null && request.getRequestTypeId() == 8L
-                    && request.getAppealDetail() != null) {
-                java.util.List<String> attendanceDates = request.getAppealDetail().getAttendanceDates();
-                if (attendanceDates != null && !attendanceDates.isEmpty()) {
-                    // Use the first attendance date as effective date
-                    effectiveDate = java.time.LocalDate.parse(attendanceDates.get(0));
-                }
+            // Appeal requests are for correcting past attendance, so they should always be approvable
+            // regardless of the attendance date (which is typically in the past)
+            if (request.getRequestTypeId() != null && request.getRequestTypeId() == 8L) {
+                return true; // Always allow approval for appeal requests
             }
 
             // If effective date found, check if it's in the future

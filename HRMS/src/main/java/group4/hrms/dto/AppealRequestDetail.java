@@ -54,6 +54,9 @@ public class AppealRequestDetail {
     @SerializedName(value = "submittedDate", alternate = {"submitted_date"})
     private String submittedDate;          // Date when appeal was submitted (format: "yyyy-MM-dd")
 
+    @SerializedName(value = "appealStatus", alternate = {"appeal_status"})
+    private String appealStatus;           // Status of appeal processing (PENDING, APPROVED, REJECTED)
+
     // Gson instance for JSON serialization/deserialization
     private static final Gson gson = new GsonBuilder()
             .setPrettyPrinting()
@@ -88,7 +91,10 @@ public class AppealRequestDetail {
 
     /**
      * Deserializes a JSON string to an AppealRequestDetail object.
-     * Handles both modern format (attendanceDates as array) and legacy format (attendance_dates as comma-separated string).
+     * Handles multiple JSON formats:
+     * 1. Modern format with attendanceDates array
+     * 2. Legacy format with attendance_dates string
+     * 3. Records format with dates extracted from records array
      *
      * @param json the JSON string to deserialize
      * @return the deserialized AppealRequestDetail object
@@ -103,35 +109,65 @@ public class AppealRequestDetail {
             // Parse JSON to check format
             JsonObject jsonObject = JsonParser.parseString(json).getAsJsonObject();
 
-            // Check if attendance_dates is a string (comma-separated format: "2025-10-20,2025-10-19" or empty "")
-            if (jsonObject.has("attendance_dates") && jsonObject.get("attendance_dates").isJsonPrimitive()) {
+            // Extract attendance dates from different possible sources
+            List<String> datesList = new java.util.ArrayList<>();
+
+            // Method 1: Check for attendanceDates array (modern format)
+            if (jsonObject.has("attendanceDates") && jsonObject.get("attendanceDates").isJsonArray()) {
+                jsonObject.getAsJsonArray("attendanceDates").forEach(element -> {
+                    if (element.isJsonPrimitive()) {
+                        datesList.add(element.getAsString());
+                    }
+                });
+            }
+            // Method 2: Check for attendance_dates string (legacy format)
+            else if (jsonObject.has("attendance_dates") && jsonObject.get("attendance_dates").isJsonPrimitive()) {
                 String datesString = jsonObject.get("attendance_dates").getAsString();
-                List<String> datesList;
-
                 if (datesString != null && !datesString.trim().isEmpty()) {
-                    // Support both comma and dot as separators: "2025-10-20,2025-10-19" or "2025-10-20.2025-10-19"
+                    // Support both comma and dot as separators
                     String[] datesArray = datesString.split("[,.]");
-                    datesList = Arrays.asList(datesArray);
-                    datesList = datesList.stream()
-                            .map(String::trim)
-                            .filter(s -> !s.isEmpty())
-                            .collect(java.util.stream.Collectors.toList());
-                } else {
-                    // Empty string → empty list
-                    datesList = new java.util.ArrayList<>();
+                    for (String date : datesArray) {
+                        String trimmedDate = date.trim();
+                        if (!trimmedDate.isEmpty()) {
+                            datesList.add(trimmedDate);
+                        }
+                    }
                 }
-
-                // Remove attendance_dates from JSON to avoid Gson parsing error
-                jsonObject.remove("attendance_dates");
-
-                // Parse object and set dates manually
-                AppealRequestDetail detail = gson.fromJson(jsonObject.toString(), AppealRequestDetail.class);
-                detail.setAttendanceDates(datesList);
-                return detail;
+            }
+            // Method 3: Extract dates from records array (current format)
+            else if (jsonObject.has("records") && jsonObject.get("records").isJsonArray()) {
+                jsonObject.getAsJsonArray("records").forEach(element -> {
+                    if (element.isJsonObject()) {
+                        JsonObject recordObj = element.getAsJsonObject();
+                        // Try to get date from newRecord first, then oldRecord
+                        String date = null;
+                        if (recordObj.has("newRecord") && recordObj.getAsJsonObject("newRecord").has("date")) {
+                            date = recordObj.getAsJsonObject("newRecord").get("date").getAsString();
+                        } else if (recordObj.has("oldRecord") && recordObj.getAsJsonObject("oldRecord").has("date")) {
+                            date = recordObj.getAsJsonObject("oldRecord").get("date").getAsString();
+                        }
+                        if (date != null && !datesList.contains(date)) {
+                            datesList.add(date);
+                        }
+                    }
+                });
             }
 
-            // Standard deserialization for modern format or if attendance_dates is already an array
-            return gson.fromJson(json, AppealRequestDetail.class);
+            // Remove problematic fields before Gson parsing
+            jsonObject.remove("attendance_dates");
+
+            // Parse object with Gson
+            AppealRequestDetail detail = gson.fromJson(jsonObject.toString(), AppealRequestDetail.class);
+
+            // Set extracted dates
+            detail.setAttendanceDates(datesList);
+
+            // Set default submittedDate if not present (use current date)
+            if (detail.getSubmittedDate() == null || detail.getSubmittedDate().trim().isEmpty()) {
+                detail.setSubmittedDate(java.time.LocalDate.now().toString());
+            }
+
+            return detail;
         } catch (JsonSyntaxException e) {
             throw new IllegalArgumentException("Invalid JSON format: " + e.getMessage(), e);
         }
@@ -235,6 +271,93 @@ public class AppealRequestDetail {
         this.submittedDate = submittedDate;
     }
 
+    public String getAppealStatus() {
+        return appealStatus;
+    }
+
+    public void setAppealStatus(String appealStatus) {
+        this.appealStatus = appealStatus;
+    }
+
+    /**
+     * Get attendance records from the original JSON for display purposes
+     * This method parses the records array to extract attendance information
+     *
+     * @param originalJson The original JSON string containing records
+     * @return List of AttendanceRecordInfo for display
+     */
+    public static java.util.List<AttendanceRecordInfo> getAttendanceRecords(String originalJson) {
+        java.util.List<AttendanceRecordInfo> records = new java.util.ArrayList<>();
+
+        if (originalJson == null || originalJson.trim().isEmpty()) {
+            return records;
+        }
+
+        try {
+            JsonObject jsonObject = JsonParser.parseString(originalJson).getAsJsonObject();
+
+            if (jsonObject.has("records") && jsonObject.get("records").isJsonArray()) {
+                jsonObject.getAsJsonArray("records").forEach(element -> {
+                    if (element.isJsonObject()) {
+                        JsonObject recordObj = element.getAsJsonObject();
+
+                        AttendanceRecordInfo info = new AttendanceRecordInfo();
+
+                        // Parse newRecord
+                        if (recordObj.has("newRecord") && recordObj.get("newRecord").isJsonObject()) {
+                            JsonObject newRecord = recordObj.getAsJsonObject("newRecord");
+                            info.date = newRecord.has("date") ? newRecord.get("date").getAsString() : "";
+                            info.newCheckIn = newRecord.has("checkIn") ? newRecord.get("checkIn").getAsString() : "";
+                            info.newCheckOut = newRecord.has("checkOut") ? newRecord.get("checkOut").getAsString() : "";
+                            info.newStatus = newRecord.has("status") ? newRecord.get("status").getAsString() : "";
+                        }
+
+                        // Parse oldRecord
+                        if (recordObj.has("oldRecord") && recordObj.get("oldRecord").isJsonObject()) {
+                            JsonObject oldRecord = recordObj.getAsJsonObject("oldRecord");
+                            info.oldCheckIn = oldRecord.has("checkIn") ? oldRecord.get("checkIn").getAsString() : "";
+                            info.oldCheckOut = oldRecord.has("checkOut") ? oldRecord.get("checkOut").getAsString() : "";
+                            info.oldStatus = oldRecord.has("status") ? oldRecord.get("status").getAsString() : "";
+                            info.source = oldRecord.has("source") ? oldRecord.get("source").getAsString() : "";
+                            info.period = oldRecord.has("period") ? oldRecord.get("period").getAsString() : "";
+                        }
+
+                        records.add(info);
+                    }
+                });
+            }
+        } catch (Exception e) {
+            // Return empty list if parsing fails
+        }
+
+        return records;
+    }
+
+    /**
+     * Inner class to hold attendance record information for display
+     */
+    public static class AttendanceRecordInfo {
+        public String date;
+        public String newCheckIn;
+        public String newCheckOut;
+        public String newStatus;
+        public String oldCheckIn;
+        public String oldCheckOut;
+        public String oldStatus;
+        public String source;
+        public String period;
+
+        public String getDate() { return date; }
+        public String getNewCheckIn() { return newCheckIn; }
+        public String getNewCheckOut() { return newCheckOut; }
+        public String getNewStatus() { return newStatus; }
+        public String getOldCheckIn() { return oldCheckIn; }
+        public String getOldCheckOut() { return oldCheckOut; }
+        public String getOldStatus() { return oldStatus; }
+        public String getSource() { return source; }
+        public String getPeriod() { return period; }
+    }
+
     @Override
     public String toString() {
         return "AppealRequestDetail{" +
@@ -245,6 +368,7 @@ public class AppealRequestDetail {
                 ", hrmNotes='" + hrmNotes + '\'' +
                 ", resolutionAction='" + resolutionAction + '\'' +
                 ", submittedDate='" + submittedDate + '\'' +
+                ", appealStatus='" + appealStatus + '\'' +
                 '}';
     }
 }
