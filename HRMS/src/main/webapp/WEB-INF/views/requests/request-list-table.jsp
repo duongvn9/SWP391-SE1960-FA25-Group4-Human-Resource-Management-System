@@ -110,10 +110,9 @@
                                         <!-- Attachment Indicator Column -->
                                         <td class="text-center">
                                             <c:if test="${req.attachmentCount > 0}">
-                                                <span class="text-muted"
-                                                      data-bs-toggle="tooltip"
-                                                      data-bs-placement="top"
-                                                      title="${req.attachmentCount} attachment(s)">
+                                                <span class="text-muted" data-bs-toggle="tooltip"
+                                                    data-bs-placement="top"
+                                                    title="${req.attachmentCount} attachment(s)">
                                                     <i class="fas fa-paperclip"></i>
                                                     <small>${req.attachmentCount}</small>
                                                 </span>
@@ -145,25 +144,25 @@
                                                 <c:if test="${req.canApprove}">
                                                     <c:choose>
                                                         <c:when test="${req.status == 'APPROVED'}">
-                                                            <button onclick="openApprovalModal(${req.id}, '${req.title}', 'APPROVED')"
-                                                                class="btn btn-warning"
-                                                                title="Review Request"
+                                                            <button
+                                                                onclick="openApprovalModal(${req.id}, '${req.title}', 'APPROVED')"
+                                                                class="btn btn-warning" title="Review Request"
                                                                 data-bs-toggle="tooltip" data-bs-placement="top">
                                                                 <i class="fas fa-clipboard-check"></i>
                                                             </button>
                                                         </c:when>
                                                         <c:when test="${req.status == 'REJECTED'}">
-                                                            <button onclick="openApprovalModal(${req.id}, '${req.title}', 'REJECTED')"
-                                                                class="btn btn-warning"
-                                                                title="Override Rejection"
+                                                            <button
+                                                                onclick="openApprovalModal(${req.id}, '${req.title}', 'REJECTED')"
+                                                                class="btn btn-warning" title="Override Rejection"
                                                                 data-bs-toggle="tooltip" data-bs-placement="top">
                                                                 <i class="fas fa-redo"></i>
                                                             </button>
                                                         </c:when>
                                                         <c:otherwise>
-                                                            <button onclick="openApprovalModal(${req.id}, '${req.title}', 'PENDING')"
-                                                                class="btn btn-warning"
-                                                                title="Approve Request"
+                                                            <button
+                                                                onclick="openApprovalModal(${req.id}, '${req.title}', 'PENDING')"
+                                                                class="btn btn-warning" title="Approve Request"
                                                                 data-bs-toggle="tooltip" data-bs-placement="top">
                                                                 <i class="fas fa-clipboard-check"></i>
                                                             </button>
@@ -257,7 +256,8 @@
                                                 <i class="fas fa-eye"></i>
                                             </a>
                                             <c:if test="${req.canApprove}">
-                                                <button onclick="openApprovalModal(${req.id}, '${req.title}', '${req.status}')"
+                                                <button
+                                                    onclick="openApprovalModal(${req.id}, '${req.title}', '${req.status}')"
                                                     class="btn btn-sm btn-warning">
                                                     <i class="fas fa-clipboard-check"></i>
                                                 </button>

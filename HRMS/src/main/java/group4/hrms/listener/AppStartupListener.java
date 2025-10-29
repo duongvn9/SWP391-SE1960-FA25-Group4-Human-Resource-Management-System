@@ -3,6 +3,7 @@ package group4.hrms.listener;
 import group4.hrms.dao.HolidayCalendarDao;
 import group4.hrms.dao.HolidayDao;
 import group4.hrms.dao.RequestTypeDao;
+import group4.hrms.util.ChatbotContextLoader;
 import group4.hrms.util.HolidayGenerator;
 import group4.hrms.util.RequestTypeInitializer;
 import jakarta.servlet.ServletContextEvent;
@@ -37,6 +38,11 @@ public class AppStartupListener implements ServletContextListener {
             HolidayGenerator generator = new HolidayGenerator(calendarDao, holidayDao);
             generator.generateHolidaysForYears(2025, 2030);
             logger.info("Holiday check completed");
+
+            // Load chatbot context from chatbot-qa.json
+            logger.info("Loading chatbot context...");
+            ChatbotContextLoader.getContext();
+            logger.info("Chatbot context loaded successfully");
 
             logger.info("Application startup completed successfully");
 
