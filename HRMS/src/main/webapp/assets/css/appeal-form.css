@@ -3,235 +3,236 @@
    ========================== */
 
 :root {
-    --sidebar-width: 260px;
-    --primary-color: #0d6efd;
-    --secondary-color: #6c757d;
-    --danger-color: #dc3545;
-    --success-color: #198754;
-    --bg-light: #f8f9fa;
-    --text-dark: #212529;
+  --sidebar-width: 260px;
+  --primary-color: #0d6efd;
+  --secondary-color: #6c757d;
+  --danger-color: #dc3545;
+  --success-color: #198754;
+  --bg-light: #f8f9fa;
+  --text-dark: #212529;
 }
 
 /* --------------------------
    Layout
 -------------------------- */
 body {
-    font-family: "Segoe UI", Arial, sans-serif;
-    background-color: var(--bg-light);
-    color: var(--text-dark);
-    margin: 0;
-    padding: 0;
-    display: flex;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background-color: var(--bg-light);
+  color: var(--text-dark);
+  margin: 0;
+  padding: 0;
+  display: flex;
 }
 
 .main-content {
-    flex: 1;
-    margin-left: var(--sidebar-width);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+  flex: 1;
+  margin-left: var(--sidebar-width);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .content-area {
-    flex: 1;
-    padding: 30px 40px;
+  flex: 1;
+  padding: 30px 40px;
 }
 
 /* --------------------------
    Page Head
 -------------------------- */
 .page-head {
-    border-bottom: 1px solid #dee2e6;
-    margin-bottom: 20px;
-    padding-bottom: 10px;
+  border-bottom: 1px solid #dee2e6;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
 }
 
 .page-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--text-dark);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-dark);
 }
 
 .page-subtitle {
-    font-size: 0.95rem;
-    color: #6c757d;
-    margin-top: 4px;
+  font-size: 0.95rem;
+  color: #6c757d;
+  margin-top: 4px;
 }
 
 /* --------------------------
    Card
 -------------------------- */
 .card {
-    background: #fff;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    border: 1px solid #e5e5e5;
-    margin-top: 20px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e5e5;
+  margin-top: 20px;
 }
 
 .card-header {
-    background-color: #f5f7fa;
-    border-bottom: 1px solid #dee2e6;
-    padding: 15px 20px;
-    font-weight: 600;
-    font-size: 1.1rem;
-    color: var(--text-dark);
+  background-color: #f5f7fa;
+  border-bottom: 1px solid #dee2e6;
+  padding: 15px 20px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--text-dark);
 }
 
 .card-body {
-    padding: 25px 30px;
+  padding: 25px 30px;
 }
 
 /* --------------------------
    Form Elements
 -------------------------- */
 .is-invalid {
-    border-color: #dc3545 !important;
+  border-color: #dc3545 !important;
 }
+
 .invalid-feedback {
-    color: #dc3545;
-    font-size: 0.875rem;
+  color: #dc3545;
+  font-size: 0.875rem;
 }
 
 .form-label {
-    font-weight: 600;
-    color: var(--text-dark);
+  font-weight: 600;
+  color: var(--text-dark);
 }
 
 .form-control {
-    border-radius: 6px;
-    border: 1px solid #ced4da;
-    padding: 8px 10px;
-    font-size: 0.95rem;
+  border-radius: 6px;
+  border: 1px solid #ced4da;
+  padding: 8px 10px;
+  font-size: 0.95rem;
 }
 
 .form-control:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.2);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.2);
 }
 
 .form-text {
-    color: #6c757d;
-    font-size: 0.85rem;
-    margin-top: 4px;
+  color: #6c757d;
+  font-size: 0.85rem;
+  margin-top: 4px;
 }
 
 /* --------------------------
    Buttons
 -------------------------- */
 .btn {
-    border-radius: 6px;
-    font-size: 0.95rem;
-    padding: 6px 14px;
-    font-weight: 500;
-    transition: all 0.2s ease;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  padding: 6px 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
 .btn:hover {
-    opacity: 0.9;
+  opacity: 0.9;
 }
 
 .btn-primary {
-    background-color: var(--primary-color);
-    color: #fff;
-    border: none;
+  background-color: var(--primary-color);
+  color: #fff;
+  border: none;
 }
 
 .btn-primary:hover {
-    background-color: #0b5ed7;
+  background-color: #0b5ed7;
 }
 
 .btn-secondary {
-    background-color: var(--secondary-color);
-    color: #fff;
-    border: none;
+  background-color: var(--secondary-color);
+  color: #fff;
+  border: none;
 }
 
 .btn-secondary:hover {
-    background-color: #5c636a;
+  background-color: #5c636a;
 }
 
 .btn-outline-primary {
-    border: 1px solid var(--primary-color);
-    color: var(--primary-color);
-    background: transparent;
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
+  background: transparent;
 }
 
 .btn-outline-primary:hover {
-    background-color: var(--primary-color);
-    color: #fff;
+  background-color: var(--primary-color);
+  color: #fff;
 }
 
 /* --------------------------
    Alerts
 -------------------------- */
 .alert {
-    border-radius: 6px;
-    padding: 12px 16px;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
 }
 
 .alert i {
-    margin-right: 8px;
+  margin-right: 8px;
 }
 
 .alert-warning {
-    background-color: #fff3cd;
-    border: 1px solid #ffeeba;
-    color: #856404;
+  background-color: #fff3cd;
+  border: 1px solid #ffeeba;
+  color: #856404;
 }
 
 .alert-success {
-    background-color: #d4edda;
-    border: 1px solid #c3e6cb;
-    color: #155724;
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
 }
 
 /* --------------------------
    Textarea
 -------------------------- */
 textarea.form-control {
-    resize: vertical;
+  resize: vertical;
 }
 
 /* --------------------------
    File Upload
 -------------------------- */
 input[type="file"].form-control {
-    padding: 4px;
+  padding: 4px;
 }
 
 .form-text span {
-    font-style: italic;
+  font-style: italic;
 }
 
 /* --------------------------
    Footer
 -------------------------- */
 .dashboard-footer {
-    margin-top: auto;
-    padding: 15px 25px;
-    background: #fff;
-    border-top: 1px solid #e5e5e5;
-    color: #6c757d;
-    font-size: 0.9rem;
+  margin-top: auto;
+  padding: 15px 25px;
+  background: #fff;
+  border-top: 1px solid #e5e5e5;
+  color: #6c757d;
+  font-size: 0.9rem;
 }
 
 /* --------------------------
    Responsive
 -------------------------- */
 @media (max-width: 768px) {
-    .content-area {
-        padding: 20px;
-    }
+  .content-area {
+    padding: 20px;
+  }
 
-    .page-title {
-        font-size: 1.25rem;
-    }
+  .page-title {
+    font-size: 1.25rem;
+  }
 
-    .btn {
-        font-size: 0.9rem;
-    }
+  .btn {
+    font-size: 0.9rem;
+  }
 }
