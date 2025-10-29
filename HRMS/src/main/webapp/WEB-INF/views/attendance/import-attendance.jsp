@@ -313,11 +313,17 @@
                                         <c:set var="endPage" value="${invalidTotalPages}" />
                                     </c:if>
 
-                                    <c:if test="${startPage > 1}">
+                                    <!-- Hiển thị số 1 + dấu ... nếu cách từ startPage > 2 -->
+                                    <c:if test="${startPage > 2}">
                                         <a href="?action=Import&invalidPage=1" class="page-btn">1</a>
                                         <span>...</span>
                                     </c:if>
+                                    <!-- Nếu startPage = 2 thì chỉ hiển thị 1 bình thường -->
+                                    <c:if test="${startPage == 2}">
+                                        <a href="?action=Import&invalidPage=1" class="page-btn">1</a>
+                                    </c:if>
 
+                                    <!-- Các trang chính giữa -->
                                     <c:forEach var="i" begin="${startPage}" end="${endPage}">
                                         <c:choose>
                                             <c:when test="${i == invalidCurrentPage}">
@@ -329,8 +335,13 @@
                                         </c:choose>
                                     </c:forEach>
 
-                                    <c:if test="${endPage < invalidTotalPages}">
+                                    <!-- Hiển thị dấu ... + trang cuối nếu khoảng cách > 1 -->
+                                    <c:if test="${endPage < invalidTotalPages - 1}">
                                         <span>...</span>
+                                        <a href="?action=Import&invalidPage=${invalidTotalPages}" class="page-btn">${invalidTotalPages}</a>
+                                    </c:if>
+                                    <!-- Nếu endPage liền kề trang cuối thì chỉ hiển thị trang cuối -->
+                                    <c:if test="${endPage == invalidTotalPages - 1}">
                                         <a href="?action=Import&invalidPage=${invalidTotalPages}" class="page-btn">${invalidTotalPages}</a>
                                     </c:if>
 
@@ -519,25 +530,25 @@
 
         <script>
             document.addEventListener("DOMContentLoaded", () => {
-                
+
                 function showEmployeeList(input) {
                     const row = input.closest('.manual-row');
                     const wrapper = input.closest('.employee-select-wrapper');
                     const dropdown = wrapper.querySelector('.custom-dropdown');
-                    
+
                     // Ẩn dropdown khác và remove class active
                     document.querySelectorAll('.manual-row').forEach(r => {
                         r.classList.remove('active-dropdown');
                         r.querySelectorAll('.custom-dropdown').forEach(dl => dl.style.display = 'none');
                     });
-                    
+
                     // Thêm class active cho row hiện tại
                     row.classList.add('active-dropdown');
-                    
+
                     // Hiển thị dropdown hiện tại
                     dropdown.style.display = 'block';
                 }
-                
+
                 function filterEmployeeList(input) {
                     const dropdown = input.closest('.employee-select-wrapper').querySelector('.custom-dropdown');
                     const filter = input.value.toLowerCase();
@@ -550,7 +561,7 @@
                     });
                     dropdown.style.display = hasMatch ? 'block' : 'none';
                 }
-                
+
                 // Chọn item
                 document.addEventListener('click', e => {
                     const li = e.target.closest('.custom-dropdown li');
@@ -558,20 +569,20 @@
                         const wrapper = li.closest('.employee-select-wrapper');
                         const input = wrapper.querySelector('.employee-input');
                         const hidden = wrapper.querySelector('.employee-id-hidden');
-                        
+
                         input.value = li.textContent.trim();
                         hidden.value = li.dataset.id;
-                        
+
                         wrapper.querySelector('.custom-dropdown').style.display = 'none';
                         return;
                     }
-                    
+
                     // Click ra ngoài → ẩn tất cả dropdown
                     if (!e.target.closest('.employee-select-wrapper')) {
                         document.querySelectorAll('.custom-dropdown').forEach(dl => dl.style.display = 'none');
                     }
                 });
-                
+
                 // Focus hoặc click vào input
                 document.addEventListener('focusin', e => {
                     if (e.target.matches('.employee-input')) {
@@ -583,7 +594,7 @@
                         showEmployeeList(e.target);
                     }
                 });
-                
+
             });
         </script>
         <script>
@@ -591,7 +602,7 @@
                 const tbody = document.querySelector("#manualTable tbody");
                 const template = document.getElementById("manualRowTemplate");
                 const selectAll = document.getElementById("selectAllRows");
-                
+
                 // Delete Row
                 document.getElementById("deleteRowBtn").addEventListener("click", () => {
                     const selectedRows = tbody.querySelectorAll(".row-select:checked");
@@ -599,16 +610,16 @@
                         alert("Please select at least one row to delete!");
                         return;
                     }
-                    
+
                     if (confirm(`Are you sure you want to delete ${selectedRows.length} row(s)?`)) {
                         selectedRows.forEach(chk => chk.closest("tr").remove());
                     }
-                    
+
                     // Sau khi xóa xong: bỏ chọn tất cả checkbox
                     selectAll.checked = false;
                     tbody.querySelectorAll(".row-select").forEach(chk => chk.checked = false);
                 });
-                
+
                 // Select / Deselect All
                 selectAll.addEventListener("change", () => {
                     tbody.querySelectorAll(".row-select").forEach(chk => chk.checked = selectAll.checked);
@@ -623,34 +634,34 @@
                         tab.classList.remove("active");
                         tab.style.display = "none";
                     });
-                    
+
                     // Hiện tab được chọn
                     const selectedTab = document.getElementById(tabId);
                     if (selectedTab) {
                         selectedTab.classList.add("active");
                         selectedTab.style.display = "block";
                     }
-                    
+
                     // Cập nhật nút
                     document.querySelectorAll(".tab-btn").forEach(btn => {
                         btn.classList.remove("active");
                         btn.setAttribute("aria-selected", "false");
                     });
-                    
+
                     const activeBtn = document.getElementById(tabId + "-btn");
                     if (activeBtn) {
                         activeBtn.classList.add("active");
                         activeBtn.setAttribute("aria-selected", "true");
                     }
-                    
+
                     // Cập nhật hidden input trong form để submit giữ tab
                     document.querySelectorAll('input[name="activeTab"]').forEach(input => input.value = tabId);
                 }
-                
+
                 // Lấy giá trị từ JSTL
                 const activeTab = "${activeTab}";
                 showTab(activeTab);
-                
+
                 // Khi click nút tab
                 document.querySelectorAll(".tab-btn").forEach(btn => {
                     btn.addEventListener("click", () => {
@@ -663,7 +674,7 @@
         <script>
             document.addEventListener("DOMContentLoaded", () => {
                 const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
-                
+
                 document.querySelectorAll(".date-input").forEach(input => {
                     input.setAttribute("max", today); // chỉ chọn ngày hiện tại trở về
                 });

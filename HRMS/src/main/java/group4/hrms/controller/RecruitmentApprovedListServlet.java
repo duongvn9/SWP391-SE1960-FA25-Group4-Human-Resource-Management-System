@@ -1,13 +1,20 @@
 package group4.hrms.controller;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import group4.hrms.dao.DepartmentDao;
+import group4.hrms.dao.JobPostingDao;
 import group4.hrms.dao.RequestDao;
 import group4.hrms.dao.RequestTypeDao;
 import group4.hrms.dao.UserDao;
+import group4.hrms.dto.RequestDto;
 import group4.hrms.dto.RequestListFilter;
 import group4.hrms.dto.RequestListResult;
 import group4.hrms.model.Account;
@@ -20,8 +27,6 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Servlet to display a dedicated page listing only APPROVED recruitment requests
@@ -48,8 +53,7 @@ public class RecruitmentApprovedListServlet extends HttpServlet {
         boolean allowed = false;
         // 1) positionId check (HR=8, HRM=7)
         Object userObj = session.getAttribute("user");
-        if (userObj instanceof group4.hrms.model.User) {
-            group4.hrms.model.User user = (group4.hrms.model.User) userObj;
+        if (userObj instanceof User user) {
             if (user.getPositionId() != null) {
                 Long posId = user.getPositionId();
                 if (posId == 7L || posId == 8L) {
@@ -103,12 +107,23 @@ public class RecruitmentApprovedListServlet extends HttpServlet {
             return;
         }
         
+        // Parse pagination parameters
+        int page = 1;
+        int pageSize = 6; // 6 items per page
+        String pageStr = request.getParameter("page");
+        if (pageStr != null) {
+            try {
+                page = Integer.parseInt(pageStr);
+                if (page < 1) page = 1;
+            } catch (NumberFormatException ignored) {}
+        }
+        
         // Set up filter for all approved recruitment requests
         filter.setRequestTypeId(rt.getId());
         filter.setStatus("APPROVED");  // Only approved requests
         filter.setScope("all");        // Show all departments
-        filter.setPage(1);             // First page
-        filter.setPageSize(1000);      // Show all on one page
+        filter.setPage(page);          // Current page
+        filter.setPageSize(pageSize);  // 6 items per page
         
         logger.info("Set up filter: typeId={}, status={}, scope={}", 
                    filter.getRequestTypeId(), filter.getStatus(), filter.getScope());
@@ -148,16 +163,75 @@ public class RecruitmentApprovedListServlet extends HttpServlet {
                 }
             }
 
+            // Filter out requests that already have job postings
+            if (result != null) {
+                JobPostingDao jobPostingDao = new JobPostingDao();
+                List<Long> requestIdsWithJobPostings = jobPostingDao.findRequestIdsWithJobPostings();
+                logger.info("Found {} request IDs that already have job postings: {}", 
+                        requestIdsWithJobPostings.size(), requestIdsWithJobPostings);
+
+                // Filter flat list
+                if (result.getRequests() != null && !result.getRequests().isEmpty()) {
+                    List<RequestDto> filteredRequests = result.getRequests().stream()
+                            .filter(req -> !requestIdsWithJobPostings.contains(req.getId()))
+                            .collect(Collectors.toList());
+                    logger.info("Filtered requests from {} to {} (removed requests with job postings)", 
+                            result.getRequests().size(), filteredRequests.size());
+                    result.setRequests(filteredRequests);
+                }
+
+                // Filter grouped by department
+                if (result.getRequestsByDepartment() != null && !result.getRequestsByDepartment().isEmpty()) {
+                    Map<String, List<RequestDto>> filteredByDept = result.getRequestsByDepartment().entrySet().stream()
+                            .collect(Collectors.toMap(
+                                    Map.Entry::getKey,
+                                    entry -> entry.getValue().stream()
+                                            .filter(req -> !requestIdsWithJobPostings.contains(req.getId()))
+                                            .collect(Collectors.toList())
+                            ))
+                            .entrySet().stream()
+                            .filter(entry -> !entry.getValue().isEmpty()) // Remove empty departments
+                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                    logger.info("Filtered departments from {} to {} (removed empty departments)", 
+                            result.getRequestsByDepartment().size(), filteredByDept.size());
+                    result.setRequestsByDepartment(filteredByDept);
+                }
+            }
+
+            // Calculate total items and pages based on filtered results
+            int totalItems = 0;
+            if (result != null && result.getRequests() != null) {
+                totalItems = result.getRequests().size();
+            } else if (result != null && result.getRequestsByDepartment() != null) {
+                totalItems = result.getRequestsByDepartment().values().stream()
+                        .mapToInt(List::size)
+                        .sum();
+            }
+            
+            int totalPages = (int) Math.ceil((double) totalItems / pageSize);
+            if (totalPages < 1) totalPages = 1;
+            
+            // Set pagination attributes
+            request.setAttribute("currentPage", page);
+            request.setAttribute("totalPages", totalPages);
+            request.setAttribute("pageSize", pageSize);
+            request.setAttribute("totalItems", totalItems);
+            
             request.setAttribute("result", result);
             request.setAttribute("filter", filter);
 
             String jspPath = "/WEB-INF/views/recruitment/recruitment-approved-list.jsp";
-            logger.info("Forwarding to JSP: {}", jspPath);
+            logger.info("Forwarding to JSP: {} (page {}/{}, {} items)", jspPath, page, totalPages, totalItems);
             request.getRequestDispatcher(jspPath).forward(request, response);
 
         } catch (ServletException | IOException e) {
             logger.error("Error forwarding to JSP: {}", e.getMessage(), e);
             throw e;
+        } catch (java.sql.SQLException e) {
+            logger.error("Database error processing request: {}", e.getMessage(), e);
+            request.setAttribute("error", "Database error occurred. Please try again later.");
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            request.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment-approved-list.jsp").forward(request, response);
         } catch (Exception e) {
             logger.error("Unexpected error processing request: {}", e.getMessage(), e);
             request.setAttribute("error", "An unexpected error occurred. Please try again later.");

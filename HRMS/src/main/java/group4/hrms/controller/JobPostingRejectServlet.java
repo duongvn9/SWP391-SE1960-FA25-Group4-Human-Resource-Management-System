@@ -2,6 +2,9 @@ package group4.hrms.controller;
 
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import group4.hrms.model.User;
 import group4.hrms.service.JobPostingService;
 import group4.hrms.util.JobPostingPermissionHelper;
@@ -14,6 +17,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @WebServlet("/job-posting/reject")
 public class JobPostingRejectServlet extends HttpServlet {
+    private static final Logger logger = LoggerFactory.getLogger(JobPostingRejectServlet.class);
     private JobPostingService jobPostingService;
 
     @Override
@@ -30,6 +34,11 @@ public class JobPostingRejectServlet extends HttpServlet {
         Long approverId = SecurityUtil.getLoggedInUserId(request.getSession()); // Lấy ID người dùng
         User logged = (User) request.getSession().getAttribute("user");
         Long positionId = logged != null ? logged.getPositionId() : null;
+        
+        logger.info("🔍 REJECT REQUEST DEBUG:");
+        logger.info("  - approverId from session: {}", approverId);
+        logger.info("  - logged user: {}", logged);
+        logger.info("  - positionId: {}", positionId);
 
         if (approverId == null || !JobPostingPermissionHelper.canApproveJobPosting(positionId)) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied. Must be logged in as HRM.");
@@ -65,7 +74,10 @@ public class JobPostingRejectServlet extends HttpServlet {
         String errorMessage = null;
         try {
             // GỌI HÀM SERVICE ĐÃ SỬA: reject(id, approverId, reason)
+            logger.info("📝 Calling service.reject(jobId={}, approverId={}, reason='{}')", 
+                jobId, approverId, reason.trim());
             jobPostingService.reject(jobId, approverId, reason.trim());
+            logger.info("✅ Reject successful!");
             
         } catch (IllegalArgumentException e) {
             // Lỗi không tìm thấy Job Posting

@@ -66,13 +66,6 @@ public class JobPostingFormDto {
             errors.put("jobType", "Invalid job type");
         }
         
-        // Validate priority - make it required
-        if (isBlank(priority)) {
-            errors.put("priority", "Priority level is required");
-        } else if (!isValidPriority(priority)) {
-            errors.put("priority", "Invalid priority level");
-        }
-        
         if (numberOfPositions == null || numberOfPositions < 1) {
             errors.put("numberOfPositions", "Number of positions must be at least 1");
         } else if (numberOfPositions > 100) {
@@ -219,11 +212,6 @@ public class JobPostingFormDto {
     private boolean isValidPhone(String phone) {
         if (phone == null) return false;
         return phone.matches("^[0-9+][0-9()-]{8,20}$");
-    }
-    
-    private boolean isValidPriority(String priority) {
-        if (priority == null) return false;
-        return priority.matches("^(NORMAL|HIGH|URGENT)$");
     }
 
     // Getters and setters
