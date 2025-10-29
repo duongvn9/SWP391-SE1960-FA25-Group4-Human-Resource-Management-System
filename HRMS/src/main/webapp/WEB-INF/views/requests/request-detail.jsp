@@ -12,7 +12,7 @@
                 </jsp:include>
             </head>
 
-            <body>
+            <body data-is-hrm="${isHRM}" data-is-hr="${isHR}">
                 <!-- Sidebar -->
                 <jsp:include page="../layout/sidebar.jsp">
                     <jsp:param name="currentPage" value="request-list" />
