@@ -53,10 +53,13 @@ public class JobPostingServiceImpl implements JobPostingService {
             JobPosting existing = jobPostingDao.findById(jobPosting.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Job posting not found with ID: " + jobPosting.getId()));
 
-            // Check if job posting is in PENDING state
-            if (!"PENDING".equals(existing.getStatus())) {
-                throw new IllegalStateException("Can only update job postings in PENDING state");
+            // Check if job posting can be updated
+            // Allow update for PENDING (normal edit) and REJECTED (resubmit after rejection)
+            if (!"PENDING".equals(existing.getStatus()) && !"REJECTED".equals(existing.getStatus())) {
+                throw new IllegalStateException("Can only update job postings in PENDING or REJECTED state");
             }
+            
+            logger.info("Updating job posting from status: {} to: {}", existing.getStatus(), jobPosting.getStatus());
 
             // Validate the updated job posting
             validateJobPosting(jobPosting);
@@ -366,6 +369,8 @@ public class JobPostingServiceImpl implements JobPostingService {
             throw new IllegalArgumentException("Rejection reason is required");
         }
         
+        logger.info("🔴 SERVICE.reject() called with id={}, approverId={}, reason='{}'", id, approverId, reason);
+        
         try {
             JobPosting jobPosting = jobPostingDao.findById(id)
                     .orElseThrow(() -> new IllegalArgumentException("Job posting not found: " + id));
@@ -374,15 +379,24 @@ public class JobPostingServiceImpl implements JobPostingService {
                 throw new IllegalStateException("Job posting must be in PENDING state to reject");
             }
             
+            logger.info("📝 Setting rejection fields...");
             jobPosting.setStatus("REJECTED");
             jobPosting.setRejectedReason(reason.trim());
             jobPosting.setApprovedByAccountId(approverId);
             jobPosting.setApprovedAt(LocalDateTime.now());
             jobPosting.setUpdatedAt(LocalDateTime.now());
             
+            logger.info("💾 Before update - JobPosting fields:");
+            logger.info("  - status: {}", jobPosting.getStatus());
+            logger.info("  - rejectedReason: {}", jobPosting.getRejectedReason());
+            logger.info("  - approvedByAccountId: {}", jobPosting.getApprovedByAccountId());
+            logger.info("  - approvedAt: {}", jobPosting.getApprovedAt());
+            
             jobPostingDao.update(jobPosting);
+            logger.info("✅ DAO.update() completed!");
             
         } catch (SQLException e) {
+            logger.error("❌ SQLException in reject(): {}", e.getMessage(), e);
             throw new RuntimeException("Failed to reject job posting", e);
         }
     }

@@ -8,43 +8,230 @@
         <jsp:param name="pageTitle" value="View Job Posting - HRMS"/>
     </jsp:include>
     <style>
-        .job-detail-section {
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            padding: 24px;
-            margin-bottom: 20px;
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --success-gradient: linear-gradient(135deg, #0cebeb 0%, #20e3b2 100%);
+            --warning-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .job-hero {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 3rem 2rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .job-hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 300px;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+        
+        .job-hero::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -5%;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 50%;
+        }
+        
+        .job-hero-content {
+            position: relative;
+            z-index: 1;
         }
         
         .job-title {
-            color: #2c3e50;
-            margin-bottom: 16px;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         
-        .job-meta {
-            color: #6c757d;
+        .job-code {
             font-size: 0.9rem;
-            margin-bottom: 24px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            display: inline-block;
+            backdrop-filter: blur(10px);
         }
         
-        .job-meta i {
-            width: 20px;
+        .info-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+            height: 100%;
+            border: 1px solid #f0f0f0;
         }
         
-        .job-description {
+        .info-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        }
+        
+        .info-card-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .info-card-icon.purple {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .info-card-icon.green {
+            background: linear-gradient(135deg, #0cebeb 0%, #20e3b2 100%);
+            color: white;
+        }
+        
+        .info-card-icon.orange {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+        }
+        
+        .info-card-icon.blue {
+            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+            color: white;
+        }
+        
+        .info-card-title {
+            font-size: 0.85rem;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        
+        .info-card-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+        
+        .detail-section {
+            background: #fff;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border: 1px solid #f0f0f0;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 3px solid #667eea;
+            display: inline-block;
+        }
+        
+        .meta-item {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .meta-item:last-child {
+            border-bottom: none;
+        }
+        
+        .meta-item i {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 0.9rem;
+        }
+        
+        .meta-label {
+            font-weight: 600;
+            color: #495057;
+            min-width: 180px;
+            margin-right: 1rem;
+        }
+        
+        .meta-value {
+            color: #2c3e50;
+            flex: 1;
+        }
+        
+        .content-block {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            line-height: 1.8;
             white-space: pre-wrap;
-            line-height: 1.6;
+            border-left: 4px solid #667eea;
         }
         
         .status-badge {
-            padding: 6px 12px;
-            border-radius: 16px;
-            font-weight: 500;
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
         }
-        </style>
+        
+        .status-badge i {
+            font-size: 1rem;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn-action {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+            </style>
 </head>
 <body>
-    <div class="alert alert-info">DEBUG: loggedInUser.positionId = ${sessionScope.loggedInUser.positionId}</div>
+<div class="dashboard-wrapper">
     <!-- Sidebar -->
     <jsp:include page="../layout/sidebar.jsp">
         <jsp:param name="currentPage" value="job-postings"/>
@@ -53,177 +240,354 @@
     <!-- Main Content -->
     <div class="main-content">
         <!-- Header -->
-        <jsp:include page="../layout/dashboard-header.jsp"/>
+        <jsp:include page="../layout/dashboard-header.jsp">
+            <jsp:param name="pageTitle" value="Job Posting Details"/>
+        </jsp:include>
 
         <!-- Content Area -->
-        <div class="content-area p-4">
-            <div class="container-fluid">
-                <!-- Back button -->
-                <div class="mb-4">
-                    <a href="${pageContext.request.contextPath}/job-postings" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left"></i> Back to Job Postings
-                    </a>
-                </div>
+        <div class="container-fluid px-4 py-4">
+            <!-- Back button -->
+            <div class="mb-4">
+                <a href="${pageContext.request.contextPath}/job-postings" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Job Postings
+                </a>
+            </div>
 
-                <!-- Job Details -->
-                <div class="job-detail-section">
-                    <c:if test="${not empty debug_priority or not empty debug_workingHours}">
-                        <div class="alert alert-secondary">
-                            <strong>DEBUG:</strong> debug_priority = ${debug_priority}, debug_workingHours = ${debug_workingHours}
-                        </div>
-                    </c:if>
-                    <div class="d-flex justify-content-between align-items-start mb-4">
+            <!-- Hero Section -->
+            <div class="job-hero">
+                <div class="job-hero-content">
+                    <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <h2 class="job-title mb-2">${jobPosting.title}</h2>
-                            <div class="job-meta">
-                                <div class="mb-2">
-                                    <i class="fas fa-code me-2"></i> Code: ${jobPosting.code}
-                                </div>
-                                <div class="mb-2">
-                                    <i class="fas fa-building me-2"></i> Department: 
-                                    <c:forEach items="${departments}" var="dept">
-                                        <c:if test="${dept.id == jobPosting.departmentId}">
-                                            ${dept.name}
-                                        </c:if>
-                                    </c:forEach>
-                                </div>
-                                <div class="mb-2">
-                                    <i class="fas fa-users me-2"></i> Positions: ${jobPosting.numberOfPositions}
-                                </div>
-                                <div class="mb-2">
-                                    <i class="fas fa-briefcase me-2"></i> Type: ${jobPosting.jobType}
-                                </div>
-                                <div class="mb-2">
-                                    <i class="fas fa-layer-group me-2"></i> Level: ${jobPosting.level}
-                                </div>
-                                <div class="mb-2">
-                                    <i class="fas fa-money-bill-wave me-2"></i> Salary Range: ${jobPosting.salaryRange}
-                                </div>
-                                <div class="mb-2">
-                                    <i class="fas fa-location-dot me-2"></i> Working Location: ${jobPosting.workingLocation}
-                                </div>
-                                <div class="mb-2">
-                                    <i class="fas fa-calendar-day me-2"></i> Expected Start Date: 
-                                    <c:if test="${not empty jobPosting.startDate}">
-                                        <fmt:parseDate value="${jobPosting.startDate}" pattern="yyyy-MM-dd" var="startDate"/>
-                                        <fmt:formatDate value="${startDate}" pattern="MMMM d, yyyy"/>
-                                    </c:if>
-                                    <c:if test="${empty jobPosting.startDate}">TBD</c:if>
-                                </div>
-                                <div class="mb-2">
-                                    <i class="fas fa-user-clock me-2"></i> Min Experience: <c:out value="${jobPosting.minExperienceYears}"/> years
-                                </div>
-                                <div class="mb-2">
-                                    <i class="fas fa-clock me-2"></i> Working Hours: 
-                                    <c:choose>
-                                        <c:when test="${not empty jobPosting.workingHours}">
-                                            <c:out value="${jobPosting.workingHours}"/>
-                                        </c:when>
-                                        <c:otherwise>Not provided</c:otherwise>
-                                    </c:choose>
-                                </div>
-                                <div class="mb-2">
-                                    <i class="fas fa-envelope me-2"></i> Contact Email: 
-                                    <c:choose>
-                                        <c:when test="${not empty jobPosting.contactEmail}">
-                                            <a href="mailto:${jobPosting.contactEmail}">${jobPosting.contactEmail}</a>
-                                        </c:when>
-                                        <c:otherwise>Not provided</c:otherwise>
-                                    </c:choose>
-                                </div>
-                                <div class="mb-2">
-                                    <i class="fas fa-phone me-2"></i> Contact Phone: <c:out value="${jobPosting.contactPhone}"/>
-                                </div>
-                                <div class="mb-2">
-                                    <i class="fas fa-calendar me-2"></i> Deadline: 
-                                    <fmt:parseDate value="${jobPosting.applicationDeadline}" pattern="yyyy-MM-dd" var="deadline"/>
-                                    <fmt:formatDate value="${deadline}" pattern="MMMM d, yyyy"/>
-                                </div>
-                                <div>
-                                    <i class="fas fa-flag me-2"></i> Priority:
-                                    <c:choose>
-                                        <c:when test="${not empty jobPosting.priority}">
-                                            <c:choose>
-                                                <c:when test="${jobPosting.priority == 'URGENT'}"><c:set var="priorityClass" value="bg-danger"/></c:when>
-                                                <c:when test="${jobPosting.priority == 'HIGH'}"><c:set var="priorityClass" value="bg-warning"/></c:when>
-                                                <c:when test="${jobPosting.priority == 'MEDIUM'}"><c:set var="priorityClass" value="bg-info"/></c:when>
-                                                <c:otherwise><c:set var="priorityClass" value="bg-secondary"/></c:otherwise>
-                                            </c:choose>
-                                            <span class="badge ${priorityClass}">
-                                                <c:out value="${jobPosting.priority}"/>
-                                            </span>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <span class="badge bg-secondary">Not set</span>
-                                        </c:otherwise>
-                                    </c:choose>
-                                </div>
+                            <h1 class="job-title">${jobPosting.title}</h1>
+                            <div class="job-code">
+                                <i class="fas fa-hashtag me-2"></i>${jobPosting.code}
                             </div>
-                            
-                            <div class="status mb-4">
-                                <strong>Status:</strong>
-                                <span class="status-badge ms-2 ${jobPosting.status == 'PENDING' ? 'bg-warning' :
-                                                                jobPosting.status == 'APPROVED' ? 'bg-info' :
-                                                                jobPosting.status == 'REJECTED' ? 'bg-danger' :
-                                                                jobPosting.status == 'PUBLISHED' ? 'bg-success' : 'bg-secondary'}">
-                                    ${jobPosting.status}
+                        </div>
+                        <div>
+                            <c:choose>
+                                <c:when test="${jobPosting.status == 'PENDING'}">
+                                    <span class="status-badge bg-warning text-dark">
+                                        <i class="fas fa-clock"></i> ${jobPosting.status}
+                                    </span>
+                                </c:when>
+                                <c:when test="${jobPosting.status == 'APPROVED'}">
+                                    <span class="status-badge bg-info text-white">
+                                        <i class="fas fa-check"></i> ${jobPosting.status}
+                                    </span>
+                                </c:when>
+                                <c:when test="${jobPosting.status == 'REJECTED'}">
+                                    <span class="status-badge bg-danger text-white">
+                                        <i class="fas fa-times"></i> ${jobPosting.status}
+                                    </span>
+                                </c:when>
+                                <c:when test="${jobPosting.status == 'PUBLISHED'}">
+                                    <span class="status-badge bg-success text-white">
+                                        <i class="fas fa-globe"></i> ${jobPosting.status}
+                                    </span>
+                                </c:when>
+                                <c:otherwise>
+                                    <span class="status-badge bg-secondary text-white">
+                                        <i class="fas fa-question"></i> ${jobPosting.status}
+                                    </span>
+                                </c:otherwise>
+                            </c:choose>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Debug Info (Remove in production) -->
+            <c:if test="${param.debug == 'true'}">
+            <div class="alert alert-info">
+                <strong>Debug Info:</strong><br/>
+                jobPosting.departmentId = ${jobPosting.departmentId}<br/>
+                departments size = ${not empty departments ? departments.size() : '0'}<br/>
+                <c:forEach items="${departments}" var="dept" varStatus="status">
+                    dept[${status.index}]: id=${dept.id}, name=${dept.name}<br/>
+                </c:forEach>
+            </div>
+            </c:if>
+
+            <!-- Quick Info Cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="info-card">
+                        <div class="info-card-icon purple">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <div class="info-card-title">Department</div>
+                        <div class="info-card-value">
+                            <c:set var="deptFound" value="false"/>
+                            <c:forEach items="${departments}" var="dept">
+                                <c:if test="${dept.id == jobPosting.departmentId}">
+                                    <c:out value="${dept.name}"/>
+                                    <c:set var="deptFound" value="true"/>
+                                </c:if>
+                            </c:forEach>
+                            <c:if test="${!deptFound}">
+                                <span class="text-muted">Not specified</span>
+                            </c:if>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="info-card">
+                        <div class="info-card-icon green">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="info-card-title">Positions</div>
+                        <div class="info-card-value">${jobPosting.numberOfPositions} Openings</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="info-card">
+                        <div class="info-card-icon orange">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+                        <div class="info-card-title">Level</div>
+                        <div class="info-card-value">${jobPosting.level}</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="info-card">
+                        <div class="info-card-icon blue">
+                            <i class="fas fa-briefcase"></i>
+                        </div>
+                        <div class="info-card-title">Job Type</div>
+                        <div class="info-card-value">${jobPosting.jobType}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Approval History (for Rejected status) -->
+            <c:if test="${jobPosting.status == 'REJECTED'}">
+                <div class="detail-section mb-4" style="background: linear-gradient(135deg, #fee 0%, #fdd 100%); border-left: 4px solid #dc3545;">
+                    <h3 class="section-title" style="border-bottom-color: #dc3545;">
+                        <i class="fas fa-history me-2" style="color: #dc3545;"></i>Approval History
+                    </h3>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 style="color: #495057; margin-bottom: 1rem;">
+                                <i class="fas fa-user-shield me-2"></i>Approver Information
+                            </h5>
+                            <div class="meta-item">
+                                <i class="fas fa-user" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);"></i>
+                                <span class="meta-label">Rejected By</span>
+                                <span class="meta-value">
+                                    <c:choose>
+                                        <c:when test="${not empty approverAccount}">
+                                            ${approverAccount.username}
+                                        </c:when>
+                                        <c:otherwise>N/A</c:otherwise>
+                                    </c:choose>
+                                </span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-calendar-times" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);"></i>
+                                <span class="meta-label">Rejection Date</span>
+                                <span class="meta-value">
+                                    <c:choose>
+                                        <c:when test="${not empty jobPosting.approvedAt}">
+                                            ${rejectionDateFormatted}
+                                        </c:when>
+                                        <c:otherwise>N/A</c:otherwise>
+                                    </c:choose>
                                 </span>
                             </div>
                         </div>
-                        
-                        <!-- Action buttons based on status and user role -->
-                        <div>
-                            <c:if test="${sessionScope.loggedInUser != null && sessionScope.loggedInUser.positionId == 7 && jobPosting.status == 'PENDING'}">
-                                <button type="button" class="btn btn-success me-2" onclick="approveJobPosting('${jobPosting.id}')">
+                        <div class="col-md-6">
+                            <h5 style="color: #dc3545; margin-bottom: 1rem;">
+                                <i class="fas fa-ban me-2"></i>Rejection Reason
+                            </h5>
+                            <div class="alert alert-danger" role="alert">
+                                <i class="fas fa-exclamation-circle me-2"></i>
+                                <c:choose>
+                                    <c:when test="${not empty jobPosting.rejectedReason}">
+                                        ${jobPosting.rejectedReason}
+                                    </c:when>
+                                    <c:otherwise>No reason provided</c:otherwise>
+                                </c:choose>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </c:if>
+
+            <!-- Action Buttons -->
+            <c:if test="${sessionScope.loggedInUser != null}">
+                <c:set var="showButtons" value="false"/>
+                <c:set var="canEdit" value="false"/>
+                
+                <%-- HRM (position 7) can approve/reject PENDING, publish APPROVED --%>
+                <c:if test="${sessionScope.loggedInUser.positionId == 7 && 
+                             (jobPosting.status == 'PENDING' || jobPosting.status == 'APPROVED')}">
+                    <c:set var="showButtons" value="true"/>
+                </c:if>
+                
+                <%-- HR (position 8) can edit PENDING --%>
+                <c:if test="${sessionScope.loggedInUser.positionId == 8 && jobPosting.status == 'PENDING'}">
+                    <c:set var="showButtons" value="true"/>
+                    <c:set var="canEdit" value="true"/>
+                </c:if>
+                
+                <%-- Creator can edit REJECTED --%>
+                <c:if test="${jobPosting.status == 'REJECTED' && 
+                             sessionScope.accountId == jobPosting.createdByAccountId}">
+                    <c:set var="showButtons" value="true"/>
+                    <c:set var="canEdit" value="true"/>
+                </c:if>
+                
+                <c:if test="${showButtons}">
+                    <div class="detail-section mb-4">
+                        <div class="action-buttons">
+                            <%-- HRM approve/reject buttons --%>
+                            <c:if test="${sessionScope.loggedInUser.positionId == 7 && jobPosting.status == 'PENDING'}">
+                                <button type="button" class="btn btn-success btn-action" onclick="approveJobPosting('${jobPosting.id}')">
                                     <i class="fas fa-check-circle"></i> Approve
                                 </button>
-                                <button type="button" class="btn btn-danger" onclick="rejectJobPosting('${jobPosting.id}')">
+                                <button type="button" class="btn btn-danger btn-action" onclick="rejectJobPosting('${jobPosting.id}')">
                                     <i class="fas fa-times-circle"></i> Reject
                                 </button>
                             </c:if>
                             
-                            <c:if test="${sessionScope.loggedInUser != null && sessionScope.loggedInUser.positionId == 8 && jobPosting.status == 'PENDING'}">
+                            <%-- Edit button (for PENDING by HR, or REJECTED by creator) --%>
+                            <c:if test="${canEdit}">
                                 <a href="${pageContext.request.contextPath}/job-posting/edit?id=${jobPosting.id}" 
-                                   class="btn btn-primary">
+                                   class="btn btn-primary btn-action">
                                     <i class="fas fa-edit"></i> Edit
                                 </a>
                             </c:if>
                             
-                            <c:if test="${sessionScope.loggedInUser != null && sessionScope.loggedInUser.positionId == 7 && jobPosting.status == 'APPROVED'}">
-                                <button type="button" class="btn btn-primary" onclick="publishJobPosting('${jobPosting.id}')">
+                            <%-- HRM publish button --%>
+                            <c:if test="${sessionScope.loggedInUser.positionId == 7 && jobPosting.status == 'APPROVED'}">
+                                <button type="button" class="btn btn-primary btn-action" onclick="publishJobPosting('${jobPosting.id}')">
                                     <i class="fas fa-globe"></i> Publish
                                 </button>
                             </c:if>
                         </div>
                     </div>
+                </c:if>
+            </c:if>
 
-                    <!-- Job Description -->
-                    <div class="job-description-section mb-4">
-                        <h4>Job Description</h4>
-                        <div class="job-description">
-                            ${jobPosting.description}
+            <!-- Job Details -->
+            <div class="detail-section">
+                <h3 class="section-title">
+                    <i class="fas fa-info-circle me-2"></i>Job Information
+                </h3>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="meta-item">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <span class="meta-label">Salary Range</span>
+                            <span class="meta-value"><strong>${jobPosting.salaryRange}</strong></span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span class="meta-label">Location</span>
+                            <span class="meta-value">${jobPosting.workingLocation}</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span class="meta-label">Start Date</span>
+                            <span class="meta-value">
+                                <c:if test="${not empty jobPosting.startDate}">
+                                    <fmt:parseDate value="${jobPosting.startDate}" pattern="yyyy-MM-dd" var="startDate"/>
+                                    <fmt:formatDate value="${startDate}" pattern="MMMM d, yyyy"/>
+                                </c:if>
+                                <c:if test="${empty jobPosting.startDate}">To Be Determined</c:if>
+                            </span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-hourglass-end"></i>
+                            <span class="meta-label">Application Deadline</span>
+                            <span class="meta-value">
+                                <fmt:parseDate value="${jobPosting.applicationDeadline}" pattern="yyyy-MM-dd" var="deadline"/>
+                                <fmt:formatDate value="${deadline}" pattern="MMMM d, yyyy"/>
+                            </span>
                         </div>
                     </div>
-
-                    <!-- Requirements -->
-                    <div class="requirements-section mb-4">
-                        <h4>Requirements</h4>
-                        <div class="job-description">
-                            ${jobPosting.requirements}
+                    <div class="col-md-6">
+                        <div class="meta-item">
+                            <i class="fas fa-user-clock"></i>
+                            <span class="meta-label">Experience Required</span>
+                            <span class="meta-value"><c:out value="${jobPosting.minExperienceYears}"/> years</span>
                         </div>
-                    </div>
-
-                    <!-- Benefits -->
-                    <div class="benefits-section">
-                        <h4>Benefits</h4>
-                        <div class="job-description">
-                            ${jobPosting.benefits}
+                        <div class="meta-item">
+                            <i class="fas fa-clock"></i>
+                            <span class="meta-label">Working Hours</span>
+                            <span class="meta-value">
+                                <c:choose>
+                                    <c:when test="${not empty jobPosting.workingHours}">
+                                        <c:out value="${jobPosting.workingHours}"/>
+                                    </c:when>
+                                    <c:otherwise><span class="text-muted">Not specified</span></c:otherwise>
+                                </c:choose>
+                            </span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-envelope"></i>
+                            <span class="meta-label">Contact Email</span>
+                            <span class="meta-value">
+                                <c:choose>
+                                    <c:when test="${not empty jobPosting.contactEmail}">
+                                        <a href="mailto:${jobPosting.contactEmail}">${jobPosting.contactEmail}</a>
+                                    </c:when>
+                                    <c:otherwise><span class="text-muted">Not provided</span></c:otherwise>
+                                </c:choose>
+                            </span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-phone"></i>
+                            <span class="meta-label">Contact Phone</span>
+                            <span class="meta-value">
+                                <c:choose>
+                                    <c:when test="${not empty jobPosting.contactPhone}">
+                                        <c:out value="${jobPosting.contactPhone}"/>
+                                    </c:when>
+                                    <c:otherwise><span class="text-muted">Not provided</span></c:otherwise>
+                                </c:choose>
+                            </span>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Job Description -->
+            <div class="detail-section">
+                <h3 class="section-title">
+                    <i class="fas fa-file-alt me-2"></i>Job Description
+                </h3>
+                <div class="content-block">
+                    ${jobPosting.description}
+                </div>
+            </div>
+
+            <!-- Requirements -->
+            <div class="detail-section">
+                <h3 class="section-title">
+                    <i class="fas fa-list-check me-2"></i>Requirements
+                </h3>
+                <div class="content-block">
+                    ${jobPosting.requirements}
+                </div>
+            </div>
+
+            <!-- Benefits -->
+            <div class="detail-section">
+                <h3 class="section-title">
+                    <i class="fas fa-gift me-2"></i>Benefits
+                </h3>
+                <div class="content-block">
+                    ${jobPosting.benefits}
+                </div>
+            </div>
         </div>
+
+        <jsp:include page="../layout/dashboard-footer.jsp"/>
     </div>
+</div>
 
     <!-- Confirm Approve Modal -->
     <div class="modal fade" id="approveModal" tabindex="-1">

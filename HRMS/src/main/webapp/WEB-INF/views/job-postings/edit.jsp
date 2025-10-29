@@ -22,7 +22,7 @@
             <div class="page-head d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h2 class="page-title"><i class="fas fa-edit me-2"></i>Edit Job Posting</h2>
-                    <p class="page-subtitle">Update an existing job posting</p>
+                    <p class="page-subtitle">Update job posting details</p>
                 </div>
                 <a href="${pageContext.request.contextPath}/job-postings" class="btn btn-outline-secondary">
                     <i class="fas fa-list me-1"></i> View All Job Postings
@@ -31,98 +31,205 @@
 
             <div class="card job-posting-card">
                 <div class="card-header">
-                    <h4><i class="fas fa-pencil-alt me-2"></i>Edit Job Posting</h4>
+                    <h4><i class="fas fa-pencil-alt me-2"></i>Job Posting Form</h4>
                 </div>
                 <div class="card-body">
+                    <!-- Alerts -->
                     <c:if test="${not empty error}">
                         <div class="alert alert-danger" role="alert">
                             <i class="fas fa-exclamation-triangle me-2"></i>
                             <c:out value="${error}" />
                         </div>
                     </c:if>
+                    <c:if test="${not empty success}">
+                        <div class="alert alert-success" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <c:out value="${success}" />
+                        </div>
+                    </c:if>
+                    
+                    <!-- Info for REJECTED job posting -->
+                    <c:if test="${jobPosting.status == 'REJECTED'}">
+                        <div class="alert alert-warning" role="alert">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Note:</strong> This job posting was rejected. After you save your changes, 
+                            it will be automatically resubmitted with status <strong>PENDING</strong> for HRM approval.
+                        </div>
+                    </c:if>
 
-                    <form method="post" action="${pageContext.request.contextPath}/job-posting/edit" class="needs-validation" novalidate>
+                    <form method="post" action="${pageContext.request.contextPath}/job-posting/edit" 
+                          class="needs-validation" novalidate>
                         <input type="hidden" name="csrfToken" value="${csrfToken}" />
                         <input type="hidden" name="id" value="${jobPosting.id}" />
 
                         <!-- Basic Information -->
                         <div class="card mb-4">
-                            <div class="card-header">Basic Information</div>
+                            <div class="card-header">
+                                Basic Information
+                            </div>
                             <div class="card-body">
-                                <div class="row g-3">
+                                <!-- Department (Read-only) -->
+                                <c:if test="${not empty jobPosting.departmentId}">
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-12">
+                                        <label for="departmentName" class="form-label">
+                                            <i class="fas fa-building"></i> Department
+                                        </label>
+                                        <c:forEach items="${departments}" var="dept">
+                                            <c:if test="${dept.id == jobPosting.departmentId}">
+                                                <input type="text" class="form-control" id="departmentName" 
+                                                       value="${dept.name}" readonly>
+                                                <input type="hidden" name="departmentId" value="${jobPosting.departmentId}">
+                                                <div class="form-text">Department cannot be changed</div>
+                                            </c:if>
+                                        </c:forEach>
+                                    </div>
+                                </div>
+                                </c:if>
+
+                                <!-- Job Title & Code editable by HR -->
+                                <div class="row g-3 mb-3">
                                     <div class="col-md-6">
-                                        <label for="jobTitle" class="form-label">Job Title <span class="text-danger">*</span></label>
-                                        <input type="text" id="jobTitle" name="jobTitle" class="form-control ${not empty errors.jobTitle ? 'is-invalid' : ''}"
-                                               value="${not empty formData.jobTitle ? formData.jobTitle : jobPosting.title}" required />
-                                        <div class="invalid-feedback">${not empty errors.jobTitle ? errors.jobTitle : 'Job title is required'}</div>
+                                        <label for="jobTitle" class="form-label">
+                                            <i class="fas fa-heading"></i> Job Title
+                                            <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="text" class="form-control ${not empty errors.jobTitle ? 'is-invalid' : ''}" 
+                                               id="jobTitle" name="jobTitle" required
+                                               minlength="3" maxlength="255"
+                                               value="${not empty formData.jobTitle ? formData.jobTitle : jobPosting.title}">
+                                        <div class="form-text">Title shown in job listing (3-255 characters)</div>
+                                        <div class="invalid-feedback">
+                                            ${not empty errors.jobTitle ? errors.jobTitle : 'Job title must be 3-255 characters'}
+                                        </div>
                                     </div>
-
-                                    <div class="col-md-3">
-                                        <label for="code" class="form-label">Code</label>
-                                        <input type="text" id="code" name="code" class="form-control"
-                                               value="${not empty formData.code ? formData.code : jobPosting.code}" />
-                                    </div>
-
-                                    <div class="col-md-3">
-                                        <label for="numberOfPositions" class="form-label">Number of Positions</label>
-                                        <input type="number" id="numberOfPositions" name="numberOfPositions" min="1" class="form-control"
-                                               value="${not empty formData.numberOfPositions ? formData.numberOfPositions : jobPosting.numberOfPositions}" />
+                                    <div class="col-md-6">
+                                        <label for="code" class="form-label">
+                                            <i class="fas fa-barcode"></i> Job Code
+                                        </label>
+                                        <input type="text" class="form-control ${not empty errors.code ? 'is-invalid' : ''}" 
+                                               id="code" name="code" 
+                                               maxlength="128"
+                                               value="${not empty formData.code ? formData.code : jobPosting.code}">
+                                        <div class="form-text">Public job code (max 128 characters)</div>
+                                        <div class="invalid-feedback">
+                                            ${not empty errors.code ? errors.code : 'Code cannot exceed 128 characters'}
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div class="row g-3 mt-3">
-                                    <div class="col-md-6">
-                                        <label for="departmentId" class="form-label">Department</label>
-                                        <select id="departmentId" name="departmentId" class="form-select">
-                                            <option value="">-- Select Department --</option>
-                                            <c:forEach items="${departments}" var="dept">
-                                                <c:set var="selectedDept" value="${not empty formData.departmentId ? formData.departmentId : jobPosting.departmentId}" />
-                                                <option value="${dept.id}" <c:if test="${dept.id == selectedDept}">selected</c:if>>${dept.name}</option>
-                                            </c:forEach>
-                                        </select>
+                                <!-- Job Level & Type (Read-only) -->
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-4">
+                                        <label for="jobLevel" class="form-label">Job Level</label>
+                                        <input type="text" class="form-control" id="jobLevel"
+                                               value="${jobPosting.level}" readonly>
+                                        <input type="hidden" name="jobLevel" value="${jobPosting.level}">
                                     </div>
+                                    <div class="col-md-4">
+                                        <label for="jobType" class="form-label">Job Type</label>
+                                        <input type="text" class="form-control" id="jobType"
+                                               value="${jobPosting.jobType}" readonly>
+                                        <input type="hidden" name="jobType" value="${jobPosting.jobType}">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="numberOfPositions" class="form-label">Number of Positions</label>
+                                        <input type="number" class="form-control" id="numberOfPositions"
+                                               value="${jobPosting.numberOfPositions}" readonly>
+                                        <input type="hidden" name="numberOfPositions" value="${jobPosting.numberOfPositions}">
+                                    </div>
+                                </div>
 
-                                    <div class="col-md-6">
-                                        <label for="positionId" class="form-label">Position</label>
-                                        <select id="positionId" name="positionId" class="form-select">
-                                            <option value="">-- Select Position --</option>
-                                            <c:forEach items="${positions}" var="pos">
-                                                <c:set var="selectedPos" value="${not empty formData.positionId ? formData.positionId : jobPosting.positionId}" />
-                                                <option value="${pos.id}" <c:if test="${pos.id == selectedPos}">selected</c:if>>${pos.name}</option>
-                                            </c:forEach>
-                                        </select>
+                                <!-- Working Hours -->
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-12">
+                                        <label for="workingHours" class="form-label">Working Hours</label>
+                                        <input type="text" class="form-control ${not empty errors.workingHours ? 'is-invalid' : ''}"
+                                               id="workingHours" name="workingHours" 
+                                               value="${not empty formData.workingHours ? formData.workingHours : jobPosting.workingHours}"
+                                               maxlength="255"
+                                               placeholder="e.g. Monday-Friday 8:00-17:00">
+                                        <div class="form-text">Optional (max 255 characters)</div>
+                                        <div class="invalid-feedback">
+                                            ${not empty errors.workingHours ? errors.workingHours : 'Working hours cannot exceed 255 characters'}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Min Experience & Start Date -->
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-4">
+                                        <label for="minExperienceYears" class="form-label">
+                                            <i class="fas fa-briefcase"></i> Min Experience Years
+                                        </label>
+                                        <input type="number" class="form-control ${not empty errors.minExperienceYears ? 'is-invalid' : ''}" 
+                                               id="minExperienceYears" name="minExperienceYears" 
+                                               min="0" max="50"
+                                               value="${not empty formData.minExperienceYears ? formData.minExperienceYears : jobPosting.minExperienceYears}">
+                                        <div class="form-text">Required years of experience (0-50)</div>
+                                        <div class="invalid-feedback">
+                                            ${not empty errors.minExperienceYears ? errors.minExperienceYears : 'Experience must be between 0 and 50 years'}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="startDate" class="form-label">
+                                            <i class="fas fa-calendar-alt"></i> Expected Start Date
+                                        </label>
+                                        <input type="date" class="form-control ${not empty errors.startDate ? 'is-invalid' : ''}" 
+                                               id="startDate" name="startDate" 
+                                               min="<jsp:useBean id='today' class='java.util.Date'/><fmt:formatDate value='${today}' pattern='yyyy-MM-dd'/>"
+                                               value="${not empty formData.startDate ? formData.startDate : jobPosting.startDate}">
+                                        <div class="form-text">When the position starts (cannot be in the past)</div>
+                                        <div class="invalid-feedback">
+                                            ${not empty errors.startDate ? errors.startDate : 'Start date cannot be in the past'}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Salary & Dates -->
+                        <!-- Compensation Information -->
                         <div class="card mb-4">
-                            <div class="card-header">Salary & Dates</div>
+                            <div class="card-header">
+                                Compensation Details
+                            </div>
                             <div class="card-body">
-                                <div class="row g-3">
-                                    <div class="col-md-3">
-                                        <label for="salaryType" class="form-label">Salary Type</label>
-                                        <select id="salaryType" name="salaryType" class="form-select">
-                                            <option value="">-- Select --</option>
-                                            <option value="GROSS" ${ (not empty formData.salaryType ? formData.salaryType : jobPosting.salaryType) == 'GROSS' ? 'selected' : '' }>GROSS</option>
-                                            <option value="NET" ${ (not empty formData.salaryType ? formData.salaryType : jobPosting.salaryType) == 'NET' ? 'selected' : '' }>NET</option>
-                                        </select>
+                                <!-- Salary Range -->
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-4">
+                                        <label for="salaryType" class="form-label">
+                                            Salary Type <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="text" class="form-control ${not empty errors.salaryType ? 'is-invalid' : ''}" 
+                                               id="salaryType" name="salaryType" required
+                                               value="${not empty formData.salaryType ? formData.salaryType : jobPosting.salaryType}"
+                                               placeholder="e.g. RANGE, FROM, NEGOTIABLE">
+                                        <div class="form-text">RANGE, FROM, NEGOTIABLE, GROSS, NET</div>
+                                        <div class="invalid-feedback">
+                                            ${not empty errors.salaryType ? errors.salaryType : 'Salary type is required'}
+                                        </div>
                                     </div>
-                                    <div class="col-md-3">
-                                        <label for="minSalary" class="form-label">Min Salary</label>
-                                        <input type="text" id="minSalary" name="minSalary" class="form-control"
-                                               value="${not empty formData.minSalary ? formData.minSalary : jobPosting.minSalary}" />
+                                    <div class="col-md-4">
+                                        <label for="minSalary" class="form-label">Minimum Salary (VND)</label>
+                                        <input type="number" step="1000" class="form-control ${not empty errors.minSalary ? 'is-invalid' : ''}" 
+                                               id="minSalary" name="minSalary"
+                                               min="1000000"
+                                               value="${not empty formData.minSalary ? formData.minSalary : jobPosting.minSalary}">
+                                        <div class="form-text">Min: 1,000,000 VND</div>
+                                        <div class="invalid-feedback">
+                                            ${not empty errors.minSalary ? errors.minSalary : 'Minimum salary must be at least 1,000,000 VND'}
+                                        </div>
                                     </div>
-                                    <div class="col-md-3">
-                                        <label for="maxSalary" class="form-label">Max Salary</label>
-                                        <input type="text" id="maxSalary" name="maxSalary" class="form-control"
-                                               value="${not empty formData.maxSalary ? formData.maxSalary : jobPosting.maxSalary}" />
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label for="applicationDeadline" class="form-label">Application Deadline</label>
-                                        <input type="date" id="applicationDeadline" name="applicationDeadline" class="form-control"
-                                               value="${not empty formData.applicationDeadline ? formData.applicationDeadline : jobPosting.applicationDeadline}" />
+                                    <div class="col-md-4">
+                                        <label for="maxSalary" class="form-label">Maximum Salary (VND)</label>
+                                        <input type="number" step="1000" class="form-control ${not empty errors.maxSalary ? 'is-invalid' : ''}" 
+                                               id="maxSalary" name="maxSalary"
+                                               min="1000000"
+                                               value="${not empty formData.maxSalary ? formData.maxSalary : jobPosting.maxSalary}">
+                                        <div class="form-text">Must be greater than min salary</div>
+                                        <div class="invalid-feedback">
+                                            ${not empty errors.maxSalary ? errors.maxSalary : 'Maximum salary must be greater than minimum salary'}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -130,45 +237,142 @@
 
                         <!-- Job Details -->
                         <div class="card mb-4">
-                            <div class="card-header">Job Details</div>
+                            <div class="card-header">
+                                Job Details
+                            </div>
                             <div class="card-body">
-                                <div class="mb-3">
-                                    <label for="description" class="form-label">Job Description <span class="text-danger">*</span></label>
-                                    <textarea id="description" name="description" rows="5" class="form-control ${not empty errors.description ? 'is-invalid' : ''}" required>${not empty formData.description ? formData.description : jobPosting.description}</textarea>
-                                    <div class="invalid-feedback">${not empty errors.description ? errors.description : 'Description is required'}</div>
+                                <!-- Description & Requirements -->
+                                <div class="row g-3 mb-3">
+                                    <div class="col-12">
+                                        <label for="description" class="form-label">
+                                            Job Description <span class="text-danger">*</span>
+                                        </label>
+                                        <textarea class="form-control ${not empty errors.description ? 'is-invalid' : ''}"
+                                                  id="description" name="description" rows="5" required
+                                                  maxlength="4000"
+                                                  placeholder="Describe the job role, responsibilities, and expectations...">${not empty formData.description ? formData.description : jobPosting.description}</textarea>
+                                        <div class="form-text">Required (max 4000 characters)</div>
+                                        <div class="invalid-feedback">
+                                            ${not empty errors.description ? errors.description : 'Job description is required and cannot exceed 4000 characters'}
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <label for="requirements" class="form-label">
+                                            Requirements <span class="text-danger">*</span>
+                                        </label>
+                                        <textarea class="form-control ${not empty errors.requirements ? 'is-invalid' : ''}"
+                                                  id="requirements" name="requirements" rows="5" required
+                                                  maxlength="4000"
+                                                  placeholder="List required skills, qualifications, and experience...">${not empty formData.requirements ? formData.requirements : jobPosting.requirements}</textarea>
+                                        <div class="form-text">Required (max 4000 characters)</div>
+                                        <div class="invalid-feedback">
+                                            ${not empty errors.requirements ? errors.requirements : 'Requirements are required and cannot exceed 4000 characters'}
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <label for="benefits" class="form-label">Benefits</label>
+                                        <textarea class="form-control ${not empty errors.benefits ? 'is-invalid' : ''}"
+                                                  id="benefits" name="benefits" rows="3"
+                                                  maxlength="2000"
+                                                  placeholder="List employee benefits, perks, and incentives...">${not empty formData.benefits ? formData.benefits : jobPosting.benefits}</textarea>
+                                        <div class="form-text">Optional (max 2000 characters)</div>
+                                        <div class="invalid-feedback">
+                                            ${not empty errors.benefits ? errors.benefits : 'Benefits cannot exceed 2000 characters'}
+                                        </div>
+                                    </div>
                                 </div>
 
+                                <!-- Location & Deadline -->
                                 <div class="row g-3">
                                     <div class="col-md-6">
-                                        <label for="requirements" class="form-label">Requirements</label>
-                                        <textarea id="requirements" name="requirements" rows="3" class="form-control">${not empty formData.requirements ? formData.requirements : jobPosting.requirements}</textarea>
+                                        <label for="location" class="form-label">
+                                            Working Location <span class="text-danger">*</span>
+                                        </label>
+                                        <c:choose>
+                                            <c:when test="${not empty jobPosting.workingLocation}">
+                                                <input type="text" class="form-control" id="location" 
+                                                       value="${jobPosting.workingLocation}" readonly>
+                                                <input type="hidden" name="location" value="${jobPosting.workingLocation}">
+                                                <div class="form-text">Location cannot be changed</div>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <input type="text" class="form-control ${not empty errors.location ? 'is-invalid' : ''}"
+                                                       id="location" name="location" 
+                                                       value="${not empty formData.location ? formData.location : jobPosting.workingLocation}" 
+                                                       required
+                                                       maxlength="255"
+                                                       placeholder="e.g. Hanoi, Ho Chi Minh City, Remote">
+                                                <div class="form-text">Required (max 255 characters)</div>
+                                                <div class="invalid-feedback">
+                                                    ${not empty errors.location ? errors.location : 'Working location is required and cannot exceed 255 characters'}
+                                                </div>
+                                            </c:otherwise>
+                                        </c:choose>
                                     </div>
                                     <div class="col-md-6">
-                                        <label for="benefits" class="form-label">Benefits</label>
-                                        <textarea id="benefits" name="benefits" rows="3" class="form-control">${not empty formData.benefits ? formData.benefits : jobPosting.benefits}</textarea>
+                                        <label for="applicationDeadline" class="form-label">
+                                            Application Deadline <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="date" class="form-control ${not empty errors.applicationDeadline ? 'is-invalid' : ''}"
+                                               id="applicationDeadline" name="applicationDeadline" 
+                                               value="${not empty formData.applicationDeadline ? formData.applicationDeadline : jobPosting.applicationDeadline}"
+                                               min="<jsp:useBean id='deadline' class='java.util.Date'/><fmt:formatDate value='${deadline}' pattern='yyyy-MM-dd'/>" 
+                                               required>
+                                        <div class="form-text">Required (cannot be in the past)</div>
+                                        <div class="invalid-feedback">
+                                            ${not empty errors.applicationDeadline ? errors.applicationDeadline : 'Application deadline is required and cannot be in the past'}
+                                        </div>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
 
-                                <div class="row g-3 mt-3">
+                        <!-- Contact Information -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                Contact Information
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
                                     <div class="col-md-6">
-                                        <label for="contactEmail" class="form-label">Contact Email</label>
-                                        <input type="email" id="contactEmail" name="contactEmail" class="form-control" value="${not empty formData.contactEmail ? formData.contactEmail : jobPosting.contactEmail}" />
+                                        <label for="contactEmail" class="form-label">
+                                            Contact Email <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="email" class="form-control ${not empty errors.contactEmail ? 'is-invalid' : ''}"
+                                               id="contactEmail" name="contactEmail" 
+                                               value="${not empty formData.contactEmail ? formData.contactEmail : jobPosting.contactEmail}" 
+                                               required
+                                               placeholder="hr@company.com">
+                                        <div class="form-text">Required (valid email format)</div>
+                                        <div class="invalid-feedback">
+                                            ${not empty errors.contactEmail ? errors.contactEmail : 'Valid email is required'}
+                                        </div>
                                     </div>
                                     <div class="col-md-6">
                                         <label for="contactPhone" class="form-label">Contact Phone</label>
-                                        <input type="text" id="contactPhone" name="contactPhone" class="form-control" value="${not empty formData.contactPhone ? formData.contactPhone : jobPosting.contactPhone}" />
+                                        <input type="tel" class="form-control ${not empty errors.contactPhone ? 'is-invalid' : ''}"
+                                               id="contactPhone" name="contactPhone" 
+                                               value="${not empty formData.contactPhone ? formData.contactPhone : jobPosting.contactPhone}"
+                                               pattern="^[0-9\+][0-9()\- ]{8,20}$"
+                                               placeholder="+84 123 456 789">
+                                        <div class="form-text">Optional (9-21 characters, numbers, +, -, ())</div>
+                                        <div class="invalid-feedback">
+                                            ${not empty errors.contactPhone ? errors.contactPhone : 'Invalid phone number format'}
+                                        </div>
                                     </div>
                                 </div>
-
-                                <div class="mt-4 d-grid gap-2 d-md-flex justify-content-md-end">
-                                    <a href="${pageContext.request.contextPath}/job-postings" class="btn btn-secondary">
-                                        <i class="fas fa-times me-1"></i> Cancel
-                                    </a>
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-save me-1"></i> Save Changes
-                                    </button>
-                                </div>
                             </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="mt-4 d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="${pageContext.request.contextPath}/job-postings" 
+                               class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i> Save Changes
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -180,30 +384,400 @@
     </div>
 
 <script>
-    // Basic client-side validation - mirrors create.jsp behavior
+    // Form validation - mirrors create.jsp
     (function() {
         'use strict';
+        
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('Edit form page loaded');
+            
             const form = document.querySelector('.needs-validation');
-            form.addEventListener('submit', function(event) {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    const firstInvalid = form.querySelector(':invalid');
-                    if (firstInvalid) {
-                        firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        firstInvalid.focus();
+            console.log('Form found:', form ? 'YES' : 'NO', form);
+            
+            const minSalaryInput = document.getElementById('minSalary');
+            const maxSalaryInput = document.getElementById('maxSalary');
+            const salaryTypeInput = document.getElementById('salaryType');
+            const startDateInput = document.getElementById('startDate');
+            const applicationDeadlineInput = document.getElementById('applicationDeadline');
+            const minExperienceInput = document.getElementById('minExperienceYears');
+            const jobTitleInput = document.getElementById('jobTitle');
+            const descriptionInput = document.getElementById('description');
+            const requirementsInput = document.getElementById('requirements');
+            const benefitsInput = document.getElementById('benefits');
+            const locationInput = document.getElementById('location');
+            const workingHoursInput = document.getElementById('workingHours');
+            
+            console.log('Form elements loaded:', {
+                form: !!form,
+                jobTitle: !!jobTitleInput,
+                description: !!descriptionInput,
+                requirements: !!requirementsInput
+            });
+            
+            // Set today's date as minimum for date inputs
+            const today = new Date().toISOString().split('T')[0];
+            if (startDateInput) {
+                startDateInput.setAttribute('min', today);
+            }
+            if (applicationDeadlineInput) {
+                applicationDeadlineInput.setAttribute('min', today);
+            }
+            
+            // Character counter for textareas and inputs with maxlength
+            function setupCharCounter(element) {
+                const maxLength = element.maxLength;
+                if(maxLength && maxLength > 0) {
+                    const counter = document.createElement('div');
+                    counter.className = 'char-counter';
+                    
+                    function updateCounter() {
+                        const length = element.value.length;
+                        counter.textContent = length + '/' + maxLength + ' characters';
+                        
+                        // Change color based on usage
+                        if (length > maxLength * 0.9) {
+                            counter.style.color = '#dc3545'; // Red when near limit
+                        } else if (length > maxLength * 0.75) {
+                            counter.style.color = '#ffc107'; // Yellow when 75%
+                        } else {
+                            counter.style.color = '#6c757d'; // Gray default
+                        }
+                    }
+                    
+                    element.parentNode.appendChild(counter);
+                    element.addEventListener('input', updateCounter);
+                    updateCounter(); // Initial count
+                }
+            }
+            
+            // Setup counters for all textareas and relevant inputs
+            document.querySelectorAll('textarea, input[maxlength]').forEach(setupCharCounter);
+            
+            // Salary validation
+            function validateSalaries() {
+                const minSalary = parseFloat(minSalaryInput.value);
+                const maxSalary = parseFloat(maxSalaryInput.value);
+                const salaryType = salaryTypeInput.value.toUpperCase();
+                
+                // Clear custom validity
+                minSalaryInput.setCustomValidity('');
+                maxSalaryInput.setCustomValidity('');
+                
+                // Check minimum salary requirement
+                if (minSalary && minSalary < 1000000) {
+                    minSalaryInput.setCustomValidity('Minimum salary must be at least 1,000,000 VND');
+                    return false;
+                }
+                
+                if (maxSalary && maxSalary < 1000000) {
+                    maxSalaryInput.setCustomValidity('Maximum salary must be at least 1,000,000 VND');
+                    return false;
+                }
+                
+                // Check if max > min
+                if (minSalary && maxSalary && minSalary >= maxSalary) {
+                    maxSalaryInput.setCustomValidity('Maximum salary must be greater than minimum salary');
+                    minSalaryInput.setCustomValidity('Minimum salary must be less than maximum salary');
+                    return false;
+                }
+                
+                // Check required fields based on salary type
+                if (salaryType === 'RANGE') {
+                    if (!minSalary || !maxSalary) {
+                        if (!minSalary) minSalaryInput.setCustomValidity('Minimum salary is required for RANGE type');
+                        if (!maxSalary) maxSalaryInput.setCustomValidity('Maximum salary is required for RANGE type');
+                        return false;
+                    }
+                } else if (salaryType === 'FROM') {
+                    if (!minSalary) {
+                        minSalaryInput.setCustomValidity('Minimum salary is required for FROM type');
+                        return false;
                     }
                 }
-                form.classList.add('was-validated');
+                
+                return true;
+            }
+            
+            // Date validation
+            function validateDates() {
+                const startDate = startDateInput.value ? new Date(startDateInput.value) : null;
+                const deadline = applicationDeadlineInput.value ? new Date(applicationDeadlineInput.value) : null;
+                const todayDate = new Date();
+                todayDate.setHours(0, 0, 0, 0);
+                
+                // Clear custom validity
+                if (startDateInput) startDateInput.setCustomValidity('');
+                if (applicationDeadlineInput) applicationDeadlineInput.setCustomValidity('');
+                
+                // Check if start date is in the past
+                if (startDate && startDate < todayDate) {
+                    startDateInput.setCustomValidity('Start date cannot be in the past');
+                    return false;
+                }
+                
+                // Check if deadline is in the past
+                if (deadline && deadline < todayDate) {
+                    applicationDeadlineInput.setCustomValidity('Application deadline cannot be in the past');
+                    return false;
+                }
+                
+                return true;
+            }
+            
+            // Experience validation
+            function validateExperience() {
+                const experience = parseInt(minExperienceInput.value);
+                
+                minExperienceInput.setCustomValidity('');
+                
+                if (experience !== '' && !isNaN(experience)) {
+                    if (experience < 0) {
+                        minExperienceInput.setCustomValidity('Experience years cannot be negative');
+                        return false;
+                    }
+                    if (experience > 50) {
+                        minExperienceInput.setCustomValidity('Experience years cannot exceed 50 years');
+                        return false;
+                    }
+                }
+                
+                return true;
+            }
+            
+            // Job title validation
+            function validateJobTitle() {
+                const title = jobTitleInput.value.trim();
+                
+                jobTitleInput.setCustomValidity('');
+                
+                if (title.length > 0 && title.length < 3) {
+                    jobTitleInput.setCustomValidity('Job title must be at least 3 characters');
+                    return false;
+                }
+                
+                if (title.length > 255) {
+                    jobTitleInput.setCustomValidity('Job title cannot exceed 255 characters');
+                    return false;
+                }
+                
+                return true;
+            }
+            
+            // Text field validation
+            function validateTextField(input, minLength, maxLength, fieldName) {
+                if (!input) return true;
+                
+                const value = input.value.trim();
+                input.setCustomValidity('');
+                
+                if (input.hasAttribute('required') && value.length === 0) {
+                    input.setCustomValidity(fieldName + ' is required');
+                    return false;
+                }
+                
+                if (value.length > maxLength) {
+                    input.setCustomValidity(fieldName + ' cannot exceed ' + maxLength + ' characters');
+                    return false;
+                }
+                
+                return true;
+            }
+            
+            // Add event listeners for real-time validation
+            if (minSalaryInput) minSalaryInput.addEventListener('blur', validateSalaries);
+            if (maxSalaryInput) maxSalaryInput.addEventListener('blur', validateSalaries);
+            if (salaryTypeInput) salaryTypeInput.addEventListener('change', validateSalaries);
+            
+            if (startDateInput) startDateInput.addEventListener('change', validateDates);
+            if (applicationDeadlineInput) applicationDeadlineInput.addEventListener('change', validateDates);
+            
+            if (minExperienceInput) minExperienceInput.addEventListener('blur', validateExperience);
+            if (jobTitleInput) jobTitleInput.addEventListener('blur', validateJobTitle);
+            
+            // Validate text fields on blur
+            if (descriptionInput) {
+                descriptionInput.addEventListener('blur', function() {
+                    validateTextField(this, 1, 4000, 'Job description');
+                });
+            }
+            
+            if (requirementsInput) {
+                requirementsInput.addEventListener('blur', function() {
+                    validateTextField(this, 1, 4000, 'Requirements');
+                });
+            }
+            
+            if (benefitsInput) {
+                benefitsInput.addEventListener('blur', function() {
+                    validateTextField(this, 0, 2000, 'Benefits');
+                });
+            }
+            
+            if (locationInput) {
+                locationInput.addEventListener('blur', function() {
+                    validateTextField(this, 1, 255, 'Working location');
+                });
+            }
+            
+            if (workingHoursInput) {
+                workingHoursInput.addEventListener('blur', function() {
+                    validateTextField(this, 0, 255, 'Working hours');
+                });
+            }
+
+            // Form submission validation
+            form.addEventListener('submit', function(event) {
+                console.log('Form submit triggered');
+                
+                try {
+                    // Run all validations
+                    const isSalaryValid = validateSalaries();
+                    const isDateValid = validateDates();
+                    const isExperienceValid = validateExperience();
+                    const isJobTitleValid = validateJobTitle();
+                    
+                    const isDescValid = validateTextField(descriptionInput, 1, 4000, 'Job description');
+                    const isReqValid = validateTextField(requirementsInput, 1, 4000, 'Requirements');
+                    const isBenValid = validateTextField(benefitsInput, 0, 2000, 'Benefits');
+                    const isLocValid = validateTextField(locationInput, 1, 255, 'Working location');
+                    const isWorkHoursValid = validateTextField(workingHoursInput, 0, 255, 'Working hours');
+                    
+                    const allCustomValid = isSalaryValid && isDateValid && isExperienceValid && 
+                                          isJobTitleValid && isDescValid && isReqValid && 
+                                          isBenValid && isLocValid && isWorkHoursValid;
+                    
+                    console.log('Validation results:', {
+                        salary: isSalaryValid,
+                        date: isDateValid,
+                        experience: isExperienceValid,
+                        title: isJobTitleValid,
+                        desc: isDescValid,
+                        req: isReqValid,
+                        benefits: isBenValid,
+                        location: isLocValid,
+                        hours: isWorkHoursValid,
+                        formValidity: form.checkValidity(),
+                        allValid: allCustomValid
+                    });
+                    
+                    if (!form.checkValidity() || !allCustomValid) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                        
+                        console.error('❌ Form validation failed');
+                        
+                        // Log all invalid fields
+                        const invalidFields = form.querySelectorAll(':invalid');
+                        console.error('Invalid fields count:', invalidFields.length);
+                        invalidFields.forEach(field => {
+                            console.error('Invalid field:', {
+                                name: field.name,
+                                id: field.id,
+                                value: field.value,
+                                validationMessage: field.validationMessage
+                            });
+                        });
+                        
+                        // Scroll to first invalid field
+                    const firstInvalid = form.querySelector(':invalid');
+                    if (firstInvalid) {
+                            console.log('First invalid field:', firstInvalid.name, firstInvalid.validationMessage);
+                        firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        firstInvalid.focus();
+                        }
+                    } else {
+                        console.log('✅ Form validation passed, submitting...');
+                        // Form will submit normally
+                    }
+                    
+                    form.classList.add('was-validated');
+                } catch (error) {
+                    event.preventDefault();
+                    console.error('❌ ERROR in form validation:', error);
+                    alert('ERROR: ' + error.message + '\n\nCheck console for details.');
+                }
             }, false);
+            
+            // Prevent form submission on Enter key (except in submit button)
+            form.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter' && event.target.type !== 'submit') {
+                    event.preventDefault();
+                }
+            });
         });
     })();
 </script>
 
 <style>
-.job-posting-card { box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075); }
-.job-posting-card .card-header { background-color: #f8f9fa; border-bottom: 1px solid #e9ecef; }
+/* Custom styles for Job Posting form */
+.job-posting-card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.job-posting-card .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.job-posting-card .card-header h4 {
+    color: #2c3e50;
+    margin-bottom: 0;
+}
+
+.form-label {
+    font-weight: 500;
+    color: #495057;
+}
+
+.form-label i {
+    width: 20px;
+    color: #6c757d;
+}
+
+.form-text {
+    font-size: 0.825rem;
+    color: #6c757d;
+}
+
+.char-counter {
+    font-size: 0.75rem;
+    color: #6c757d;
+    text-align: right;
+    margin-top: 0.25rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .content-area {
+        padding: 1rem;
+    }
+    
+    .job-posting-card {
+        margin-bottom: 1rem;
+    }
+    
+    .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .d-md-flex.justify-content-md-end {
+        flex-direction: column-reverse;
+    }
+}
+
+/* Form validation styles */
+.was-validated .form-control:invalid:focus,
+.form-control.is-invalid:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+}
+
+.was-validated .form-control:valid:focus,
+.form-control.is-valid:focus {
+    border-color: #198754;
+    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+}
 </style>
 </body>
 </html>

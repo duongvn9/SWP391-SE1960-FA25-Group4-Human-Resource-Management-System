@@ -21,6 +21,18 @@
         <description>Maximum request size in bytes (25MB)</description>
     </context-param>
 
+    <!-- Chatbot Servlet -->
+    <servlet>
+        <servlet-name>ChatbotServlet</servlet-name>
+        <servlet-class>group4.hrms.controller.ChatbotServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    
+    <servlet-mapping>
+        <servlet-name>ChatbotServlet</servlet-name>
+        <url-pattern>/chatbot/ask</url-pattern>
+    </servlet-mapping>
+
     <!-- Default servlet to serve static content -->
     <servlet-mapping>
         <servlet-name>default</servlet-name>

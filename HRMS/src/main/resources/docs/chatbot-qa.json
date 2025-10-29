@@ -1,0 +1,343 @@
+{
+    "metadata": {
+        "version": "1.0",
+        "language": "vi",
+        "description": "Dữ liệu câu hỏi-trả lời cho chatbot HRMS",
+        "last_updated": "2025-10-29"
+    },
+    "categories": [
+        {
+            "category": "Chính sách Nghỉ phép",
+            "qa_pairs": [
+                {
+                    "id": "leave_001",
+                    "question": "Làm sao để gửi đơn nghỉ phép?",
+                    "answer": "Để gửi đơn xin nghỉ phép, bạn thực hiện: 1) Đăng nhập vào hệ thống và vào mục yêu cầu nghỉ phép. 2) Tạo đơn nghỉ phép mới, chọn loại nghỉ và nhập khoảng thời gian. 3) Điền lý do nghỉ và đính kèm minh chứng nếu cần. 4) Kiểm tra lại thông tin và nhấn Gửi. Đơn sẽ chuyển sang trạng thái chờ duyệt.",
+                    "keywords": [
+                        "gửi đơn",
+                        "nghỉ phép",
+                        "tạo đơn",
+                        "yêu cầu nghỉ"
+                    ]
+                },
+                {
+                    "id": "leave_002",
+                    "question": "Nếu ngày nghỉ phép trùng vào ngày nghỉ lễ thì sao?",
+                    "answer": "Nếu ngày bạn xin nghỉ phép trùng vào ngày lễ chính thức có hưởng lương của công ty, bạn không cần dùng ngày phép cho ngày đó. Hệ thống sẽ không trừ ngày phép của bạn cho ngày trùng với ngày lễ. Ví dụ: nghỉ từ Thứ Hai đến Thứ Tư và Thứ Ba là ngày lễ, bạn chỉ bị trừ 2 ngày phép.",
+                    "keywords": [
+                        "ngày lễ",
+                        "trùng lễ",
+                        "không trừ phép"
+                    ]
+                },
+                {
+                    "id": "leave_003",
+                    "question": "Hệ thống có cho đăng ký nghỉ nửa ngày không?",
+                    "answer": "Có. Bạn có thể xin nghỉ phép nửa ngày (0.5 ngày) vào buổi sáng (08:00-12:00) hoặc buổi chiều (13:00-17:00). Không áp dụng nghỉ nửa ngày vào ngày nghỉ cuối tuần hoặc ngày lễ. Mỗi nửa ngày nghỉ được tính 0.5 ngày phép.",
+                    "keywords": [
+                        "nửa ngày",
+                        "0.5 ngày",
+                        "buổi sáng",
+                        "buổi chiều"
+                    ]
+                },
+                {
+                    "id": "leave_004",
+                    "question": "Nghỉ không lương có giới hạn như thế nào?",
+                    "answer": "Giới hạn nghỉ không lương: Mỗi lần nghỉ tối đa 5 ngày làm việc liên tục. Trong một tháng không quá 13 ngày làm việc. Trong một năm tối đa 30 ngày. Bạn cần nộp đơn ít nhất 3 ngày làm việc trước ngày định nghỉ.",
+                    "keywords": [
+                        "nghỉ không lương",
+                        "giới hạn",
+                        "5 ngày",
+                        "13 ngày",
+                        "30 ngày"
+                    ]
+                },
+                {
+                    "id": "leave_005",
+                    "question": "Nếu không dùng hết ngày phép năm nay, tôi có được chuyển sang năm sau không?",
+                    "answer": "Có. Công ty cho phép bạn bảo lưu ngày phép chưa sử dụng sang các năm sau, tối đa dồn trong 3 năm liên tiếp. Nếu bạn nghỉ việc mà vẫn còn ngày phép chưa nghỉ, công ty sẽ thanh toán tiền cho những ngày phép đó.",
+                    "keywords": [
+                        "chuyển phép",
+                        "bảo lưu",
+                        "3 năm",
+                        "thanh toán phép"
+                    ]
+                },
+                {
+                    "id": "leave_006",
+                    "question": "Tôi có thể hủy đơn nghỉ phép đã gửi không?",
+                    "answer": "Bạn có thể hủy đơn nghỉ phép nếu đơn đang ở trạng thái Chờ duyệt. Mở đơn nghỉ phép và chọn chức năng Hủy đơn. Nếu đơn đã được duyệt, bạn cần thông báo với quản lý hoặc phòng Nhân sự để được hỗ trợ.",
+                    "keywords": [
+                        "hủy đơn",
+                        "chờ duyệt",
+                        "rút đơn"
+                    ]
+                },
+                {
+                    "id": "leave_007",
+                    "question": "Những ngày lễ nào được nghỉ hưởng lương ở công ty?",
+                    "answer": "Công ty có 11 ngày nghỉ lễ hưởng lương: Tết Dương lịch (1 ngày), Tết Âm lịch (5 ngày), Giỗ Tổ Hùng Vương (1 ngày), 30/4 (1 ngày), 1/5 (1 ngày), Quốc khánh (2 ngày). Nhân viên nước ngoài được nghỉ thêm 1 ngày Tết và 1 ngày Quốc khánh của nước họ.",
+                    "keywords": [
+                        "ngày lễ",
+                        "11 ngày",
+                        "hưởng lương",
+                        "Tết",
+                        "Quốc khánh"
+                    ]
+                }
+            ]
+        },
+        {
+            "category": "Chính sách Tăng ca",
+            "qa_pairs": [
+                {
+                    "id": "ot_001",
+                    "question": "Làm sao để gửi đơn xin tăng ca?",
+                    "answer": "Để đăng ký tăng ca: 1) Đăng nhập và vào mục Yêu cầu, chọn Tạo đơn Tăng ca. 2) Nhập ngày, giờ bắt đầu, giờ kết thúc và lý do tăng ca. 3) Nhấn Gửi đơn. Đơn sẽ được chuyển đến quản lý để phê duyệt. Bạn có thể theo dõi trạng thái trong danh sách yêu cầu.",
+                    "keywords": [
+                        "tăng ca",
+                        "OT",
+                        "gửi đơn",
+                        "làm thêm giờ"
+                    ]
+                },
+                {
+                    "id": "ot_002",
+                    "question": "Tăng ca vào cuối tuần được tính lương như thế nào?",
+                    "answer": "Làm thêm giờ vào ngày nghỉ cuối tuần (Thứ Bảy, Chủ Nhật) được trả lương 200% so với lương giờ làm thông thường (gấp đôi). Tăng ca ngày làm việc bình thường được trả 150%.",
+                    "keywords": [
+                        "cuối tuần",
+                        "200%",
+                        "gấp đôi",
+                        "Thứ Bảy",
+                        "Chủ Nhật"
+                    ]
+                },
+                {
+                    "id": "ot_003",
+                    "question": "Tăng ca vào ngày lễ được tính lương như thế nào?",
+                    "answer": "Làm thêm giờ vào ngày lễ được hưởng lương 300% (gấp 3 lần). Tuy nhiên, nếu ngày lễ trùng cuối tuần và công ty bố trí nghỉ bù, làm việc vào ngày nghỉ bù đó được tính 200% (như ngày cuối tuần).",
+                    "keywords": [
+                        "ngày lễ",
+                        "300%",
+                        "gấp 3",
+                        "nghỉ bù"
+                    ]
+                },
+                {
+                    "id": "ot_004",
+                    "question": "Một ngày tôi có thể tăng ca tối đa bao nhiêu giờ?",
+                    "answer": "Tổng số giờ làm việc (bao gồm giờ hành chính và tăng ca) không được quá 10 giờ/ngày và 48 giờ/tuần. Giới hạn tăng ca: tối đa 40 giờ/tháng và 300 giờ/năm. Nếu làm 8 giờ hành chính, bạn chỉ có thể tăng ca thêm khoảng 2 giờ/ngày.",
+                    "keywords": [
+                        "giới hạn",
+                        "10 giờ",
+                        "40 giờ",
+                        "300 giờ",
+                        "tối đa"
+                    ]
+                },
+                {
+                    "id": "ot_005",
+                    "question": "Nếu cần tăng ca nhiều hơn giới hạn thì có được không?",
+                    "answer": "Thông thường không được phép vượt giới hạn. Hệ thống sẽ cảnh báo hoặc chặn đơn vượt quá. Trong trường hợp đặc biệt, bạn có thể trao đổi với quản lý và phòng Nhân sự để xin phê duyệt ngoại lệ. Cần có sự chấp thuận bằng văn bản hoặc trên hệ thống.",
+                    "keywords": [
+                        "vượt giới hạn",
+                        "ngoại lệ",
+                        "phê duyệt đặc biệt"
+                    ]
+                },
+                {
+                    "id": "ot_006",
+                    "question": "Làm sao biết đơn xin tăng ca của tôi đã được duyệt chưa?",
+                    "answer": "Bạn kiểm tra trạng thái đơn tăng ca trong mục quản lý yêu cầu/đơn từ. Hệ thống hiển thị trạng thái: Chờ duyệt, Đã duyệt, hoặc Đã từ chối. Hệ thống cũng có thể gửi thông báo hoặc email khi đơn được xử lý.",
+                    "keywords": [
+                        "trạng thái",
+                        "đã duyệt",
+                        "kiểm tra đơn",
+                        "thông báo"
+                    ]
+                }
+            ]
+        },
+        {
+            "category": "Khiếu nại chấm công",
+            "qa_pairs": [
+                {
+                    "id": "attendance_001",
+                    "question": "Làm thế nào để gửi khiếu nại chấm công trên hệ thống?",
+                    "answer": "Để gửi khiếu nại chấm công: Đăng nhập vào HRMS, vào phần Đơn từ, chọn Tạo đơn mới và chọn loại Khiếu nại chấm công. Nhập chi tiết vấn đề (ngày/giờ cần điều chỉnh), đính kèm tài liệu nếu cần, rồi nhấn Gửi.",
+                    "keywords": [
+                        "khiếu nại",
+                        "chấm công",
+                        "điều chỉnh công",
+                        "sai công"
+                    ]
+                },
+                {
+                    "id": "attendance_002",
+                    "question": "Quy trình xử lý khiếu nại chấm công diễn ra như thế nào?",
+                    "answer": "HR sẽ tiếp nhận và xem xét khiếu nại đầu tiên, kiểm tra thông tin và điều chỉnh dữ liệu chấm công nếu hợp lý. Nếu khiếu nại liên quan đến kỳ công đã khóa hoặc điều chỉnh vượt ngưỡng, HR Manager sẽ phê duyệt cuối cùng.",
+                    "keywords": [
+                        "quy trình",
+                        "HR xử lý",
+                        "phê duyệt",
+                        "kỳ công khóa"
+                    ]
+                },
+                {
+                    "id": "attendance_003",
+                    "question": "Ai sẽ phê duyệt đơn khiếu nại chấm công của tôi?",
+                    "answer": "Đơn khiếu nại chấm công do HR xử lý và phê duyệt sơ bộ. Trong trường hợp bình thường, HR có thể tự giải quyết. Nếu cần điều chỉnh trong kỳ đã khóa hoặc điều chỉnh lớn, HR Manager sẽ phê duyệt cuối cùng.",
+                    "keywords": [
+                        "HR",
+                        "HR Manager",
+                        "phê duyệt",
+                        "người duyệt"
+                    ]
+                },
+                {
+                    "id": "attendance_004",
+                    "question": "Tôi có thể chỉnh sửa hoặc hủy đơn khiếu nại chấm công đã gửi không?",
+                    "answer": "Bạn có thể chỉnh sửa đơn nếu đang ở trạng thái Nháp (chưa gửi). Sau khi gửi (trạng thái Pending), bạn không thể chỉnh sửa nhưng có thể hủy đơn trong thời gian chờ xử lý. Nếu đơn đã được phê duyệt hoặc từ chối, cần tạo khiếu nại mới.",
+                    "keywords": [
+                        "chỉnh sửa",
+                        "hủy đơn",
+                        "nháp",
+                        "pending"
+                    ]
+                }
+            ]
+        },
+        {
+            "category": "Xử lý đơn từ/Phê duyệt",
+            "qa_pairs": [
+                {
+                    "id": "approval_001",
+                    "question": "Quy trình phê duyệt đơn xin Tăng ca (OT) diễn ra như thế nào?",
+                    "answer": "Quy trình phê duyệt OT: Nhân viên gửi đơn → Trưởng phòng duyệt bước đầu → HR kiểm tra và duyệt → HR Manager phê duyệt nếu đơn vượt ngưỡng hoặc thuộc ngày đặc biệt (ngày lễ). Quy trình này đảm bảo tăng ca được xét duyệt qua nhiều cấp.",
+                    "keywords": [
+                        "quy trình OT",
+                        "phê duyệt tăng ca",
+                        "trưởng phòng",
+                        "HR Manager"
+                    ]
+                },
+                {
+                    "id": "approval_002",
+                    "question": "Quy trình duyệt đơn Nghỉ phép được thực hiện ra sao?",
+                    "answer": "Quy trình nghỉ phép: Nhân viên gửi đơn → Trưởng phòng duyệt đầu tiên → HR kiểm tra và duyệt (kiểm tra số ngày phép còn lại). HR Manager thường không tham gia trừ khi nghỉ phép thuộc diện ngoại lệ hoặc nghỉ không lương dài ngày.",
+                    "keywords": [
+                        "quy trình nghỉ phép",
+                        "phê duyệt",
+                        "trưởng phòng",
+                        "HR"
+                    ]
+                },
+                {
+                    "id": "approval_003",
+                    "question": "Đơn Đề nghị tuyển dụng được xử lý qua các bước nào?",
+                    "answer": "Quy trình tuyển dụng: Trưởng phòng khởi tạo và gửi đề nghị tuyển dụng → HR tiếp nhận và xử lý (xem xét nhu cầu, lập kế hoạch) → HR Manager phê duyệt cuối cùng. Chỉ khi HR Manager chấp thuận, yêu cầu mới được phê duyệt hoàn toàn.",
+                    "keywords": [
+                        "tuyển dụng",
+                        "đề nghị tuyển",
+                        "HR Manager duyệt"
+                    ]
+                },
+                {
+                    "id": "approval_004",
+                    "question": "Làm sao để tạo và gửi đơn xin nghỉ hoặc đơn OT trên hệ thống?",
+                    "answer": "Vào module Đơn từ sau khi đăng nhập, chọn Tạo đơn mới và chọn loại đơn (Nghỉ phép hoặc Tăng ca). Nhập thông tin chi tiết theo biểu mẫu, đính kèm tệp nếu cần. Nhấn Gửi để nộp đơn hoặc Lưu Nháp để gửi sau.",
+                    "keywords": [
+                        "tạo đơn",
+                        "gửi đơn",
+                        "module đơn từ",
+                        "lưu nháp"
+                    ]
+                },
+                {
+                    "id": "approval_005",
+                    "question": "Tôi có thể theo dõi trạng thái và lịch sử phê duyệt đơn từ của mình không?",
+                    "answer": "Có. Vào danh sách Đơn từ để xem trạng thái: Nháp, Đang chờ duyệt, Đã phê duyệt, Đã từ chối, hoặc Đã hủy. Bạn cũng có thể xem lịch sử phê duyệt chi tiết (ai đã duyệt, thời điểm, lý do từ chối nếu có).",
+                    "keywords": [
+                        "trạng thái đơn",
+                        "lịch sử",
+                        "theo dõi",
+                        "đã duyệt"
+                    ]
+                }
+            ]
+        },
+        {
+            "category": "Hồ sơ cá nhân & Hợp đồng",
+            "qa_pairs": [
+                {
+                    "id": "profile_001",
+                    "question": "Tôi có thể xem thông tin hồ sơ cá nhân của mình trên hệ thống ở đâu?",
+                    "answer": "Truy cập mục Quản lý hồ sơ hoặc Hồ sơ cá nhân trên HRMS sau khi đăng nhập. Tại đây hiển thị đầy đủ thông tin như thông tin cá nhân, chức vụ, phòng ban, ngày vào làm, v.v.",
+                    "keywords": [
+                        "hồ sơ",
+                        "thông tin cá nhân",
+                        "xem hồ sơ",
+                        "profile"
+                    ]
+                },
+                {
+                    "id": "profile_002",
+                    "question": "Làm cách nào để cập nhật thông tin cá nhân (ví dụ: địa chỉ, số điện thoại) trên HRMS?",
+                    "answer": "Truy cập phần Hồ sơ nhân viên, nhấn Chỉnh sửa/Cập nhật hồ sơ. Thay đổi thông tin cần cập nhật (địa chỉ, số điện thoại, email), sau đó nhấn Lưu. Một số trường quan trọng (mã nhân viên, chức danh) không cho phép tự sửa, cần liên hệ HR.",
+                    "keywords": [
+                        "cập nhật",
+                        "chỉnh sửa",
+                        "địa chỉ",
+                        "số điện thoại",
+                        "email"
+                    ]
+                },
+                {
+                    "id": "profile_003",
+                    "question": "Hệ thống có quản lý hợp đồng lao động của nhân viên không?",
+                    "answer": "Có. Hệ thống HRMS có chức năng quản lý hợp đồng lao động. HR có thể tạo mới, xem danh sách và chỉnh sửa hợp đồng. Thông tin như ngày bắt đầu, kết thúc, loại hợp đồng được cập nhật và theo dõi tập trung.",
+                    "keywords": [
+                        "hợp đồng",
+                        "quản lý hợp đồng",
+                        "contract"
+                    ]
+                },
+                {
+                    "id": "profile_004",
+                    "question": "Ai có thể xem và quản lý thông tin hợp đồng lao động trong hệ thống?",
+                    "answer": "Chỉ HR và HR Manager có quyền tạo, chỉnh sửa hoặc xem danh sách tất cả hợp đồng. Nhân viên có thể xem thông tin cơ bản về hợp đồng của chính mình nhưng không thể truy cập hợp đồng người khác. Mọi thao tác được ghi lại để đảm bảo bảo mật.",
+                    "keywords": [
+                        "phân quyền",
+                        "HR",
+                        "bảo mật",
+                        "quyền truy cập"
+                    ]
+                },
+                {
+                    "id": "profile_005",
+                    "question": "Nếu tôi ký hợp đồng lao động mới hoặc gia hạn, hệ thống có cập nhật không?",
+                    "answer": "Có. HR sẽ cập nhật thông tin hợp đồng mới hoặc gia hạn lên hệ thống. Thông tin như ngày hiệu lực, thời hạn, loại hợp đồng sẽ được nhập vào. Bạn có thể theo dõi lịch sử hợp đồng trong hồ sơ cá nhân hoặc hỏi HR để xác nhận.",
+                    "keywords": [
+                        "gia hạn",
+                        "hợp đồng mới",
+                        "cập nhật hợp đồng",
+                        "ký hợp đồng"
+                    ]
+                }
+            ]
+        }
+    ],
+    "system_prompt": {
+        "role": "Trợ lý nội bộ về chính sách và quy trình nhân sự",
+        "guidelines": [
+            "Cung cấp thông tin dựa trên kiến thức đã được huấn luyện hoặc tài liệu nội bộ",
+            "Không đưa ra câu trả lời nằm ngoài dữ liệu đã cung cấp",
+            "Nếu không chắc chắn, từ chối lịch sự: 'Xin lỗi, tôi không tìm thấy thông tin chính xác để trả lời câu hỏi này.'",
+            "Giọng điệu thân thiện, gần gũi, tự nhiên, không quá trang trọng",
+            "Có thể xưng 'mình' hoặc 'tôi' để tạo cảm giác thân thiện",
+            "Hỗ trợ chuyên nghiệp và nhiệt tình về các vấn đề chính sách nội bộ"
+        ]
+    }
+}
