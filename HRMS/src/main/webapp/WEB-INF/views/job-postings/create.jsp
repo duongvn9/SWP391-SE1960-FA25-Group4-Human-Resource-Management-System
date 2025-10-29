@@ -261,7 +261,9 @@
                                     <textarea class="form-control ${not empty errors.description ? 'is-invalid' : ''}"
                                               id="description" name="description" rows="5" required
                                               maxlength="4000"
-                                              placeholder="Describe the job role, responsibilities, and expectations...">${param.description}</textarea>
+                                              placeholder="Describe the job role, responsibilities, and expectations..."> 
+                                        <c:out value="${param.description != null ? param.description : (formData != null ? formData.description : requestDetails.jobSummary)}"/>
+                                    </textarea>
                                     <div class="form-text">Required (max 4000 characters)</div>
                                     <div class="invalid-feedback">
                                         ${not empty errors.description ? errors.description : 'Job description is required and cannot exceed 4000 characters'}
@@ -299,13 +301,27 @@
                                     <label for="location" class="form-label">
                                         Working Location <span class="text-danger">*</span>
                                     </label>
-                                    <input type="text" class="form-control ${not empty errors.location ? 'is-invalid' : ''}"
-                                           id="location" name="location" 
-                                           value="${param.location}" 
-                                           required
-                                           maxlength="255"
-                                           placeholder="e.g. Hanoi, Ho Chi Minh City, Remote">
-                                    <div class="form-text">Required (max 255 characters)</div>
+                                    <c:choose>
+                                        <c:when test="${not empty requestDetails.workingLocation}">
+                                            <input type="text" class="form-control ${not empty errors.location ? 'is-invalid' : ''}"
+                                                   id="location" name="location"
+                                                   value="${param.location != null ? param.location : (formData != null ? formData.location : requestDetails.workingLocation)}"
+                                                   required
+                                                   maxlength="255"
+                                                   readonly
+                                                   placeholder="e.g. Hanoi, Ho Chi Minh City, Remote">
+                                            <div class="form-text">Auto-filled from recruitment request (not editable)</div>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <input type="text" class="form-control ${not empty errors.location ? 'is-invalid' : ''}"
+                                                   id="location" name="location" 
+                                                   value="${param.location != null ? param.location : (formData != null ? formData.location : '')}" 
+                                                   required
+                                                   maxlength="255"
+                                                   placeholder="e.g. Hanoi, Ho Chi Minh City, Remote">
+                                            <div class="form-text">Required (max 255 characters)</div>
+                                        </c:otherwise>
+                                    </c:choose>
                                     <div class="invalid-feedback">
                                         ${not empty errors.location ? errors.location : 'Working location is required and cannot exceed 255 characters'}
                                     </div>
