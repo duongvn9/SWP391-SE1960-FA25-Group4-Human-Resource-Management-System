@@ -678,22 +678,41 @@ public class OTRequestService {
         String currentOTType = determineOTType(otDate);
         boolean isCurrentWeekdayOT = OT_TYPE_WEEKDAY.equals(currentOTType);
 
-        // Calculate total weekly hours
-        // Only add regular hours if there are weekday OT requests
-        double regularHours = (weekdayOTCount > 0 || isCurrentWeekdayOT) ? REGULAR_WEEKLY_HOURS : 0;
+        // Calculate actual regular hours for this week (considering holidays)
+        double regularHours = computeRegularHoursForWeek(userId, LocalDate.parse(otDate));
         double totalWeeklyHours = regularHours + approvedWeeklyOTHours + otHours;
 
-        logger.fine(String.format("Weekly hours calculation: userId=%d, week=%s to %s, regular=%d, approved=%.1f, requested=%.1f, total=%.1f, limit=%d, currentType=%s",
-                   userId, weekStart, weekEnd, (int)regularHours, approvedWeeklyOTHours, otHours, totalWeeklyHours, WEEKLY_LIMIT, currentOTType));
+        // Check monthly OT limit constraint
+        LocalDate requestDate = LocalDate.parse(otDate);
+        double monthlyHours = calculateOTHoursInMonth(userId, requestDate.getYear(), requestDate.getMonthValue());
+        double remainingMonthlyOT = MONTHLY_LIMIT - monthlyHours;
+
+        logger.fine(String.format("Weekly hours calculation: userId=%d, week=%s to %s, regular=%.1f, approved=%.1f, requested=%.1f, total=%.1f, limit=%d, monthlyRemaining=%.1f, currentType=%s",
+                   userId, weekStart, weekEnd, regularHours, approvedWeeklyOTHours, otHours, totalWeeklyHours, WEEKLY_LIMIT, remainingMonthlyOT, currentOTType));
 
         if (totalWeeklyHours > WEEKLY_LIMIT) {
             logger.warning(String.format("Weekly limit exceeded: userId=%d, week=%s to %s, total=%.1f, limit=%d",
                           userId, weekStart, weekEnd, totalWeeklyHours, WEEKLY_LIMIT));
             throw new IllegalArgumentException(
                 String.format("Total weekly hours cannot exceed %d hours (current: %.1fh). " +
-                    "Regular hours: %.0fh, Approved OT: %.1fh, Requested OT: %.1fh",
+                    "Regular hours: %.1fh, Approved OT: %.1fh, Requested OT: %.1fh",
                     WEEKLY_LIMIT, totalWeeklyHours, regularHours, approvedWeeklyOTHours, otHours)
             );
+        }
+
+        // Additional check for holiday weeks: ensure OT doesn't exceed monthly limit
+        if (regularHours < REGULAR_WEEKLY_HOURS) {
+            double potentialWeeklyOT = approvedWeeklyOTHours + otHours;
+            if (potentialWeeklyOT > remainingMonthlyOT) {
+                int holidayDays = (int)((REGULAR_WEEKLY_HOURS - regularHours) / 8);
+                logger.warning(String.format("Holiday week monthly OT limit exceeded: userId=%d, week has %d holidays, weeklyOT=%.1f, monthlyRemaining=%.1f",
+                              userId, holidayDays, potentialWeeklyOT, remainingMonthlyOT));
+                throw new IllegalArgumentException(
+                    String.format("Monthly OT limit constraint: This week has %d holiday days, but total OT (%.1fh) would exceed monthly remaining limit (%.1fh). " +
+                        "Approved OT: %.1fh, Requested: %.1fh. Please reduce OT hours or wait for next month.",
+                        holidayDays, potentialWeeklyOT, remainingMonthlyOT, approvedWeeklyOTHours, otHours)
+                );
+            }
         }
 
         logger.fine(String.format("Weekly limit validation passed: userId=%d, week=%s to %s",
@@ -1065,19 +1084,7 @@ public class OTRequestService {
             logger.fine(String.format("Weekly balance: userId=%d, regular=%.2f, currentOT=%.2f, requestedOT=%.1f, total=%.2f, limit=%d",
                        userId, regularHoursThisWeek, currentWeekHours, otHours, totalWorkHours, WEEKLY_LIMIT));
 
-            // Check if total work hours (regular + OT) exceeds 48h/week limit
-            if (totalWorkHours > WEEKLY_LIMIT) {
-                double remainingHours = WEEKLY_LIMIT - regularHoursThisWeek - currentWeekHours;
-                logger.warning(String.format("Weekly work limit exceeded: userId=%d, regular=%.2f, currentOT=%.2f, requestedOT=%.1f, total=%.2f, limit=%d",
-                              userId, regularHoursThisWeek, currentWeekHours, otHours, totalWorkHours, WEEKLY_LIMIT));
-                throw new IllegalArgumentException(
-                    String.format("Weekly work limit (48h) exceeded! Regular work: %.1fh, Current OT: %.1fh, Requested OT: %.1fh, " +
-                        "Total: %.1fh. You can only add %.1fh more OT this week.",
-                        regularHoursThisWeek, currentWeekHours, otHours, totalWorkHours, Math.max(0, remainingHours))
-                );
-            }
-
-            // Calculate current monthly OT hours
+            // Calculate current monthly OT hours FIRST to check monthly limit
             double monthlyHours = calculateOTHoursInMonth(userId, date.getYear(), date.getMonthValue());
             logger.fine(String.format("Monthly balance: userId=%d, current=%.2f, requested=%.1f, limit=%d",
                        userId, monthlyHours, otHours, MONTHLY_LIMIT));
@@ -1090,6 +1097,49 @@ public class OTRequestService {
                         "Limit: %dh. Remaining: %.1fh.",
                         monthlyHours, otHours, MONTHLY_LIMIT, MONTHLY_LIMIT - monthlyHours)
                 );
+            }
+
+            // Calculate remaining monthly OT hours
+            double remainingMonthlyOT = MONTHLY_LIMIT - monthlyHours;
+
+            // Calculate maximum allowed OT for this week considering monthly limit
+            double maxWeeklyOT = Math.min(
+                WEEKLY_LIMIT - regularHoursThisWeek - currentWeekHours, // Weekly limit constraint
+                remainingMonthlyOT - otHours + otHours // Monthly limit constraint (remaining + current request)
+            );
+
+            // Check if total work hours (regular + OT) exceeds 48h/week limit
+            // BUT also ensure we don't exceed monthly OT limit
+            if (totalWorkHours > WEEKLY_LIMIT) {
+                double remainingWeeklyHours = WEEKLY_LIMIT - regularHoursThisWeek - currentWeekHours;
+                logger.warning(String.format("Weekly work limit exceeded: userId=%d, regular=%.2f, currentOT=%.2f, requestedOT=%.1f, total=%.2f, limit=%d",
+                              userId, regularHoursThisWeek, currentWeekHours, otHours, totalWorkHours, WEEKLY_LIMIT));
+                throw new IllegalArgumentException(
+                    String.format("Weekly work limit (48h) exceeded! Regular work: %.1fh, Current OT: %.1fh, Requested OT: %.1fh, " +
+                        "Total: %.1fh. You can only add %.1fh more OT this week.",
+                        regularHoursThisWeek, currentWeekHours, otHours, totalWorkHours, Math.max(0, remainingWeeklyHours))
+                );
+            }
+
+            // Additional check: If this week has many holidays (low regular hours),
+            // ensure OT doesn't exceed what's allowed for the month
+            if (regularHoursThisWeek < REGULAR_WEEKLY_HOURS) {
+                double potentialWeeklyOT = currentWeekHours + otHours;
+                double maxAllowedWeeklyOT = Math.min(
+                    WEEKLY_LIMIT - regularHoursThisWeek, // Weekly constraint
+                    remainingMonthlyOT // Monthly constraint
+                );
+
+                if (potentialWeeklyOT > maxAllowedWeeklyOT) {
+                    logger.warning(String.format("Holiday week OT limit exceeded: userId=%d, week has %d holidays, regular=%.1fh, weeklyOT=%.1fh, maxAllowed=%.1fh, monthlyRemaining=%.1fh",
+                                  userId, (int)((REGULAR_WEEKLY_HOURS - regularHoursThisWeek) / 8), regularHoursThisWeek, potentialWeeklyOT, maxAllowedWeeklyOT, remainingMonthlyOT));
+                    throw new IllegalArgumentException(
+                        String.format("OT limit exceeded for holiday week! This week has %.0f holiday days, allowing max %.1fh OT " +
+                            "(Weekly limit: %.1fh, Monthly remaining: %.1fh). Current OT: %.1fh, Requested: %.1fh.",
+                            (REGULAR_WEEKLY_HOURS - regularHoursThisWeek) / 8, maxAllowedWeeklyOT,
+                            WEEKLY_LIMIT - regularHoursThisWeek, remainingMonthlyOT, currentWeekHours, otHours)
+                    );
+                }
             }
 
             // Calculate current annual OT hours
