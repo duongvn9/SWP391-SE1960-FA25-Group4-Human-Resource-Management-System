@@ -1209,8 +1209,8 @@ public class OTRequestService {
 
             // SECOND PASS: Check individual leave conflicts
             for (Request request : allRequests) {
-                // Only check APPROVED leave requests
-                if (!"APPROVED".equals(request.getStatus())) {
+                // Check both PENDING and APPROVED leave requests
+                if (!"APPROVED".equals(request.getStatus()) && !"PENDING".equals(request.getStatus())) {
                     continue;
                 }
 
@@ -1252,13 +1252,13 @@ public class OTRequestService {
 
                         // Check if OT overlaps with morning period: start1 < end2 AND start2 < end1
                         if (otStart.isBefore(morningEnd) && morningStart.isBefore(otEnd)) {
-                            logger.warning(String.format("OT conflicts with morning half-day leave: userId=%d, date=%s, otTime=%s-%s, leaveType=%s",
-                                          userId, otDate, startTime, endTime, leaveDetail.getLeaveTypeName()));
+                            logger.warning(String.format("OT conflicts with morning half-day leave: userId=%d, date=%s, otTime=%s-%s, leaveType=%s, status=%s",
+                                          userId, otDate, startTime, endTime, leaveDetail.getLeaveTypeName(), request.getStatus()));
                             throw new IllegalArgumentException(
                                 String.format("Cannot create OT during %s-%s on %s! " +
-                                    "You have an approved morning half-day leave (8:00-12:00) (%s). " +
+                                    "You have a %s morning half-day leave (8:00-12:00) (%s). " +
                                     "You can only create OT after 12:00.",
-                                    startTime, endTime, otDate, leaveDetail.getLeaveTypeName())
+                                    startTime, endTime, otDate, request.getStatus().toLowerCase(), leaveDetail.getLeaveTypeName())
                             );
                         }
                         // OT is allowed if it's after 12:00 (afternoon/evening)
@@ -1273,13 +1273,13 @@ public class OTRequestService {
 
                         // Check if OT overlaps with afternoon period: start1 < end2 AND start2 < end1
                         if (otStart.isBefore(afternoonEnd) && afternoonStart.isBefore(otEnd)) {
-                            logger.warning(String.format("OT conflicts with afternoon half-day leave: userId=%d, date=%s, otTime=%s-%s, leaveType=%s",
-                                          userId, otDate, startTime, endTime, leaveDetail.getLeaveTypeName()));
+                            logger.warning(String.format("OT conflicts with afternoon half-day leave: userId=%d, date=%s, otTime=%s-%s, leaveType=%s, status=%s",
+                                          userId, otDate, startTime, endTime, leaveDetail.getLeaveTypeName(), request.getStatus()));
                             throw new IllegalArgumentException(
                                 String.format("Cannot create OT during %s-%s on %s! " +
-                                    "You have an approved afternoon half-day leave (13:00-17:00) (%s). " +
+                                    "You have a %s afternoon half-day leave (13:00-17:00) (%s). " +
                                     "You can only create OT after 17:00.",
-                                    startTime, endTime, otDate, leaveDetail.getLeaveTypeName())
+                                    startTime, endTime, otDate, request.getStatus().toLowerCase(), leaveDetail.getLeaveTypeName())
                             );
                         }
                         // OT is allowed if it's after 17:00
@@ -1288,12 +1288,12 @@ public class OTRequestService {
                     }
                 } else {
                     // Full-day leave - block all OT
-                    logger.warning(String.format("OT conflicts with full-day leave: userId=%d, date=%s, leaveType=%s, leaveDates=%s to %s",
-                                  userId, otDate, leaveDetail.getLeaveTypeName(), leaveDetail.getStartDate(), leaveDetail.getEndDate()));
+                    logger.warning(String.format("OT conflicts with full-day leave: userId=%d, date=%s, leaveType=%s, leaveDates=%s to %s, status=%s",
+                                  userId, otDate, leaveDetail.getLeaveTypeName(), leaveDetail.getStartDate(), leaveDetail.getEndDate(), request.getStatus()));
                     throw new IllegalArgumentException(
-                        String.format("Cannot create OT on %s! You have an approved leave request " +
+                        String.format("Cannot create OT on %s! You have a %s leave request " +
                             "(%s) from %s to %s.",
-                            otDate, leaveDetail.getLeaveTypeName(),
+                            otDate, request.getStatus().toLowerCase(), leaveDetail.getLeaveTypeName(),
                             leaveDetail.getStartDate(), leaveDetail.getEndDate())
                     );
                 }
