@@ -114,7 +114,19 @@ public class ApproveRequestController extends HttpServlet {
 
             // Check permission
             if (!RequestListPermissionHelper.canApproveRequest(currentUser, req, position, currentAccount.getId())) {
-                out.print("{\"success\": false, \"message\": \"You do not have permission to approve/reject this request\"}");
+                // Get employee name for better error message
+                String employeeName = "this employee";
+                try {
+                    group4.hrms.dao.UserDao userDao = new group4.hrms.dao.UserDao();
+                    java.util.Optional<group4.hrms.model.User> employeeOpt = userDao.findById(req.getCreatedByUserId());
+                    if (employeeOpt.isPresent()) {
+                        employeeName = employeeOpt.get().getFullName();
+                    }
+                } catch (Exception e) {
+                    logger.warning("Error getting employee name for error message: " + e.getMessage());
+                }
+
+                out.print("{\"success\": false, \"message\": \"You do not have permission to approve/reject " + employeeName + "'s request\"}");
                 return;
             }
 

@@ -108,7 +108,8 @@ public class OTRequestService {
 
             // NEW VALIDATIONS - Check for conflicts and limits
             // Check for OT overlap (same day, overlapping time)
-            checkOTOverlap(userId, otDate, startTime, endTime);
+            // For createOTRequest, the creator is the same as the target user (employee creating for themselves)
+            checkOTOverlap(userId, otDate, startTime, endTime, userId);
 
             // Check for pending OT requests (warning only)
             checkPendingOTRequests(userId, otDate);
@@ -249,7 +250,8 @@ public class OTRequestService {
 
             // NEW VALIDATIONS - Check for conflicts and limits
             // Check for OT overlap (same day, overlapping time)
-            checkOTOverlap(employeeUserId, otDate, startTime, endTime);
+            // For createOTRequestForEmployee, pass a different createdByUserId to indicate manager creating for employee
+            checkOTOverlap(employeeUserId, otDate, startTime, endTime, -1L); // -1L indicates manager creating for employee
 
             // Check for pending OT requests (warning only)
             checkPendingOTRequests(employeeUserId, otDate);
@@ -967,11 +969,12 @@ public class OTRequestService {
      * @param otDate OT date (yyyy-MM-dd format)
      * @param startTime Start time (HH:mm format)
      * @param endTime End time (HH:mm format)
+     * @param createdByUserId ID of user creating the request (for proper error message)
      * @throws IllegalArgumentException if overlap detected
      */
-    private void checkOTOverlap(Long userId, String otDate, String startTime, String endTime) {
-        logger.fine(String.format("Checking OT overlap: userId=%d, date=%s, time=%s-%s",
-                   userId, otDate, startTime, endTime));
+    private void checkOTOverlap(Long userId, String otDate, String startTime, String endTime, Long createdByUserId) {
+        logger.fine(String.format("Checking OT overlap: userId=%d, date=%s, time=%s-%s, createdBy=%d",
+                   userId, otDate, startTime, endTime, createdByUserId));
 
         try {
             // Get all OT requests for the same date
@@ -1000,11 +1003,32 @@ public class OTRequestService {
                     logger.warning(String.format("OT overlap detected: userId=%d, date=%s, existingTime=%s-%s, requestedTime=%s-%s, status=%s",
                                   userId, otDate, detail.getStartTime(), detail.getEndTime(),
                                   startTime, endTime, request.getStatus()));
-                    throw new IllegalArgumentException(
-                        String.format("OT schedule conflict! You already have OT from %s to %s on %s (Status: %s). " +
+
+                    // Determine appropriate message based on who is creating the request
+                    String errorMessage;
+                    if (userId.equals(createdByUserId)) {
+                        // Employee creating for themselves
+                        errorMessage = String.format("OT schedule conflict! You already have OT from %s to %s on %s (Status: %s). " +
                             "Please choose a different time slot.",
-                            detail.getStartTime(), detail.getEndTime(), otDate, request.getStatus())
-                    );
+                            detail.getStartTime(), detail.getEndTime(), otDate, request.getStatus());
+                    } else {
+                        // Manager creating for employee (createdByUserId = -1L or different from userId)
+                        // Get employee name
+                        try {
+                            Optional<User> employeeOpt = userDao.findById(userId);
+                            String employeeName = employeeOpt.isPresent() ? employeeOpt.get().getFullName() : "Employee";
+                            errorMessage = String.format("OT schedule conflict! %s already has OT from %s to %s on %s (Status: %s). " +
+                                "Please choose a different time slot.",
+                                employeeName, detail.getStartTime(), detail.getEndTime(), otDate, request.getStatus());
+                        } catch (Exception e) {
+                            logger.warning("Error getting employee name for error message: " + e.getMessage());
+                            errorMessage = String.format("OT schedule conflict! Employee already has OT from %s to %s on %s (Status: %s). " +
+                                "Please choose a different time slot.",
+                                detail.getStartTime(), detail.getEndTime(), otDate, request.getStatus());
+                        }
+                    }
+
+                    throw new IllegalArgumentException(errorMessage);
                 }
             }
 

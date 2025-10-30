@@ -832,11 +832,49 @@
                                     return;
                                 }
 
-                                // Check against max days
+                                // Check against available balance and max days
                                 if (selectedCode && rulesData[selectedCode]) {
                                     const rules = rulesData[selectedCode];
-                                    if (workingDays > rules.maxDays) {
-                                        warningText.textContent = 'Exceeds maximum allowed days (' + rules.maxDays + ' days)';
+                                    let hasError = false;
+                                    let errorMessage = '';
+
+                                    // For paid leave types: check available balance first
+                                    if (rules.isPaid && balanceData[selectedCode]) {
+                                        const balance = balanceData[selectedCode];
+
+                                        // Check if available days is negative (too many pending requests)
+                                        if (balance.availableDays < 0) {
+                                            hasError = true;
+                                            errorMessage = 'Cannot create request! Available balance: ' + balance.availableDays.toFixed(1) + ' days (you have too many pending requests)';
+                                        }
+                                        // Check if requested days exceed available balance
+                                        else if (workingDays > balance.availableDays) {
+                                            hasError = true;
+                                            errorMessage = 'Insufficient available balance! Available: ' + balance.availableDays.toFixed(1) + ' days, Requested: ' + workingDays + ' days';
+                                        }
+                                    }
+
+                                    // If no balance issue, check max days per request
+                                    if (!hasError) {
+                                        let effectiveMaxDays = rules.maxDays;
+
+                                        // Special handling for Annual Leave: use totalAllowed (includes seniority)
+                                        if (selectedCode === 'ANNUAL' && balanceData[selectedCode]) {
+                                            effectiveMaxDays = balanceData[selectedCode].totalAllowed;
+                                        }
+
+                                        if (workingDays > effectiveMaxDays) {
+                                            hasError = true;
+                                            errorMessage = 'Exceeds maximum allowed days (' + effectiveMaxDays + ' days per request)';
+                                            if (selectedCode === 'ANNUAL') {
+                                                errorMessage += ' (includes seniority bonus)';
+                                            }
+                                        }
+                                    }
+
+                                    // Show error or hide warning
+                                    if (hasError) {
+                                        warningText.textContent = errorMessage;
                                         durationWarning.classList.remove('d-none');
                                     } else {
                                         durationWarning.classList.add('d-none');

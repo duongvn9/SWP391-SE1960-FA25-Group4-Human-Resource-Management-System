@@ -158,17 +158,23 @@
                                 </div>
                             </c:if>
 
-                            <!-- Attachment Path -->
-                            <c:if test="${not empty requestDto.recruitmentDetail.attachmentPath}">
+                            <!-- Attachments from JSON -->
+                            <c:if test="${not empty requestDto.recruitmentDetail.attachments}">
                                 <div class="info-item">
                                     <div class="info-label">
-                                        <i class="fas fa-paperclip me-2"></i>Attachment
+                                        <i class="fas fa-paperclip me-2"></i>Attachments
                                     </div>
                                     <div class="info-value">
-                                        <span class="badge bg-secondary">
-                                            <i class="fas fa-file me-1"></i>
-                                            <c:out value="${requestDto.recruitmentDetail.attachmentPath}" />
-                                        </span>
+                                        <c:forEach var="attachment" items="${requestDto.recruitmentDetail.attachments}" varStatus="status">
+                                            <div class="mb-2">
+                                                <a href="${attachment}" target="_blank" class="text-decoration-none">
+                                                    <span class="badge bg-primary">
+                                                        <i class="fab fa-google-drive me-1"></i>
+                                                        Google Drive Link ${status.index + 1}
+                                                    </span>
+                                                </a>
+                                            </div>
+                                        </c:forEach>
                                     </div>
                                 </div>
                             </c:if>
