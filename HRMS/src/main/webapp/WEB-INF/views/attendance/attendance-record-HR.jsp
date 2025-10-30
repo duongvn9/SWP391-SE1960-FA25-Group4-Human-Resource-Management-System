@@ -329,7 +329,7 @@
                     <label for="modalPeriod">Period:</label>
                     <input type="text" name="periodUpdate" id="modalPeriod" readonly>
 
-                    <button type="button" onclick="submitEdit()">💾 Save</button>
+                    <button type="button" onclick="submitEdit()">Save</button>
                 </form>
             </div>
         </div>
