@@ -201,10 +201,10 @@
                                             <!-- File Upload Section -->
                                             <div id="fileUploadSection" class="file-upload-wrapper">
                                                 <input type="file" class="form-control" id="attachments"
-                                                    name="attachments" multiple>
+                                                    name="attachments" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx" multiple>
                                                 <div class="form-text">
                                                     <i class="bi bi-info-circle"></i>
-                                                    Upload any supporting documents (Max 5MB each)
+                                                    Upload supporting documents: PDF, JPG, PNG, DOC, DOCX, TXT, XLS, XLSX, PPT, PPTX (Max 5MB each)
                                                 </div>
                                                 <div id="filePreviewList" class="file-preview-list mt-2"></div>
                                             </div>
@@ -399,6 +399,32 @@
                     minSalaryInput.addEventListener('input', validateSalary);
                     maxSalaryInput.addEventListener('input', validateSalary);
 
+                    // Google Drive link validation
+                    function validateGoogleDriveLink(link) {
+                        if (!link || link.trim() === '') {
+                            return true; // Empty is allowed
+                        }
+                        
+                        try {
+                            const url = new URL(link);
+                            const host = url.hostname.toLowerCase();
+                            
+                            // Must be from Google Drive domains
+                            if (host !== 'drive.google.com' && host !== 'docs.google.com') {
+                                return false;
+                            }
+                            
+                            // Check for common Google Drive URL patterns
+                            const path = url.pathname;
+                            return path.includes('/file/d/') || path.includes('/document/d/') || 
+                                   path.includes('/spreadsheets/d/') || path.includes('/presentation/d/') ||
+                                   path.includes('/folders/') || path.includes('/drive/folders/');
+                                   
+                        } catch (e) {
+                            return false;
+                        }
+                    }
+
                     // Form validation before submit
                     form.addEventListener('submit', function (e) {
                         // Validate salary
@@ -420,21 +446,40 @@
                             }
                         }
 
-                        // Clear any validation on drive link (allow empty)
+                        // Validate Google Drive link format if provided
                         if (attachmentTypeLink.checked) {
+                            const linkValue = driveLink.value.trim();
+                            if (linkValue && !validateGoogleDriveLink(linkValue)) {
+                                e.preventDefault();
+                                alert('Invalid Google Drive link format. Please provide a valid shareable Google Drive link.');
+                                driveLink.focus();
+                                return false;
+                            }
                             driveLink.setCustomValidity('');
                         }
                     });
 
-                    // Drive link preview
+                    // Drive link preview and validation
                     driveLink.addEventListener('input', function () {
                         const v = this.value && this.value.trim();
                         if (v) {
+                            // Show preview
                             driveLinkText.textContent = v;
                             driveLinkPreview.classList.remove('d-none');
                             driveLinkPreview.classList.add('d-block');
+                            
+                            // Validate format and show feedback
+                            if (!validateGoogleDriveLink(v)) {
+                                this.classList.add('is-invalid');
+                                this.setCustomValidity('Invalid Google Drive link format');
+                            } else {
+                                this.classList.remove('is-invalid');
+                                this.setCustomValidity('');
+                            }
                         } else {
                             driveLinkPreview.classList.add('d-none');
+                            this.classList.remove('is-invalid');
+                            this.setCustomValidity('');
                         }
                     });
 
