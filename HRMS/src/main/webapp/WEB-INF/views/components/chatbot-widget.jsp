@@ -38,12 +38,14 @@
                 </div>
 
                 <!-- Input Area -->
-                <div class="chatbot-input-area">
+                <form class="chatbot-input-area" autocomplete="off" onsubmit="return false;">
                     <textarea id="chatbot-input" class="chatbot-input" placeholder="Nhập câu hỏi của bạn..." rows="1"
-                        maxlength="500"></textarea>
+                        maxlength="500" autocomplete="off" spellcheck="false" data-gramm="false"
+                        data-gramm_editor="false" data-enable-grammarly="false" name="chatbot-message-input"
+                        form=""></textarea>
                     <button id="chatbot-send-btn" class="chatbot-send-btn" type="button" aria-label="Send message">
                         <i class="fas fa-paper-plane"></i>
                     </button>
-                </div>
+                </form>
             </div>
         </div>

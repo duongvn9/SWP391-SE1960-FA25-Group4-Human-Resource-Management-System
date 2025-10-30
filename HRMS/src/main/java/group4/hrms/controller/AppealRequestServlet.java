@@ -222,10 +222,14 @@ public class AppealRequestServlet extends HttpServlet {
                 uploadedFileLink = "/downloads/" + serverFileName;
             }
 
+            // Build JSON in AppealRequestDetail format
             StringBuilder detailJsonBuilder = new StringBuilder();
             detailJsonBuilder.append("{");
 
+            // Extract attendance dates from records
+            List<String> attendanceDates = new ArrayList<>();
             if (!recordsList.isEmpty()) {
+                // Add records section for backward compatibility
                 detailJsonBuilder.append("\"records\":[");
                 for (int i = 0; i < recordsList.size(); i++) {
                     Map<String, Map<String, String>> pair = recordsList.get(i);
@@ -261,23 +265,45 @@ public class AppealRequestServlet extends HttpServlet {
                     if (i < recordsList.size() - 1) {
                         detailJsonBuilder.append(",");
                     }
+
+                    // Extract date for attendanceDates array
+                    if (oldRec.containsKey("date") && !attendanceDates.contains(oldRec.get("date"))) {
+                        attendanceDates.add(oldRec.get("date"));
+                    }
+                }
+                detailJsonBuilder.append("],");
+
+                // Add attendanceDates array for AppealRequestDetail compatibility
+                detailJsonBuilder.append("\"attendanceDates\":[");
+                for (int i = 0; i < attendanceDates.size(); i++) {
+                    detailJsonBuilder.append("\"").append(attendanceDates.get(i)).append("\"");
+                    if (i < attendanceDates.size() - 1) {
+                        detailJsonBuilder.append(",");
+                    }
                 }
                 detailJsonBuilder.append("]");
             }
 
-            System.out.println("------------------------");
-            System.out.println(detailJsonBuilder);
-
+            // Add reason field (maps to detail_text)
             if (detailText != null && !detailText.isEmpty()) {
                 if (!recordsList.isEmpty()) {
                     detailJsonBuilder.append(",");
                 }
-                detailJsonBuilder.append("\"detail_text\":\"").append(escapeJson(detailText)).append("\"");
+                detailJsonBuilder.append("\"reason\":\"").append(escapeJson(detailText)).append("\"");
+                // Keep detail_text for backward compatibility
+                detailJsonBuilder.append(",\"detail_text\":\"").append(escapeJson(detailText)).append("\"");
             }
+
+            // Add attachmentPath field (maps to attachment_link)
             if (uploadedFileLink != null) {
+                detailJsonBuilder.append(",\"attachmentPath\":\"").append(escapeJson(uploadedFileLink)).append("\"");
+                // Keep attachment_link for backward compatibility
                 detailJsonBuilder.append(",\"attachment_link\":\"").append(escapeJson(uploadedFileLink)).append("\"");
             }
             if (userAttachmentLink != null && !userAttachmentLink.isEmpty()) {
+                if (uploadedFileLink == null) {
+                    detailJsonBuilder.append(",\"attachmentPath\":\"").append(escapeJson(userAttachmentLink)).append("\"");
+                }
                 detailJsonBuilder.append(",\"user_attachment_link\":\"").append(escapeJson(userAttachmentLink)).append("\"");
             }
 

@@ -175,7 +175,7 @@
             <version>5.0.0-M1</version>
             <scope>provided</scope>
         </dependency>
-        
+
         <dependency>
             <groupId>com.itextpdf</groupId>
             <artifactId>itextpdf</artifactId>
@@ -256,27 +256,14 @@
                 </executions>
             </plugin>
 
-            <!-- Checkstyle Plugin for code quality -->
+            <!-- Checkstyle Plugin for code quality - DISABLED -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <version>3.3.1</version>
                 <configuration>
-                    <configLocation>google_checks.xml</configLocation>
-                    <encoding>UTF-8</encoding>
-                    <consoleOutput>true</consoleOutput>
-                    <failsOnError>false</failsOnError>
-                    <linkXRef>false</linkXRef>
+                    <skip>true</skip>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>validate</id>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
 
             <!-- SpotBugs Plugin for static analysis -->

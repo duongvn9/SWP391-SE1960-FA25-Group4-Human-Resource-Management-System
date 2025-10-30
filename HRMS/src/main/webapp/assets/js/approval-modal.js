@@ -79,9 +79,13 @@ function openApprovalModal(requestId, requestTitle, requestStatus) {
     const rejectBtn = document.getElementById('decisionReject');
     const modalLabel = document.getElementById('approvalModalLabel');
 
-    // Handle APPROVED status (manager override scenario)
+    // Get user role info from page
+    const isHRM = document.body.getAttribute('data-is-hrm') === 'true';
+    const isHR = document.body.getAttribute('data-is-hr') === 'true';
+
+    // Handle APPROVED status (HRM override scenario for appeal requests)
     if (requestStatus === 'APPROVED') {
-        // For APPROVED requests, only allow rejection (manager override)
+        // For APPROVED requests, only HRM can reject (override)
         if (acceptBtn) acceptBtn.style.display = 'none';
         if (acceptLabel) acceptLabel.style.display = 'none';
         if (rejectBtn) {
@@ -90,10 +94,14 @@ function openApprovalModal(requestId, requestTitle, requestStatus) {
         }
         // Update modal title
         if (modalLabel) {
-            modalLabel.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Override Request';
+            if (isHRM) {
+                modalLabel.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>HRM Override - Reject Approved Request';
+            } else {
+                modalLabel.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Override Request';
+            }
         }
     } else if (requestStatus === 'REJECTED') {
-        // For REJECTED requests, only allow approval (HR override)
+        // For REJECTED requests, only HRM can approve (override)
         if (acceptBtn) {
             acceptBtn.checked = true;
             acceptBtn.style.display = 'block';
@@ -104,7 +112,11 @@ function openApprovalModal(requestId, requestTitle, requestStatus) {
         if (rejectLabel) rejectLabel.style.display = 'none';
         // Update modal title
         if (modalLabel) {
-            modalLabel.innerHTML = '<i class="fas fa-redo me-2"></i>Override Rejection';
+            if (isHRM) {
+                modalLabel.innerHTML = '<i class="fas fa-redo me-2"></i>HRM Override - Approve Rejected Request';
+            } else {
+                modalLabel.innerHTML = '<i class="fas fa-redo me-2"></i>Override Rejection';
+            }
         }
     } else {
         // For PENDING requests, show both options
@@ -122,18 +134,22 @@ function openApprovalModal(requestId, requestTitle, requestStatus) {
         }
     }
 
-    // Add event listeners to clear error when decision changes
+    // Add event listeners to clear error when decision changes or user types
     const decisionRadios = document.querySelectorAll('input[name="decision"]');
     decisionRadios.forEach(radio => {
         radio.addEventListener('change', function() {
-            if (approvalReasonEl) {
-                approvalReasonEl.classList.remove('is-invalid');
-            }
-            if (reasonErrorEl) {
-                reasonErrorEl.style.display = 'none';
-            }
+            clearValidationErrors();
         });
     });
+
+    // Clear errors when user starts typing
+    if (approvalReasonEl) {
+        approvalReasonEl.addEventListener('input', function() {
+            if (this.value.trim()) {
+                clearValidationErrors();
+            }
+        });
+    }
 
     // Show the modal
     const modalElement = document.getElementById('approvalModal');
@@ -151,16 +167,32 @@ function submitApproval() {
     const decision = document.querySelector('input[name="decision"]:checked').value;
     const reason = document.getElementById('approvalReason').value.trim();
 
-    // Validate: Rejection requires a reason
-    if (decision === 'reject' && !reason) {
-        const approvalReasonEl = document.getElementById('approvalReason');
+    // Clear previous errors
+    const approvalReasonEl = document.getElementById('approvalReason');
+    const reasonErrorEl = document.getElementById('reasonError');
+
+    if (approvalReasonEl) {
+        approvalReasonEl.classList.remove('is-invalid');
+    }
+    if (reasonErrorEl) {
+        reasonErrorEl.style.display = 'none';
+    }
+
+    // Validate: Both approval and rejection require a reason
+    if (!reason) {
         if (approvalReasonEl) {
             approvalReasonEl.classList.add('is-invalid');
         }
-        const reasonErrorEl = document.getElementById('reasonError');
         if (reasonErrorEl) {
-            reasonErrorEl.textContent = 'Rejection reason is required';
+            const actionText = decision === 'accept' ? 'Approval' : 'Rejection';
+            reasonErrorEl.textContent = actionText + ' reason is required';
             reasonErrorEl.style.display = 'block';
+            reasonErrorEl.className = 'invalid-feedback d-block'; // Ensure it shows
+        }
+
+        // Focus on the reason field
+        if (approvalReasonEl) {
+            approvalReasonEl.focus();
         }
         return;
     }
@@ -202,53 +234,118 @@ function submitApproval() {
                 if (modal) modal.hide();
             }
 
-            // Show success message
+            // Show success message with green color
             showNotification('success', data.message || 'Request processed successfully');
 
             // Reload page after short delay
             setTimeout(() => {
                 window.location.reload();
-            }, 1500);
+            }, 2000);
         } else {
-            // Show error message
+            // Show error message with red color
             showNotification('error', data.message || 'Failed to process request');
 
             // Re-enable submit button
             if (submitBtn) {
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-check me-1"></i>Submit';
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Submit';
             }
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        showNotification('error', 'An error occurred while processing the request');
+        showNotification('error', 'Network error occurred while processing the request. Please try again.');
 
         // Re-enable submit button
         if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-check me-1"></i>Submit';
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Submit';
         }
     });
 }
 
 /**
- * Show notification message
+ * Clear validation errors
+ */
+function clearValidationErrors() {
+    const approvalReasonEl = document.getElementById('approvalReason');
+    const reasonErrorEl = document.getElementById('reasonError');
+
+    if (approvalReasonEl) {
+        approvalReasonEl.classList.remove('is-invalid');
+    }
+    if (reasonErrorEl) {
+        reasonErrorEl.style.display = 'none';
+    }
+}
+
+/**
+ * Show notification message with appropriate colors
  * @param {string} type - Type of notification ('success' or 'error')
  * @param {string} message - Message to display
  */
 function showNotification(type, message) {
     // Try to use existing notification system if available
     if (typeof showToast === 'function') {
-        showToast(type, message);
+        // Map type to appropriate toast type
+        const toastType = type === 'success' ? 'success' : 'danger';
+        showToast(message, toastType);
         return;
     }
 
-    // Fallback to alert
-    if (type === 'success') {
-        alert('✓ ' + message);
-    } else {
-        alert('✗ ' + message);
+    // Fallback: Create custom toast if showToast not available
+    createCustomToast(type, message);
+}
+
+/**
+ * Create custom toast notification
+ * @param {string} type - Type of notification ('success' or 'error')
+ * @param {string} message - Message to display
+ */
+function createCustomToast(type, message) {
+    // Create toast container if not exists
+    let toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+        toastContainer.style.zIndex = '9999';
+        document.body.appendChild(toastContainer);
     }
+
+    // Create toast element
+    const toastId = 'toast-' + Date.now();
+    const bgClass = type === 'success' ? 'bg-success' : 'bg-danger';
+    const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+    const title = type === 'success' ? 'Success' : 'Error';
+
+    const toastHtml = `
+        <div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header ${bgClass} text-white">
+                <i class="fas ${icon} me-2"></i>
+                <strong class="me-auto">${title}</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                ${message}
+            </div>
+        </div>
+    `;
+
+    toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+
+    // Show toast
+    const toastElement = document.getElementById(toastId);
+    const toast = new bootstrap.Toast(toastElement, {
+        autohide: true,
+        delay: type === 'success' ? 3000 : 5000
+    });
+
+    toast.show();
+
+    // Remove toast element after it's hidden
+    toastElement.addEventListener('hidden.bs.toast', function() {
+        toastElement.remove();
+    });
 }
 

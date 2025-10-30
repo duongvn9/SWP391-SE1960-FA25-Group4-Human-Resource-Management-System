@@ -409,7 +409,7 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
     ) throws SQLException {
 
         StringBuilder sql = new StringBuilder("""
-        SELECT 
+        SELECT
             al.id,
             al.user_id,
             u.full_name AS employee_name,
@@ -1206,5 +1206,38 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
         }
 
         return result;
+    }
+
+    /**
+     * Tìm attendance logs theo userId và date
+     * @param userId ID của user
+     * @param date Ngày cần tìm
+     * @return Danh sách attendance logs trong ngày
+     */
+    public List<AttendanceLog> findByUserIdAndDate(Long userId, LocalDate date) {
+        List<AttendanceLog> logs = new ArrayList<>();
+        String sql = "SELECT id, user_id, check_type, checked_at, source, note, period_id, created_at " +
+                    "FROM attendance_logs " +
+                    "WHERE user_id = ? AND DATE(checked_at) = ? " +
+                    "ORDER BY checked_at";
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, userId);
+            stmt.setDate(2, java.sql.Date.valueOf(date));
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    logs.add(mapResultSetToEntity(rs));
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Error finding attendance logs by userId and date: " +
+                                     userId + ", " + date, e);
+        }
+
+        return logs;
     }
 }
