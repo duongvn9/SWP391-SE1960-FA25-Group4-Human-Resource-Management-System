@@ -175,17 +175,24 @@
                                                     </c:choose>
                                                 </td>
                                                 <td>
-                                                    <a href="${pageContext.request.contextPath}/settings/edit?id=${dept.id}&type=Department"
-                                                        class="btn btn-sm btn-warning btn-action">
-                                                        <i class="fas fa-edit"></i> Edit
-                                                    </a>
-                                                    <button type="button"
-                                                        class="btn btn-sm btn-danger btn-action deleteBtn"
-                                                        data-id="${dept.id}" data-name="${dept.name}"
-                                                        data-type="Department" data-bs-toggle="modal"
-                                                        data-bs-target="#deleteModal">
-                                                        <i class="fas fa-trash"></i> Delete
-                                                    </button>
+                                                    <c:choose>
+                                                        <c:when test="${dept.name == 'Human Resource'}">
+                                                            <span class="text-muted">No action available</span>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <a href="${pageContext.request.contextPath}/settings/edit?id=${dept.id}&type=Department"
+                                                                class="btn btn-sm btn-warning btn-action">
+                                                                <i class="fas fa-edit"></i> Edit
+                                                            </a>
+                                                            <button type="button"
+                                                                class="btn btn-sm btn-danger btn-action deleteBtn"
+                                                                data-id="${dept.id}" data-name="${dept.name}"
+                                                                data-type="Department" data-bs-toggle="modal"
+                                                                data-bs-target="#deleteModal">
+                                                                <i class="fas fa-trash"></i> Delete
+                                                            </button>
+                                                        </c:otherwise>
+                                                    </c:choose>
                                                 </td>
                                             </tr>
                                         </c:forEach>
