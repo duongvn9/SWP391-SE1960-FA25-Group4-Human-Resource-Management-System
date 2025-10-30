@@ -139,6 +139,14 @@
                 box-shadow: 0 2px 6px rgba(0, 123, 255, 0.3);
             }
         </style>
+        <style>
+            .error-message {
+                color: #dc3545; /* red */
+                font-size: 13px;
+                margin-top: 4px;
+                display: none;
+            }
+        </style>
 
     </head>
     <body class="import-attendance-page">
@@ -447,8 +455,14 @@
                                                 </div>
                                             </td>
                                             <td class="manual-cell"><input type="date" class="form-control date-input"></td>
-                                            <td class="manual-cell"><input type="time" class="form-control checkin-input"></td>
-                                            <td class="manual-cell"><input type="time" class="form-control checkout-input"></td>
+                                            <td class="manual-cell">
+                                                <input type="time" class="form-control checkin-input">
+                                                <div class="error-message"></div>
+                                            </td>
+                                            <td class="manual-cell">
+                                                <input type="time" class="form-control checkout-input">
+                                                <div class="error-message"></div>
+                                            </td>
                                             <td class="manual-cell">
                                                 <select class="form-control status-input">
                                                     <option value="">Select status</option>
@@ -677,6 +691,68 @@
 
                 document.querySelectorAll(".date-input").forEach(input => {
                     input.setAttribute("max", today); // chỉ chọn ngày hiện tại trở về
+                });
+            });
+        </script>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const checkinInputs = document.querySelectorAll(".checkin-input");
+                const checkoutInputs = document.querySelectorAll(".checkout-input");
+                const minTime = "06:00";
+                const maxTime = "23:59";
+
+                function showError(input, message) {
+                    const errorDiv = input.parentElement.querySelector(".error-message");
+                    if (errorDiv) {
+                        errorDiv.textContent = message;
+                        errorDiv.style.display = "block";
+                    }
+                }
+
+                function clearError(input) {
+                    const errorDiv = input.parentElement.querySelector(".error-message");
+                    if (errorDiv) {
+                        errorDiv.textContent = "";
+                        errorDiv.style.display = "none";
+                    }
+                }
+
+                function isTimeInRange(time) {
+                    return time >= minTime && time <= maxTime;
+                }
+
+                function validateTime(checkinInput, checkoutInput) {
+                    clearError(checkinInput);
+                    clearError(checkoutInput);
+
+                    const checkin = checkinInput.value;
+                    const checkout = checkoutInput.value;
+
+                    if (!checkin && !checkout)
+                        return;
+
+                    if (checkin && !isTimeInRange(checkin)) {
+                        showError(checkinInput, "Check-in time must be between 06:00 and 23:59.");
+                        checkinInput.value = "";
+                        return;
+                    }
+
+                    if (checkout && !isTimeInRange(checkout)) {
+                        showError(checkoutInput, "Check-out time must be between 06:00 and 23:59.");
+                        checkoutInput.value = "";
+                        return;
+                    }
+
+                    if (checkin && checkout && checkin >= checkout) {
+                        showError(checkoutInput, "Check-in time must be earlier than check-out time.");
+                        checkoutInput.value = "";
+                    }
+                }
+
+                checkinInputs.forEach((checkinInput, index) => {
+                    const checkoutInput = checkoutInputs[index];
+                    checkinInput.addEventListener("change", () => validateTime(checkinInput, checkoutInput));
+                    checkoutInput.addEventListener("change", () => validateTime(checkinInput, checkoutInput));
                 });
             });
         </script>
