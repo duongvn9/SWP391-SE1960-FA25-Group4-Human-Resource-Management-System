@@ -1159,12 +1159,12 @@ public class UserDao {
         // Find user with "Department Manager" position in the specified department
         String sql = """
                 SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
-                       u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                       u.gender, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
                        u.start_work_date, u.created_at, u.updated_at,
                        d.name as department_name, p.name as position_name
                 FROM users u
                 LEFT JOIN departments d ON u.department_id = d.id
-                LEFT JOIN positions p ON u.position_id = p.id
+                INNER JOIN positions p ON u.position_id = p.id
                 WHERE u.department_id = ?
                   AND u.status = 'active'
                   AND p.name = 'Department Manager'
@@ -1175,22 +1175,30 @@ public class UserDao {
                 PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setLong(1, departmentId);
+            logger.info("Executing findDepartmentManager query for department ID: {}", departmentId);
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    User manager = mapResultSetToUser(rs);
-                    logger.debug("Tìm thấy department manager: {} cho department ID: {}",
-                            manager.getFullName(), departmentId);
-                    return Optional.of(manager);
+                    try {
+                        User manager = mapResultSetToUser(rs);
+                        logger.info("Found department manager: {} (ID: {}) for department ID: {}",
+                                manager.getFullName(), manager.getId(), departmentId);
+                        return Optional.of(manager);
+                    } catch (Exception e) {
+                        logger.error("Error mapping result set to User object for department {}: {}",
+                                departmentId, e.getMessage(), e);
+                        throw new RuntimeException("Error processing department manager data", e);
+                    }
                 }
             }
 
-            logger.debug("Không tìm thấy department manager cho department ID: {}", departmentId);
+            logger.info("No department manager found for department ID: {}", departmentId);
             return Optional.empty();
 
         } catch (SQLException e) {
-            logger.error("Lỗi khi tìm department manager: {}", e.getMessage(), e);
-            throw new RuntimeException("Lỗi khi tìm department manager", e);
+            logger.error("SQL error when finding department manager for department {}: {}",
+                    departmentId, e.getMessage(), e);
+            throw new RuntimeException("Database error while checking department manager. Please contact support.", e);
         }
     }
 
@@ -1407,8 +1415,6 @@ public class UserDao {
         }
     }
 
-
-
     /**
      * Count total number of users
      * 
@@ -1428,6 +1434,72 @@ public class UserDao {
 
         } catch (SQLException e) {
             logger.error("Error counting all users: {}", e.getMessage(), e);
+            return 0;
+        }
+    }
+
+    /**
+     * Check if a user is an admin based on position
+     * 
+     * @param userId User ID to check
+     * @return true if user is admin, false otherwise
+     */
+    public boolean isAdminUser(Long userId) {
+        logger.debug("Checking if user ID {} is admin", userId);
+
+        String sql = "SELECT COUNT(*) as count " +
+                "FROM users u " +
+                "INNER JOIN positions p ON u.position_id = p.id " +
+                "WHERE u.id = ? " +
+                "AND (p.name = 'Administrator' OR p.name = 'Admin')";
+
+        try (Connection conn = DatabaseUtil.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, userId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("count") > 0;
+                }
+                return false;
+            }
+
+        } catch (SQLException e) {
+            logger.error("Error checking if user is admin: {}", e.getMessage(), e);
+            return false;
+        }
+    }
+
+    /**
+     * Count active admin users
+     * Admin is identified by position name 'Administrator' or 'Admin'
+     * 
+     * @return Number of active admin users
+     */
+    public int countActiveAdmins() {
+        logger.info("Counting active admin users (with active accounts)");
+
+        String sql = "SELECT COUNT(DISTINCT u.id) as count " +
+                "FROM users u " +
+                "INNER JOIN positions p ON u.position_id = p.id " +
+                "INNER JOIN accounts a ON a.user_id = u.id " +
+                "WHERE a.status = 'active' " +
+                "AND (p.name = 'Administrator' OR p.name = 'Admin')";
+
+        try (Connection conn = DatabaseUtil.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                ResultSet rs = stmt.executeQuery()) {
+
+            if (rs.next()) {
+                int count = rs.getInt("count");
+                logger.info("Found {} admin users with active accounts", count);
+                return count;
+            }
+            return 0;
+
+        } catch (SQLException e) {
+            logger.error("Error counting active admins: {}", e.getMessage(), e);
             return 0;
         }
     }

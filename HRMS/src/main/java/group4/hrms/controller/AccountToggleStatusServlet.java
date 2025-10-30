@@ -114,6 +114,29 @@ public class AccountToggleStatusServlet extends HttpServlet {
         // Toggle status
         if ("active".equalsIgnoreCase(currentStatus)) {
             newStatus = "inactive";
+
+            // Check if this is an admin account being deactivated
+            boolean isAdmin = accountDao.isAdminAccount(accountId);
+            if (isAdmin) {
+                // Count active admins BEFORE deactivation
+                int activeAdminCount = accountDao.countActiveAdmins();
+                logger.info("Attempting to deactivate admin account. Current active admin count: {}", activeAdminCount);
+
+                // Calculate how many admins will remain active AFTER this deactivation
+                int remainingAdmins = activeAdminCount - 1;
+
+                // Prevent deactivating if it would leave zero active admins
+                if (remainingAdmins < 1) {
+                    logger.warn("Cannot deactivate the last active admin account. Would leave {} active admins",
+                            remainingAdmins);
+                    sendJsonResponse(response, false,
+                            "Cannot deactivate the last active admin account. At least one admin must remain active to manage the system.",
+                            HttpServletResponse.SC_BAD_REQUEST);
+                    return;
+                }
+
+                logger.info("Deactivation allowed. Will have {} active admin(s) remaining", remainingAdmins);
+            }
         } else {
             newStatus = "active";
         }

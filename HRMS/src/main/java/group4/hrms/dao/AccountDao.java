@@ -725,7 +725,7 @@ public class AccountDao {
     /**
      * Update password for account
      * 
-     * @param accountId Account ID
+     * @param accountId       Account ID
      * @param newPasswordHash New password hash (bcrypt)
      * @return true if successful, false otherwise
      */
@@ -805,6 +805,96 @@ public class AccountDao {
         } catch (SQLException e) {
             logger.error("Error getting password hash for account ID {}: {}", accountId, e.getMessage(), e);
             throw new RuntimeException("Error getting password hash", e);
+        }
+    }
+
+    /**
+     * Count active admin accounts
+     * Admin is identified by position name 'Administrator' or 'Admin'
+     * 
+     * @return Number of active admin accounts
+     */
+    public int countActiveAdmins() {
+        logger.info("Counting active admin accounts");
+
+        String sql = "SELECT COUNT(*) as count " +
+                "FROM accounts a " +
+                "INNER JOIN users u ON a.user_id = u.id " +
+                "INNER JOIN positions p ON u.position_id = p.id " +
+                "WHERE a.status = 'active' " +
+                "AND (p.name = 'Administrator' OR p.name = 'Admin')";
+
+        try (Connection conn = DatabaseUtil.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                ResultSet rs = stmt.executeQuery()) {
+
+            if (rs.next()) {
+                int count = rs.getInt("count");
+                logger.info("Found {} active admin accounts (account status = active, regardless of user status)",
+                        count);
+                return count;
+            }
+            return 0;
+
+        } catch (SQLException e) {
+            logger.error("Error counting active admins: {}", e.getMessage(), e);
+            throw new RuntimeException("Error counting active admins", e);
+        }
+    }
+
+    /**
+     * Check if an account belongs to an admin user
+     * 
+     * @param accountId Account ID to check
+     * @return true if account belongs to admin, false otherwise
+     */
+    public boolean isAdminAccount(Long accountId) {
+        logger.info("Checking if account ID {} is admin", accountId);
+
+        // First, get the position name for debugging
+        String debugSql = "SELECT p.name as position_name " +
+                "FROM accounts a " +
+                "INNER JOIN users u ON a.user_id = u.id " +
+                "LEFT JOIN positions p ON u.position_id = p.id " +
+                "WHERE a.id = ?";
+
+        try (Connection conn = DatabaseUtil.getConnection();
+                PreparedStatement debugStmt = conn.prepareStatement(debugSql)) {
+            debugStmt.setLong(1, accountId);
+            try (ResultSet debugRs = debugStmt.executeQuery()) {
+                if (debugRs.next()) {
+                    String positionName = debugRs.getString("position_name");
+                    logger.info("Account ID {} has position: '{}'", accountId, positionName);
+                }
+            }
+        } catch (SQLException e) {
+            logger.warn("Error getting position name for debug: {}", e.getMessage());
+        }
+
+        String sql = "SELECT COUNT(*) as count " +
+                "FROM accounts a " +
+                "INNER JOIN users u ON a.user_id = u.id " +
+                "INNER JOIN positions p ON u.position_id = p.id " +
+                "WHERE a.id = ? " +
+                "AND (p.name = 'Administrator' OR p.name = 'Admin')";
+
+        try (Connection conn = DatabaseUtil.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, accountId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    boolean isAdmin = rs.getInt("count") > 0;
+                    logger.info("Account ID {} isAdmin: {}", accountId, isAdmin);
+                    return isAdmin;
+                }
+                return false;
+            }
+
+        } catch (SQLException e) {
+            logger.error("Error checking if account is admin: {}", e.getMessage(), e);
+            throw new RuntimeException("Error checking admin account", e);
         }
     }
 }

@@ -78,12 +78,13 @@ public class UserListServlet extends HttpServlet {
             if (departmentParam != null && !departmentParam.trim().isEmpty()) {
                 // Try to parse as Long first (for backward compatibility)
                 departmentId = parseLongOrNull(departmentParam);
-                
+
                 // If not a number, try to find department by name
                 if (departmentId == null) {
                     try {
                         group4.hrms.dao.DepartmentDao departmentDao = new group4.hrms.dao.DepartmentDao();
-                        java.util.Optional<group4.hrms.model.Department> dept = departmentDao.findByName(departmentParam.trim());
+                        java.util.Optional<group4.hrms.model.Department> dept = departmentDao
+                                .findByName(departmentParam.trim());
                         if (dept.isPresent()) {
                             departmentId = dept.get().getId();
                             logger.info("Found department '{}' with ID: {}", departmentParam, departmentId);
@@ -177,6 +178,12 @@ public class UserListServlet extends HttpServlet {
             // Set permissions for UI
             request.setAttribute("canCreateUser", group4.hrms.util.PermissionUtil.canCreateUser(request));
             request.setAttribute("canViewAllUsers", group4.hrms.util.PermissionUtil.canViewAllUsers(request));
+
+            // Check if user is admin (for edit button visibility)
+            String positionCode = group4.hrms.util.PermissionUtil.getCurrentUserPositionCode(request);
+            boolean isAdmin = group4.hrms.util.PermissionUtil.POSITION_ADMIN.equals(positionCode);
+            request.setAttribute("isAdmin", isAdmin);
+            logger.info("User position code: {}, isAdmin: {}", positionCode, isAdmin);
 
             // Forward to JSP
             request.getRequestDispatcher("/WEB-INF/views/employees/user-list.jsp")
