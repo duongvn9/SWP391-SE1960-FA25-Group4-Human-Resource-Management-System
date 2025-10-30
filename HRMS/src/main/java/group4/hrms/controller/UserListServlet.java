@@ -55,7 +55,7 @@ public class UserListServlet extends HttpServlet {
 
             // Parse query parameters
             String search = request.getParameter("search");
-            String departmentIdStr = request.getParameter("department");
+            String departmentParam = request.getParameter("department");
             String positionIdStr = request.getParameter("position");
             String status = request.getParameter("status");
             String gender = request.getParameter("gender");
@@ -74,7 +74,27 @@ public class UserListServlet extends HttpServlet {
             }
 
             // Parse filter parameters
-            Long departmentId = parseLongOrNull(departmentIdStr);
+            Long departmentId = null;
+            if (departmentParam != null && !departmentParam.trim().isEmpty()) {
+                // Try to parse as Long first (for backward compatibility)
+                departmentId = parseLongOrNull(departmentParam);
+                
+                // If not a number, try to find department by name
+                if (departmentId == null) {
+                    try {
+                        group4.hrms.dao.DepartmentDao departmentDao = new group4.hrms.dao.DepartmentDao();
+                        java.util.Optional<group4.hrms.model.Department> dept = departmentDao.findByName(departmentParam.trim());
+                        if (dept.isPresent()) {
+                            departmentId = dept.get().getId();
+                            logger.info("Found department '{}' with ID: {}", departmentParam, departmentId);
+                        } else {
+                            logger.warn("Department not found: {}", departmentParam);
+                        }
+                    } catch (Exception e) {
+                        logger.error("Error finding department by name: {}", departmentParam, e);
+                    }
+                }
+            }
             Long positionId = parseLongOrNull(positionIdStr);
 
             // Default sort
@@ -147,6 +167,7 @@ public class UserListServlet extends HttpServlet {
             request.setAttribute("totalRecords", totalRecords);
             request.setAttribute("search", search);
             request.setAttribute("selectedDepartment", departmentId);
+            request.setAttribute("selectedDepartmentName", departmentParam); // For dropdown selection
             request.setAttribute("selectedPosition", positionId);
             request.setAttribute("selectedStatus", status);
             request.setAttribute("selectedGender", gender);
