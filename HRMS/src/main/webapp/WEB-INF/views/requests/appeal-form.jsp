@@ -1,7 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <html>
-
     <head>
         <title>Submit Attendance Dispute - HRMS</title>
         <jsp:include page="../layout/head.jsp">
@@ -79,9 +78,15 @@
             #selectRecordPopup .popup-actions {
                 margin-top: 15px;
             }
+
+            .error-message {
+                color: #dc3545;
+                font-size: 13px;
+                margin-top: 4px;
+                display: none;
+            }
         </style>
     </head>
-
     <body>
         <!-- Sidebar -->
         <jsp:include page="../layout/sidebar.jsp">
@@ -195,37 +200,26 @@
                                                     <div class="row g-2 mt-1">
                                                         <div class="col-md-3">
                                                             <label for="editDate" class="form-label">Date</label>
-                                                            <input type="date" id="editDate" name="editDate"
-                                                                   class="form-control" value="${rec.date}" readonly />
+                                                            <input type="date" id="editDate" name="editDate" class="form-control" value="${rec.date}" readonly />
                                                         </div>
                                                         <div class="col-md-2">
-                                                            <label for="editCheckIn"
-                                                                   class="form-label">Check-in</label>
-                                                            <input type="time" id="editCheckIn" name="editCheckIn"
-                                                                   class="form-control" value="${rec.checkIn}" />
+                                                            <label for="editCheckIn" class="form-label">Check-in</label>
+                                                            <input type="time" id="editCheckIn" name="editCheckIn" class="form-control" value="${rec.checkIn}" />
+                                                            <div class="error-message"></div>
                                                         </div>
                                                         <div class="col-md-2">
-                                                            <label for="editCheckOut"
-                                                                   class="form-label">Check-out</label>
-                                                            <input type="time" id="editCheckOut" name="editCheckOut"
-                                                                   class="form-control" value="${rec.checkOut}" />
+                                                            <label for="editCheckOut" class="form-label">Check-out</label>
+                                                            <input type="time" id="editCheckOut" name="editCheckOut" class="form-control" value="${rec.checkOut}" />
+                                                            <div class="error-message"></div>
                                                         </div>
                                                         <div class="col-md-3">
-                                                            <label for="editStatus"
-                                                                   class="form-label">Status</label>
-                                                            <select id="editStatus" name="editStatus"
-                                                                    class="form-select">
-                                                                <option value="Late" ${rec.status=='Late'
-                                                                                       ? 'selected' : '' }>Late</option>
-                                                                <option value="On Time" ${rec.status=='On Time'
-                                                                                          ? 'selected' : '' }>On Time</option>
-                                                                <option value="Shift day" ${rec.status=='Shift day'
-                                                                                            ? 'selected' : '' }>Shift day</option>
-                                                                <option value="leaving early"
-                                                                        ${rec.status=='leaving early' ? 'selected' : ''
-                                                                        }>leaving early</option>
-                                                                <option value="Over Time" ${rec.status=='Over Time'
-                                                                                            ? 'selected' : '' }>Over Time</option>
+                                                            <label for="editStatus" class="form-label">Status</label>
+                                                            <select id="editStatus" name="editStatus" class="form-select">
+                                                                <option value="Late" ${rec.status=='Late' ? 'selected' : '' }>Late</option>
+                                                                <option value="On Time" ${rec.status=='On Time' ? 'selected' : '' }>On Time</option>
+                                                                <option value="Shift day" ${rec.status=='Shift day' ? 'selected' : '' }>Shift day</option>
+                                                                <option value="leaving early" ${rec.status=='leaving early' ? 'selected' : '' }>leaving early</option>
+                                                                <option value="Over Time" ${rec.status=='Over Time' ? 'selected' : '' }>Over Time</option>
                                                             </select>
                                                         </div>
                                                     </div>
@@ -508,7 +502,6 @@
                 renderRows();
             });
         </script>
-
         <script>
             document.addEventListener("DOMContentLoaded", function () {
                 const selectRecordBtn = document.getElementById("selectRecordBtn");
@@ -630,7 +623,65 @@
                 });
             });
         </script>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const checkInInput = document.getElementById("editCheckIn");
+                const checkOutInput = document.getElementById("editCheckOut");
+                const minTime = "06:00";
+                const maxTime = "23:59";
+
+                function showError(input, message) {
+                    const errorDiv = input.parentElement.querySelector(".error-message");
+                    if (errorDiv) {
+                        errorDiv.textContent = message;
+                        errorDiv.style.display = "block";
+                    }
+                }
+
+                function clearError(input) {
+                    const errorDiv = input.parentElement.querySelector(".error-message");
+                    if (errorDiv) {
+                        errorDiv.textContent = "";
+                        errorDiv.style.display = "none";
+                    }
+                }
+
+                function isTimeInRange(time) {
+                    return time >= minTime && time <= maxTime;
+                }
+
+                function validateEditTimes() {
+                    clearError(checkInInput);
+                    clearError(checkOutInput);
+
+                    const checkIn = checkInInput.value;
+                    const checkOut = checkOutInput.value;
+
+                    if (!checkIn && !checkOut)
+                        return;
+
+                    if (checkIn && !isTimeInRange(checkIn)) {
+                        showError(checkInInput, "Check-in time must be between 06:00 and 23:59.");
+                        checkInInput.value = "";
+                        return;
+                    }
+
+                    if (checkOut && !isTimeInRange(checkOut)) {
+                        showError(checkOutInput, "Check-out time must be between 06:00 and 23:59.");
+                        checkOutInput.value = "";
+                        return;
+                    }
+
+                    if (checkIn && checkOut && checkIn >= checkOut) {
+                        showError(checkOutInput, "Check-in time must be earlier than check-out time.");
+                        checkOutInput.value = "";
+                    }
+                }
+
+                checkInInput.addEventListener("change", validateEditTimes);
+                checkOutInput.addEventListener("change", validateEditTimes);
+            });
+        </script>
         <script src="${pageContext.request.contextPath}/assets/js/appeal-request.js"></script>
     </body>
-
 </html>

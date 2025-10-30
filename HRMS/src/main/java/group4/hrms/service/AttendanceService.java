@@ -146,11 +146,11 @@ public class AttendanceService {
                     pageInvalidLogs = invalidLogsDto.subList(fromIndex, toIndex);
                 }
 
+                req.setAttribute("warning", invalidLogsDto.size() + " records were invalid and not imported.");
                 req.setAttribute("invalidLogsExcel", pageInvalidLogs);
                 req.setAttribute("invalidCurrentPage", page);
                 req.setAttribute("invalidTotalPages", totalPages);
-                req.getSession().setAttribute("invalidLogsAll", invalidLogsDto);
-                req.setAttribute("warning", invalidLogsDto.size() + " records were invalid and not imported.");
+                req.getSession().setAttribute("invalidLogsAll", invalidLogsDto);               
             }
 
             Files.deleteIfExists(tempFilePath);
