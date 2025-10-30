@@ -125,7 +125,7 @@ public class EmploymentContractDto {
     }
     
     /**
-     * Format contract type to Vietnamese display text
+     * Format contract type to English display text
      */
     private String formatContractType(String type) {
         if (type == null || type.trim().isEmpty()) {
@@ -134,11 +134,11 @@ public class EmploymentContractDto {
         
         switch (type.toLowerCase()) {
             case "indefinite":
-                return "Hợp đồng không xác định thời hạn";
+                return "Indefinite Contract";
             case "fixed_term":
-                return "Hợp đồng xác định thời hạn";
+                return "Fixed-term Contract";
             case "probation":
-                return "Hợp đồng thử việc";
+                return "Probation Contract";
             default:
                 return type;
         }
@@ -156,15 +156,15 @@ public class EmploymentContractDto {
         
         switch (status.toLowerCase()) {
             case "active":
-                this.statusDisplay = "Đang hoạt động";
+                this.statusDisplay = "Active";
                 this.statusColor = "success";
                 break;
             case "expired":
-                this.statusDisplay = "Đã hết hạn";
+                this.statusDisplay = "Expired";
                 this.statusColor = "secondary";
                 break;
             case "terminated":
-                this.statusDisplay = "Đã chấm dứt";
+                this.statusDisplay = "Terminated";
                 this.statusColor = "danger";
                 break;
             default:
