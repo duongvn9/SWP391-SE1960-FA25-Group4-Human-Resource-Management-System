@@ -252,20 +252,23 @@ public class UserCreateServlet extends HttpServlet {
                             var department = departments.stream()
                                     .filter(d -> d.getId().equals(finalDepartmentId))
                                     .findFirst();
-                            
+
                             if (department.isPresent()) {
                                 String deptName = department.get().getName();
                                 if ("Human Resource".equalsIgnoreCase(deptName) || "Admin".equalsIgnoreCase(deptName)) {
-                                    errors.add("Department Manager position is not allowed in " + deptName + " department.");
+                                    errors.add("Department Manager position is not allowed in " + deptName
+                                            + " department.");
                                     return; // Skip further validation for this position
                                 }
                             }
-                            
+
                             Optional<User> existingManager = userDao.findDepartmentManager(finalDepartmentId);
                             if (existingManager.isPresent()) {
-                                errors.add("This department already has a manager: " +
+                                String deptName = department.isPresent() ? department.get().getName()
+                                        : "This department";
+                                errors.add("The " + deptName + " department already has a Department Manager: " +
                                         existingManager.get().getFullName() +
-                                        ". Please remove the current manager first.");
+                                        ". Only one Department Manager is allowed per department.");
                             }
                         }
                     }
@@ -432,7 +435,8 @@ public class UserCreateServlet extends HttpServlet {
             if ("HR Manager".equalsIgnoreCase(positionName)) {
                 roleName = "HR_MANAGER";
             }
-            // Note: Department Manager is no longer allowed in Human Resource or Admin departments
+            // Note: Department Manager is no longer allowed in Human Resource or Admin
+            // departments
         }
 
         // Assign role

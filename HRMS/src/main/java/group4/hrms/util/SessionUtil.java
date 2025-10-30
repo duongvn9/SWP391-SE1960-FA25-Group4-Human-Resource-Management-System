@@ -59,9 +59,33 @@ public class SessionUtil {
         session.setAttribute("account", account);
         session.setAttribute("user", user);
 
-        // Set admin flag based on username (temporary solution until role system is
-        // implemented)
-        boolean isAdmin = "admin".equalsIgnoreCase(account.getUsername());
+        // Set admin flag based on position (check if user has Administrator position)
+        boolean isAdmin = false;
+        if (user.getPositionId() != null) {
+            try {
+                // Get position from cache to check if it's Administrator
+                var positions = DropdownCacheUtil.getCachedPositions(request.getServletContext());
+                var position = positions.stream()
+                        .filter(p -> p.getId().equals(user.getPositionId()))
+                        .findFirst();
+
+                if (position.isPresent()) {
+                    String positionName = position.get().getName();
+                    // Check if position is Administrator or Admin
+                    isAdmin = "Administrator".equalsIgnoreCase(positionName) ||
+                            "Admin".equalsIgnoreCase(positionName);
+                    logger.debug("User position: {}, isAdmin: {}", positionName, isAdmin);
+                }
+            } catch (Exception e) {
+                logger.error("Error checking admin position", e);
+                // Fallback to username check for backward compatibility
+                isAdmin = "admin".equalsIgnoreCase(account.getUsername());
+            }
+        } else {
+            // Fallback to username check if no position
+            isAdmin = "admin".equalsIgnoreCase(account.getUsername());
+        }
+
         session.setAttribute(IS_ADMIN_KEY, isAdmin);
 
         // Set roles string (temporary solution)

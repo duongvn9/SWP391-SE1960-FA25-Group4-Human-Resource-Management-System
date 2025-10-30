@@ -144,9 +144,10 @@ public class UserUpdateServlet extends HttpServlet {
             user.setStatus(status != null && !status.trim().isEmpty() ? status.trim() : "active");
 
             // Parse and set department ID
+            Long newDepartmentId = null;
             if (departmentIdStr != null && !departmentIdStr.trim().isEmpty()) {
                 try {
-                    user.setDepartmentId(Long.parseLong(departmentIdStr.trim()));
+                    newDepartmentId = Long.parseLong(departmentIdStr.trim());
                 } catch (NumberFormatException e) {
                     response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                     result.put("success", false);
@@ -157,7 +158,7 @@ public class UserUpdateServlet extends HttpServlet {
             }
 
             // Parse and set position ID with validation
-            Long newPositionId = null;
+            final Long newPositionId;
             if (positionIdStr != null && !positionIdStr.trim().isEmpty()) {
                 try {
                     newPositionId = Long.parseLong(positionIdStr.trim());
@@ -168,7 +169,12 @@ public class UserUpdateServlet extends HttpServlet {
                     response.getWriter().write(gson.toJson(result));
                     return;
                 }
+            } else {
+                newPositionId = null;
             }
+
+            // Check if user is currently an admin
+            boolean isCurrentlyAdmin = userDao.isAdminUser(userId);
 
             // Validate manager uniqueness if position is changing
             if (newPositionId != null && !newPositionId.equals(user.getPositionId())) {
@@ -181,40 +187,75 @@ public class UserUpdateServlet extends HttpServlet {
 
                 if (newPosition.isPresent()) {
                     String positionName = newPosition.get().getName();
-                    Long newDepartmentId = (departmentIdStr != null && !departmentIdStr.trim().isEmpty())
-                            ? Long.parseLong(departmentIdStr.trim())
-                            : user.getDepartmentId();
+                    Long finalNewDepartmentId = (newDepartmentId != null) ? newDepartmentId : user.getDepartmentId();
+
+                    // Check if changing from admin to non-admin position
+                    boolean isNewPositionAdmin = "Administrator".equalsIgnoreCase(positionName) ||
+                            "Admin".equalsIgnoreCase(positionName);
+
+                    if (isCurrentlyAdmin && !isNewPositionAdmin) {
+                        // User is changing from admin to non-admin
+                        int activeAdminCount = userDao.countActiveAdmins();
+                        logger.info("Attempting to change admin position. Current active admin count: {}",
+                                activeAdminCount);
+
+                        // Calculate remaining admins after this change
+                        int remainingAdmins = activeAdminCount - 1;
+
+                        if (remainingAdmins < 1) {
+                            logger.warn("Cannot change position. Would leave {} active admins", remainingAdmins);
+                            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                            result.put("success", false);
+                            result.put("message",
+                                    "Cannot change the position of the last active admin. At least one admin must remain to manage the system.");
+                            response.getWriter().write(gson.toJson(result));
+                            return;
+                        }
+
+                        logger.info("Position change allowed. Will have {} active admin(s) remaining", remainingAdmins);
+                    }
 
                     // Note: Position validation is now handled by JavaScript in the frontend
                     // No need to check department-position assignment here
 
                     // Check for Department Manager uniqueness
                     if ("Department Manager".equalsIgnoreCase(positionName)) {
-                        if (newDepartmentId != null) {
+                        // Determine which department to check: new department or current department
+                        Long departmentToCheck = finalNewDepartmentId != null ? finalNewDepartmentId
+                                : user.getDepartmentId();
+
+                        if (departmentToCheck != null) {
                             // Do not allow Department Manager in Human Resource or Admin departments
                             var departments = DropdownCacheUtil.getCachedDepartments(getServletContext());
                             var department = departments.stream()
-                                    .filter(d -> d.getId().equals(newDepartmentId))
+                                    .filter(d -> d.getId().equals(departmentToCheck))
                                     .findFirst();
-                            
+
                             if (department.isPresent()) {
                                 String deptName = department.get().getName();
                                 if ("Human Resource".equalsIgnoreCase(deptName) || "Admin".equalsIgnoreCase(deptName)) {
                                     response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                                     result.put("success", false);
-                                    result.put("message", "Department Manager position is not allowed in " + deptName + " department.");
+                                    result.put("message", "Department Manager position is not allowed in " + deptName
+                                            + " department.");
                                     response.getWriter().write(gson.toJson(result));
                                     return;
                                 }
                             }
-                            
-                            java.util.Optional<User> existingManager = userDao.findDepartmentManager(newDepartmentId);
+
+                            java.util.Optional<User> existingManager = userDao
+                                    .findDepartmentManager(departmentToCheck);
                             if (existingManager.isPresent() && !existingManager.get().getId().equals(userId)) {
+                                // Get department name for better error message
+                                String deptName = department.isPresent() ? department.get().getName()
+                                        : "this department";
+
                                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                                 result.put("success", false);
-                                result.put("message", "This department already has a manager: " +
-                                        existingManager.get().getFullName() +
-                                        ". Please remove the current manager first.");
+                                result.put("message",
+                                        "The " + deptName + " department already has a Department Manager: " +
+                                                existingManager.get().getFullName() +
+                                                ". Only one Department Manager is allowed per department.");
                                 response.getWriter().write(gson.toJson(result));
                                 return;
                             }
@@ -245,6 +286,48 @@ public class UserUpdateServlet extends HttpServlet {
                 user.setPositionId(newPositionId);
             } else if (newPositionId != null) {
                 user.setPositionId(newPositionId);
+            }
+
+            // Check if changing department for an admin user
+            if (newDepartmentId != null && !newDepartmentId.equals(user.getDepartmentId())) {
+                // Check if user is admin (either currently or will be after position change)
+                boolean willBeAdmin = isCurrentlyAdmin;
+                if (newPositionId != null && !newPositionId.equals(user.getPositionId())) {
+                    var positions = group4.hrms.util.DropdownCacheUtil.getCachedPositions(getServletContext());
+                    var newPosition = positions.stream()
+                            .filter(p -> p.getId().equals(newPositionId))
+                            .findFirst();
+                    if (newPosition.isPresent()) {
+                        String positionName = newPosition.get().getName();
+                        willBeAdmin = "Administrator".equalsIgnoreCase(positionName) ||
+                                "Admin".equalsIgnoreCase(positionName);
+                    }
+                }
+
+                if (willBeAdmin) {
+                    // Admin is changing department - check if this is the last active admin
+                    int activeAdminCount = userDao.countActiveAdmins();
+                    logger.info("Attempting to change admin department. Current active admin count: {}",
+                            activeAdminCount);
+
+                    // If this is the last active admin, don't allow department change
+                    if (activeAdminCount <= 1) {
+                        logger.warn("Cannot change department of the last active admin");
+                        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                        result.put("success", false);
+                        result.put("message",
+                                "Cannot change the department of the last active admin. At least one admin must remain to manage the system.");
+                        response.getWriter().write(gson.toJson(result));
+                        return;
+                    }
+
+                    logger.info("Department change allowed. Have {} active admin(s)", activeAdminCount);
+                }
+            }
+
+            // Set department ID after validation
+            if (newDepartmentId != null) {
+                user.setDepartmentId(newDepartmentId);
             }
 
             // Parse and set dates
@@ -310,10 +393,19 @@ public class UserUpdateServlet extends HttpServlet {
             response.getWriter().write(gson.toJson(result));
 
         } catch (Exception e) {
-            logger.error("Error updating user", e);
+            logger.error("Error updating user: {}", e.getMessage(), e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             result.put("success", false);
-            result.put("message", "Internal server error: " + e.getMessage());
+
+            // Provide user-friendly error messages
+            String errorMessage = e.getMessage();
+            if (errorMessage != null && !errorMessage.trim().isEmpty()) {
+                // Pass through the error message from DAO or other layers
+                result.put("message", errorMessage);
+            } else {
+                result.put("message", "An error occurred while updating user. Please try again.");
+            }
+
             response.getWriter().write(gson.toJson(result));
         }
     }
@@ -324,7 +416,8 @@ public class UserUpdateServlet extends HttpServlet {
      * - HR Manager position → HR_MANAGER role
      * - Department Manager → DEPARTMENT_MANAGER role
      * - Other positions → no role change
-     * Note: Department Manager is no longer allowed in Human Resource or Admin departments
+     * Note: Department Manager is no longer allowed in Human Resource or Admin
+     * departments
      */
     private void updateUserRole(User user) {
         // Check if user has an account
@@ -352,7 +445,8 @@ public class UserUpdateServlet extends HttpServlet {
                 newRoleName = "HR_MANAGER";
             }
             // If Department Manager, assign DEPARTMENT_MANAGER role
-            // Note: Department Manager is no longer allowed in Human Resource or Admin departments
+            // Note: Department Manager is no longer allowed in Human Resource or Admin
+            // departments
             else if ("Department Manager".equalsIgnoreCase(positionName)) {
                 newRoleName = "DEPARTMENT_MANAGER";
             }

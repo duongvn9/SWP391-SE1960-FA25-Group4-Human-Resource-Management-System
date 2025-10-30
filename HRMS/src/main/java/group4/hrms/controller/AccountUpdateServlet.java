@@ -91,7 +91,35 @@ public class AccountUpdateServlet extends HttpServlet {
             }
 
             if (status != null && !status.trim().isEmpty()) {
-                account.setStatus(status.trim());
+                String newStatus = status.trim();
+
+                // Check if changing from active to inactive
+                if ("active".equalsIgnoreCase(originalStatus) && "inactive".equalsIgnoreCase(newStatus)) {
+                    // Check if this is an admin account being deactivated
+                    boolean isAdmin = accountDao.isAdminAccount(accountId);
+                    if (isAdmin) {
+                        // Count active admins BEFORE deactivation
+                        int activeAdminCount = accountDao.countActiveAdmins();
+                        logger.info("Attempting to deactivate admin account via edit. Current active admin count: {}",
+                                activeAdminCount);
+
+                        // Calculate remaining admins after this change
+                        int remainingAdmins = activeAdminCount - 1;
+
+                        // Prevent deactivating if it would leave zero active admins
+                        if (remainingAdmins < 1) {
+                            logger.warn("Cannot deactivate the last active admin account. Would leave {} active admins",
+                                    remainingAdmins);
+                            out.write(
+                                    "{\"success\":false,\"message\":\"Cannot deactivate the last active admin account. At least one admin must remain active to manage the system.\"}");
+                            return;
+                        }
+
+                        logger.info("Deactivation allowed. Will have {} active admin(s) remaining", remainingAdmins);
+                    }
+                }
+
+                account.setStatus(newStatus);
             }
 
             // Check if any changes were made
