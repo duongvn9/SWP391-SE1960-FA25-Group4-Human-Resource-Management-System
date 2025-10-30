@@ -338,6 +338,7 @@
                                                     <i class="fas fa-business-time"></i><span>OT Request</span>
                                                 </a>
                                             </li>
+                                            <c:if test="${sessionScope.user.positionId != 7}">
                                             <li>
                                                 <a href="${pageContext.request.contextPath}/requests/appeal/create"
                                                     class="nav-link ${param.currentPage == 'appeal-request' ? 'active' : ''}">
@@ -345,6 +346,7 @@
                                                         Appeal</span>
                                                 </a>
                                             </li>
+                                            </c:if>
                                             <!-- Recruitment request - Dept Manager only -->
                                             <c:if
                                                 test="${sessionScope.user != null && sessionScope.user.positionId == 9}">
