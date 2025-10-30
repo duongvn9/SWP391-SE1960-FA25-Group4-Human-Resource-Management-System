@@ -57,10 +57,10 @@ public class JobPostingCreateServlet extends HttpServlet {
             logger.warn("No valid user found in session");
         }
         
-        // Only HR (8) or HR Manager (7) can create job postings
-        if (!JobPostingPermissionHelper.canManageJobPosting(sessPositionId2)) {
-            logger.error("Access denied - Invalid position ID: {}", sessPositionId2);
-            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+        // Only HR Staff (8) can create job postings. HR Manager (7) can only approve/reject/publish.
+        if (!JobPostingPermissionHelper.canCreateJobPosting(sessPositionId2)) {
+            logger.error("Access denied - Only HR Staff (positionId=8) can create job postings. User position ID: {}", sessPositionId2);
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Only HR Staff can create job postings");
             return;
         }
 
@@ -138,9 +138,10 @@ public class JobPostingCreateServlet extends HttpServlet {
             sessPositionId2 = su2.getPositionId();
         }
         
-        // Only HR (8) or HR Manager (7) can create job postings
-        if (!JobPostingPermissionHelper.canManageJobPosting(sessPositionId2)) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+        // Only HR Staff (8) can create job postings. HR Manager (7) can only approve/reject/publish.
+        if (!JobPostingPermissionHelper.canCreateJobPosting(sessPositionId2)) {
+            logger.error("Access denied - Only HR Staff (positionId=8) can create job postings. User position ID: {}", sessPositionId2);
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Only HR Staff can create job postings");
             return;
         }
 
