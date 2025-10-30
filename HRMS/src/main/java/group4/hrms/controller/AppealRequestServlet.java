@@ -13,6 +13,7 @@ import group4.hrms.model.Attachment;
 import group4.hrms.model.Request;
 import group4.hrms.model.TimesheetPeriod;
 import group4.hrms.model.User;
+import group4.hrms.service.AttachmentService;
 import group4.hrms.util.SessionUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
@@ -22,24 +23,23 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @WebServlet("/requests/appeal/create")
-@MultipartConfig
+@MultipartConfig(maxFileSize = 5 * 1024 * 1024, // 5MB per file
+        maxRequestSize = 25 * 1024 * 1024 // 25MB total request size
+)
 public class AppealRequestServlet extends HttpServlet {
 
     private final AttendanceLogDao dao = new AttendanceLogDao();
@@ -168,7 +168,6 @@ public class AppealRequestServlet extends HttpServlet {
             String title = req.getParameter("title");
             String detailText = req.getParameter("detail");
             Long requestTypeId = 8L;
-            String userAttachmentLink = req.getParameter("attachmentLink");
 
             // --- Lấy danh sách bản ghi cũ + mới từ JS ---
             String selectedLogsData = req.getParameter("selected_logs_data");
@@ -191,6 +190,157 @@ public class AppealRequestServlet extends HttpServlet {
             System.out.println("recordsList size: " + recordsList.size());
             System.out.println(recordsList);
 
+            // === VALIDATION: Check edit fields completeness and conflicts ===
+            List<AttendanceLogDto> editedLogs = new ArrayList<>();
+            boolean hasValidationErrors = false;
+            StringBuilder validationErrors = new StringBuilder();
+
+            for (Map<String, Map<String, String>> record : recordsList) {
+                Map<String, String> newRecord = record.get("newRecord");
+                if (newRecord == null) continue;
+
+                // Validate required fields
+                String date = newRecord.get("date");
+                String checkIn = newRecord.get("checkIn");
+                String checkOut = newRecord.get("checkOut");
+                String status = newRecord.get("status");
+
+                if (date == null || date.trim().isEmpty()) {
+                    hasValidationErrors = true;
+                    validationErrors.append("Date is required for all edited records. ");
+                    continue;
+                }
+
+                if (checkIn == null || checkIn.trim().isEmpty()) {
+                    hasValidationErrors = true;
+                    validationErrors.append("Check-in time is required for all edited records. ");
+                    continue;
+                }
+
+                if (checkOut == null || checkOut.trim().isEmpty()) {
+                    hasValidationErrors = true;
+                    validationErrors.append("Check-out time is required for all edited records. ");
+                    continue;
+                }
+
+                if (status == null || status.trim().isEmpty()) {
+                    hasValidationErrors = true;
+                    validationErrors.append("Status is required for all edited records. ");
+                    continue;
+                }
+
+                // Create DTO for conflict checking
+                try {
+                    AttendanceLogDto dto = new AttendanceLogDto();
+                    dto.setUserId(userId);
+                    dto.setDate(LocalDate.parse(date));
+                    dto.setCheckIn(LocalTime.parse(checkIn));
+                    dto.setCheckOut(LocalTime.parse(checkOut));
+                    dto.setStatus(status);
+                    dto.setSource("appeal");
+                    editedLogs.add(dto);
+                } catch (Exception e) {
+                    hasValidationErrors = true;
+                    validationErrors.append("Invalid date/time format in edited records. ");
+                }
+            }
+
+            // Check for conflicts using appeal-specific validation method
+            if (!hasValidationErrors && !editedLogs.isEmpty()) {
+                // For appeal requests, we need to validate edited records against existing records
+                // but exclude the original records being edited from conflict checking
+                List<Map<String, Map<String, String>>> originalRecords = recordsList;
+                
+                System.out.println("=== APPEAL VALIDATION DEBUG ===");
+                System.out.println("Edited logs count: " + editedLogs.size());
+                System.out.println("Original records count: " + originalRecords.size());
+                for (AttendanceLogDto editedLog : editedLogs) {
+                    System.out.println("Edited log: " + editedLog.getDate() + " " + 
+                        editedLog.getCheckIn() + "-" + editedLog.getCheckOut());
+                }
+                for (Map<String, Map<String, String>> originalRecord : originalRecords) {
+                    Map<String, String> oldRec = originalRecord.get("oldRecord");
+                    if (oldRec != null) {
+                        System.out.println("Original record: " + oldRec.get("date") + " " + 
+                            oldRec.get("checkIn") + "-" + oldRec.get("checkOut"));
+                    }
+                }
+                
+                Map<String, List<AttendanceLogDto>> validationResult = dao.validateAppealLogs(editedLogs, originalRecords);
+                List<AttendanceLogDto> invalidLogs = validationResult.get("invalid");
+                
+                if (!invalidLogs.isEmpty()) {
+                    hasValidationErrors = true;
+                    for (AttendanceLogDto invalidLog : invalidLogs) {
+                        if (invalidLog.getError() != null) {
+                            System.out.println("Validation error: " + invalidLog.getError());
+                            validationErrors.append(invalidLog.getError()).append(" ");
+                        }
+                    }
+                } else {
+                    System.out.println("All edited logs are valid!");
+                }
+                System.out.println("=== END APPEAL VALIDATION DEBUG ===");
+            }
+
+            // If validation fails, preserve form data and show error
+            if (hasValidationErrors) {
+                // Preserve form data
+                req.setAttribute("title", title);
+                req.setAttribute("detail", detailText);
+                
+                // Preserve attachment data
+                String attachmentType = req.getParameter("attachmentType");
+                String driveLink = req.getParameter("driveLink");
+                req.setAttribute("attachmentType", attachmentType);
+                req.setAttribute("driveLink", driveLink);
+                
+                // Convert recordsList back to records for display
+                List<AttendanceLogDto> preservedRecords = new ArrayList<>();
+                for (Map<String, Map<String, String>> record : recordsList) {
+                    Map<String, String> oldRec = record.get("oldRecord");
+                    Map<String, String> newRec = record.get("newRecord");
+                    
+                    if (oldRec != null && newRec != null) {
+                        AttendanceLogDto dto = new AttendanceLogDto();
+                        try {
+                            dto.setDate(LocalDate.parse(oldRec.get("date")));
+                            dto.setCheckIn(oldRec.get("checkIn") != null ? LocalTime.parse(oldRec.get("checkIn")) : null);
+                            dto.setCheckOut(oldRec.get("checkOut") != null ? LocalTime.parse(oldRec.get("checkOut")) : null);
+                            dto.setStatus(oldRec.get("status"));
+                            dto.setSource(oldRec.get("source"));
+                            dto.setPeriod(oldRec.get("period"));
+                            preservedRecords.add(dto);
+                        } catch (Exception e) {
+                            // Skip invalid records
+                        }
+                    }
+                }
+                
+                req.setAttribute("records", preservedRecords);
+                req.setAttribute("message", "Validation Error: " + validationErrors.toString().trim());
+                
+                // Get required data for form display
+                List<TimesheetPeriod> periodList = tDAO.findAll();
+                req.setAttribute("periodList", periodList);
+                TimesheetPeriod currentPeriod = tDAO.findCurrentPeriod();
+                Long currentPeriodId = currentPeriod != null ? currentPeriod.getId() : null;
+                req.setAttribute("currentPeriod", currentPeriod);
+                req.setAttribute("currentPeriodId", currentPeriodId);
+                
+                List<AttendanceLogDto> attendanceList = new ArrayList<>();
+                if (currentPeriod != null) {
+                    LocalDate startDate = currentPeriod.getStartDate();
+                    LocalDate endDate = currentPeriod.getEndDate();
+                    attendanceList = dao.findByFilter(userId, null, null, startDate, endDate, null, null, currentPeriodId, Integer.MAX_VALUE, 0, true);
+                }
+                req.setAttribute("attendanceList", attendanceList);
+                
+                req.getRequestDispatcher("/WEB-INF/views/requests/appeal-form.jsp").forward(req, resp);
+                return;
+            }
+
+            // Save the request first to get the ID for attachments
             Request request = new Request();
             request.setRequestTypeId(requestTypeId);
             request.setTitle(title);
@@ -202,27 +352,7 @@ public class AppealRequestServlet extends HttpServlet {
             request.setStatus("PENDING");
             request.setCreatedAt(LocalDateTime.now());
 
-            String uploadedFileLink = null;
-            Part filePart = req.getPart("attachment");
-            if (filePart != null && filePart.getSize() > 0) {
-                String originalName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
-                String uuid = java.util.UUID.randomUUID().toString();
-                String ext = originalName.contains(".") ? originalName.substring(originalName.lastIndexOf('.')) : "";
-                String serverFileName = uuid + ext;
-
-                Path uploadDir = Paths.get("C:/HRMS_uploads");
-                if (!Files.exists(uploadDir)) {
-                    Files.createDirectories(uploadDir);
-                }
-
-                Path filePath = uploadDir.resolve(serverFileName);
-                try (InputStream in = filePart.getInputStream()) {
-                    Files.copy(in, filePath, StandardCopyOption.REPLACE_EXISTING);
-                }
-                uploadedFileLink = "/downloads/" + serverFileName;
-            }
-
-            // Build JSON in AppealRequestDetail format
+            // Build JSON first (without attachment info)
             StringBuilder detailJsonBuilder = new StringBuilder();
             detailJsonBuilder.append("{");
 
@@ -294,42 +424,103 @@ public class AppealRequestServlet extends HttpServlet {
                 detailJsonBuilder.append(",\"detail_text\":\"").append(escapeJson(detailText)).append("\"");
             }
 
-            // Add attachmentPath field (maps to attachment_link)
-            if (uploadedFileLink != null) {
-                detailJsonBuilder.append(",\"attachmentPath\":\"").append(escapeJson(uploadedFileLink)).append("\"");
-                // Keep attachment_link for backward compatibility
-                detailJsonBuilder.append(",\"attachment_link\":\"").append(escapeJson(uploadedFileLink)).append("\"");
-            }
-            if (userAttachmentLink != null && !userAttachmentLink.isEmpty()) {
-                if (uploadedFileLink == null) {
-                    detailJsonBuilder.append(",\"attachmentPath\":\"").append(escapeJson(userAttachmentLink)).append("\"");
-                }
-                detailJsonBuilder.append(",\"user_attachment_link\":\"").append(escapeJson(userAttachmentLink)).append("\"");
-            }
-
             detailJsonBuilder.append("}");
             request.setDetailJson(detailJsonBuilder.toString());
 
-            System.out.println("--------------------------------------");
-            System.out.println(request.getDetailJson());
+            // Save request to get ID
             requestDao.save(request);
+            Long requestId = request.getId();
 
-            if (userAttachmentLink != null && !userAttachmentLink.isEmpty()) {
-                Attachment attachment = new Attachment();
-                attachment.setOwnerType("REQUEST");
-                attachment.setOwnerId(request.getId());
-                attachment.setOriginalName("Google drive link");
-                attachment.setAttachmentType("LINK");
-                attachment.setExternalUrl(userAttachmentLink);
-                attachment.setPath("");
-                attachment.setSizeBytes(0L);
-                attachment.setUploadedByAccountId(accountId);
-                attachment.setCreatedAt(LocalDateTime.now());
-                attachment.setContentType("External/link");
-                attachment.setChecksumSha256(null);
+            // Handle attachments - both file uploads and external links
+            try {
+                AttachmentService attachmentService = new AttachmentService();
 
-                attachmentDao.save(attachment);
+                // Check attachment type: "file" or "link"
+                String attachmentType = req.getParameter("attachmentType");
+
+                if ("link".equals(attachmentType)) {
+                    // Handle Google Drive link
+                    String driveLink = req.getParameter("driveLink");
+
+                    if (driveLink != null && !driveLink.trim().isEmpty()) {
+                        Logger.getLogger(AppealRequestServlet.class.getName()).info(
+                            String.format("Processing Google Drive link for appeal request ID: %d - URL: %s",
+                                requestId, driveLink));
+
+                        // Save external link to database
+                        Attachment linkAttachment = attachmentService.saveExternalLink(
+                            driveLink.trim(),
+                            requestId,
+                            "REQUEST",
+                            accountId,
+                            "Google Drive Link");
+
+                        Logger.getLogger(AppealRequestServlet.class.getName()).info(
+                            String.format("Successfully saved external link attachment: id=%d",
+                                linkAttachment.getId()));
+                    }
+
+                } else {
+                    // Handle file uploads (default)
+                    Collection<Part> fileParts = req.getParts().stream()
+                        .filter(part -> "attachments".equals(part.getName()) && part.getSize() > 0)
+                        .collect(Collectors.toList());
+
+                    if (!fileParts.isEmpty()) {
+                        Logger.getLogger(AppealRequestServlet.class.getName()).info(
+                            String.format("Processing %d file attachment(s) for appeal request ID: %d",
+                                fileParts.size(), requestId));
+
+                        // Get upload base path - save to webapp/assets/img/Request/
+                        String uploadBasePath = req.getServletContext().getRealPath("/assets/img/Request");
+                        if (uploadBasePath == null) {
+                            // Fallback to system temp directory if realPath is not available
+                            uploadBasePath = System.getProperty("java.io.tmpdir");
+                            Logger.getLogger(AppealRequestServlet.class.getName()).warning(
+                                "Using temp directory for uploads: " + uploadBasePath);
+                        } else {
+                            // Create directory if it doesn't exist
+                            java.io.File uploadDir = new java.io.File(uploadBasePath);
+                            if (!uploadDir.exists()) {
+                                boolean created = uploadDir.mkdirs();
+                                if (created) {
+                                    Logger.getLogger(AppealRequestServlet.class.getName()).info(
+                                        "Created upload directory: " + uploadBasePath);
+                                } else {
+                                    Logger.getLogger(AppealRequestServlet.class.getName()).warning(
+                                        "Failed to create upload directory: " + uploadBasePath);
+                                }
+                            }
+                        }
+
+                        // Save files to filesystem and database
+                        List<Attachment> attachments = attachmentService.saveFiles(
+                            fileParts,
+                            requestId,
+                            "REQUEST",
+                            accountId,
+                            uploadBasePath);
+
+                        Logger.getLogger(AppealRequestServlet.class.getName()).info(
+                            String.format("Successfully saved %d file attachment(s) for appeal request ID: %d",
+                                attachments.size(), requestId));
+                    }
+                }
+
+            } catch (Exception fileError) {
+                // Attachment handling failed - log error and rollback the request creation
+                Logger.getLogger(AppealRequestServlet.class.getName()).log(Level.SEVERE,
+                    String.format("Attachment handling failed for appeal request ID: %d, error: %s",
+                        requestId, fileError.getMessage()), fileError);
+
+                // TODO: Implement transaction rollback - delete the created request
+                // For now, we'll throw an exception to inform the user
+                throw new Exception("Appeal request was created but attachment handling failed. " +
+                    "Please contact IT support with request ID: " + requestId, fileError);
             }
+
+
+
 
             // --- Lấy danh sách các kỳ công (periods) ---
             List<TimesheetPeriod> periodList = tDAO.findAll();
@@ -367,10 +558,9 @@ public class AppealRequestServlet extends HttpServlet {
             req.setAttribute("success", "Create appeal attendance request successfully!");
             req.getRequestDispatcher("/WEB-INF/views/requests/appeal-form.jsp").forward(req, resp);
 
-        } catch (ServletException | IOException | NumberFormatException ex) {
-            throw new ServletException(ex);
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(AppealRequestServlet.class.getName()).log(Level.SEVERE, null, ex);
+            throw new ServletException(ex);
         }
     }
 
