@@ -124,8 +124,8 @@
                     </p>
                 </div>
                 
-                <!-- Only HR Staff (8) or HR Manager (7) can create new job postings -->
-                <c:if test="${sessionScope.user != null && (sessionScope.user.positionId == 7 || sessionScope.user.positionId == 8)}">
+                <!-- Only HR Staff (8) can create new job postings. HR Manager (7) can only approve/reject/publish. -->
+                <c:if test="${sessionScope.user != null && sessionScope.user.positionId == 8}">
                     <a href="${pageContext.request.contextPath}/recruitment/approved" 
                        class="btn btn-primary">
                         <i class="fas fa-plus-circle me-1"></i> Create New Posting
@@ -286,7 +286,7 @@
                     <tr>
                         <th style="width: 25%;"><i class="fas fa-file-alt me-1"></i> Job Title & Code</th>
                         <th style="width: 15%;"><i class="fas fa-briefcase me-1"></i> Type / Level</th>
-                        <th style="width: 10%;" class="text-center"><i class="fas fa-users me-1"></i> Positions</th>
+                        <th style="width: 10%;" class="text-center"><i class="fas fa-users me-1"></i>Quantity</th>
                         <th style="width: 12%;"><i class="fas fa-info-circle me-1"></i> Status</th>
                         <th style="width: 13%;"><i class="fas fa-clock me-1"></i> Deadline</th>
                         <th style="width: 13%;"><i class="fas fa-user me-1"></i> Created By</th>
@@ -375,41 +375,44 @@
                                     <i class="fas fa-eye"></i>
                                 </button>
                                 
-                                <!-- Approve/Reject buttons for HR Manager (position_id = 7) when status is PENDING -->
-                                <c:if test="${sessionScope.user != null && sessionScope.user.positionId == 7 && job.status == 'PENDING'}">
-                                    <button type="button" class="btn btn-sm btn-success"
-                                            onclick="approveJobPosting('${job.id}')" 
-                                            data-bs-toggle="tooltip"
-                                            title="Approve Job Posting">
-                                        <i class="fas fa-check-circle"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-danger"
-                                            onclick="rejectJobPosting('${job.id}')"
-                                            data-bs-toggle="tooltip" 
-                                            title="Reject Job Posting">
-                                        <i class="fas fa-times-circle"></i>
-                                    </button>
-                                </c:if>
-                                
-                                <!-- Edit button for HR Staff (position_id = 8) when status is PENDING or REJECTED -->
-                                <c:if test="${sessionScope.user != null && sessionScope.user.positionId == 8 && (job.status == 'PENDING' || job.status == 'REJECTED')}">
-                                    <button type="button" 
-                                            class="btn btn-sm btn-warning"
-                                            data-bs-toggle="tooltip"
-                                            title="Edit Job Posting"
-                                            onclick="window.location.href='${pageContext.request.contextPath}/job-posting/edit?id=${job.id}'">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                </c:if>
+                                <!-- Actions only visible for HR Manager (7) and HR Staff (8), NOT for Department Manager (9) -->
+                                <c:if test="${sessionScope.user != null && sessionScope.user.positionId != 9}">
+                                    <!-- Approve/Reject buttons for HR Manager (position_id = 7) when status is PENDING -->
+                                    <c:if test="${sessionScope.user != null && sessionScope.user.positionId == 7 && job.status == 'PENDING'}">
+                                        <button type="button" class="btn btn-sm btn-success"
+                                                onclick="approveJobPosting('${job.id}')" 
+                                                data-bs-toggle="tooltip"
+                                                title="Approve Job Posting">
+                                            <i class="fas fa-check-circle"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-danger"
+                                                onclick="rejectJobPosting('${job.id}')"
+                                                data-bs-toggle="tooltip" 
+                                                title="Reject Job Posting">
+                                            <i class="fas fa-times-circle"></i>
+                                        </button>
+                                    </c:if>
+                                    
+                                    <!-- Edit button for HR Staff (position_id = 8) when status is PENDING or REJECTED -->
+                                    <c:if test="${sessionScope.user != null && sessionScope.user.positionId == 8 && (job.status == 'PENDING' || job.status == 'REJECTED')}">
+                                        <button type="button" 
+                                                class="btn btn-sm btn-warning"
+                                                data-bs-toggle="tooltip"
+                                                title="Edit Job Posting"
+                                                onclick="window.location.href='${pageContext.request.contextPath}/job-posting/edit?id=${job.id}'">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </c:if>
 
-                                <!-- Publish button for HR Manager (position_id = 7) when status is APPROVED -->
-                                <c:if test="${sessionScope.user != null && sessionScope.user.positionId == 7 && job.status == 'APPROVED'}">
-                                    <button type="button" class="btn btn-sm btn-primary"
-                                            onclick="publishJobPosting('${job.id}')"
-                                            data-bs-toggle="tooltip" 
-                                            title="Publish to Public">
-                                        <i class="fas fa-globe"></i> Publish
-                                    </button>
+                                    <!-- Publish button for HR Manager (position_id = 7) when status is APPROVED -->
+                                    <c:if test="${sessionScope.user != null && sessionScope.user.positionId == 7 && job.status == 'APPROVED'}">
+                                        <button type="button" class="btn btn-sm btn-primary"
+                                                onclick="publishJobPosting('${job.id}')"
+                                                data-bs-toggle="tooltip" 
+                                                title="Publish to Public">
+                                            <i class="fas fa-globe"></i> Publish
+                                        </button>
+                                    </c:if>
                                 </c:if>
                             </td>
                         </tr>
@@ -421,7 +424,7 @@
                                 <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
                                 <h5 class="text-muted">No Job Postings Found</h5>
                                 <p class="text-muted">Try adjusting your filters or create a new job posting.</p>
-                                <c:if test="${sessionScope.user != null && (sessionScope.user.positionId == 7 || sessionScope.user.positionId == 8)}">
+                                <c:if test="${sessionScope.user != null && sessionScope.user.positionId == 8}">
                                     <a href="${pageContext.request.contextPath}/recruitment/approved" class="btn btn-primary mt-2">
                                         <i class="fas fa-plus-circle me-1"></i> Create New Posting
                                     </a>
