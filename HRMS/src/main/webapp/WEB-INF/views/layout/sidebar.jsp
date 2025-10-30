@@ -360,8 +360,8 @@
                                     </li>
                                 </c:if>
 
-                                        <!-- Job Management - HR Staff (8) and HRM Manager (7) only -->
-                                <c:if test="${sessionScope.user != null && (sessionScope.user.positionId == 7 || sessionScope.user.positionId == 8)}">
+                                        <!-- Job Management - HR Manager (7), HR Staff (8), and Department Manager (9) -->
+                                <c:if test="${sessionScope.user != null && (sessionScope.user.positionId == 7 || sessionScope.user.positionId == 8 || sessionScope.user.positionId == 9)}">
                                     <li class="nav-item">
                                         <a href="#" class="nav-link sidebar-dropdown-toggle" data-target="job-management-submenu"
                                             aria-expanded="false" data-tooltip="Job Management">
@@ -375,12 +375,15 @@
                                                     <i class="fas fa-list"></i><span>Job Postings List</span>
                                                 </a>
                                             </li>
-                                            <li>
-                                                <a href="${pageContext.request.contextPath}/recruitment/approved"
-                                                    class="nav-link ${param.currentPage == 'approved-recruitment-requests' ? 'active' : ''}">
-                                                    <i class="fas fa-plus-circle"></i><span>Create Job Posting</span>
-                                                </a>
-                                            </li>
+                                            <!-- Only HR Staff (8) can create job postings. HR Manager (7) and Department Manager (9) cannot create. -->
+                                            <c:if test="${sessionScope.user != null && sessionScope.user.positionId == 8}">
+                                                <li>
+                                                    <a href="${pageContext.request.contextPath}/recruitment/approved"
+                                                        class="nav-link ${param.currentPage == 'approved-recruitment-requests' ? 'active' : ''}">
+                                                        <i class="fas fa-plus-circle"></i><span>Create Job Posting</span>
+                                                    </a>
+                                                </li>
+                                            </c:if>
                                         </ul>
                                     </li>
                                 </c:if>

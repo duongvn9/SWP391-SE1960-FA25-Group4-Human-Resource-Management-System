@@ -115,7 +115,7 @@
                                                                title="View Details">
                                                                 <i class="fas fa-eye"></i>
                                                             </a>
-                                                            <c:if test="${req.requestTypeCode == 'RECRUITMENT_REQUEST' && req.status == 'APPROVED'}">
+                                                            <c:if test="${req.requestTypeCode == 'RECRUITMENT_REQUEST' && req.status == 'APPROVED' && sessionScope.user != null && sessionScope.user.positionId == 8}">
                                                                 <a href="${pageContext.request.contextPath}/job-posting/create?requestId=${req.id}" 
                                                                    class="btn btn-sm btn-success"
                                                                    data-bs-toggle="tooltip"
@@ -180,7 +180,7 @@
                                                                title="View Details">
                                                                 <i class="fas fa-eye"></i>
                                                             </a>
-                                                            <c:if test="${req.requestTypeCode == 'RECRUITMENT_REQUEST' && req.status == 'APPROVED'}">
+                                                            <c:if test="${req.requestTypeCode == 'RECRUITMENT_REQUEST' && req.status == 'APPROVED' && sessionScope.user != null && sessionScope.user.positionId == 8}">
                                                                 <a href="${pageContext.request.contextPath}/job-posting/create?requestId=${req.id}" 
                                                                    class="btn btn-sm btn-success"
                                                                    data-bs-toggle="tooltip"

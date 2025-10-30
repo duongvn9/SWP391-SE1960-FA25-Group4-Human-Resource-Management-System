@@ -52,7 +52,7 @@ public class RecruitmentRequestCreateServlet extends HttpServlet {
         */
 
         try {
-            // 1. HANDLE ATTACHMENT: could be multiple files or a drive link
+            // 1. HANDLE ATTACHMENT: could be multiple files or a drive link (both optional)
             String attachmentType = req.getParameter("attachmentType"); // 'file' or 'link'
             String attachmentPath = null;
             java.util.List<String> attachmentsList = null;
@@ -60,11 +60,8 @@ public class RecruitmentRequestCreateServlet extends HttpServlet {
                 String driveLink = req.getParameter("driveLink");
                 if (driveLink != null && !driveLink.trim().isEmpty()) {
                     attachmentPath = driveLink.trim();
-                } else {
-                    req.setAttribute("error", "Please provide a Google Drive link or switch to Upload File.");
-                    req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
-                    return;
                 }
+                // If driveLink is empty, attachmentPath remains null (which is fine since it's optional)
             } else {
                 attachmentsList = new java.util.ArrayList<>();
                 try {
