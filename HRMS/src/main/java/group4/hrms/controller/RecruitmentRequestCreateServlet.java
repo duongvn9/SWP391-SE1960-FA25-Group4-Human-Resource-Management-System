@@ -52,19 +52,23 @@ public class RecruitmentRequestCreateServlet extends HttpServlet {
         */
 
         try {
-            // 1. HANDLE ATTACHMENT: could be multiple files or a drive link
+            // 1. HANDLE ATTACHMENT: could be multiple files or a drive link (both optional)
             String attachmentType = req.getParameter("attachmentType"); // 'file' or 'link'
             String attachmentPath = null;
             java.util.List<String> attachmentsList = null;
             if ("link".equals(attachmentType)) {
                 String driveLink = req.getParameter("driveLink");
                 if (driveLink != null && !driveLink.trim().isEmpty()) {
-                    attachmentPath = driveLink.trim();
-                } else {
-                    req.setAttribute("error", "Please provide a Google Drive link or switch to Upload File.");
-                    req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
-                    return;
+                    driveLink = driveLink.trim();
+                    // Validate Google Drive link format if provided
+                    if (!isValidGoogleDriveLink(driveLink)) {
+                        req.setAttribute("error", "Invalid Google Drive link format. Please provide a valid shareable Google Drive link.");
+                        req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
+                        return;
+                    }
+                    attachmentPath = driveLink;
                 }
+                // If driveLink is empty, attachmentPath remains null (which is fine since it's optional)
             } else {
                 attachmentsList = new java.util.ArrayList<>();
                 try {
@@ -227,6 +231,35 @@ public class RecruitmentRequestCreateServlet extends HttpServlet {
             System.err.println("Error in RecruitmentRequestCreateServlet: " + e.getMessage());
             req.setAttribute("error", "Submission Failed: Invalid input or server error.");
             req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
+        }
+    }
+
+    /**
+     * Validate Google Drive link format
+     */
+    private boolean isValidGoogleDriveLink(String link) {
+        if (link == null || link.trim().isEmpty()) {
+            return false;
+        }
+        
+        // Check if it's a valid URL format
+        try {
+            java.net.URL url = new java.net.URL(link);
+            String host = url.getHost().toLowerCase();
+            
+            // Must be from Google Drive domains
+            if (!host.equals("drive.google.com") && !host.equals("docs.google.com")) {
+                return false;
+            }
+            
+            // Check for common Google Drive URL patterns
+            String path = url.getPath();
+            return path.contains("/file/d/") || path.contains("/document/d/") || 
+                   path.contains("/spreadsheets/d/") || path.contains("/presentation/d/") ||
+                   path.contains("/folders/") || path.contains("/drive/folders/");
+                   
+        } catch (java.net.MalformedURLException e) {
+            return false;
         }
     }
 

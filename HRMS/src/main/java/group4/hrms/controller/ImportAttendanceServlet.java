@@ -111,7 +111,7 @@ public class ImportAttendanceServlet extends HttpServlet {
         req.setAttribute("uList", uList);
         String activeTab = req.getParameter("activeTab");
         if (activeTab == null) {
-            activeTab = "upload"; // mặc định
+            activeTab = "upload"; 
         }
         req.setAttribute("activeTab", activeTab);
         req.getRequestDispatcher("/WEB-INF/views/attendance/import-attendance.jsp").forward(req, resp);

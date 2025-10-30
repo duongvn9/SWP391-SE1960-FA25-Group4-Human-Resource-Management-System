@@ -414,28 +414,76 @@
                 </div>
             </c:if>
 
+            <!-- Approval Info (for Approved status) -->
+            <c:if test="${jobPosting.status == 'APPROVED'}">
+                <div class="detail-section mb-4" style="background: linear-gradient(135deg, #e6fff4 0%, #d1fae5 100%); border-left: 4px solid #20e3b2;">
+                    <h3 class="section-title" style="border-bottom-color: #20e3b2;">
+                        <i class="fas fa-history me-2" style="color: #20e3b2;"></i>Approval Info
+                    </h3>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 style="color: #0f766e; margin-bottom: 1rem;">
+                                <i class="fas fa-user-shield me-2"></i>Approver Information
+                            </h5>
+                            <div class="meta-item">
+                                <i class="fas fa-user" style="background: linear-gradient(135deg, #0cebeb 0%, #20e3b2 100%);"></i>
+                                <span class="meta-label">Approved By</span>
+                                <span class="meta-value">
+                                    <c:choose>
+                                        <c:when test="${not empty approverAccount}">
+                                            ${approverAccount.username}
+                                        </c:when>
+                                        <c:otherwise>N/A</c:otherwise>
+                                    </c:choose>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 style="color: #0f766e; margin-bottom: 1rem;">
+                                <i class="fas fa-calendar-check me-2"></i>Approval Date
+                            </h5>
+                            <div class="meta-item">
+                                <i class="fas fa-calendar" style="background: linear-gradient(135deg, #0cebeb 0%, #20e3b2 100%);"></i>
+                                <span class="meta-label">Approved At</span>
+                                <span class="meta-value">
+                                    <c:choose>
+                                        <c:when test="${not empty jobPosting.approvedAt}">
+                                            ${rejectionDateFormatted}
+                                        </c:when>
+                                        <c:otherwise>N/A</c:otherwise>
+                                    </c:choose>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </c:if>
+
             <!-- Action Buttons -->
             <c:if test="${sessionScope.loggedInUser != null}">
                 <c:set var="showButtons" value="false"/>
                 <c:set var="canEdit" value="false"/>
                 
-                <%-- HRM (position 7) can approve/reject PENDING, publish APPROVED --%>
-                <c:if test="${sessionScope.loggedInUser.positionId == 7 && 
-                             (jobPosting.status == 'PENDING' || jobPosting.status == 'APPROVED')}">
-                    <c:set var="showButtons" value="true"/>
-                </c:if>
-                
-                <%-- HR (position 8) can edit PENDING --%>
-                <c:if test="${sessionScope.loggedInUser.positionId == 8 && jobPosting.status == 'PENDING'}">
-                    <c:set var="showButtons" value="true"/>
-                    <c:set var="canEdit" value="true"/>
-                </c:if>
-                
-                <%-- Creator can edit REJECTED --%>
-                <c:if test="${jobPosting.status == 'REJECTED' && 
-                             sessionScope.accountId == jobPosting.createdByAccountId}">
-                    <c:set var="showButtons" value="true"/>
-                    <c:set var="canEdit" value="true"/>
+                <%-- Department Manager (position 9) cannot see any action buttons --%>
+                <c:if test="${sessionScope.loggedInUser.positionId != 9}">
+                    <%-- HRM (position 7) can approve/reject PENDING, publish APPROVED --%>
+                    <c:if test="${sessionScope.loggedInUser.positionId == 7 && 
+                                 (jobPosting.status == 'PENDING' || jobPosting.status == 'APPROVED')}">
+                        <c:set var="showButtons" value="true"/>
+                    </c:if>
+                    
+                    <%-- HR (position 8) can edit PENDING --%>
+                    <c:if test="${sessionScope.loggedInUser.positionId == 8 && jobPosting.status == 'PENDING'}">
+                        <c:set var="showButtons" value="true"/>
+                        <c:set var="canEdit" value="true"/>
+                    </c:if>
+                    
+                    <%-- Creator can edit REJECTED --%>
+                    <c:if test="${jobPosting.status == 'REJECTED' && 
+                                 sessionScope.accountId == jobPosting.createdByAccountId}">
+                        <c:set var="showButtons" value="true"/>
+                        <c:set var="canEdit" value="true"/>
+                    </c:if>
                 </c:if>
                 
                 <c:if test="${showButtons}">
