@@ -159,7 +159,6 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
         return log.getId();
     }
 
-    //Override save method để xử lý insert/update
     @Override
     public AttendanceLog save(AttendanceLog entity) throws SQLException {
         if (entity == null) {
