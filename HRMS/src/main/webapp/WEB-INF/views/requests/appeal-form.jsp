@@ -1,7 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <html>
-
     <head>
         <title>Submit Attendance Dispute - HRMS</title>
         <jsp:include page="../layout/head.jsp">
@@ -88,7 +87,6 @@
             }
         </style>
     </head>
-
     <body>
         <!-- Sidebar -->
         <jsp:include page="../layout/sidebar.jsp">
@@ -504,7 +502,6 @@
                 renderRows();
             });
         </script>
-
         <script>
             document.addEventListener("DOMContentLoaded", function () {
                 const selectRecordBtn = document.getElementById("selectRecordBtn");
