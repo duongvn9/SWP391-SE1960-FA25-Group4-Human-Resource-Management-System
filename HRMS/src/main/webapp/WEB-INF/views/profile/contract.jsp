@@ -237,7 +237,7 @@
                         <div class="contract-content">
                             <div class="alert alert-info text-center" role="alert">
                                 <i class="fas fa-info-circle me-2"></i>
-                                <c:out value="${message != null ? message : 'Không tìm thấy hợp đồng hiện tại'}"/>
+                                <c:out value="${message != null ? message : 'No contract information'}"/>
                             </div>
                         </div>
                     </div>

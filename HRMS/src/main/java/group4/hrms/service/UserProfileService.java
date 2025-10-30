@@ -163,6 +163,18 @@ public class UserProfileService {
     }
 
     /**
+     * Validate CCCD expire date
+     * Rules: Required, must be in the future
+     */
+    public boolean isCCCDExpireDateInFuture(LocalDate cccdExpireDate) {
+        if (cccdExpireDate == null) {
+            return false; // Required field
+        }
+        LocalDate today = LocalDate.now();
+        return cccdExpireDate.isAfter(today);
+    }
+
+    /**
      * Validate address line 1 - no special characters
      * Rules: Optional, max 100 chars, no special characters
      */
@@ -281,6 +293,12 @@ public class UserProfileService {
         if (!isValidCCCDIssuedPlace(dto.getCccdIssuedPlace())) {
             logger.warn("CCCD issued place validation failed: {}", dto.getCccdIssuedPlace());
             return "CCCD issued place must not exceed 100 characters and cannot contain special characters";
+        }
+
+        // Validate CCCD expire date
+        if (!isCCCDExpireDateInFuture(dto.getCccdExpireDate())) {
+            logger.warn("CCCD expire date validation failed: {}", dto.getCccdExpireDate());
+            return "CCCD expire date must be in the future";
         }
 
         // Validate address line 1
