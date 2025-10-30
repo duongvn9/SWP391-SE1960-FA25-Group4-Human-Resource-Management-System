@@ -149,3 +149,139 @@ body.sidebar-collapsed .main-content {
   border-radius: 1rem !important;
 }
 /* ❌ KHÔNG override .text-muted và .d-none toàn cục để tránh ảnh hưởng header/footer/sidebar */
+
+/* ---------- Dashboard KPI Cards ---------- */
+.content-area .stat-card {
+  text-align: center;
+  padding: 1.5rem;
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.content-area .stat-card .icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  opacity: 0.9;
+}
+
+.content-area .stat-card .stat-number {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.content-area .stat-card .stat-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.25rem;
+}
+
+.content-area .stat-card small,
+.content-area .stat-card .text-muted {
+  color: rgba(255, 255, 255, 0.9) !important;
+  opacity: 0.95;
+}
+
+.content-area .stat-card.primary {
+  background: linear-gradient(135deg, #f7b733 0%, #fc4a1a 100%);
+  color: white;
+}
+
+.content-area .stat-card.success {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  color: white;
+}
+
+.content-area .stat-card.warning {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+}
+
+.content-area .stat-card.info {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: white;
+}
+
+/* Horizontal stat card */
+.content-area .stat-card-horizontal {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.content-area .stat-card-horizontal .icon-wrapper {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: white;
+  flex-shrink: 0;
+}
+
+.content-area .stat-card-horizontal .icon-wrapper.bg-success {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.content-area .stat-card-horizontal .icon-wrapper.bg-info {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.content-area .stat-card-horizontal .icon-wrapper.bg-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.content-area .stat-card-horizontal .stat-info {
+  flex: 1;
+}
+
+.content-area .stat-card-horizontal .stat-label {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.content-area .stat-card-horizontal .stat-number {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+/* Chart containers */
+.content-area .chart-container {
+  position: relative;
+  height: 280px;
+  max-height: 280px;
+}
+
+.content-area .chart-container.chart-large {
+  height: 350px;
+  max-height: 350px;
+}
+
+.content-area canvas {
+  max-height: 280px;
+  cursor: pointer;
+}
+
+.content-area .chart-large canvas {
+  max-height: 350px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .content-area .stat-card .stat-number {
+    font-size: 1.5rem;
+  }
+  
+  .content-area .stat-card .icon {
+    font-size: 2rem;
+  }
+}

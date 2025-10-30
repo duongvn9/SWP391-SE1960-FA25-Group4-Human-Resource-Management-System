@@ -2,7 +2,8 @@ package group4.hrms.controller;
 
 import java.io.IOException;
 
-import group4.hrms.dao.UserDao;
+import group4.hrms.dto.DashboardKpiDto;
+import group4.hrms.service.DashboardService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -16,7 +17,7 @@ import org.slf4j.LoggerFactory;
 public class DashboardServlet extends HttpServlet {
 
     private static final Logger logger = LoggerFactory.getLogger(DashboardServlet.class);
-    private final UserDao userDao = new UserDao();
+    private final DashboardService dashboardService = new DashboardService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -31,13 +32,14 @@ public class DashboardServlet extends HttpServlet {
         }
 
         try {
-            // Get total employees count
-            int totalEmployees = userDao.countAll();
-            request.setAttribute("totalEmployees", totalEmployees);
-            logger.info("Total employees: {}", totalEmployees);
+            // Get all dashboard KPIs
+            DashboardKpiDto kpis = dashboardService.getDashboardKpis();
+            request.setAttribute("kpis", kpis);
+            logger.info("Dashboard KPIs loaded successfully");
         } catch (Exception e) {
-            logger.error("Error getting total employees count", e);
-            request.setAttribute("totalEmployees", 0);
+            logger.error("Error loading dashboard KPIs", e);
+            // Set empty KPI object to prevent JSP errors
+            request.setAttribute("kpis", new DashboardKpiDto());
         }
 
         // Set permission flags for sidebar
