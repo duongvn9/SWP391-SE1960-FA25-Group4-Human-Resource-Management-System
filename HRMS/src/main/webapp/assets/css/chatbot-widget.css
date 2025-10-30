@@ -48,8 +48,9 @@
     position: fixed;
     bottom: 140px;
     right: 20px;
-    width: 360px;
-    max-height: 600px;
+    width: 420px;
+    max-height: 650px;
+    min-height: 500px;
     background: white;
     border-radius: 12px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
@@ -118,7 +119,8 @@
     flex: 1;
     padding: 20px;
     overflow-y: auto;
-    max-height: 400px;
+    max-height: 450px;
+    min-height: 300px;
     background: #f8f9fa;
 }
 
@@ -169,25 +171,57 @@
 }
 
 .chatbot-message-content {
-    max-width: 75%;
-    padding: 12px 16px;
+    max-width: 80%;
+    padding: 14px 18px;
     border-radius: 12px;
     font-size: 14px;
-    line-height: 1.5;
+    line-height: 1.6;
     word-wrap: break-word;
+    position: relative;
 }
 
+/* User message styling - Right side, blue gradient */
 .chatbot-message.user .chatbot-message-content {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border-bottom-right-radius: 4px;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 }
 
+/* Bot message styling - Left side, white background */
 .chatbot-message.bot .chatbot-message-content {
     background: white;
     color: #333;
     border: 1px solid #e5e7eb;
     border-bottom-left-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Add message sender indicators */
+.chatbot-message.user .chatbot-message-content::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: -8px;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 8px solid #764ba2;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+}
+
+.chatbot-message.bot .chatbot-message-content::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: -8px;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-right: 8px solid #e5e7eb;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
 }
 
 /* Format bot message text */
@@ -219,10 +253,24 @@
     border-radius: 12px;
     border-bottom-left-radius: 4px;
     max-width: 60px;
+    position: relative;
 }
 
 .chatbot-typing.show {
     display: flex;
+}
+
+.chatbot-typing::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: -8px;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-right: 8px solid #e5e7eb;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
 }
 
 .chatbot-typing-dot {
@@ -263,6 +311,13 @@
     flex-wrap: wrap;
     gap: 8px;
     background: #f8f9fa;
+    transition: opacity 0.3s ease, max-height 0.3s ease;
+    overflow: hidden;
+}
+
+.chatbot-suggestions:empty {
+    padding: 0;
+    max-height: 0;
 }
 
 .chatbot-suggestion-btn {
@@ -300,6 +355,8 @@
     display: flex;
     gap: 12px;
     align-items: flex-end;
+    margin: 0;
+    border: none;
 }
 
 .chatbot-input {
@@ -323,6 +380,64 @@
 
 .chatbot-input::placeholder {
     color: #9ca3af;
+}
+
+/* Hide browser autocomplete suggestions */
+.chatbot-input::-webkit-contacts-auto-fill-button,
+.chatbot-input::-webkit-credentials-auto-fill-button {
+    visibility: hidden;
+    display: none !important;
+    pointer-events: none;
+    height: 0;
+    width: 0;
+    margin: 0;
+}
+
+/* Disable autocomplete dropdown */
+.chatbot-input {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+/* Hide any potential suggestion overlays */
+.chatbot-input-area {
+    position: relative;
+    z-index: 1;
+}
+
+/* Ensure no suggestion popups appear */
+.chatbot-input::-webkit-list-button {
+    display: none;
+}
+
+.chatbot-input::-webkit-calendar-picker-indicator {
+    display: none;
+}
+
+/* Hide all possible autocomplete suggestions globally for this input */
+.chatbot-input-area input[list],
+.chatbot-input-area textarea[list] {
+    list-style: none;
+}
+
+/* Force hide any suggestion dropdowns that might appear */
+.chatbot-window *::-webkit-search-decoration,
+.chatbot-window *::-webkit-search-cancel-button,
+.chatbot-window *::-webkit-search-results-button,
+.chatbot-window *::-webkit-search-results-decoration {
+    display: none;
+}
+
+/* Additional browser-specific hiding */
+.chatbot-input {
+    -webkit-text-security: none;
+    -webkit-user-select: text;
+}
+
+/* Hide any potential suggestion overlays that might appear over the chatbot */
+.chatbot-window {
+    isolation: isolate;
 }
 
 .chatbot-send-btn {
@@ -356,19 +471,40 @@
 }
 
 /* ===== Error Message ===== */
-.chatbot-message.error .chatbot-message-content {
-    background: #fee;
-    color: #dc3545;
-    border: 1px solid #fcc;
+.chatbot-message.bot.error .chatbot-message-content {
+    background: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+.chatbot-message.bot.error .chatbot-message-content::before {
+    border-right-color: #fecaca;
 }
 
 /* ===== Responsive Styles ===== */
+@media (min-width: 1200px) {
+    .chatbot-window {
+        width: 450px;
+        max-height: 700px;
+    }
+
+    .chatbot-messages {
+        max-height: 500px;
+    }
+}
+
 @media (max-width: 768px) {
     .chatbot-window {
         width: calc(100vw - 40px);
-        max-width: 360px;
+        max-width: 420px;
         right: 20px;
         bottom: 140px;
+        max-height: 70vh;
+    }
+
+    .chatbot-messages {
+        max-height: calc(70vh - 200px);
+        min-height: 250px;
     }
 
     .chatbot-toggle {
@@ -383,6 +519,7 @@
         right: 10px;
         bottom: 130px;
         max-height: calc(100vh - 170px);
+        min-height: 400px;
     }
 
     .chatbot-toggle {
@@ -395,6 +532,7 @@
 
     .chatbot-messages {
         max-height: calc(100vh - 300px);
+        min-height: 280px;
     }
 
     .chatbot-message-content {

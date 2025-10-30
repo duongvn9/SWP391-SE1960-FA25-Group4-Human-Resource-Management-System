@@ -43,14 +43,15 @@
                                 Reason <span class="text-danger">*</span>
                             </label>
                             <textarea class="form-control" id="approvalReason" rows="3" required
-                                placeholder="Enter reason for your decision (required)"></textarea>
+                                placeholder="Enter reason for your decision (required for both approval and rejection)"></textarea>
+                            <div id="reasonError" class="invalid-feedback" style="display: none;"></div>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                             <i class="fas fa-times me-1"></i>Cancel
                         </button>
-                        <button type="button" class="btn btn-primary" onclick="submitApproval()">
+                        <button type="button" class="btn btn-primary" id="submitApprovalBtn" onclick="submitApproval()">
                             <i class="fas fa-paper-plane me-1"></i>Submit
                         </button>
                     </div>
@@ -99,5 +100,17 @@
 
             #approvalModal .btn-check+label {
                 transition: all 0.2s ease-in-out;
+            }
+
+            /* Error message styling */
+            #approvalModal .invalid-feedback {
+                color: #dc3545 !important;
+                font-size: 0.875rem;
+                margin-top: 0.25rem;
+            }
+
+            #approvalModal .form-control.is-invalid {
+                border-color: #dc3545 !important;
+                box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
             }
         </style>

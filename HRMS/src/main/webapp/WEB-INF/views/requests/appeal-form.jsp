@@ -202,19 +202,13 @@
                                                             <label for="editCheckIn"
                                                                    class="form-label">Check-in</label>
                                                             <input type="time" id="editCheckIn" name="editCheckIn"
-                                                                   class="form-control validate-time"
-                                                                   value="${rec.checkIn}" data-user-id="${rec.userId}"
-                                                                   data-date="${rec.date}" data-type="checkIn" />
-                                                            <div class="invalid-feedback"></div>
+                                                                   class="form-control" value="${rec.checkIn}" />
                                                         </div>
                                                         <div class="col-md-2">
                                                             <label for="editCheckOut"
                                                                    class="form-label">Check-out</label>
                                                             <input type="time" id="editCheckOut" name="editCheckOut"
-                                                                   class="form-control validate-time"
-                                                                   value="${rec.checkOut}" data-user-id="${rec.userId}"
-                                                                   data-date="${rec.date}" data-type="checkOut" />
-                                                            <div class="invalid-feedback"></div>
+                                                                   class="form-control" value="${rec.checkOut}" />
                                                         </div>
                                                         <div class="col-md-3">
                                                             <label for="editStatus"
@@ -637,5 +631,6 @@
             });
         </script>
         <script src="${pageContext.request.contextPath}/assets/js/appeal-request.js"></script>
-    </body>F
+    </body>
+
 </html>

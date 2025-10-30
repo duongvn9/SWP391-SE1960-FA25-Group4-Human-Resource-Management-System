@@ -1,9 +1,12 @@
 {
     "metadata": {
-        "version": "1.0",
+        "version": "2.0",
         "language": "vi",
-        "description": "Dữ liệu câu hỏi-trả lời cho chatbot HRMS",
-        "last_updated": "2025-10-29"
+        "description": "Dữ liệu câu hỏi-trả lời cho chatbot HRMS - Phiên bản mở rộng",
+        "last_updated": "2025-10-30",
+        "total_categories": 8,
+        "total_qa_pairs": 45,
+        "note": "Bổ sung thêm nhiều thông tin dựa trên logic code hệ thống"
     },
     "categories": [
         {
@@ -85,6 +88,42 @@
                         "Tết",
                         "Quốc khánh"
                     ]
+                },
+                {
+                    "id": "leave_008",
+                    "question": "Các loại nghỉ phép trong hệ thống có những gì?",
+                    "answer": "Hệ thống hỗ trợ nhiều loại nghỉ phép: Nghỉ phép năm (ANNUAL) - có lương, Nghỉ bệnh (SICK) - có lương với giấy tờ chứng minh, Nghỉ thai sản (MATERNITY) - dành cho nữ nhân viên, Nghỉ không lương (UNPAID) - không hưởng lương. Mỗi loại có quy định riêng về số ngày, giấy tờ yêu cầu và quy trình duyệt.",
+                    "keywords": [
+                        "loại nghỉ phép",
+                        "nghỉ phép năm",
+                        "nghỉ bệnh",
+                        "nghỉ thai sản",
+                        "nghỉ không lương"
+                    ]
+                },
+                {
+                    "id": "leave_009",
+                    "question": "Làm sao để kiểm tra số ngày phép còn lại của tôi?",
+                    "answer": "Bạn có thể kiểm tra số ngày phép còn lại trong phần Hồ sơ cá nhân hoặc Dashboard. Hệ thống hiển thị chi tiết: số ngày phép được cấp trong năm, số ngày đã sử dụng, số ngày còn lại, và số ngày được chuyển từ năm trước (nếu có). Thông tin được cập nhật real-time khi có đơn nghỉ phép được duyệt.",
+                    "keywords": [
+                        "kiểm tra ngày phép",
+                        "số ngày còn lại",
+                        "dashboard",
+                        "hồ sơ cá nhân"
+                    ]
+                },
+                {
+                    "id": "leave_010",
+                    "question": "Quy trình duyệt đơn nghỉ phép có những bước nào?",
+                    "answer": "Quy trình duyệt đơn nghỉ phép: 1) Nhân viên tạo và gửi đơn (trạng thái PENDING), 2) HR kiểm tra tình hình công việc và các quy định, 3) HR Manager duyệt cuối cùng (trạng thái APPROVED) hoặc từ chối (REJECTED). Nhân viên có thể hủy đơn (CANCELLED) khi đang ở trạng thái chờ duyệt.",
+                    "keywords": [
+                        "quy trình duyệt",
+                        "trạng thái đơn",
+                        "PENDING",
+                        "APPROVED",
+                        "REJECTED",
+                        "CANCELLED"
+                    ]
                 }
             ]
         },
@@ -156,6 +195,30 @@
                         "đã duyệt",
                         "kiểm tra đơn",
                         "thông báo"
+                    ]
+                },
+                {
+                    "id": "ot_007",
+                    "question": "Các loại tăng ca trong hệ thống có gì khác nhau?",
+                    "answer": "Hệ thống phân loại 4 loại tăng ca: WEEKDAY (ngày thường) - hệ số 1.5x, WEEKEND (cuối tuần) - hệ số 2.0x, HOLIDAY (ngày lễ) - hệ số 3.0x, COMPENSATORY (tăng ca bù) - không tính lương nhưng được nghỉ bù. Hệ thống tự động tính hệ số lương dựa trên ngày tăng ca được chọn.",
+                    "keywords": [
+                        "loại tăng ca",
+                        "WEEKDAY",
+                        "WEEKEND",
+                        "HOLIDAY",
+                        "COMPENSATORY",
+                        "hệ số lương"
+                    ]
+                },
+                {
+                    "id": "ot_008",
+                    "question": "Tôi có cần đồng ý trước khi được tăng ca không?",
+                    "answer": "Có. Theo quy định, nhân viên phải đồng ý tăng ca trước khi đơn được tạo. Khi tạo đơn tăng ca, bạn cần xác nhận đồng ý (employeeConsent = true) và hệ thống sẽ ghi lại thời điểm đồng ý (consentTimestamp). Đây là yêu cầu bắt buộc để bảo vệ quyền lợi nhân viên.",
+                    "keywords": [
+                        "đồng ý tăng ca",
+                        "employeeConsent",
+                        "consentTimestamp",
+                        "quyền lợi nhân viên"
                     ]
                 }
             ]
@@ -327,17 +390,233 @@
                     ]
                 }
             ]
+        },
+        {
+            "category": "Quản lý tài khoản & Đăng nhập",
+            "qa_pairs": [
+                {
+                    "id": "account_001",
+                    "question": "Làm sao để đăng nhập vào hệ thống HRMS?",
+                    "answer": "Bạn có thể đăng nhập bằng 2 cách: 1) Sử dụng username và password được cấp bởi IT, 2) Đăng nhập bằng Google Account (nếu email công ty được liên kết). Truy cập trang đăng nhập, nhập thông tin và nhấn Đăng nhập. Nếu quên mật khẩu, liên hệ IT để reset.",
+                    "keywords": [
+                        "đăng nhập",
+                        "username",
+                        "password",
+                        "Google Account",
+                        "reset mật khẩu"
+                    ]
+                },
+                {
+                    "id": "account_002",
+                    "question": "Tài khoản của tôi bị khóa, phải làm sao?",
+                    "answer": "Tài khoản có thể bị khóa do nhập sai mật khẩu nhiều lần (failed_attempts). Trạng thái tài khoản có thể là: active (hoạt động), inactive (tạm khóa). Liên hệ với IT hoặc HR để được hỗ trợ mở khóa tài khoản và reset mật khẩu.",
+                    "keywords": [
+                        "tài khoản bị khóa",
+                        "failed_attempts",
+                        "inactive",
+                        "terminated",
+                        "mở khóa tài khoản"
+                    ]
+                },
+                {
+                    "id": "account_003",
+                    "question": "Làm sao để đổi mật khẩu tài khoản?",
+                    "answer": "Vào mục Tài khoản của tôi hoặc Hồ sơ cá nhân, chọn Đổi mật khẩu. Nhập mật khẩu cũ, mật khẩu mới và xác nhận mật khẩu mới. Mật khẩu mới cần đủ mạnh (ít nhất 8 ký tự, có chữ hoa, chữ thường, số và ký tự đặc biệt). Nhấn Lưu để hoàn tất.",
+                    "keywords": [
+                        "đổi mật khẩu",
+                        "mật khẩu mạnh",
+                        "8 ký tự",
+                        "chữ hoa chữ thường",
+                        "ký tự đặc biệt"
+                    ]
+                }
+            ]
+        },
+        {
+            "category": "Chấm công & Báo cáo thời gian",
+            "qa_pairs": [
+                {
+                    "id": "attendance_005",
+                    "question": "Hệ thống chấm công hoạt động như thế nào?",
+                    "answer": "Hệ thống ghi lại thời gian vào/ra (check-in/check-out) của nhân viên. Mỗi lần chấm công tạo một AttendanceLog với thông tin: thời gian chấm công (checkedAt), loại chấm công (checkType), nguồn chấm công (source), ghi chú (note). Dữ liệu được nhóm theo kỳ chấm công (TimesheetPeriod).",
+                    "keywords": [
+                        "chấm công",
+                        "check-in",
+                        "check-out",
+                        "AttendanceLog",
+                        "TimesheetPeriod"
+                    ]
+                },
+                {
+                    "id": "attendance_006",
+                    "question": "Tôi có thể xem lịch sử chấm công của mình không?",
+                    "answer": "Có. Vào mục Chấm công để xem lịch sử chi tiết. Bạn có thể xem theo ngày, tuần, tháng hoặc kỳ chấm công. Thông tin hiển thị: thời gian vào/ra, tổng giờ làm việc, giờ tăng ca, ngày nghỉ. Nhân viên chỉ xem được dữ liệu của mình, HR có thể xem tất cả nhân viên.",
+                    "keywords": [
+                        "lịch sử chấm công",
+                        "theo ngày tuần tháng",
+                        "tổng giờ làm việc",
+                        "giờ tăng ca",
+                        "phân quyền xem"
+                    ]
+                },
+                {
+                    "id": "attendance_007",
+                    "question": "Kỳ chấm công bị khóa có nghĩa là gì?",
+                    "answer": "Kỳ chấm công bị khóa (periodLocked = true) có nghĩa là dữ liệu chấm công của kỳ đó đã được finalize và không thể chỉnh sửa trực tiếp. Thường xảy ra khi kỳ đã được dùng để tính lương. Nếu cần điều chỉnh, phải gửi đơn khiếu nại chấm công để HR xử lý đặc biệt.",
+                    "keywords": [
+                        "kỳ chấm công khóa",
+                        "periodLocked",
+                        "finalize",
+                        "tính lương",
+                        "không chỉnh sửa"
+                    ]
+                },
+                {
+                    "id": "attendance_008",
+                    "question": "HR có thể import dữ liệu chấm công từ file Excel không?",
+                    "answer": "Có. HR có chức năng Import chấm công từ file Excel. File cần có định dạng chuẩn với các cột: Mã nhân viên, Ngày, Giờ vào, Giờ ra, Ghi chú. Hệ thống sẽ validate dữ liệu và báo lỗi nếu có. Chức năng này giúp nhập hàng loạt dữ liệu chấm công từ hệ thống cũ hoặc thiết bị chấm công khác.",
+                    "keywords": [
+                        "import chấm công",
+                        "file Excel",
+                        "định dạng chuẩn",
+                        "validate dữ liệu",
+                        "nhập hàng loạt"
+                    ]
+                }
+            ]
+        },
+        {
+            "category": "Phòng ban & Chức vụ",
+            "qa_pairs": [
+                {
+                    "id": "dept_001",
+                    "question": "Làm sao để biết tôi thuộc phòng ban nào?",
+                    "answer": "Thông tin phòng ban của bạn hiển thị trong Hồ sơ cá nhân. Mỗi nhân viên (User) được gán vào một phòng ban (Department) thông qua departmentId. Phòng ban có trưởng phòng (headAccountId) và mô tả công việc. Nếu cần thay đổi phòng ban, liên hệ HR để được hỗ trợ.",
+                    "keywords": [
+                        "phòng ban",
+                        "Department",
+                        "departmentId",
+                        "trưởng phòng",
+                        "headAccountId"
+                    ]
+                },
+                {
+                    "id": "dept_002",
+                    "question": "Chức vụ của tôi trong hệ thống là gì?",
+                    "answer": "Chức vụ của bạn được lưu trong trường positionId của hồ sơ nhân viên. Hệ thống có bảng Position quản lý các chức vụ khác nhau trong công ty. Chức vụ ảnh hưởng đến quyền hạn, quy trình phê duyệt và mức lương. Xem chi tiết trong phần Hồ sơ cá nhân.",
+                    "keywords": [
+                        "chức vụ",
+                        "Position",
+                        "positionId",
+                        "quyền hạn",
+                        "quy trình phê duyệt"
+                    ]
+                }
+            ]
+        },
+        {
+            "category": "Tuyển dụng & Ứng tuyển",
+            "qa_pairs": [
+                {
+                    "id": "recruit_001",
+                    "question": "Làm sao để tạo đề nghị tuyển dụng?",
+                    "answer": "Trưởng phòng có thể tạo đề nghị tuyển dụng trong mục Tuyển dụng. Điền thông tin: vị trí cần tuyển, số lượng, yêu cầu, mức lương, thời hạn. Đơn sẽ được gửi đến HR để xem xét và HR Manager phê duyệt cuối cùng. Chỉ khi được duyệt, tin tuyển dụng mới được đăng công khai.",
+                    "keywords": [
+                        "đề nghị tuyển dụng",
+                        "trưởng phòng",
+                        "HR Manager",
+                        "phê duyệt",
+                        "đăng công khai"
+                    ]
+                },
+                {
+                    "id": "recruit_002",
+                    "question": "Ứng viên nộp hồ sơ như thế nào?",
+                    "answer": "Ứng viên có thể nộp hồ sơ trực tuyến qua trang tuyển dụng. Cần điền đầy đủ thông tin: họ tên, email, điện thoại, ngày sinh, địa chỉ, upload CV và CCCD (mặt trước/sau). Hệ thống tự động tạo Application và gửi thông báo cho HR. Trạng thái hồ sơ: new, reviewing, interviewed, hired, rejected.",
+                    "keywords": [
+                        "ứng viên",
+                        "nộp hồ sơ trực tuyến",
+                        "Application",
+                        "upload CV CCCD",
+                        "trạng thái hồ sơ"
+                    ]
+                },
+                {
+                    "id": "recruit_003",
+                    "question": "Quy trình tuyển dụng có những bước nào?",
+                    "answer": "Quy trình tuyển dụng: 1) Trưởng phòng tạo đề nghị tuyển dụng, 2) HR xem xét và lập kế hoạch, 3) HR Manager phê duyệt, 4) Đăng tin tuyển dụng (JobPosting), 5) Nhận và sàng lọc hồ sơ (Application), 6) Phỏng vấn và quyết định tuyển dụng. Mỗi bước có trạng thái và người phụ trách riêng.",
+                    "keywords": [
+                        "quy trình tuyển dụng",
+                        "JobPosting",
+                        "sàng lọc hồ sơ",
+                        "phỏng vấn",
+                        "quyết định tuyển dụng"
+                    ]
+                }
+            ]
+        },
+        {
+            "category": "Lương & Phúc lợi",
+            "qa_pairs": [
+                {
+                    "id": "salary_001",
+                    "question": "Làm sao để xem thông tin lương của tôi?",
+                    "answer": "Thông tin lương cơ bản (baseSalary) hiển thị trong Hồ sơ cá nhân. Để xem chi tiết phiếu lương (Payslip), vào mục Lương & Phúc lợi. Phiếu lương bao gồm: lương cơ bản, phụ cấp, tăng ca, khấu trừ, thực lĩnh. Dữ liệu được bảo mật, chỉ bản thân và HR có quyền xem.",
+                    "keywords": [
+                        "thông tin lương",
+                        "baseSalary",
+                        "Payslip",
+                        "phiếu lương",
+                        "bảo mật lương"
+                    ]
+                },
+                {
+                    "id": "salary_002",
+                    "question": "Lịch sử thay đổi lương có được lưu trữ không?",
+                    "answer": "Có. Hệ thống có bảng SalaryHistory lưu trữ toàn bộ lịch sử thay đổi lương của nhân viên. Mỗi lần điều chỉnh lương (tăng/giảm) đều được ghi lại với thông tin: mức lương cũ, mức lương mới, ngày hiệu lực, lý do thay đổi, người phê duyệt. Giúp theo dõi quá trình phát triển lương của nhân viên.",
+                    "keywords": [
+                        "lịch sử lương",
+                        "SalaryHistory",
+                        "điều chỉnh lương",
+                        "ngày hiệu lực",
+                        "theo dõi phát triển"
+                    ]
+                }
+            ]
         }
     ],
     "system_prompt": {
-        "role": "Trợ lý nội bộ về chính sách và quy trình nhân sự",
+        "role": "Trợ lý nội bộ về chính sách và quy trình nhân sự HRMS",
         "guidelines": [
             "Cung cấp thông tin dựa trên kiến thức đã được huấn luyện hoặc tài liệu nội bộ",
             "Không đưa ra câu trả lời nằm ngoài dữ liệu đã cung cấp",
             "Nếu không chắc chắn, từ chối lịch sự: 'Xin lỗi, tôi không tìm thấy thông tin chính xác để trả lời câu hỏi này.'",
             "Giọng điệu thân thiện, gần gũi, tự nhiên, không quá trang trọng",
             "Có thể xưng 'mình' hoặc 'tôi' để tạo cảm giác thân thiện",
-            "Hỗ trợ chuyên nghiệp và nhiệt tình về các vấn đề chính sách nội bộ"
+            "Hỗ trợ chuyên nghiệp và nhiệt tình về các vấn đề chính sách nội bộ",
+            "Khi đề cập đến các trạng thái hệ thống (PENDING, APPROVED, REJECTED, etc.), giải thích rõ ràng ý nghĩa",
+            "Ưu tiên hướng dẫn cụ thể về cách thực hiện thay vì chỉ giải thích lý thuyết",
+            "Nhắc nhở về các quy định quan trọng như thời hạn, giấy tờ cần thiết, người phê duyệt"
+        ],
+        "technical_terms": {
+            "PENDING": "Đang chờ duyệt",
+            "APPROVED": "Đã được phê duyệt",
+            "REJECTED": "Đã bị từ chối",
+            "CANCELLED": "Đã hủy",
+            "WEEKDAY": "Tăng ca ngày thường",
+            "WEEKEND": "Tăng ca cuối tuần",
+            "HOLIDAY": "Tăng ca ngày lễ",
+            "COMPENSATORY": "Tăng ca bù",
+            "ANNUAL": "Nghỉ phép năm",
+            "SICK": "Nghỉ bệnh",
+            "MATERNITY": "Nghỉ thai sản",
+            "UNPAID": "Nghỉ không lương"
+        },
+        "common_workflows": [
+            "Tạo đơn nghỉ phép: Đăng nhập → Đơn từ → Tạo mới → Chọn loại → Điền thông tin → Gửi",
+            "Tạo đơn tăng ca: Đăng nhập → Yêu cầu → Tăng ca → Chọn ngày giờ → Xác nhận đồng ý → Gửi",
+            "Kiểm tra trạng thái đơn: Đăng nhập → Danh sách đơn từ → Xem chi tiết",
+            "Khiếu nại chấm công: Đăng nhập → Đơn từ → Khiếu nại chấm công → Điền chi tiết → Gửi"
         ]
     }
 }
