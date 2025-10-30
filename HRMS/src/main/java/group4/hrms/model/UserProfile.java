@@ -21,6 +21,7 @@ public class UserProfile {
     private String cccd;
     private LocalDate cccdIssuedDate;
     private String cccdIssuedPlace;
+    private LocalDate cccdExpireDate;
     
     // Contact info
     private String emailCompany;
@@ -134,6 +135,14 @@ public class UserProfile {
     
     public void setCccdIssuedPlace(String cccdIssuedPlace) {
         this.cccdIssuedPlace = cccdIssuedPlace;
+    }
+    
+    public LocalDate getCccdExpireDate() {
+        return cccdExpireDate;
+    }
+    
+    public void setCccdExpireDate(LocalDate cccdExpireDate) {
+        this.cccdExpireDate = cccdExpireDate;
     }
     
     public String getEmailCompany() {
