@@ -27,7 +27,7 @@ public class UserProfileDao {
     public Optional<UserProfile> findByAccountId(Long accountId) {
         String sql = "SELECT " +
                 "u.id as user_id, u.employee_code, u.full_name, u.dob, u.gender, u.hometown, " +
-                "u.cccd, u.cccd_issued_date, u.cccd_issued_place, " +
+                "u.cccd, u.cccd_issued_date, u.cccd_issued_place, u.cccd_expired_date, " +
                 "u.email_company, u.phone, " +
                 "u.department_id, d.name as department_name, " +
                 "u.position_id, p.name as position_name, " +
@@ -69,7 +69,7 @@ public class UserProfileDao {
     public UserProfile findByUserId(Long userId) {
         String sql = "SELECT " +
                 "u.id as user_id, u.employee_code, u.full_name, u.dob, u.gender, u.hometown, " +
-                "u.cccd, u.cccd_issued_date, u.cccd_issued_place, " +
+                "u.cccd, u.cccd_issued_date, u.cccd_issued_place, u.cccd_expired_date, " +
                 "u.email_company, u.phone, " +
                 "u.department_id, d.name as department_name, " +
                 "u.position_id, p.name as position_name, " +
@@ -117,6 +117,7 @@ public class UserProfileDao {
                 "cccd = ?, " +
                 "cccd_issued_date = ?, " +
                 "cccd_issued_place = ?, " +
+                "cccd_expired_date = ?, " +
                 "email_company = ?, " +
                 "phone = ?, " +
                 "address_line1 = ?, " +
@@ -138,15 +139,16 @@ public class UserProfileDao {
             stmt.setString(5, profile.getCccd());
             stmt.setObject(6, profile.getCccdIssuedDate());
             stmt.setString(7, profile.getCccdIssuedPlace());
-            stmt.setString(8, profile.getEmailCompany());
-            stmt.setString(9, profile.getPhone());
-            stmt.setString(10, profile.getAddressLine1());
-            stmt.setString(11, profile.getAddressLine2());
-            stmt.setString(12, profile.getCity());
-            stmt.setString(13, profile.getState());
-            stmt.setString(14, profile.getPostalCode());
-            stmt.setString(15, profile.getCountry());
-            stmt.setLong(16, userId);
+            stmt.setObject(8, profile.getCccdExpireDate());
+            stmt.setString(9, profile.getEmailCompany());
+            stmt.setString(10, profile.getPhone());
+            stmt.setString(11, profile.getAddressLine1());
+            stmt.setString(12, profile.getAddressLine2());
+            stmt.setString(13, profile.getCity());
+            stmt.setString(14, profile.getState());
+            stmt.setString(15, profile.getPostalCode());
+            stmt.setString(16, profile.getCountry());
+            stmt.setLong(17, userId);
 
             int rowsAffected = stmt.executeUpdate();
 
@@ -268,6 +270,10 @@ public class UserProfileDao {
             profile.setCccdIssuedDate(cccdIssuedDate.toLocalDate());
         }
         profile.setCccdIssuedPlace(rs.getString("cccd_issued_place"));
+        Date cccdExpireDate = rs.getDate("cccd_expired_date");
+        if (cccdExpireDate != null) {
+            profile.setCccdExpireDate(cccdExpireDate.toLocalDate());
+        }
 
         // Contact info
         profile.setEmailCompany(rs.getString("email_company"));

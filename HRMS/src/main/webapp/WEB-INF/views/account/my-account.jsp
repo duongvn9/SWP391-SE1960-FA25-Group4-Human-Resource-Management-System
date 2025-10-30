@@ -229,9 +229,7 @@
 
                 <!-- Action Buttons -->
                 <div class="text-center mt-4">
-                    <a href="${pageContext.request.contextPath}/dashboard" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
-                    </a>
+                    
                 </div>
             </div>
         </div>

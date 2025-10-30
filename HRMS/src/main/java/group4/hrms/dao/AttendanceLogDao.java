@@ -784,10 +784,103 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
             return result;
         }
 
+        // Allowed working time range
+        LocalTime MIN_TIME = LocalTime.of(6, 0);
+        LocalTime MAX_TIME = LocalTime.of(23, 59);
+
         try (Connection conn = DatabaseUtil.getConnection()) {
             for (AttendanceLogDto log : manualLogs) {
                 boolean hasConflict = false;
+                String errorMessage = null;
 
+                // === Basic validation - All fields are required ===
+                if (log.getUserId() == null) {
+                    errorMessage = "Employee is required";
+                    log.setError(errorMessage);
+                    invalidLogs.add(log);
+                    continue;
+                }
+
+                if (log.getDate() == null) {
+                    errorMessage = "Date is required";
+                    log.setError(errorMessage);
+                    invalidLogs.add(log);
+                    continue;
+                }
+
+                if (log.getCheckIn() == null) {
+                    errorMessage = "Check-in time is required";
+                    log.setError(errorMessage);
+                    invalidLogs.add(log);
+                    continue;
+                }
+
+                if (log.getCheckOut() == null) {
+                    errorMessage = "Check-out time is required";
+                    log.setError(errorMessage);
+                    invalidLogs.add(log);
+                    continue;
+                }
+
+                if (log.getStatus() == null || log.getStatus().trim().isEmpty()) {
+                    errorMessage = "Status is required";
+                    log.setError(errorMessage);
+                    invalidLogs.add(log);
+                    continue;
+                }
+
+                // Check future date
+                if (log.getDate().isAfter(LocalDate.now())) {
+                    errorMessage = "Date cannot be in the future";
+                    log.setError(errorMessage);
+                    invalidLogs.add(log);
+                    continue;
+                }
+
+                // === Time range validation ===
+                if (log.getCheckIn() != null) {
+                    if (log.getCheckIn().isBefore(MIN_TIME) || log.getCheckIn().isAfter(MAX_TIME)) {
+                        errorMessage = "Check-in time must be between 06:00 and 23:59";
+                        log.setError(errorMessage);
+                        invalidLogs.add(log);
+                        continue;
+                    }
+                }
+
+                if (log.getCheckOut() != null) {
+                    if (log.getCheckOut().isBefore(MIN_TIME) || log.getCheckOut().isAfter(MAX_TIME)) {
+                        errorMessage = "Check-out time must be between 06:00 and 23:59";
+                        log.setError(errorMessage);
+                        invalidLogs.add(log);
+                        continue;
+                    }
+                }
+
+                // === Logical order: check-in < check-out ===
+                if (log.getCheckIn() != null && log.getCheckOut() != null) {
+                    if (!log.getCheckIn().isBefore(log.getCheckOut())) {
+                        errorMessage = "Check-in time must be earlier than check-out time";
+                        log.setError(errorMessage);
+                        invalidLogs.add(log);
+                        continue;
+                    }
+                }
+
+                // === Check if user exists ===
+                String checkUserSql = "SELECT COUNT(1) FROM users WHERE id = ?";
+                try (PreparedStatement stmt = conn.prepareStatement(checkUserSql)) {
+                    stmt.setLong(1, log.getUserId());
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        if (rs.next() && rs.getInt(1) == 0) {
+                            errorMessage = "Employee does not exist in the system";
+                            log.setError(errorMessage);
+                            invalidLogs.add(log);
+                            continue;
+                        }
+                    }
+                }
+
+                // === Check if period is locked ===
                 String checkPeriodSql = """
                 SELECT COALESCE(tp.is_locked, FALSE)
                 FROM timesheet_periods tp
@@ -797,17 +890,12 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                     stmt.setDate(1, java.sql.Date.valueOf(log.getDate()));
                     try (ResultSet rs = stmt.executeQuery()) {
                         if (rs.next() && rs.getBoolean(1)) {
-                            log.setError("Invalid: period is locked");
+                            errorMessage = "Timesheet period is locked for this date";
+                            log.setError(errorMessage);
                             invalidLogs.add(log);
-                            continue; // bỏ qua log này
+                            continue;
                         }
                     }
-                }
-
-                if (log.getUserId() == null || log.getDate() == null
-                        || (log.getCheckIn() == null && log.getCheckOut() == null)) {
-                    invalidLogs.add(log);
-                    continue;
                 }
 
                 LocalDateTime newCheckIn = log.getCheckIn() != null ? log.getDate().atTime(log.getCheckIn()) : null;
@@ -892,6 +980,9 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                         if (overlap) {
                             log.setOldCheckIn(existIn.toLocalTime());
                             log.setOldCheckOut(existOut.toLocalTime());
+                            errorMessage = String.format("Attendance overlaps with existing record (%s - %s)", 
+                                existIn.toLocalTime().toString(), existOut.toLocalTime().toString());
+                            log.setError(errorMessage);
                             hasConflict = true;
                             System.out.println("Invalid because overlap: " + log.getEmployeeName()
                                     + ", newCheckIn=" + newCheckIn + ", newCheckOut=" + newCheckOut
@@ -904,6 +995,9 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                     if (!hasConflict) {
                         for (LocalDateTime extraIn : remainingIns) {
                             if (newCheckIn != null && !newCheckIn.isBefore(extraIn) && !newCheckIn.isAfter(extraIn.plusHours(8))) {
+                                errorMessage = String.format("Check-in conflicts with existing unpaired check-in at %s", 
+                                    extraIn.toLocalTime().toString());
+                                log.setError(errorMessage);
                                 hasConflict = true;
                                 System.out.println("Invalid because extra IN: " + log.getEmployeeName()
                                         + ", newCheckIn=" + newCheckIn + ", extraIn=" + extraIn);
@@ -911,15 +1005,318 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                             }
                         }
 
-                        for (LocalDateTime extraOut : remainingOuts) {
-                            if (newCheckOut != null && !newCheckOut.isBefore(extraOut.minusHours(8)) && !newCheckOut.isAfter(extraOut)) {
-                                hasConflict = true;
-                                System.out.println("Invalid because extra OUT: " + log.getEmployeeName()
-                                        + ", newCheckOut=" + newCheckOut + ", extraOut=" + extraOut);
-                                break;
+                        if (!hasConflict) {
+                            for (LocalDateTime extraOut : remainingOuts) {
+                                if (newCheckOut != null && !newCheckOut.isBefore(extraOut.minusHours(8)) && !newCheckOut.isAfter(extraOut)) {
+                                    errorMessage = String.format("Check-out conflicts with existing unpaired check-out at %s", 
+                                        extraOut.toLocalTime().toString());
+                                    log.setError(errorMessage);
+                                    hasConflict = true;
+                                    System.out.println("Invalid because extra OUT: " + log.getEmployeeName()
+                                            + ", newCheckOut=" + newCheckOut + ", extraOut=" + extraOut);
+                                    break;
+                                }
                             }
                         }
                     }
+                }
+
+                if (hasConflict) {
+                    invalidLogs.add(log);
+                } else {
+                    validLogs.add(log);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public Map<String, List<AttendanceLogDto>> validateAppealLogs(List<AttendanceLogDto> editedLogs, 
+            List<Map<String, Map<String, String>>> originalRecords) throws SQLException {
+        Map<String, List<AttendanceLogDto>> result = new HashMap<>();
+        List<AttendanceLogDto> validLogs = new ArrayList<>();
+        List<AttendanceLogDto> invalidLogs = new ArrayList<>();
+        result.put("valid", validLogs);
+        result.put("invalid", invalidLogs);
+
+        if (editedLogs == null || editedLogs.isEmpty()) {
+            return result;
+        }
+
+        // Allowed working time range
+        LocalTime MIN_TIME = LocalTime.of(6, 0);
+        LocalTime MAX_TIME = LocalTime.of(23, 59);
+
+        // Extract original record times to exclude from conflict checking
+        List<Pair<LocalDateTime, LocalDateTime>> originalPairs = new ArrayList<>();
+        if (originalRecords != null) {
+            for (Map<String, Map<String, String>> record : originalRecords) {
+                Map<String, String> oldRecord = record.get("oldRecord");
+                if (oldRecord != null) {
+                    try {
+                        LocalDate date = LocalDate.parse(oldRecord.get("date"));
+                        String checkInStr = oldRecord.get("checkIn");
+                        String checkOutStr = oldRecord.get("checkOut");
+                        
+                        if (checkInStr != null && !checkInStr.trim().isEmpty() && 
+                            checkOutStr != null && !checkOutStr.trim().isEmpty()) {
+                            LocalTime checkIn = LocalTime.parse(checkInStr);
+                            LocalTime checkOut = LocalTime.parse(checkOutStr);
+                            
+                            LocalDateTime checkInDateTime = date.atTime(checkIn);
+                            LocalDateTime checkOutDateTime;
+                            if (checkOut.isBefore(checkIn)) {
+                                checkOutDateTime = date.plusDays(1).atTime(checkOut);
+                            } else {
+                                checkOutDateTime = date.atTime(checkOut);
+                            }
+                            
+                            originalPairs.add(Pair.of(checkInDateTime, checkOutDateTime));
+                        }
+                    } catch (Exception e) {
+                        // Skip invalid original records
+                        System.out.println("Warning: Could not parse original record: " + e.getMessage());
+                    }
+                }
+            }
+        }
+
+        try (Connection conn = DatabaseUtil.getConnection()) {
+            for (AttendanceLogDto log : editedLogs) {
+                boolean hasConflict = false;
+                String errorMessage = null;
+
+                // === Basic validation - All fields are required ===
+                if (log.getUserId() == null) {
+                    errorMessage = "Employee is required";
+                    log.setError(errorMessage);
+                    invalidLogs.add(log);
+                    continue;
+                }
+
+                if (log.getDate() == null) {
+                    errorMessage = "Date is required";
+                    log.setError(errorMessage);
+                    invalidLogs.add(log);
+                    continue;
+                }
+
+                if (log.getCheckIn() == null) {
+                    errorMessage = "Check-in time is required";
+                    log.setError(errorMessage);
+                    invalidLogs.add(log);
+                    continue;
+                }
+
+                if (log.getCheckOut() == null) {
+                    errorMessage = "Check-out time is required";
+                    log.setError(errorMessage);
+                    invalidLogs.add(log);
+                    continue;
+                }
+
+                if (log.getStatus() == null || log.getStatus().trim().isEmpty()) {
+                    errorMessage = "Status is required";
+                    log.setError(errorMessage);
+                    invalidLogs.add(log);
+                    continue;
+                }
+
+                // Check future date
+                if (log.getDate().isAfter(LocalDate.now())) {
+                    errorMessage = "Date cannot be in the future";
+                    log.setError(errorMessage);
+                    invalidLogs.add(log);
+                    continue;
+                }
+
+                // === Time range validation ===
+                if (log.getCheckIn() != null) {
+                    if (log.getCheckIn().isBefore(MIN_TIME) || log.getCheckIn().isAfter(MAX_TIME)) {
+                        errorMessage = "Check-in time must be between 06:00 and 23:59";
+                        log.setError(errorMessage);
+                        invalidLogs.add(log);
+                        continue;
+                    }
+                }
+
+                if (log.getCheckOut() != null) {
+                    if (log.getCheckOut().isBefore(MIN_TIME) || log.getCheckOut().isAfter(MAX_TIME)) {
+                        errorMessage = "Check-out time must be between 06:00 and 23:59";
+                        log.setError(errorMessage);
+                        invalidLogs.add(log);
+                        continue;
+                    }
+                }
+
+                // === Logical order: check-in < check-out ===
+                if (log.getCheckIn() != null && log.getCheckOut() != null) {
+                    if (!log.getCheckIn().isBefore(log.getCheckOut())) {
+                        errorMessage = "Check-in time must be earlier than check-out time";
+                        log.setError(errorMessage);
+                        invalidLogs.add(log);
+                        continue;
+                    }
+                }
+
+                // === Check if user exists ===
+                String checkUserSql = "SELECT COUNT(1) FROM users WHERE id = ?";
+                try (PreparedStatement stmt = conn.prepareStatement(checkUserSql)) {
+                    stmt.setLong(1, log.getUserId());
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        if (rs.next() && rs.getInt(1) == 0) {
+                            errorMessage = "Employee does not exist in the system";
+                            log.setError(errorMessage);
+                            invalidLogs.add(log);
+                            continue;
+                        }
+                    }
+                }
+
+                // === Check if period is locked ===
+                String checkPeriodSql = """
+                SELECT COALESCE(tp.is_locked, FALSE)
+                FROM timesheet_periods tp
+                WHERE ? BETWEEN tp.date_start AND tp.date_end
+                """;
+                try (PreparedStatement stmt = conn.prepareStatement(checkPeriodSql)) {
+                    stmt.setDate(1, java.sql.Date.valueOf(log.getDate()));
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        if (rs.next() && rs.getBoolean(1)) {
+                            errorMessage = "Timesheet period is locked for this date";
+                            log.setError(errorMessage);
+                            invalidLogs.add(log);
+                            continue;
+                        }
+                    }
+                }
+
+                LocalDateTime newCheckIn = log.getCheckIn() != null ? log.getDate().atTime(log.getCheckIn()) : null;
+                LocalDateTime newCheckOut = null;
+                if (log.getCheckOut() != null) {
+                    if (log.getCheckIn() != null && log.getCheckOut().isBefore(log.getCheckIn())) {
+                        newCheckOut = log.getDate().plusDays(1).atTime(log.getCheckOut());
+                    } else {
+                        newCheckOut = log.getDate().atTime(log.getCheckOut());
+                    }
+                }
+
+                // Lấy tất cả log của user trong cùng ngày
+                String sql = "SELECT checked_at, check_type FROM attendance_logs WHERE user_id = ? AND DATE(checked_at) = ?";
+                try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                    stmt.setLong(1, log.getUserId());
+                    stmt.setDate(2, java.sql.Date.valueOf(log.getDate()));
+
+                    List<LocalDateTime> ins = new ArrayList<>();
+                    List<LocalDateTime> outs = new ArrayList<>();
+
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        while (rs.next()) {
+                            String type = rs.getString("check_type");
+                            Timestamp ts = rs.getTimestamp("checked_at");
+                            if (ts == null || type == null) {
+                                continue;
+                            }
+
+                            if ("IN".equalsIgnoreCase(type)) {
+                                ins.add(ts.toLocalDateTime());
+                            } else if ("OUT".equalsIgnoreCase(type)) {
+                                outs.add(ts.toLocalDateTime());
+                            }
+                        }
+                    }
+
+                    // Sắp xếp thời gian ascending
+                    ins.sort(Comparator.naturalOrder());
+                    outs.sort(Comparator.naturalOrder());
+
+                    // Ghép cặp theo logic: check-in đầu tiên → check-out gần nhất
+                    List<Pair<LocalDateTime, LocalDateTime>> existingPairs = new ArrayList<>();
+                    List<LocalDateTime> remainingIns = new ArrayList<>(ins);
+                    List<LocalDateTime> remainingOuts = new ArrayList<>(outs);
+
+                    while (!remainingIns.isEmpty()) {
+                        LocalDateTime in = remainingIns.remove(0);
+                        LocalDateTime out = null;
+
+                        for (Iterator<LocalDateTime> it = remainingOuts.iterator(); it.hasNext();) {
+                            LocalDateTime candidateOut = it.next();
+                            if (!candidateOut.isBefore(in)) { // out >= in
+                                out = candidateOut;
+                                it.remove();
+                                break;
+                            }
+                        }
+
+                        // Nếu không tìm được check-out phù hợp → out = in + 8h
+                        if (out == null) {
+                            out = in.plusHours(8);
+                        }
+
+                        existingPairs.add(Pair.of(in, out));
+                    }
+
+                    // Filter out original pairs that are being replaced
+                    List<Pair<LocalDateTime, LocalDateTime>> filteredPairs = new ArrayList<>();
+                    for (Pair<LocalDateTime, LocalDateTime> existingPair : existingPairs) {
+                        boolean isOriginalRecord = false;
+                        for (Pair<LocalDateTime, LocalDateTime> originalPair : originalPairs) {
+                            // Check if this existing pair matches any original record being replaced
+                            // Use a tolerance of 1 minute to account for slight differences in parsing/rounding
+                            LocalDateTime existIn = existingPair.getLeft();
+                            LocalDateTime existOut = existingPair.getRight();
+                            LocalDateTime origIn = originalPair.getLeft();
+                            LocalDateTime origOut = originalPair.getRight();
+                            
+                            boolean inMatches = Math.abs(existIn.toLocalTime().toSecondOfDay() - origIn.toLocalTime().toSecondOfDay()) <= 60;
+                            boolean outMatches = Math.abs(existOut.toLocalTime().toSecondOfDay() - origOut.toLocalTime().toSecondOfDay()) <= 60;
+                            boolean sameDate = existIn.toLocalDate().equals(origIn.toLocalDate());
+                            
+                            if (sameDate && inMatches && outMatches) {
+                                isOriginalRecord = true;
+                                System.out.println("Excluding original record from conflict check: " + 
+                                    origIn.toLocalTime() + " - " + origOut.toLocalTime() + 
+                                    " (matched with existing: " + existIn.toLocalTime() + " - " + existOut.toLocalTime() + ")");
+                                break;
+                            }
+                        }
+                        if (!isOriginalRecord) {
+                            filteredPairs.add(existingPair);
+                        }
+                    }
+
+                    // Kiểm tra trùng với các cặp còn lại (sau khi loại trừ bản ghi gốc)
+                    for (Pair<LocalDateTime, LocalDateTime> pair : filteredPairs) {
+                        LocalDateTime existIn = pair.getLeft();
+                        LocalDateTime existOut = pair.getRight();
+
+                        boolean overlap = false;
+                        if (newCheckIn != null && newCheckOut != null) {
+                            overlap = newCheckIn.isBefore(existOut) && newCheckOut.isAfter(existIn);
+                        } else if (newCheckIn != null) {
+                            overlap = !newCheckIn.isBefore(existIn) && !newCheckIn.isAfter(existOut);
+                        } else if (newCheckOut != null) {
+                            overlap = !newCheckOut.isBefore(existIn) && !newCheckOut.isAfter(existOut);
+                        }
+
+                        if (overlap) {
+                            log.setOldCheckIn(existIn.toLocalTime());
+                            log.setOldCheckOut(existOut.toLocalTime());
+                            errorMessage = String.format("Attendance overlaps with existing record (%s - %s)", 
+                                existIn.toLocalTime().toString(), existOut.toLocalTime().toString());
+                            log.setError(errorMessage);
+                            hasConflict = true;
+                            System.out.println("Invalid because overlap: " + log.getEmployeeName()
+                                    + ", newCheckIn=" + newCheckIn + ", newCheckOut=" + newCheckOut
+                                    + ", existIn=" + existIn + ", existOut=" + existOut);
+                            break;
+                        }
+                    }
+
+                    // Kiểm tra các check-in/check-out dư thừa (không ghép được)
+                    // Note: For appeal requests, we should be more lenient with unpaired records
+                    // since the user is trying to fix existing data
                 }
 
                 if (hasConflict) {
