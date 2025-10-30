@@ -185,19 +185,38 @@ public class LeaveRequestController extends HttpServlet {
             // Load leave type rules using service.getAllLeaveTypeRules()
             List<LeaveTypeRules> allLeaveTypeRules = service.getAllLeaveTypeRules();
 
-            // Filter rules based on gender
+            // Filter rules based on gender and calculate effective max days with seniority
             List<LeaveTypeRules> leaveTypeRules = new java.util.ArrayList<>();
             for (LeaveTypeRules rules : allLeaveTypeRules) {
                 String ruleCode = rules.getCode();
+
+                // Apply gender filter
+                boolean shouldInclude = true;
                 if ("MATERNITY".equals(ruleCode) || "MATERNITY_LEAVE".equals(ruleCode)) {
-                    if ("FEMALE".equalsIgnoreCase(userGender)) {
-                        leaveTypeRules.add(rules);
-                    }
+                    shouldInclude = "FEMALE".equalsIgnoreCase(userGender);
                 } else if ("PATERNITY".equals(ruleCode) || "PATERNITY_LEAVE".equals(ruleCode)) {
-                    if ("MALE".equalsIgnoreCase(userGender)) {
-                        leaveTypeRules.add(rules);
+                    shouldInclude = "MALE".equalsIgnoreCase(userGender);
+                }
+
+                if (shouldInclude) {
+                    // For Annual Leave, calculate effective max days with seniority bonus
+                    if ("ANNUAL".equals(ruleCode)) {
+                        try {
+                            // Calculate seniority bonus for this user
+                            int seniorityBonus = service.calculateSeniorityBonus(user.getId(), ruleCode);
+                            int effectiveMaxDays = rules.getDefaultDays() + seniorityBonus;
+
+                            // Update max days to include seniority
+                            rules.maxDays = effectiveMaxDays;
+
+                            logger.info(String.format("Annual Leave effective max days: userId=%d, base=%d, seniority=%d, total=%d",
+                                       user.getId(), rules.getDefaultDays(), seniorityBonus, effectiveMaxDays));
+                        } catch (Exception e) {
+                            logger.warning("Error calculating seniority bonus for user " + user.getId() + ": " + e.getMessage());
+                            // Keep original max days if calculation fails
+                        }
                     }
-                } else {
+
                     leaveTypeRules.add(rules);
                 }
             }

@@ -21,10 +21,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.Optional;
 
-/**
- * Controller for Employment Contract view (read-only)
- */
-@WebServlet("/contracts")
+
+@WebServlet("/my-contract")
 public class ContractController extends HttpServlet {
     
     private static final Logger logger = LoggerFactory.getLogger(ContractController.class);
@@ -81,7 +79,7 @@ public class ContractController extends HttpServlet {
                 logger.info("Found active contract for user_id: {}", userId);
             } else {
                 // No contract found
-                req.setAttribute("message", "Không tìm thấy hợp đồng hiện tại");
+                req.setAttribute("message", "No active contract found");
                 req.setAttribute("contract", null);
                 logger.info("No active contract found for user_id: {}", userId);
             }
@@ -89,7 +87,7 @@ public class ContractController extends HttpServlet {
         } catch (SQLException e) {
             // Database error handling
             logger.error("Database error while fetching contract for user_id: {}", userId, e);
-            req.setAttribute("error", "Đã xảy ra lỗi khi tải thông tin hợp đồng. Vui lòng thử lại sau.");
+            req.setAttribute("error", "An error occurred while loading contract information. Please try again later.");
             req.setAttribute("contract", null);
         }
         

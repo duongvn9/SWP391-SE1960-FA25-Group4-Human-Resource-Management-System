@@ -188,6 +188,7 @@ public class ProfileController extends HttpServlet {
             updatedProfile.setCccd(emptyToNull(dto.getCccd()));
             updatedProfile.setCccdIssuedDate(dto.getCccdIssuedDate());
             updatedProfile.setCccdIssuedPlace(emptyToNull(dto.getCccdIssuedPlace()));
+            updatedProfile.setCccdExpireDate(dto.getCccdExpireDate());
             updatedProfile.setEmailCompany(emptyToNull(dto.getEmailCompany()));
             updatedProfile.setPhone(emptyToNull(dto.getPhone()));
             updatedProfile.setAddressLine1(emptyToNull(dto.getAddressLine1()));
@@ -282,6 +283,16 @@ public class ProfileController extends HttpServlet {
             }
         }
         
+        // Parse CCCD expire date
+        String cccdExpireDateStr = req.getParameter("cccdExpireDate");
+        if (cccdExpireDateStr != null && !cccdExpireDateStr.trim().isEmpty()) {
+            try {
+                dto.setCccdExpireDate(LocalDate.parse(cccdExpireDateStr));
+            } catch (Exception e) {
+                logger.warn("Invalid date format for cccdExpireDate: {}", cccdExpireDateStr);
+            }
+        }
+        
         return dto;
     }
     
@@ -352,6 +363,10 @@ public class ProfileController extends HttpServlet {
         }
         if (!equals(current.getCccdIssuedDate(), dto.getCccdIssuedDate())) {
             logger.info("CCCD Issued Date changed");
+            return true;
+        }
+        if (!equals(current.getCccdExpireDate(), dto.getCccdExpireDate())) {
+            logger.info("CCCD Expire Date changed");
             return true;
         }
         
@@ -537,6 +552,7 @@ public class ProfileController extends HttpServlet {
         profile.setCccd(dto.getCccd());
         profile.setCccdIssuedDate(dto.getCccdIssuedDate());
         profile.setCccdIssuedPlace(dto.getCccdIssuedPlace());
+        profile.setCccdExpireDate(dto.getCccdExpireDate());
         profile.setEmailCompany(dto.getEmailCompany());
         profile.setPhone(dto.getPhone());
         profile.setAddressLine1(dto.getAddressLine1());

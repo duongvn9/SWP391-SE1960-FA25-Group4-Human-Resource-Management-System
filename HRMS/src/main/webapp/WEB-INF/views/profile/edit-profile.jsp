@@ -243,20 +243,20 @@
                     </div>
                 </div>
 
-                <!-- Citizen ID (CCCD) -->
-                <div class="form-row">
+                <!-- Citizen ID (CCCD) & Issued Place -->
+                <div class="form-row two-columns">
                     <label class="form-label">Citizen ID (CCCD): </label>
-                    <div class="form-input-wrapper">
-                        <input type="text" name="cccd" class="form-control" value="${profile.cccd}" autocomplete="off">
-                    </div>
+                    <input type="text" name="cccd" class="form-control" value="${profile.cccd}" autocomplete="off">
+                    <label class="label-inline">Issued Place: </label>
+                    <input type="text" name="cccdIssuedPlace" class="form-control" value="${profile.cccdIssuedPlace}">
                 </div>
 
-                <!-- CCCD Issued Date & Place -->
+                <!-- CCCD Issued Date & Expire Date -->
                 <div class="form-row two-columns">
                     <label class="form-label">CCCD Issued Date: </label>
                     <input type="date" name="cccdIssuedDate" class="form-control" value="${profile.cccdIssuedDate}">
-                    <label class="label-inline">Issued Place: </label>
-                    <input type="text" name="cccdIssuedPlace" class="form-control" value="${profile.cccdIssuedPlace}">
+                    <label class="label-inline"> Expire Date: </label>
+                    <input type="date" name="cccdExpireDate" class="form-control" value="${profile.cccdExpireDate}">
                 </div>
 
                 <!-- Country -->

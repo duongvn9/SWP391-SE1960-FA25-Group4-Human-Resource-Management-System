@@ -13,6 +13,7 @@ public class UserProfileDto {
     private String cccd;
     private LocalDate cccdIssuedDate;
     private String cccdIssuedPlace;
+    private LocalDate cccdExpireDate;
     private String fullName;
     private String gender;
     private String emailCompany;
@@ -141,6 +142,14 @@ public class UserProfileDto {
     
     public void setCccdIssuedPlace(String cccdIssuedPlace) {
         this.cccdIssuedPlace = cccdIssuedPlace;
+    }
+    
+    public LocalDate getCccdExpireDate() {
+        return cccdExpireDate;
+    }
+    
+    public void setCccdExpireDate(LocalDate cccdExpireDate) {
+        this.cccdExpireDate = cccdExpireDate;
     }
     
     public String getState() {

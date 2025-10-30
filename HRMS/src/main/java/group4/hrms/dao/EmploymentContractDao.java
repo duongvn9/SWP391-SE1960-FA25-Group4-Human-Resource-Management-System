@@ -258,4 +258,34 @@ public class EmploymentContractDao extends BaseDao<EmploymentContract, Long> {
             throw e;
         }
     }
+    
+    /**
+     * Xóa contract theo ID
+     */
+    public boolean deleteById(Long contractId) throws SQLException {
+        if (contractId == null) {
+            return false;
+        }
+        
+        String sql = "DELETE FROM employment_contracts WHERE id = ?";
+        
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setLong(1, contractId);
+            
+            int rowsAffected = stmt.executeUpdate();
+            
+            if (rowsAffected > 0) {
+                logger.info("Deleted contract with ID: {}", contractId);
+                return true;
+            }
+            
+            return false;
+            
+        } catch (SQLException e) {
+            logger.error("Error deleting contract {}: {}", contractId, e.getMessage(), e);
+            throw e;
+        }
+    }
 }
