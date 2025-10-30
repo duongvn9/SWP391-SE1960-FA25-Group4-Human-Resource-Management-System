@@ -221,7 +221,13 @@ public class RequestDetailController extends HttpServlet {
                         group4.hrms.dto.AppealRequestDetail appealDetail = requestDto.getAppealDetail();
                         if (appealDetail != null) {
                             request.setAttribute("appealDetail", appealDetail);
-                            logger.info("Successfully parsed appeal detail for request " + requestId);
+
+                            // Parse attendance records for display
+                            java.util.List<group4.hrms.dto.AppealRequestDetail.AttendanceRecordInfo> attendanceRecords =
+                                group4.hrms.dto.AppealRequestDetail.getAttendanceRecords(requestDto.getDetailJson());
+                            request.setAttribute("attendanceRecords", attendanceRecords);
+
+                            logger.info("Successfully parsed appeal detail for request " + requestId + " with " + attendanceRecords.size() + " attendance records");
                         } else {
                             logger.warning("Failed to parse appeal detail for request " + requestId + " - detail is null");
                         }
@@ -246,6 +252,13 @@ public class RequestDetailController extends HttpServlet {
             request.setAttribute("requestDto", requestDto);
             request.setAttribute("canApprove", canApprove);
             request.setAttribute("attachments", attachments);
+
+            // Set user position info for appeal override logic
+            if (position != null) {
+                request.setAttribute("userJobLevel", position.getJobLevel());
+                request.setAttribute("isHRM", position.getJobLevel() != null && position.getJobLevel() == 2); // HR_MANAGER
+                request.setAttribute("isHR", position.getJobLevel() != null && position.getJobLevel() == 3);  // HR_STAFF
+            }
 
             // Forward to detail view
             request.getRequestDispatcher("/WEB-INF/views/requests/request-detail.jsp")

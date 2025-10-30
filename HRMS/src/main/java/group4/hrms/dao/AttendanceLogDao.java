@@ -159,7 +159,6 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
         return log.getId();
     }
 
-    //Override save method để xử lý insert/update
     @Override
     public AttendanceLog save(AttendanceLog entity) throws SQLException {
         if (entity == null) {
@@ -409,7 +408,7 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
     ) throws SQLException {
 
         StringBuilder sql = new StringBuilder("""
-        SELECT 
+        SELECT
             al.id,
             al.user_id,
             u.full_name AS employee_name,
@@ -1116,11 +1115,16 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
             return result;
         }
 
-        // Map để lưu danh sách log theo user + date
+        // Allowed working time range
+        LocalTime MIN_TIME = LocalTime.of(6, 0);
+        LocalTime MAX_TIME = LocalTime.of(23, 59);
+
+        // Map để nhóm log theo user + date
         Map<String, List<AttendanceLogDto>> logsByUserDate = new HashMap<>();
 
         for (AttendanceLogDto log : excelLogs) {
-            // Check cơ bản: thông tin bắt buộc
+
+            // === Basic validation ===
             if (log.getUserId() == null) {
                 log.setError("Invalid: userId is missing");
                 invalidLogs.add(log);
@@ -1139,27 +1143,55 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                 continue;
             }
 
-            // Check ngày không được ở tương lai
+            // Check future date
             if (log.getDate().isAfter(LocalDate.now())) {
                 log.setError("Invalid: date is in the future");
                 invalidLogs.add(log);
                 continue;
             }
 
+            // === Time range validation ===
+            if (log.getCheckIn() != null) {
+                if (log.getCheckIn().isBefore(MIN_TIME) || log.getCheckIn().isAfter(MAX_TIME)) {
+                    log.setError("Invalid: check-in must be between 06:00 and 23:59");
+                    invalidLogs.add(log);
+                    continue;
+                }
+            }
+
+            if (log.getCheckOut() != null) {
+                if (log.getCheckOut().isBefore(MIN_TIME) || log.getCheckOut().isAfter(MAX_TIME)) {
+                    log.setError("Invalid: check-out must be between 06:00 and 23:59");
+                    invalidLogs.add(log);
+                    continue;
+                }
+            }
+
+            // === Logical order: check-in < check-out ===
+            if (log.getCheckIn() != null && log.getCheckOut() != null) {
+                if (!log.getCheckIn().isBefore(log.getCheckOut())) {
+                    log.setError("Invalid: check-in must be earlier than check-out");
+                    invalidLogs.add(log);
+                    continue;
+                }
+            }
+
+            // Nếu qua hết kiểm tra, thêm vào nhóm user-date
             String key = log.getUserId() + "_" + log.getDate();
             logsByUserDate.computeIfAbsent(key, k -> new ArrayList<>()).add(log);
         }
 
-        // Duyệt từng nhóm user + date
+        // === Check for overlapping logs in the same day/user ===
         for (Map.Entry<String, List<AttendanceLogDto>> entry : logsByUserDate.entrySet()) {
             List<AttendanceLogDto> group = entry.getValue();
 
-            // Chuẩn hóa thời gian checkIn/Out
+            // Chuẩn hóa thành thời điểm checkIn/checkOut
             List<Pair<AttendanceLogDto, Pair<LocalDateTime, LocalDateTime>>> times = new ArrayList<>();
             for (AttendanceLogDto log : group) {
                 LocalDateTime checkIn = log.getCheckIn() != null ? log.getDate().atTime(log.getCheckIn()) : null;
                 LocalDateTime checkOut = null;
                 if (log.getCheckOut() != null) {
+                    // Nếu checkout < checkin, coi là qua ngày hôm sau
                     if (log.getCheckIn() != null && log.getCheckOut().isBefore(log.getCheckIn())) {
                         checkOut = log.getDate().plusDays(1).atTime(log.getCheckOut());
                     } else {
@@ -1169,11 +1201,12 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                 times.add(Pair.of(log, Pair.of(checkIn, checkOut)));
             }
 
-            // Kiểm tra trùng lặp trong nhóm
+            // Kiểm tra trùng lặp giữa các khoảng thời gian
             int n = times.size();
             for (int i = 0; i < n; i++) {
                 LocalDateTime in1 = times.get(i).getRight().getLeft();
                 LocalDateTime out1 = times.get(i).getRight().getRight();
+
                 for (int j = i + 1; j < n; j++) {
                     LocalDateTime in2 = times.get(j).getRight().getLeft();
                     LocalDateTime out2 = times.get(j).getRight().getRight();
@@ -1181,10 +1214,6 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                     boolean overlap = false;
                     if (in1 != null && out1 != null && in2 != null && out2 != null) {
                         overlap = in1.isBefore(out2) && out1.isAfter(in2);
-                    } else if (in1 != null && in2 != null && out2 != null) {
-                        overlap = !in1.isBefore(in2) && !in1.isAfter(out2);
-                    } else if (out1 != null && in2 != null && out2 != null) {
-                        overlap = !out1.isBefore(in2) && !out1.isAfter(out2);
                     }
 
                     if (overlap) {
@@ -1206,5 +1235,38 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
         }
 
         return result;
+    }
+
+    /**
+     * Tìm attendance logs theo userId và date
+     *
+     * @param userId ID của user
+     * @param date Ngày cần tìm
+     * @return Danh sách attendance logs trong ngày
+     */
+    public List<AttendanceLog> findByUserIdAndDate(Long userId, LocalDate date) {
+        List<AttendanceLog> logs = new ArrayList<>();
+        String sql = "SELECT id, user_id, check_type, checked_at, source, note, period_id, created_at "
+                + "FROM attendance_logs "
+                + "WHERE user_id = ? AND DATE(checked_at) = ? "
+                + "ORDER BY checked_at";
+
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, userId);
+            stmt.setDate(2, java.sql.Date.valueOf(date));
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    logs.add(mapResultSetToEntity(rs));
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Error finding attendance logs by userId and date: "
+                    + userId + ", " + date, e);
+        }
+
+        return logs;
     }
 }
