@@ -19,6 +19,10 @@
                        href="${pageContext.request.contextPath}/">Home</a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link ${param.currentPage == 'jobs' ? 'active' : ''}"
+                       href="${pageContext.request.contextPath}/jobs">Jobs</a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link" href="#features">Features</a>
                 </li>
                 <li class="nav-item">
@@ -61,7 +65,7 @@
                     <c:otherwise>
                         <!-- User not logged in -->
                         <li class="nav-item">
-                            <a class="nav-link ${currentPage == 'login' ? 'active' : ''}"
+                            <a class="nav-link ${param.currentPage == 'login' ? 'active' : ''}"
                                href="${pageContext.request.contextPath}/login">
                                 <i class="fas fa-sign-in-alt me-1"></i>Login
                             </a>

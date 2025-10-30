@@ -468,7 +468,10 @@
                                     <select id="department" name="department" class="form-select">
                                         <option value="">All Departments</option>
                                         <c:forEach var="dept" items="${departments}">
-                                            <option value="${dept.id}" ${param.department==dept.id ? 'selected' : '' }>
+                                            <option value="${dept.name}" 
+                                                ${selectedDepartmentName != null && selectedDepartmentName == dept.name ? 'selected' : 
+                                                  param.department == dept.name ? 'selected' : 
+                                                  param.department == dept.id.toString() ? 'selected' : ''}>
                                                 ${dept.name}
                                             </option>
                                         </c:forEach>
