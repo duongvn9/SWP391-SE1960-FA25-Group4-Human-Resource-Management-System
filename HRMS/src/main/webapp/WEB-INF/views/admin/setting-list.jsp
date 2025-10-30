@@ -176,7 +176,7 @@
                                                 </td>
                                                 <td>
                                                     <c:choose>
-                                                        <c:when test="${dept.name == 'Human Resource'}">
+                                                        <c:when test="${dept.name == 'Human Resource' || dept.name == 'IT Support'}">
                                                             <span class="text-muted">No action available</span>
                                                         </c:when>
                                                         <c:otherwise>
