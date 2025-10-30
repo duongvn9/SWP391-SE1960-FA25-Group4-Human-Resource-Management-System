@@ -31,15 +31,30 @@ public class DashboardServlet extends HttpServlet {
             return;
         }
 
-        try {
-            // Get all dashboard KPIs
-            DashboardKpiDto kpis = dashboardService.getDashboardKpis();
-            request.setAttribute("kpis", kpis);
-            logger.info("Dashboard KPIs loaded successfully");
-        } catch (Exception e) {
-            logger.error("Error loading dashboard KPIs", e);
-            // Set empty KPI object to prevent JSP errors
-            request.setAttribute("kpis", new DashboardKpiDto());
+        // Kiểm tra quyền xem dashboard - chỉ HR (8) và HRM (7) mới thấy KPI và charts
+        group4.hrms.model.User user = (group4.hrms.model.User) session.getAttribute("user");
+        boolean canViewDashboardData = false;
+        
+        if (user != null && user.getPositionId() != null) {
+            canViewDashboardData = (user.getPositionId() == 7 || user.getPositionId() == 8);
+        }
+        
+        request.setAttribute("canViewDashboardData", canViewDashboardData);
+        logger.info("User position: {}, canViewDashboardData: {}", 
+                user != null ? user.getPositionId() : "null", canViewDashboardData);
+
+        // Chỉ load KPI data nếu user có quyền xem
+        if (canViewDashboardData) {
+            try {
+                // Get all dashboard KPIs
+                DashboardKpiDto kpis = dashboardService.getDashboardKpis();
+                request.setAttribute("kpis", kpis);
+                logger.info("Dashboard KPIs loaded successfully");
+            } catch (Exception e) {
+                logger.error("Error loading dashboard KPIs", e);
+                // Set empty KPI object to prevent JSP errors
+                request.setAttribute("kpis", new DashboardKpiDto());
+            }
         }
 
         // Set permission flags for sidebar

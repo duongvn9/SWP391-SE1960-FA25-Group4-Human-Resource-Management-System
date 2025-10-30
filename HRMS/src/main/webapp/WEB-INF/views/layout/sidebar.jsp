@@ -390,6 +390,17 @@
                                     </li>
                                 </c:if>
 
+                                <!-- Contract Management - HR Manager (7) and HR Staff (8) -->
+                                <c:if test="${sessionScope.user != null && (sessionScope.user.positionId == 7 || sessionScope.user.positionId == 8)}">
+                                    <li class="nav-item">
+                                        <a href="${pageContext.request.contextPath}/contracts"
+                                            class="nav-link ${param.currentPage == 'contracts' ? 'active' : ''}"
+                                            data-tooltip="Contract Management">
+                                            <i class="fas fa-file-contract"></i><span>Contract Management</span>
+                                        </a>
+                                    </li>
+                                </c:if>
+
                                 <!-- Settings - Admin Only (position_id = 6) -->
                                 <c:if test="${sessionScope.user != null && sessionScope.user.positionId == 6}">
                                     <li class="nav-item">
