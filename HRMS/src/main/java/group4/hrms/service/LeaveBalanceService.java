@@ -8,6 +8,7 @@ import java.util.logging.Logger;
 
 import group4.hrms.dao.LeaveTypeDao;
 import group4.hrms.dao.RequestDao;
+import group4.hrms.dao.UserDao;
 import group4.hrms.dto.LeaveRequestDetail;
 import group4.hrms.model.LeaveType;
 import group4.hrms.model.Request;
@@ -23,10 +24,12 @@ public class LeaveBalanceService {
 
     private final RequestDao requestDao;
     private final LeaveTypeDao leaveTypeDao;
+    private final UserDao userDao;
 
     public LeaveBalanceService(RequestDao requestDao, LeaveTypeDao leaveTypeDao) {
         this.requestDao = requestDao;
         this.leaveTypeDao = leaveTypeDao;
+        this.userDao = new UserDao();
     }
 
     /**
@@ -182,8 +185,8 @@ public class LeaveBalanceService {
                 return true;
             }
 
-            // Calculate seniority bonus (simplified - can be enhanced later)
-            int seniorityBonus = 0; // TODO: Calculate based on user's join date
+            // Calculate seniority bonus based on user's join date
+            int seniorityBonus = calculateSeniorityBonus(userId, leaveTypeCode);
 
             // Calculate total allowed days
             double totalAllowed = defaultDays + seniorityBonus;
@@ -191,19 +194,23 @@ public class LeaveBalanceService {
             // Calculate used days from APPROVED requests in the year
             double usedDays = calculateUsedDays(userId, leaveTypeCode, year);
 
-            // Calculate remaining days
+            // Calculate pending days from PENDING requests in the year
+            double pendingDays = calculatePendingDays(userId, leaveTypeCode, year);
+
+            // Calculate remaining days and available days
             double remainingDays = totalAllowed - usedDays;
+            double availableDays = remainingDays - pendingDays;
 
-            logger.fine(String.format("Balance check: userId=%d, leaveType=%s, total=%.1f, used=%.1f, remaining=%.1f, requested=%.1f",
-                       userId, leaveTypeCode, totalAllowed, usedDays, remainingDays, requestedDays));
+            logger.fine(String.format("Balance check: userId=%d, leaveType=%s, total=%.1f, used=%.1f, pending=%.1f, remaining=%.1f, available=%.1f, requested=%.1f",
+                       userId, leaveTypeCode, totalAllowed, usedDays, pendingDays, remainingDays, availableDays, requestedDays));
 
-            // Check balance >= 0.5 for half-day requests
-            // Check balance >= 1.0 for full-day requests
-            boolean hasSufficient = remainingDays >= requestedDays;
+            // Check available balance (remaining - pending) >= requested days
+            // This prevents creating requests that would exceed balance when pending requests are approved
+            boolean hasSufficient = availableDays >= requestedDays;
 
             if (!hasSufficient) {
-                logger.warning(String.format("Insufficient balance: userId=%d, leaveType=%s, requested=%.1f, remaining=%.1f",
-                              userId, leaveTypeCode, requestedDays, remainingDays));
+                logger.warning(String.format("Insufficient available balance: userId=%d, leaveType=%s, requested=%.1f, available=%.1f (remaining=%.1f, pending=%.1f)",
+                              userId, leaveTypeCode, requestedDays, availableDays, remainingDays, pendingDays));
             } else {
                 logger.info(String.format("Sufficient balance: userId=%d, leaveType=%s, requested=%.1f, remaining=%.1f",
                            userId, leaveTypeCode, requestedDays, remainingDays));
@@ -247,8 +254,8 @@ public class LeaveBalanceService {
                 return -1.0;
             }
 
-            // Calculate seniority bonus (simplified - can be enhanced later)
-            int seniorityBonus = 0; // TODO: Calculate based on user's join date
+            // Calculate seniority bonus based on user's join date
+            int seniorityBonus = calculateSeniorityBonus(userId, leaveTypeCode);
 
             // Calculate total allowed days
             double totalAllowed = defaultDays + seniorityBonus;
@@ -316,8 +323,8 @@ public class LeaveBalanceService {
                     display.totalDays = 0.0;
                     display.remainingDays = 0.0;
                 } else {
-                    // Calculate seniority bonus (simplified)
-                    int seniorityBonus = 0; // TODO: Calculate based on user's join date
+                    // Calculate seniority bonus based on user's join date
+                    int seniorityBonus = calculateSeniorityBonus(userId, leaveTypeCode);
                     double totalAllowed = defaultDays + seniorityBonus;
                     double remainingDays = totalAllowed - usedDays;
 
@@ -363,5 +370,152 @@ public class LeaveBalanceService {
         public double getUsedDays() { return usedDays; }
         public double getRemainingDays() { return remainingDays; }
         public String getDisplayText() { return displayText; }
+    }
+
+    /**
+     * Calculate seniority bonus based on user's join date and company policy
+     *
+     * Company Policy for Annual Leave:
+     * - 0-4 years: 0 extra days
+     * - 5+ years: +1 day for every 5 years of service
+     *
+     * Examples:
+     * - 4 years: 0 bonus days
+     * - 5 years: 1 bonus day
+     * - 9 years: 1 bonus day
+     * - 10 years: 2 bonus days
+     * - 15 years: 3 bonus days
+     *
+     * @param userId User ID
+     * @param leaveTypeCode Leave type code (only applies to ANNUAL)
+     * @return Seniority bonus days
+     */
+    private int calculateSeniorityBonus(Long userId, String leaveTypeCode) {
+        logger.fine(String.format("Calculating seniority bonus: userId=%d, leaveType=%s", userId, leaveTypeCode));
+
+        try {
+            // Only apply seniority bonus to Annual Leave
+            if (!"ANNUAL".equals(leaveTypeCode)) {
+                logger.fine(String.format("Seniority bonus not applicable for leave type: %s", leaveTypeCode));
+                return 0;
+            }
+
+            // Get user information
+            java.util.Optional<group4.hrms.model.User> userOpt = userDao.findById(userId);
+            if (!userOpt.isPresent()) {
+                logger.warning(String.format("User not found for seniority calculation: userId=%d", userId));
+                return 0;
+            }
+
+            group4.hrms.model.User user = userOpt.get();
+            java.time.LocalDate joinDate = user.getDateJoined();
+
+            logger.info(String.format("DEBUG: User %d dateJoined=%s", userId, joinDate));
+
+            // Fallback to startWorkDate if dateJoined is null
+            if (joinDate == null) {
+                joinDate = user.getStartWorkDate();
+                logger.info(String.format("DEBUG: User %d using startWorkDate=%s", userId, joinDate));
+            }
+
+            if (joinDate == null) {
+                logger.warning(String.format("No join date found for user: userId=%d", userId));
+                return 0;
+            }
+
+            // Calculate years of service
+            java.time.LocalDate currentDate = java.time.LocalDate.now();
+            long yearsOfService = java.time.temporal.ChronoUnit.YEARS.between(joinDate, currentDate);
+
+            logger.fine(String.format("User service calculation: userId=%d, joinDate=%s, yearsOfService=%d",
+                       userId, joinDate, yearsOfService));
+
+            // Apply company policy: 1 bonus day for every 5 years of service
+            int seniorityBonus = 0;
+            if (yearsOfService >= 5) {
+                seniorityBonus = (int) (yearsOfService / 5); // Integer division: 5-9 years = 1 day, 10-14 years = 2 days, etc.
+            }
+
+            logger.info(String.format("Seniority bonus calculated: userId=%d, yearsOfService=%d, bonus=%d days",
+                       userId, yearsOfService, seniorityBonus));
+
+            return seniorityBonus;
+
+        } catch (Exception e) {
+            logger.log(Level.WARNING, String.format("Error calculating seniority bonus: userId=%d, leaveType=%s",
+                      userId, leaveTypeCode), e);
+            return 0; // Return 0 on error to be safe
+        }
+    }
+
+    /**
+     * Calculate pending days for user, leave type and year
+     * Only counts PENDING requests to check available balance
+     *
+     * @param userId User ID
+     * @param leaveTypeCode Leave type code
+     * @param year Year
+     * @return Number of pending leave days (supports half-day: 0.5)
+     */
+    private double calculatePendingDays(Long userId, String leaveTypeCode, int year) {
+        logger.fine(String.format("Calculating pending days: userId=%d, leaveType=%s, year=%d",
+                   userId, leaveTypeCode, year));
+
+        try {
+            List<Request> allRequests = requestDao.findByUserId(userId);
+            double totalPendingDays = 0.0;
+
+            for (Request request : allRequests) {
+                // Only count PENDING requests
+                if (!"PENDING".equals(request.getStatus())) {
+                    continue;
+                }
+
+                LeaveRequestDetail detail = request.getLeaveDetail();
+                if (detail == null) {
+                    continue;
+                }
+
+                // Only count matching leave type
+                if (!leaveTypeCode.equals(detail.getLeaveTypeCode())) {
+                    continue;
+                }
+
+                // Check if request is in the target year
+                String startDateStr = detail.getStartDate();
+                if (startDateStr == null || startDateStr.length() < 4) {
+                    continue;
+                }
+
+                try {
+                    java.time.LocalDateTime requestStartDate = java.time.LocalDateTime.parse(startDateStr);
+                    if (requestStartDate.getYear() != year) {
+                        continue;
+                    }
+
+                    // Add days to total (supports half-day)
+                    if (detail.getIsHalfDay() != null && detail.getIsHalfDay()) {
+                        totalPendingDays += 0.5;
+                    } else {
+                        int dayCount = detail.getDayCount() != null ? detail.getDayCount() : 1;
+                        totalPendingDays += dayCount;
+                    }
+                } catch (Exception e) {
+                    logger.log(Level.WARNING, String.format("Error parsing date for request %d: %s",
+                              request.getId(), startDateStr), e);
+                    // Continue with other requests
+                }
+            }
+
+            logger.info(String.format("Calculated pending days: userId=%d, leaveType=%s, year=%d, pendingDays=%.1f",
+                       userId, leaveTypeCode, year, totalPendingDays));
+
+            return totalPendingDays;
+
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, String.format("Error calculating pending days: userId=%d, leaveType=%s, year=%d",
+                      userId, leaveTypeCode, year), e);
+            return 0.0; // Return 0 on error to be safe
+        }
     }
 }
