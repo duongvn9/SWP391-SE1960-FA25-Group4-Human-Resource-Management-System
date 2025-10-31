@@ -486,13 +486,13 @@
                 // Build allPositions object from server data
                 const allPositions = {};
                 <c:forEach var="pos" items="${positions}">
-                allPositions['${pos.id}'] = '${pos.name}';
+                    allPositions['${pos.id}'] = '${pos.name}';
                 </c:forEach>
 
                 // Build allDepartments object from server data  
                 const allDepartments = {};
                 <c:forEach var="dept" items="${departments}">
-                allDepartments['${dept.id}'] = '${dept.name}';
+                    allDepartments['${dept.id}'] = '${dept.name}';
                 </c:forEach>
 
                 // Function to filter positions based on selected department
@@ -500,7 +500,7 @@
                     const departmentId = document.getElementById('departmentId').value;
                     const positionSelect = document.getElementById('positionId');
                     const selectedPosition = positionSelect.value;
-                    
+
                     if (!departmentId) {
                         // If no department selected, show all positions
                         Array.from(positionSelect.options).forEach(option => {
@@ -511,19 +511,19 @@
                     }
 
                     const departmentName = allDepartments[departmentId];
-                    
+
                     // Determine which positions to show
                     let allowedPositions = [];
-                    
+
                     if (departmentName === 'Human Resource') {
                         // HR department can only have: HR Manager and HR Staff
                         allowedPositions = ['HR Manager', 'HR Staff'];
-                    } else if (departmentName === 'Admin') {
-                        // Admin department can only have: Administrator
+                    } else if (departmentName === 'IT Support') {
+                        // IT Support department can only have: Administrator
                         allowedPositions = ['Administrator'];
                     } else {
                         // Other departments can have all positions except HR-specific and Administrator
-                        allowedPositions = Object.values(allPositions).filter(pos => 
+                        allowedPositions = Object.values(allPositions).filter(pos =>
                             pos !== 'HR Manager' && pos !== 'HR Staff' && pos !== 'Administrator'
                         );
                     }
@@ -531,7 +531,7 @@
                     // Filter options
                     Array.from(positionSelect.options).forEach(option => {
                         if (option.value === '') return; // Keep the "Select Position" option
-                        
+
                         const positionName = allPositions[option.value];
                         if (allowedPositions.includes(positionName)) {
                             option.style.display = '';
@@ -548,17 +548,17 @@
                 // Form validation
                 document.addEventListener('DOMContentLoaded', function () {
                     const form = document.getElementById('userCreateForm');
-                    
+
                     // Listen for department change to filter positions
                     const departmentSelect = document.getElementById('departmentId');
-                    departmentSelect.addEventListener('change', function() {
+                    departmentSelect.addEventListener('change', function () {
                         filterPositionsByDepartment();
                         // Clear custom validity and validate
                         this.setCustomValidity('');
                         const isValid = this.value !== '';
                         updateFieldValidation(this, isValid);
                     });
-                    
+
                     // Filter positions on page load if department is already selected
                     filterPositionsByDepartment();
 
@@ -580,7 +580,7 @@
                             age--;
                         }
 
-                        return age >= 18;
+                        return age >= 18 && age <= 60;
                     }
 
                     // HTML5 validation is enabled by default with 'required' attributes
@@ -590,7 +590,7 @@
                         if (dateOfBirth) {
                             if (!validateAge(dateOfBirth)) {
                                 e.preventDefault();
-                                dateOfBirthInput.setCustomValidity('Date of birth must indicate user is at least 18 years old');
+                                dateOfBirthInput.setCustomValidity('Employee must be between 18 and 60 years old');
                                 dateOfBirthInput.reportValidity();
                                 return false;
                             } else {
@@ -605,7 +605,7 @@
                         if (dateOfBirth) {
                             const isValid = validateAge(dateOfBirth);
                             if (!isValid) {
-                                this.setCustomValidity('Employee must be at least 18 years old');
+                                this.setCustomValidity('Employee must be between 18 and 60 years old');
                                 this.reportValidity();
                             } else {
                                 this.setCustomValidity('');

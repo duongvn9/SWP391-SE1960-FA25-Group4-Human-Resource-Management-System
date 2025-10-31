@@ -62,7 +62,12 @@ public class JobPostingServiceImpl implements JobPostingService {
             logger.info("Updating job posting from status: {} to: {}", existing.getStatus(), jobPosting.getStatus());
 
             // Validate the updated job posting
-            validateJobPosting(jobPosting);
+            if (jobPosting == null) {
+                throw new IllegalArgumentException("Job posting cannot be null");
+            }
+            if (jobPosting.getTitle() == null || jobPosting.getTitle().trim().isEmpty()) {
+                throw new IllegalArgumentException("Job title is required");
+            }
 
             // Set audit timestamps
             jobPosting.setCreatedAt(existing.getCreatedAt()); // Preserve creation time
@@ -94,10 +99,17 @@ public class JobPostingServiceImpl implements JobPostingService {
 
     @Override
     public long create(JobPosting jobPosting) {
+        // Debug logs removed
+        
         logger.info("Attempting to create job posting: {}", jobPosting);
         
         // Validate job posting data
-        validateJobPosting(jobPosting);
+        if (jobPosting == null) {
+            throw new IllegalArgumentException("Job posting cannot be null");
+        }
+        if (jobPosting.getTitle() == null || jobPosting.getTitle().trim().isEmpty()) {
+            throw new IllegalArgumentException("Job title is required");
+        }
         
         // Ensure status is PENDING
         if (!"PENDING".equals(jobPosting.getStatus())) {

@@ -468,10 +468,10 @@
                                     <select id="department" name="department" class="form-select">
                                         <option value="">All Departments</option>
                                         <c:forEach var="dept" items="${departments}">
-                                            <option value="${dept.name}" 
-                                                ${selectedDepartmentName != null && selectedDepartmentName == dept.name ? 'selected' : 
-                                                  param.department == dept.name ? 'selected' : 
-                                                  param.department == dept.id.toString() ? 'selected' : ''}>
+                                            <option value="${dept.name}" ${selectedDepartmentName !=null &&
+                                                selectedDepartmentName==dept.name ? 'selected' :
+                                                param.department==dept.name ? 'selected' :
+                                                param.department==dept.id.toString() ? 'selected' : '' }>
                                                 ${dept.name}
                                             </option>
                                         </c:forEach>
@@ -497,16 +497,7 @@
                                         </option>
                                     </select>
                                 </div>
-                                <div class="filter-group">
-                                    <label for="status">Status</label>
-                                    <select id="status" name="status" class="form-select">
-                                        <option value="">All Status</option>
-                                        <option value="active" ${param.status=='active' ? 'selected' : '' }>Active
-                                        </option>
-                                        <option value="inactive" ${param.status=='inactive' ? 'selected' : '' }>Inactive
-                                        </option>
-                                    </select>
-                                </div>
+
                                 <div class="filter-actions">
                                     <button type="submit" class="btn btn-primary">
                                         <i class="fas fa-search me-1"></i>Filter
@@ -552,7 +543,7 @@
                                     <i class="fas fa-inbox"></i>
                                     <p>No users found</p>
                                     <c:if
-                                        test="${not empty param.search or not empty param.department or not empty param.position or not empty param.status}">
+                                        test="${not empty param.search or not empty param.department or not empty param.position}">
                                         <p class="text-muted">Try adjusting your filters</p>
                                     </c:if>
                                 </div>
@@ -569,7 +560,6 @@
                                                 <th>Gender</th>
                                                 <th>Department</th>
                                                 <th>Position</th>
-                                                <th>Status</th>
                                                 <th class="date-joined-col">Date Joined</th>
                                                 <th>Actions</th>
                                             </tr>
@@ -585,11 +575,6 @@
                                                         : '-'}</td>
                                                     <td>${user.departmentName != null ? user.departmentName : '-'}</td>
                                                     <td>${user.positionName != null ? user.positionName : '-'}</td>
-                                                    <td>
-                                                        <span class="status-badge ${user.status}">
-                                                            ${user.status}
-                                                        </span>
-                                                    </td>
                                                     <td class="date-joined-col">
                                                         ${user.dateJoined != null ? user.dateJoined : '-'}
                                                     </td>
@@ -874,16 +859,7 @@
                                     </div>
                                 </div>
 
-                                <!-- Status -->
-                                <div class="mb-3">
-                                    <label for="edit-status" class="form-label">
-                                        Status<span class="text-danger">*</span>
-                                    </label>
-                                    <select class="form-select" id="edit-status" name="status" required>
-                                        <option value="active">Active</option>
-                                        <option value="inactive">Inactive</option>
-                                    </select>
-                                </div>
+
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
@@ -998,6 +974,73 @@
             </div>
 
             <script>
+                // Department-Position mapping for filtering
+                const departmentPositionMapping = {
+                    'Human Resource': ['HR Manager', 'HR Staff', 'Department Manager']
+                };
+
+                // Build allPositions object from server data
+                const allPositions = {};
+                <c:forEach var="pos" items="${positions}">
+                    allPositions['${pos.id}'] = '${pos.name}';
+                </c:forEach>
+
+                // Build allDepartments object from server data  
+                const allDepartments = {};
+                <c:forEach var="dept" items="${departments}">
+                    allDepartments['${dept.id}'] = '${dept.name}';
+                </c:forEach>
+
+                // Function to filter positions based on selected department
+                function filterPositionsByDepartment(departmentSelectId, positionSelectId) {
+                    const departmentId = document.getElementById(departmentSelectId).value;
+                    const positionSelect = document.getElementById(positionSelectId);
+                    const selectedPosition = positionSelect.value;
+
+                    if (!departmentId) {
+                        // If no department selected, show all positions
+                        Array.from(positionSelect.options).forEach(option => {
+                            if (option.value === '') return;
+                            option.style.display = '';
+                        });
+                        return;
+                    }
+
+                    const departmentName = allDepartments[departmentId];
+
+                    // Determine which positions to show
+                    let allowedPositions = [];
+
+                    if (departmentName === 'Human Resource') {
+                        // HR department can only have: HR Manager and HR Staff
+                        allowedPositions = ['HR Manager', 'HR Staff'];
+                    } else if (departmentName === 'IT Support') {
+                        // IT Support department can only have: Administrator
+                        allowedPositions = ['Administrator'];
+                    } else {
+                        // Other departments can have all positions except HR-specific and Administrator
+                        allowedPositions = Object.values(allPositions).filter(pos =>
+                            pos !== 'HR Manager' && pos !== 'HR Staff' && pos !== 'Administrator'
+                        );
+                    }
+
+                    // Filter options
+                    Array.from(positionSelect.options).forEach(option => {
+                        if (option.value === '') return; // Keep the "Select Position" option
+
+                        const positionName = allPositions[option.value];
+                        if (allowedPositions.includes(positionName)) {
+                            option.style.display = '';
+                        } else {
+                            option.style.display = 'none';
+                            // If this was the selected option, clear it
+                            if (option.value === selectedPosition) {
+                                positionSelect.value = '';
+                            }
+                        }
+                    });
+                }
+
                 // Notification function
                 function showNotification(message, type = 'info') {
                     const modal = new bootstrap.Modal(document.getElementById('notificationModal'));
@@ -1191,6 +1234,9 @@
                                 document.getElementById('edit-departmentId').value = user.departmentId || '';
                                 document.getElementById('edit-positionId').value = user.positionId || '';
 
+                                // Apply department-position filtering after setting values
+                                filterPositionsByDepartment('edit-departmentId', 'edit-positionId');
+
                                 // Convert date format from dd/MM/yyyy to yyyy-MM-dd for input[type="date"]
                                 if (user.dateJoined) {
                                     const djParts = user.dateJoined.split('/');
@@ -1205,7 +1251,7 @@
                                     }
                                 }
 
-                                document.getElementById('edit-status').value = user.status || 'active';
+
 
                                 // Show modal
                                 const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
@@ -1312,6 +1358,11 @@
                         viewModal.hide();
                         // Open edit modal
                         setTimeout(() => editUser(userId), 300);
+                    });
+
+                    // Department change event listener for edit modal
+                    document.getElementById('edit-departmentId').addEventListener('change', function () {
+                        filterPositionsByDepartment('edit-departmentId', 'edit-positionId');
                     });
 
                     // Edit form submission

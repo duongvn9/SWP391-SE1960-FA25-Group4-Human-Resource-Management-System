@@ -39,6 +39,7 @@ public class LeaveRequestService {
     private final LeaveTypeDao leaveTypeDao;
     private final HolidayDao holidayDao;
     private final LeaveBalanceDao leaveBalanceDao;
+    private final group4.hrms.dao.UserDao userDao;
 
     public LeaveRequestService(RequestDao requestDao, RequestTypeDao requestTypeDao, LeaveTypeDao leaveTypeDao) {
         this.requestDao = requestDao;
@@ -46,6 +47,7 @@ public class LeaveRequestService {
         this.leaveTypeDao = leaveTypeDao;
         this.holidayDao = new HolidayDao();
         this.leaveBalanceDao = new LeaveBalanceDao();
+        this.userDao = new group4.hrms.dao.UserDao();
     }
 
     /**
@@ -238,9 +240,8 @@ public class LeaveRequestService {
             // Get default days for leave type
             int defaultDays = leaveType.getDefaultDays();
 
-            // Calculate seniority bonus (simplified - can be enhanced later)
-            // TODO: Calculate based on user's join date and company policy
-            int seniorityBonus = 0;
+            // Calculate seniority bonus based on user's join date
+            int seniorityBonus = calculateSeniorityBonus(userId, leaveTypeCode);
 
             // Calculate total allowed days
             int totalAllowed = defaultDays + seniorityBonus;
@@ -543,8 +544,8 @@ public class LeaveRequestService {
             String otherPeriod = null;
 
             for (Request request : allRequests) {
-                // Only check APPROVED leaves (not PENDING, as they might be rejected)
-                if (!"APPROVED".equals(request.getStatus())) {
+                // Check both APPROVED and PENDING leaves to prevent conflicts
+                if (!"APPROVED".equals(request.getStatus()) && !"PENDING".equals(request.getStatus())) {
                     continue;
                 }
 
@@ -810,11 +811,30 @@ public class LeaveRequestService {
             throw new IllegalArgumentException(errorMessage);
         }
 
-        // Requirement 4.7: Validate duration does not exceed max_days limit
-        if (leaveType.getMaxDays() != null && dayCount > leaveType.getMaxDays()) {
-            throw new IllegalArgumentException(
-                    "Cannot request more than " + leaveType.getMaxDays() + " days for " + leaveType.getName()
-                    + " (requested: " + dayCount + " days)");
+        // Requirement 4.7: Validate duration does not exceed max_days limit (for all leave types)
+        // Both paid and unpaid leave types can have max_days limits per request
+        if (leaveType.getMaxDays() != null) {
+            int effectiveMaxDays = leaveType.getMaxDays();
+
+            // Special handling for Annual Leave: max_days should include seniority bonus
+            if ("ANNUAL".equals(leaveType.getCode())) {
+                int seniorityBonus = calculateSeniorityBonus(userId, leaveType.getCode());
+                effectiveMaxDays = leaveType.getDefaultDays() + seniorityBonus;
+
+                logger.fine(String.format("Annual Leave max_days calculation: userId=%d, base=%d, seniority=%d, total=%d",
+                           userId, leaveType.getDefaultDays(), seniorityBonus, effectiveMaxDays));
+            }
+
+            if (dayCount > effectiveMaxDays) {
+                throw new IllegalArgumentException(
+                        "Cannot request more than " + effectiveMaxDays + " days for " + leaveType.getName()
+                        + " (requested: " + dayCount + " days)");
+            }
+        }
+
+        // Requirement BR-LV-13: Validate monthly limit for unpaid leave (13 days per month)
+        if (!leaveType.isPaid() && "UNPAID".equals(leaveType.getCode())) {
+            validateUnpaidLeaveMonthlyLimit(userId, startDate, dayCount);
         }
 
         // Requirement 2: Validate leave balance (with half-day support)
@@ -1135,9 +1155,8 @@ public class LeaveRequestService {
 
             int defaultDays = leaveType.getDefaultDays();
 
-            // Calculate seniority bonus (simplified - can be enhanced)
-            // For now, assume 1 extra day per 2 years of service
-            int seniorityBonus = 0; // TODO: Calculate based on user's join date
+            // Calculate seniority bonus based on user's join date
+            int seniorityBonus = calculateSeniorityBonus(userId, leaveTypeCode);
 
             // Calculate used days from approved requests in the year (supports decimal for half-day)
             double usedDays = calculateUsedDays(userId, leaveTypeCode, year);
@@ -1568,6 +1587,219 @@ public class LeaveRequestService {
         } catch (Exception e) {
             logger.log(Level.SEVERE, String.format("Error finding half-day requests: userId=%d, date=%s", userId, date), e);
             return new java.util.ArrayList<>();
+        }
+    }
+
+    /**
+     * Calculate seniority bonus based on user's join date and company policy
+     *
+     * Company Policy for Annual Leave:
+     * - 0-4 years: 0 extra days
+     * - 5+ years: +1 day for every 5 years of service
+     *
+     * Examples:
+     * - 4 years: 0 bonus days
+     * - 5 years: 1 bonus day
+     * - 9 years: 1 bonus day
+     * - 10 years: 2 bonus days
+     * - 15 years: 3 bonus days
+     *
+     * @param userId User ID
+     * @param leaveTypeCode Leave type code (only applies to ANNUAL)
+     * @return Seniority bonus days
+     */
+    public int calculateSeniorityBonus(Long userId, String leaveTypeCode) {
+        logger.fine(String.format("Calculating seniority bonus: userId=%d, leaveType=%s", userId, leaveTypeCode));
+
+        try {
+            // Only apply seniority bonus to Annual Leave
+            if (!"ANNUAL".equals(leaveTypeCode)) {
+                logger.fine(String.format("Seniority bonus not applicable for leave type: %s", leaveTypeCode));
+                return 0;
+            }
+
+            // Get user information
+            java.util.Optional<group4.hrms.model.User> userOpt = userDao.findById(userId);
+            if (!userOpt.isPresent()) {
+                logger.warning(String.format("User not found for seniority calculation: userId=%d", userId));
+                return 0;
+            }
+
+            group4.hrms.model.User user = userOpt.get();
+            java.time.LocalDate joinDate = user.getDateJoined();
+
+            logger.info(String.format("DEBUG: User %d dateJoined=%s", userId, joinDate));
+
+            // Fallback to startWorkDate if dateJoined is null
+            if (joinDate == null) {
+                joinDate = user.getStartWorkDate();
+                logger.info(String.format("DEBUG: User %d using startWorkDate=%s", userId, joinDate));
+            }
+
+            if (joinDate == null) {
+                logger.warning(String.format("No join date found for user: userId=%d", userId));
+                return 0;
+            }
+
+            // Calculate years of service
+            java.time.LocalDate currentDate = java.time.LocalDate.now();
+            long yearsOfService = java.time.temporal.ChronoUnit.YEARS.between(joinDate, currentDate);
+
+            logger.fine(String.format("User service calculation: userId=%d, joinDate=%s, yearsOfService=%d",
+                       userId, joinDate, yearsOfService));
+
+            // Apply company policy: 1 bonus day for every 5 years of service
+            int seniorityBonus = 0;
+            if (yearsOfService >= 5) {
+                seniorityBonus = (int) (yearsOfService / 5); // Integer division: 5-9 years = 1 day, 10-14 years = 2 days, etc.
+            }
+
+            logger.info(String.format("Seniority bonus calculated: userId=%d, yearsOfService=%d, bonus=%d days",
+                       userId, yearsOfService, seniorityBonus));
+
+            return seniorityBonus;
+
+        } catch (Exception e) {
+            logger.log(Level.WARNING, String.format("Error calculating seniority bonus: userId=%d, leaveType=%s",
+                      userId, leaveTypeCode), e);
+            return 0; // Return 0 on error to be safe
+        }
+    }
+
+    /**
+     * Validate monthly limit for unpaid leave (BR-LV-13)
+     *
+     * Business Rule: Unpaid leave is limited to 13 working days per month
+     * to prevent abuse and ensure business continuity.
+     *
+     * @param userId User ID
+     * @param startDate Start date of the new request
+     * @param requestedDays Number of days being requested
+     * @throws IllegalArgumentException if monthly limit would be exceeded
+     */
+    private void validateUnpaidLeaveMonthlyLimit(Long userId, LocalDateTime startDate, int requestedDays) {
+        logger.info(String.format("Validating unpaid leave monthly limit: userId=%d, month=%d-%d, requestedDays=%d",
+                   userId, startDate.getYear(), startDate.getMonthValue(), requestedDays));
+
+        try {
+            int year = startDate.getYear();
+            int month = startDate.getMonthValue();
+
+            // Calculate used unpaid leave days in the current month (APPROVED only)
+            double usedDaysInMonth = calculateUnpaidLeaveDaysInMonth(userId, year, month);
+
+            // Monthly limit for unpaid leave
+            final int MONTHLY_LIMIT = 13;
+
+            // Check if new request would exceed monthly limit
+            double totalAfterRequest = usedDaysInMonth + requestedDays;
+
+            logger.fine(String.format("Monthly limit check: userId=%d, month=%d-%d, used=%.1f, requested=%d, total=%.1f, limit=%d",
+                       userId, year, month, usedDaysInMonth, requestedDays, totalAfterRequest, MONTHLY_LIMIT));
+
+            if (totalAfterRequest > MONTHLY_LIMIT) {
+                double remainingDays = MONTHLY_LIMIT - usedDaysInMonth;
+
+                logger.warning(String.format("Monthly unpaid leave limit exceeded: userId=%d, month=%d-%d, used=%.1f, requested=%d, limit=%d, remaining=%.1f",
+                              userId, year, month, usedDaysInMonth, requestedDays, MONTHLY_LIMIT, remainingDays));
+
+                throw new IllegalArgumentException(
+                    String.format("Monthly unpaid leave limit exceeded! " +
+                                 "You have already used %.1f days of unpaid leave in %d-%02d. " +
+                                 "Monthly limit: %d days. Remaining: %.1f days. " +
+                                 "Requested: %d days. " +
+                                 "Please reduce your request or wait for next month.",
+                                 usedDaysInMonth, year, month, MONTHLY_LIMIT, remainingDays, requestedDays)
+                );
+            }
+
+            logger.info(String.format("Monthly limit validation passed: userId=%d, month=%d-%d, used=%.1f, requested=%d, remaining=%.1f",
+                       userId, year, month, usedDaysInMonth, requestedDays, MONTHLY_LIMIT - totalAfterRequest));
+
+        } catch (IllegalArgumentException e) {
+            throw e; // Re-throw validation exceptions
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, String.format("Error validating monthly unpaid leave limit: userId=%d, month=%d-%d",
+                      userId, startDate.getYear(), startDate.getMonthValue()), e);
+            throw new RuntimeException("Error validating monthly unpaid leave limit", e);
+        }
+    }
+
+    /**
+     * Calculate unpaid leave days used in a specific month
+     * Counts both APPROVED and PENDING requests to prevent monthly limit abuse
+     *
+     * @param userId User ID
+     * @param year Year
+     * @param month Month (1-12)
+     * @return Number of unpaid leave days used in the month (supports half-day: 0.5)
+     */
+    private double calculateUnpaidLeaveDaysInMonth(Long userId, int year, int month) {
+        logger.fine(String.format("Calculating unpaid leave days in month: userId=%d, year=%d, month=%d",
+                   userId, year, month));
+
+        try {
+            // Get all requests for the user
+            List<Request> allRequests = requestDao.findByUserId(userId);
+
+            double totalDays = 0.0;
+
+            for (Request request : allRequests) {
+                // Count both APPROVED and PENDING unpaid leave requests
+                // This prevents creating multiple requests that would exceed monthly limit
+                if (!"APPROVED".equals(request.getStatus()) && !"PENDING".equals(request.getStatus())) {
+                    continue;
+                }
+
+                LeaveRequestDetail detail = request.getLeaveDetail();
+                if (detail == null) {
+                    continue;
+                }
+
+                // Only count unpaid leave
+                if (!"UNPAID".equals(detail.getLeaveTypeCode())) {
+                    continue;
+                }
+
+                // Parse start date to check if it's in the target month
+                String startDateStr = detail.getStartDate();
+                if (startDateStr == null || startDateStr.length() < 10) {
+                    continue;
+                }
+
+                try {
+                    LocalDateTime requestStartDate = LocalDateTime.parse(startDateStr);
+
+                    // Check if request is in the target month
+                    if (requestStartDate.getYear() == year && requestStartDate.getMonthValue() == month) {
+                        // Add days to total (supports half-day)
+                        if (detail.getIsHalfDay() != null && detail.getIsHalfDay()) {
+                            totalDays += 0.5;
+                            logger.fine(String.format("Added half-day unpaid leave: requestId=%d, date=%s, period=%s",
+                                       request.getId(), startDateStr, detail.getHalfDayPeriod()));
+                        } else {
+                            int dayCount = detail.getDayCount() != null ? detail.getDayCount() : 1;
+                            totalDays += dayCount;
+                            logger.fine(String.format("Added full-day unpaid leave: requestId=%d, days=%d",
+                                       request.getId(), dayCount));
+                        }
+                    }
+                } catch (Exception e) {
+                    logger.log(Level.WARNING, String.format("Error parsing date for request %d: %s",
+                              request.getId(), startDateStr), e);
+                    // Continue with other requests
+                }
+            }
+
+            logger.info(String.format("Calculated unpaid leave days in month (APPROVED + PENDING): userId=%d, year=%d, month=%d, totalDays=%.1f",
+                       userId, year, month, totalDays));
+
+            return totalDays;
+
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, String.format("Error calculating unpaid leave days in month: userId=%d, year=%d, month=%d",
+                      userId, year, month), e);
+            return 0.0; // Return 0 on error to be safe
         }
     }
 }
