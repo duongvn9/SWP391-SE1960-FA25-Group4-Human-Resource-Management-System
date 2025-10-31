@@ -260,6 +260,67 @@ public class EmploymentContractDao extends BaseDao<EmploymentContract, Long> {
     }
     
     /**
+     * Generate contract number theo format CONTRACT-YYYY-XXX
+     */
+    public String generateContractNo() throws SQLException {
+        int currentYear = java.time.Year.now().getValue();
+        String yearPrefix = "CONTRACT-" + currentYear + "-";
+        
+        String sql = "SELECT contract_no FROM employment_contracts " +
+                    "WHERE contract_no LIKE ? " +
+                    "ORDER BY contract_no DESC LIMIT 1";
+        
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, yearPrefix + "%");
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    String lastContractNo = rs.getString("contract_no");
+                    // Extract number from CONTRACT-2025-001
+                    String[] parts = lastContractNo.split("-");
+                    if (parts.length == 3) {
+                        int lastNumber = Integer.parseInt(parts[2]);
+                        int nextNumber = lastNumber + 1;
+                        return String.format("%s%03d", yearPrefix, nextNumber);
+                    }
+                }
+            }
+            
+            // First contract of the year
+            return yearPrefix + "001";
+            
+        } catch (SQLException e) {
+            logger.error("Error generating contract number: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+    
+    /**
+     * Lấy danh sách user IDs có active contract
+     */
+    public List<Long> findUserIdsWithActiveContract() throws SQLException {
+        List<Long> userIds = new ArrayList<>();
+        String sql = "SELECT DISTINCT user_id FROM employment_contracts WHERE status = 'active'";
+        
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            while (rs.next()) {
+                userIds.add(rs.getLong("user_id"));
+            }
+            
+            return userIds;
+            
+        } catch (SQLException e) {
+            logger.error("Error finding user IDs with active contract: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+    
+    /**
      * Xóa contract theo ID
      */
     public boolean deleteById(Long contractId) throws SQLException {
