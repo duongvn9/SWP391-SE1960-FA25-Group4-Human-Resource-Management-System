@@ -173,14 +173,6 @@
                                                    class="btn btn-sm btn-warning" title="Edit">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
-                                                <button class="btn btn-sm btn-danger" 
-                                                        data-bs-toggle="modal" 
-                                                        data-bs-target="#deleteModal"
-                                                        data-contract-id="${contract.id}"
-                                                        data-contract-no="${contract.contractNo}"
-                                                        title="Delete">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
                                             </td>
                                         </tr>
                                     </c:forEach>
@@ -196,51 +188,6 @@
         <jsp:include page="../layout/dashboard-footer.jsp" />
     </div>
     
-    <!-- Delete Confirmation Modal -->
-    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title" id="deleteModalLabel">
-                        <i class="fas fa-exclamation-triangle"></i> Confirm Delete
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Are you sure you want to delete this contract?</p>
-                    <p><strong>Contract No: <span id="deleteContractNo"></span></strong></p>
-                    <p class="text-danger mb-0"><i class="fas fa-info-circle"></i> This action cannot be undone.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="fas fa-times"></i> Cancel
-                    </button>
-                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
-                        <i class="fas fa-trash"></i> Yes, Delete
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <script>
-        // Handle delete modal
-        const deleteModal = document.getElementById('deleteModal');
-        let deleteContractId = null;
-        
-        deleteModal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            deleteContractId = button.getAttribute('data-contract-id');
-            const contractNo = button.getAttribute('data-contract-no');
-            
-            document.getElementById('deleteContractNo').textContent = contractNo;
-        });
-        
-        document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
-            if (deleteContractId) {
-                window.location.href = '${pageContext.request.contextPath}/contracts/delete?id=' + deleteContractId;
-            }
-        });
-    </script>
+
 </body>
 </html>
