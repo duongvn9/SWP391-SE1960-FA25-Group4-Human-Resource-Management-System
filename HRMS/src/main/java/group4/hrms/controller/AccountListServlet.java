@@ -211,6 +211,11 @@ public class AccountListServlet extends HttpServlet {
             request.setAttribute("canCreateAccount", group4.hrms.util.PermissionUtil.canCreateAccount(request));
             request.setAttribute("canResetPassword", group4.hrms.util.PermissionUtil.canResetPassword(request));
 
+            // Check if user is admin (for edit button visibility)
+            boolean isAdmin = group4.hrms.util.PermissionUtil.POSITION_ADMIN.equals(positionCode);
+            request.setAttribute("isAdmin", isAdmin);
+            logger.info("User position code: {}, isAdmin: {}", positionCode, isAdmin);
+
             // Log final performance summary
             long totalRequestTime = System.currentTimeMillis() - queryStartTime;
             logger.info(
