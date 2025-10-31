@@ -30,10 +30,14 @@
                             <div class="col-12">
                                 <h2>Welcome back, ${sessionScope.userFullName != null ? sessionScope.userFullName :
                                     'Admin'}!</h2>
-                                <p class="text-muted">HR Management System Dashboard - KPIs Overview</p>
+                                <c:if test="${canViewDashboardData}">
+                                    <p class="text-muted">HR Management System Dashboard - KPIs Overview</p>
+                                </c:if>
                             </div>
                         </div>
 
+                        <!-- Chỉ hiển thị KPI và Charts cho HR và HRM -->
+                        <c:if test="${canViewDashboardData}">
                         <!-- Employee Statistics Cards -->
                         <div class="row mb-4">
                             <div class="col-lg-3 col-md-6 mb-3">
@@ -250,6 +254,8 @@
                                 </div>
                             </div>
                         </c:if>
+                        </c:if>
+                        <!-- Kết thúc phần chỉ dành cho HR và HRM -->
                     </div>
 
                     <!-- Confirmation Modal -->
@@ -275,6 +281,8 @@
                     <jsp:include page="../layout/dashboard-footer.jsp" />
                 </div>
 
+                <!-- Chỉ load charts nếu user có quyền xem dashboard data -->
+                <c:if test="${canViewDashboardData}">
                 <script>
                     // Chart.js configuration
                     Chart.defaults.font.family = "'Inter', sans-serif";
@@ -520,6 +528,7 @@
                         canvas.title = 'Click to view details';
                     });
                 </script>
+                </c:if>
             </body>
 
             </html>

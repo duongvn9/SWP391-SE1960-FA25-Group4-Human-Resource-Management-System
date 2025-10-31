@@ -106,8 +106,8 @@
                                 <i class="fas fa-user-circle"></i> My Account</a></li>
                         <li><a class="dropdown-item" href="${pageContext.request.contextPath}/user-profile">
                                 <i class="fas fa-user"></i> Profile</a></li>
-                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/contracts">
-                                <i class="fas fa-file-alt"></i> Employment Contract</a></li>
+                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/my-contract">
+                                <i class="fas fa-file-contract"></i> My Contract</a></li>
                         <%-- Settings - Admin Position Only (position_id=6) --%>
                             <c:if test="${sessionScope.user != null && sessionScope.user.positionId == 6}">
                                 <li><a class="dropdown-item" href="${pageContext.request.contextPath}/settings">

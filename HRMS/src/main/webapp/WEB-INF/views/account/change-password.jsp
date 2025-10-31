@@ -31,6 +31,17 @@
             padding: 2rem;
         }
         
+        /* Ẩn biểu tượng con mắt mặc định của trình duyệt */
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear {
+            display: none;
+        }
+        
+        input[type="text"]::-ms-reveal,
+        input[type="text"]::-ms-clear {
+            display: none;
+        }
+        
         @media (max-width: 768px) {
             .main-content { 
                 margin-left: 0; 

@@ -132,36 +132,44 @@ public class AccountCreateServlet extends HttpServlet {
             return;
         }
 
-        try {
-            // Get form parameters
-            String userIdStr = request.getParameter("userId");
-            String username = request.getParameter("username");
-            String emailLogin = request.getParameter("emailLogin");
-            String password = request.getParameter("password");
-            String confirmPassword = request.getParameter("confirmPassword");
+        // Get form parameters
+        String userIdStr = request.getParameter("userId");
+        String username = request.getParameter("username");
+        String emailLogin = request.getParameter("emailLogin");
+        String password = request.getParameter("password");
+        String confirmPassword = request.getParameter("confirmPassword");
 
+        try {
             // Validate required fields
             if (userIdStr == null || userIdStr.trim().isEmpty()) {
-                session.setAttribute("errorMessage", "Please select a user");
-                response.sendRedirect(request.getContextPath() + "/employees/accounts/create");
+                request.setAttribute("errorMessage", "Please select a user");
+                preserveFormData(request, userIdStr, username, emailLogin);
+                loadFormData(request);
+                request.getRequestDispatcher("/WEB-INF/views/employees/account-create.jsp").forward(request, response);
                 return;
             }
 
             if (username == null || username.trim().isEmpty()) {
-                session.setAttribute("errorMessage", "Username is required");
-                response.sendRedirect(request.getContextPath() + "/employees/accounts/create");
+                request.setAttribute("errorMessage", "Username is required");
+                preserveFormData(request, userIdStr, username, emailLogin);
+                loadFormData(request);
+                request.getRequestDispatcher("/WEB-INF/views/employees/account-create.jsp").forward(request, response);
                 return;
             }
 
             if (password == null || password.trim().isEmpty()) {
-                session.setAttribute("errorMessage", "Password is required");
-                response.sendRedirect(request.getContextPath() + "/employees/accounts/create");
+                request.setAttribute("errorMessage", "Password is required");
+                preserveFormData(request, userIdStr, username, emailLogin);
+                loadFormData(request);
+                request.getRequestDispatcher("/WEB-INF/views/employees/account-create.jsp").forward(request, response);
                 return;
             }
 
             if (confirmPassword == null || !password.equals(confirmPassword)) {
-                session.setAttribute("errorMessage", "Passwords do not match");
-                response.sendRedirect(request.getContextPath() + "/employees/accounts/create");
+                request.setAttribute("errorMessage", "Passwords do not match");
+                preserveFormData(request, userIdStr, username, emailLogin);
+                loadFormData(request);
+                request.getRequestDispatcher("/WEB-INF/views/employees/account-create.jsp").forward(request, response);
                 return;
             }
 
@@ -170,8 +178,10 @@ public class AccountCreateServlet extends HttpServlet {
             if (!passwordErrors.isEmpty()) {
                 // Combine all password validation errors into a single message
                 String errorMessage = "Password validation failed: " + String.join("; ", passwordErrors);
-                session.setAttribute("errorMessage", errorMessage);
-                response.sendRedirect(request.getContextPath() + "/employees/accounts/create");
+                request.setAttribute("errorMessage", errorMessage);
+                preserveFormData(request, userIdStr, username, emailLogin);
+                loadFormData(request);
+                request.getRequestDispatcher("/WEB-INF/views/employees/account-create.jsp").forward(request, response);
                 return;
             }
 
@@ -181,8 +191,10 @@ public class AccountCreateServlet extends HttpServlet {
                 userId = Long.parseLong(userIdStr);
             } catch (NumberFormatException e) {
                 logger.error("Invalid user ID format: {}", userIdStr);
-                session.setAttribute("errorMessage", "Invalid user ID");
-                response.sendRedirect(request.getContextPath() + "/employees/accounts/create");
+                request.setAttribute("errorMessage", "Invalid user ID");
+                preserveFormData(request, userIdStr, username, emailLogin);
+                loadFormData(request);
+                request.getRequestDispatcher("/WEB-INF/views/employees/account-create.jsp").forward(request, response);
                 return;
             }
 
@@ -190,8 +202,10 @@ public class AccountCreateServlet extends HttpServlet {
             User user = userDao.findById(userId).orElse(null);
             if (user == null) {
                 logger.warn("User not found with ID: {}", userId);
-                session.setAttribute("errorMessage", "Selected user not found");
-                response.sendRedirect(request.getContextPath() + "/employees/accounts/create");
+                request.setAttribute("errorMessage", "Selected user not found");
+                preserveFormData(request, userIdStr, username, emailLogin);
+                loadFormData(request);
+                request.getRequestDispatcher("/WEB-INF/views/employees/account-create.jsp").forward(request, response);
                 return;
             }
 
@@ -204,24 +218,30 @@ public class AccountCreateServlet extends HttpServlet {
                     : user.getEmailCompany();
 
             if (finalEmailLogin == null || finalEmailLogin.trim().isEmpty()) {
-                session.setAttribute("errorMessage", "Email login is required. User has no company email.");
-                response.sendRedirect(request.getContextPath() + "/employees/accounts/create");
+                request.setAttribute("errorMessage", "Email login is required. User has no company email.");
+                preserveFormData(request, userIdStr, username, emailLogin);
+                loadFormData(request);
+                request.getRequestDispatcher("/WEB-INF/views/employees/account-create.jsp").forward(request, response);
                 return;
             }
 
             // Check if username already exists
             if (accountDao.existsByUsername(username.trim())) {
                 logger.warn("Username already exists: {}", username);
-                session.setAttribute("errorMessage", "Username already exists. Please choose another one.");
-                response.sendRedirect(request.getContextPath() + "/employees/accounts/create");
+                request.setAttribute("errorMessage", "Username already exists. Please choose another one.");
+                preserveFormData(request, userIdStr, username, emailLogin);
+                loadFormData(request);
+                request.getRequestDispatcher("/WEB-INF/views/employees/account-create.jsp").forward(request, response);
                 return;
             }
 
             // Check if email login already exists
             if (accountDao.findByEmailLogin(finalEmailLogin).isPresent()) {
                 logger.warn("Email login already exists: {}", finalEmailLogin);
-                session.setAttribute("errorMessage", "Email login already exists. Please use another email.");
-                response.sendRedirect(request.getContextPath() + "/employees/accounts/create");
+                request.setAttribute("errorMessage", "Email login already exists. Please use another email.");
+                preserveFormData(request, userIdStr, username, emailLogin);
+                loadFormData(request);
+                request.getRequestDispatcher("/WEB-INF/views/employees/account-create.jsp").forward(request, response);
                 return;
             }
 
@@ -265,8 +285,39 @@ public class AccountCreateServlet extends HttpServlet {
                 }
             }
 
-            session.setAttribute("errorMessage", errorMessage);
-            response.sendRedirect(request.getContextPath() + "/employees/accounts/create");
+            request.setAttribute("errorMessage", errorMessage);
+            preserveFormData(request, userIdStr, username, emailLogin);
+            loadFormData(request);
+            request.getRequestDispatcher("/WEB-INF/views/employees/account-create.jsp").forward(request, response);
+        }
+    }
+
+    /**
+     * Load form data (users list) for the form
+     */
+    private void loadFormData(HttpServletRequest request) {
+        try {
+            // Load all active users for the dropdown
+            List<User> users = userDao.findByStatus("active");
+            request.setAttribute("users", users);
+            request.setAttribute("currentPage", "account-create");
+        } catch (Exception e) {
+            logger.error("Error loading form data: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Preserve form data in request attributes for re-display after error
+     */
+    private void preserveFormData(HttpServletRequest request, String userId, String username, String emailLogin) {
+        if (userId != null && !userId.trim().isEmpty()) {
+            request.setAttribute("selectedUserId", userId);
+        }
+        if (username != null && !username.trim().isEmpty()) {
+            request.setAttribute("username", username);
+        }
+        if (emailLogin != null && !emailLogin.trim().isEmpty()) {
+            request.setAttribute("emailLogin", emailLogin);
         }
     }
 }

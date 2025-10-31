@@ -142,7 +142,7 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             String action = req.getParameter("action");
             String exportType = req.getParameter("exportType");
             String employeeIdStr = req.getParameter("employeeId");
-            Long employeeId = Long.valueOf(employeeIdStr);
+            Long employeeId = parseLongSafe(employeeIdStr);
             String employeeKeyword = getParam(req, "employeeKeyword");
             String department = getParam(req, "department");
             String startDateStr = getParam(req, "startDate");

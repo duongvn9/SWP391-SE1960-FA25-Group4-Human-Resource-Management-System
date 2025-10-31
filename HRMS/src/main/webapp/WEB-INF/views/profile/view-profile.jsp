@@ -173,20 +173,26 @@
             <div class="form-value">${profile.hometown}</div>
         </div>
 
-        <!-- Citizen ID (CCCD) & Country -->
+        <!-- Citizen ID (CCCD) & Issued Place -->
         <div class="form-row two-columns">
             <label class="form-label">Citizen ID (CCCD):</label>
             <div class="form-value">${profile.cccd}</div>
-            <label class="form-label">Country:</label>
-            <div class="form-value">${profile.country}</div>
+            <label class="form-label">Issued Place:</label>
+            <div class="form-value">${profile.cccdIssuedPlace}</div>
         </div>
 
-        <!-- CCCD Issued Date & Place -->
+        <!-- CCCD Issued Date & Expire Date -->
         <div class="form-row two-columns">
             <label class="form-label">CCCD Issued Date:</label>
             <div class="form-value">${profile.cccdIssuedDate}</div>
-            <label class="form-label">CCCD Issued Place:</label>
-            <div class="form-value">${profile.cccdIssuedPlace}</div>
+            <label class="form-label">CCCD Expire Date:</label>
+            <div class="form-value">${profile.cccdExpireDate}</div>
+        </div>
+
+        <!-- Country -->
+        <div class="form-row">
+            <label class="form-label">Country:</label>
+            <div class="form-value">${profile.country}</div>
         </div>
 
         <!-- Email Company -->
