@@ -22,17 +22,20 @@
             <jsp:param name="pageTitle" value="Approved Recruitment Requests"/>
         </jsp:include>
 
-        <div class="container-fluid px-4 py-4">
+        <div class="content-area">
             <!-- Page heading and actions -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="h4 mb-0">
-                    <i class="fas fa-check-circle text-success me-2"></i>Approved Recruitment Requests
-                </h2>
+            <div class="page-head d-flex justify-content-between align-items-center mb-4">
                 <div>
+                    <h2 class="page-title">
+                        <i class="fas fa-check-circle me-2"></i>Approved Recruitment Requests
+                    </h2>
+                    <p class="page-subtitle">Manage approved recruitment requests and create job postings</p>
+                </div>
+                <div class="d-flex gap-2">
                     <a href="${pageContext.request.contextPath}/requests" class="btn btn-outline-secondary">
                         <i class="fas fa-arrow-left me-2"></i>Back to Requests
                     </a>
-                    <a href="${pageContext.request.contextPath}/job-postings" class="btn btn-primary ms-2">
+                    <a href="${pageContext.request.contextPath}/job-postings" class="btn btn-primary">
                         <i class="fas fa-briefcase me-2"></i>View Job Postings
                     </a>
                 </div>
@@ -57,23 +60,32 @@
            
 
             <!-- Main content card -->
-            <div class="card shadow-sm">
+            <div class="card recruitment-card">
+                <div class="card-header">
+                    <h4><i class="fas fa-list me-2"></i>Approved Requests</h4>
+                </div>
                 <div class="card-body">
                     <c:choose>
                         <%-- Flat list when result.requests is present (my / subordinate scopes) --%>
                         <c:when test="${not empty result and not empty result.requests}">
                             <c:choose>
                                 <c:when test="${empty result.requests}">
-                                    <div class="text-center py-5">
-                                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
-                                        <p class="text-muted mb-0">All approved recruitment requests have been converted to job postings.</p>
-                                        <p class="text-muted">Or there are no approved recruitment requests yet.</p>
+                                    <div class="empty-state">
+                                        <div class="empty-icon">
+                                            <i class="fas fa-check-circle"></i>
+                                        </div>
+                                        <h5 class="empty-title">All Set!</h5>
+                                        <p class="empty-text">All approved recruitment requests have been converted to job postings.</p>
+                                        <p class="empty-subtext">Or there are no approved recruitment requests yet.</p>
+                                        <a href="${pageContext.request.contextPath}/job-postings" class="btn btn-primary mt-3">
+                                            <i class="fas fa-briefcase me-2"></i>View Job Postings
+                                        </a>
                                     </div>
                                 </c:when>
                                 <c:otherwise>
                                     <div class="table-responsive">
-                                        <table class="table table-hover align-middle">
-                                            <thead class="table-light">
+                                        <table class="table modern-table">
+                                            <thead>
                                                 <tr>
                                                     <th class="text-center">#</th>
                                                     <th>Request Title</th>
@@ -93,12 +105,12 @@
                                                             <strong><c:out value="${req.title}"/></strong>
                                                         </td>
                                                         <td>
-                                                            <span class="badge bg-info text-dark">
+                                                            <span class="position-badge">
                                                                 <c:out value="${req.recruitmentDetail.positionName}"/>
                                                             </span>
                                                         </td>
                                                         <td class="text-center">
-                                                            <span class="badge bg-secondary">
+                                                            <span class="quantity-badge">
                                                                 ${req.recruitmentDetail.quantity}
                                                             </span>
                                                         </td>
@@ -136,15 +148,15 @@
         <%-- Grouped result when result.requestsByDepartment is present (all scope) --%>
         <c:when test="${not empty result and not empty result.requestsByDepartment}">
             <c:forEach var="entry" items="${result.requestsByDepartment}">
-                <div class="mb-4 mt-3">
-                    <h5 class="mb-3 pb-2 border-bottom">
-                        <i class="fas fa-building me-2 text-primary"></i>
+                <div class="department-section">
+                    <div class="department-header">
+                        <i class="fas fa-building me-2"></i>
                         <strong><c:out value="${entry.key}"/></strong>
-                        <small class="text-muted ms-2">(${fn:length(entry.value)} request<c:if test="${fn:length(entry.value) > 1}">s</c:if>)</small>
-                    </h5>
+                        <span class="request-count">${fn:length(entry.value)} request<c:if test="${fn:length(entry.value) > 1}">s</c:if></span>
+                    </div>
                                     <div class="table-responsive">
-                                        <table class="table table-hover align-middle">
-                                            <thead class="table-light">
+                                        <table class="table modern-table">
+                                            <thead>
                                                 <tr>
                                                     <th class="text-center">#</th>
                                                     <th>Request Title</th>
@@ -161,12 +173,12 @@
                                                         <td class="text-center">${req.id}</td>
                                                         <td><strong><c:out value="${req.title}"/></strong></td>
                                                         <td>
-                                                            <span class="badge bg-info text-dark">
+                                                            <span class="position-badge">
                                                                 <c:out value="${req.recruitmentDetail.positionName}"/>
                                                             </span>
                                                         </td>
                                                         <td class="text-center">
-                                                            <span class="badge bg-secondary">${req.recruitmentDetail.quantity}</span>
+                                                            <span class="quantity-badge">${req.recruitmentDetail.quantity}</span>
                                                         </td>
                                                         <td><c:out value="${req.userFullName}"/></td>
                                                         <td>
@@ -199,10 +211,13 @@
                         </c:when>
 
         <c:otherwise>
-            <div class="text-center py-5">
-                <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
-                <p class="text-muted mb-2">All approved recruitment requests have been converted to job postings.</p>
-                <p class="text-muted">Or there are no approved recruitment requests yet.</p>
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h5 class="empty-title">All Set!</h5>
+                <p class="empty-text">All approved recruitment requests have been converted to job postings.</p>
+                <p class="empty-subtext">Or there are no approved recruitment requests yet.</p>
                 <a href="${pageContext.request.contextPath}/job-postings" class="btn btn-primary mt-3">
                     <i class="fas fa-briefcase me-2"></i>View Job Postings
                 </a>
@@ -294,5 +309,366 @@
             return new bootstrap.Tooltip(tooltipTriggerEl);
         });
     </script>
+
+<style>
+/* Enhanced styles for Recruitment Approved List */
+.content-area {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+    padding: 2rem;
+}
+
+.page-head {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 1.5rem;
+    border-radius: 15px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    margin-bottom: 2rem;
+}
+
+.page-title {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.page-subtitle {
+    color: #6c757d;
+    margin-bottom: 0;
+}
+
+.recruitment-card {
+    background: rgba(255, 255, 255, 0.95);
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    overflow: hidden;
+}
+
+.recruitment-card .card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 1.5rem;
+}
+
+.recruitment-card .card-header h4 {
+    color: white;
+    margin-bottom: 0;
+    font-weight: 600;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    color: #28a745;
+    margin-bottom: 1.5rem;
+    animation: pulse 2s infinite;
+}
+
+.empty-title {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.empty-text {
+    color: #6c757d;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+.empty-subtext {
+    color: #adb5bd;
+    margin-bottom: 2rem;
+}
+
+/* Modern Table */
+.modern-table {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.modern-table thead {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.modern-table thead th {
+    color: white;
+    font-weight: 600;
+    border: none;
+    padding: 1rem;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+.modern-table tbody tr {
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.modern-table tbody tr:hover {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 50%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.modern-table tbody td {
+    padding: 1rem;
+    border: none;
+    vertical-align: middle;
+}
+
+/* Badges */
+.position-badge {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.quantity-badge {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    padding: 0.3rem 0.6rem;
+    border-radius: 15px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: inline-block;
+    min-width: 30px;
+    text-align: center;
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    align-items: center;
+}
+
+.action-buttons .btn {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.action-buttons .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Department Section */
+.department-section {
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 15px;
+    margin-bottom: 2rem;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    backdrop-filter: blur(10px);
+    overflow: hidden;
+}
+
+.department-header {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+    padding: 1rem 1.5rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.request-count {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    margin-left: auto;
+}
+
+/* Buttons */
+.btn {
+    border-radius: 10px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+}
+
+.btn-outline-secondary {
+    border: 2px solid #6c757d;
+    color: #6c757d;
+    background: transparent;
+}
+
+.btn-outline-secondary:hover {
+    background: #6c757d;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+    box-shadow: 0 4px 15px rgba(86, 171, 47, 0.4);
+}
+
+.btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(86, 171, 47, 0.6);
+}
+
+.btn-outline-info {
+    border: 2px solid #17a2b8;
+    color: #17a2b8;
+    background: transparent;
+}
+
+.btn-outline-info:hover {
+    background: #17a2b8;
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* Alerts */
+.alert {
+    border: none;
+    border-radius: 15px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
+    backdrop-filter: blur(10px);
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+    color: #155724;
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+    color: #721c24;
+}
+
+/* Pagination */
+.pagination {
+    margin-top: 2rem;
+}
+
+.page-link {
+    border: none;
+    border-radius: 8px;
+    margin: 0 2px;
+    color: #667eea;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.page-link:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.page-item.active .page-link {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+/* Animations */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .content-area {
+        padding: 1rem;
+    }
+    
+    .page-head {
+        padding: 1rem;
+        margin-bottom: 1rem;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .action-buttons .btn {
+        width: 100%;
+        font-size: 0.85rem;
+    }
+    
+    .department-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .request-count {
+        margin-left: 0;
+        align-self: flex-end;
+    }
+}
+
+/* Smooth transitions */
+* {
+    transition: all 0.3s ease;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+</style>
 </body>
 </html>

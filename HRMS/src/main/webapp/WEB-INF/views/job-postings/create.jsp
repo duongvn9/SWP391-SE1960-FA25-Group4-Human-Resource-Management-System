@@ -110,7 +110,7 @@
                                     <input type="text" class="form-control ${not empty errors.jobTitle ? 'is-invalid' : ''}" 
                                            id="jobTitle" name="jobTitle" required
                                            minlength="3" maxlength="255"
-                                           value="${param.jobTitle != null ? param.jobTitle : requestDetails.positionName}">
+                                           value="${formData != null ? formData.jobTitle : (param.jobTitle != null ? param.jobTitle : requestDetails.positionName)}">
                                     <div class="form-text">Title shown in job listing (3-255 characters)</div>
                                     <div class="invalid-feedback">
                                         ${not empty errors.jobTitle ? errors.jobTitle : 'Job title must be 3-255 characters'}
@@ -123,7 +123,7 @@
                                     <input type="text" class="form-control ${not empty errors.code ? 'is-invalid' : ''}" 
                                            id="code" name="code" 
                                            maxlength="128"
-                                           value="${param.code != null ? param.code : requestDetails.positionCode}">
+                                           value="${formData != null ? formData.code : (param.code != null ? param.code : requestDetails.positionCode)}">
                                     <div class="form-text">Public job code (max 128 characters)</div>
                                     <div class="invalid-feedback">
                                         ${not empty errors.code ? errors.code : 'Code cannot exceed 128 characters'}
@@ -157,13 +157,26 @@
                             <div class="row g-3 mb-3">
                                 <div class="col-md-12">
                                     <label for="workingHours" class="form-label">Working Hours</label>
-                                    <input type="text" class="form-control ${not empty errors.workingHours ? 'is-invalid' : ''}"
-                                           id="workingHours" name="workingHours" value="${param.workingHours}"
-                                           maxlength="255"
-                                           placeholder="e.g. Monday-Friday 8:00-17:00">
-                                    <div class="form-text">Optional (max 255 characters)</div>
+                                    <c:set var="currentWorkingHours" value="${formData != null ? formData.workingHours : param.workingHours}" />
+                                    <select class="form-select ${not empty errors.workingHours ? 'is-invalid' : ''}"
+                                            id="workingHours" name="workingHours">
+                                        <option value="">Select working hours...</option>
+                                        <option value="Monday - Friday 8h00 - 12h00 & 13h00- 17h00" 
+                                                ${currentWorkingHours == 'Monday - Friday 8h00 - 12h00 & 13h00- 17h00' ? 'selected' : ''}>
+                                            Monday - Friday 8h00 - 12h00 & 13h00- 17h00
+                                        </option>
+                                        <option value="Monday - Friday 8h00 - 12h00" 
+                                                ${currentWorkingHours == 'Monday - Friday 8h00 - 12h00' ? 'selected' : ''}>
+                                            Monday - Friday 8h00 - 12h00
+                                        </option>
+                                        <option value="Monday - Friday 13h00- 17h00" 
+                                                ${currentWorkingHours == 'Monday - Friday 13h00- 17h00' ? 'selected' : ''}>
+                                            Monday - Friday 13h00- 17h00
+                                        </option>
+                                    </select>
+                                    <div class="form-text">Select from predefined working hour options</div>
                                     <div class="invalid-feedback">
-                                        ${not empty errors.workingHours ? errors.workingHours : 'Working hours cannot exceed 255 characters'}
+                                        ${not empty errors.workingHours ? errors.workingHours : 'Please select a valid working hours option'}
                                     </div>
                                 </div>
                             </div>
@@ -176,7 +189,7 @@
                                     <input type="number" class="form-control ${not empty errors.minExperienceYears ? 'is-invalid' : ''}" 
                                            id="minExperienceYears" name="minExperienceYears" 
                                            min="0" max="50"
-                                           value="${param.minExperienceYears}">
+                                           value="${formData != null ? formData.minExperienceYears : param.minExperienceYears}">
                                     <div class="form-text">Required years of experience (0-50)</div>
                                     <div class="invalid-feedback">
                                         ${not empty errors.minExperienceYears ? errors.minExperienceYears : 'Experience must be between 0 and 50 years'}
@@ -189,7 +202,7 @@
                                     <input type="date" class="form-control ${not empty errors.startDate ? 'is-invalid' : ''}" 
                                            id="startDate" name="startDate" 
                                            min="<jsp:useBean id='today' class='java.util.Date'/><fmt:formatDate value='${today}' pattern='yyyy-MM-dd'/>"
-                                           value="${param.startDate}">
+                                           value="${formData != null ? formData.startDate : param.startDate}">
                                     <div class="form-text">When the position starts (cannot be in the past)</div>
                                     <div class="invalid-feedback">
                                         ${not empty errors.startDate ? errors.startDate : 'Start date cannot be in the past'}
@@ -213,7 +226,7 @@
                                     </label>
                                     <input type="text" class="form-control ${not empty errors.salaryType ? 'is-invalid' : ''}" 
                                            id="salaryType" name="salaryType" required
-                                           value="${param.salaryType != null ? param.salaryType : requestDetails.salaryType}"
+                                           value="${formData != null ? formData.salaryType : (param.salaryType != null ? param.salaryType : requestDetails.salaryType)}"
                                            placeholder="e.g. RANGE, FROM, NEGOTIABLE">
                                     <div class="form-text">RANGE, FROM, NEGOTIABLE, GROSS, NET</div>
                                     <div class="invalid-feedback">
@@ -222,22 +235,28 @@
                                 </div>
                                 <div class="col-md-4">
                                     <label for="minSalary" class="form-label">Minimum Salary (VND)</label>
-                                    <input type="number" step="1000" class="form-control ${not empty errors.minSalary ? 'is-invalid' : ''}" 
+                                    <c:set var="currentMinSalary" value="${formData != null ? formData.minSalary : (param.minSalary != null ? param.minSalary : requestDetails.minSalary)}" />
+                                    <input type="text" class="form-control ${not empty errors.minSalary ? 'is-invalid' : ''}" 
                                            id="minSalary" name="minSalary"
-                                           min="1000000"
-                                           value="${param.minSalary != null ? param.minSalary : requestDetails.minSalary}">
-                                    <div class="form-text">Min: 1,000,000 VND</div>
+                                           pattern="[0-9,]+"
+                                           value="${currentMinSalary}"
+                                           data-original-value="${currentMinSalary}"
+                                           placeholder="e.g. 12,000,000">
+                                    <div class="form-text">Min: 1,000,000 VND (use commas for thousands)</div>
                                     <div class="invalid-feedback">
                                         ${not empty errors.minSalary ? errors.minSalary : 'Minimum salary must be at least 1,000,000 VND'}
                                     </div>
                                 </div>
                                 <div class="col-md-4">
                                     <label for="maxSalary" class="form-label">Maximum Salary (VND)</label>
-                                    <input type="number" step="1000" class="form-control ${not empty errors.maxSalary ? 'is-invalid' : ''}" 
+                                    <c:set var="currentMaxSalary" value="${formData != null ? formData.maxSalary : (param.maxSalary != null ? param.maxSalary : requestDetails.maxSalary)}" />
+                                    <input type="text" class="form-control ${not empty errors.maxSalary ? 'is-invalid' : ''}" 
                                            id="maxSalary" name="maxSalary"
-                                           min="1000000"
-                                           value="${param.maxSalary != null ? param.maxSalary : requestDetails.maxSalary}">
-                                    <div class="form-text">Must be greater than min salary</div>
+                                           pattern="[0-9,]+"
+                                           value="${currentMaxSalary}"
+                                           data-original-value="${currentMaxSalary}"
+                                           placeholder="e.g. 15,000,000">
+                                    <div class="form-text">Must be greater than min salary (use commas for thousands)</div>
                                     <div class="invalid-feedback">
                                         ${not empty errors.maxSalary ? errors.maxSalary : 'Maximum salary must be greater than minimum salary'}
                                     </div>
@@ -276,7 +295,7 @@
                                     <textarea class="form-control ${not empty errors.requirements ? 'is-invalid' : ''}"
                                               id="requirements" name="requirements" rows="5" required
                                               maxlength="4000"
-                                              placeholder="List required skills, qualifications, and experience...">${param.requirements}</textarea>
+                                              placeholder="List required skills, qualifications, and experience..."><c:out value="${formData != null ? formData.requirements : param.requirements}"/></textarea>
                                     <div class="form-text">Required (max 4000 characters)</div>
                                     <div class="invalid-feedback">
                                         ${not empty errors.requirements ? errors.requirements : 'Requirements are required and cannot exceed 4000 characters'}
@@ -287,7 +306,7 @@
                                     <textarea class="form-control ${not empty errors.benefits ? 'is-invalid' : ''}"
                                               id="benefits" name="benefits" rows="3"
                                               maxlength="2000"
-                                              placeholder="List employee benefits, perks, and incentives...">${param.benefits}</textarea>
+                                              placeholder="List employee benefits, perks, and incentives..."><c:out value="${formData != null ? formData.benefits : param.benefits}"/></textarea>
                                     <div class="form-text">Optional (max 2000 characters)</div>
                                     <div class="invalid-feedback">
                                         ${not empty errors.benefits ? errors.benefits : 'Benefits cannot exceed 2000 characters'}
@@ -332,7 +351,7 @@
                                     </label>
                                     <input type="date" class="form-control ${not empty errors.applicationDeadline ? 'is-invalid' : ''}"
                                            id="applicationDeadline" name="applicationDeadline" 
-                                           value="${param.applicationDeadline}"
+                                           value="${formData != null ? formData.applicationDeadline : param.applicationDeadline}"
                                            min="<jsp:useBean id='deadline' class='java.util.Date'/><fmt:formatDate value='${deadline}' pattern='yyyy-MM-dd'/>" 
                                            required>
                                     <div class="form-text">Required (cannot be in the past)</div>
@@ -357,7 +376,7 @@
                                     </label>
                                     <input type="email" class="form-control ${not empty errors.contactEmail ? 'is-invalid' : ''}"
                                            id="contactEmail" name="contactEmail" 
-                                           value="${param.contactEmail}" 
+                                           value="${formData != null ? formData.contactEmail : param.contactEmail}" 
                                            required
                                            placeholder="hr@company.com">
                                     <div class="form-text">Required (valid email format)</div>
@@ -369,8 +388,8 @@
                                     <label for="contactPhone" class="form-label">Contact Phone</label>
                                     <input type="tel" class="form-control ${not empty errors.contactPhone ? 'is-invalid' : ''}"
                                            id="contactPhone" name="contactPhone" 
-                                           value="${param.contactPhone}"
-                                           pattern="^[0-9\+][0-9()\- ]{8,20}$"
+                                           value="${formData != null ? formData.contactPhone : param.contactPhone}"
+                                           pattern="^[0-9+][0-9()\- ]{8,20}$"
                                            placeholder="+84 123 456 789">
                                     <div class="form-text">Optional (9-21 characters, numbers, +, -, ())</div>
                                     <div class="invalid-feedback">
@@ -443,10 +462,20 @@
                         // Change color based on usage
                         if (length > maxLength * 0.9) {
                             counter.style.color = '#dc3545'; // Red when near limit
+                            counter.style.fontWeight = 'bold';
                         } else if (length > maxLength * 0.75) {
                             counter.style.color = '#ffc107'; // Yellow when 75%
+                            counter.style.fontWeight = '500';
                         } else {
                             counter.style.color = '#6c757d'; // Gray default
+                            counter.style.fontWeight = 'normal';
+                        }
+                        
+                        // Add warning if over limit
+                        if (length > maxLength) {
+                            counter.textContent += ' (Over limit!)';
+                            counter.style.color = '#dc3545';
+                            counter.style.fontWeight = 'bold';
                         }
                     }
                     
@@ -459,10 +488,92 @@
             // Setup counters for all textareas and relevant inputs
             document.querySelectorAll('textarea, input[maxlength]').forEach(setupCharCounter);
             
+            // Format salary inputs on page load
+            function formatSalaryInputsOnLoad() {
+                if (minSalaryInput && minSalaryInput.value) {
+                    const value = parseNumber(minSalaryInput.value);
+                    if (value && !isNaN(value)) {
+                        minSalaryInput.value = formatNumber(value);
+                    }
+                }
+                
+                if (maxSalaryInput && maxSalaryInput.value) {
+                    const value = parseNumber(maxSalaryInput.value);
+                    if (value && !isNaN(value)) {
+                        maxSalaryInput.value = formatNumber(value);
+                    }
+                }
+            }
+            
+            // Call format function after DOM is ready
+            formatSalaryInputsOnLoad();
+            
+            // Dropdown validation function
+            function validateDropdown(element, fieldName) {
+                if (!element) return true;
+                
+                const value = element.value.trim();
+                
+                // Clear custom validity
+                element.setCustomValidity('');
+                
+                // For optional fields, empty is valid
+                if (fieldName === 'Working hours' && value === '') {
+                    return true;
+                }
+                
+                // Check if a valid option is selected
+                if (value === '') {
+                    element.setCustomValidity(fieldName + ' must be selected');
+                    return false;
+                }
+                
+                return true;
+            }
+            
+            // Text field validation function (if not already defined)
+            function validateTextField(element, minLength, maxLength, fieldName) {
+                if (!element) return true;
+                
+                const value = element.value.trim();
+                
+                // Clear custom validity
+                element.setCustomValidity('');
+                
+                // Check length requirements
+                if (minLength > 0 && value.length < minLength) {
+                    element.setCustomValidity(fieldName + ' must be at least ' + minLength + ' characters');
+                    return false;
+                }
+                
+                if (maxLength > 0 && value.length > maxLength) {
+                    element.setCustomValidity(fieldName + ' cannot exceed ' + maxLength + ' characters');
+                    return false;
+                }
+                
+                return true;
+            }
+            
+            // Number formatting functions
+            function formatNumber(num) {
+                if (!num) return '';
+                // Convert to integer to avoid decimal issues
+                const intNum = Math.floor(parseFloat(num));
+                return intNum.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            }
+            
+            function parseNumber(str) {
+                if (!str) return null;
+                // Remove commas and parse as integer
+                const cleaned = str.replace(/,/g, '');
+                const parsed = parseInt(cleaned, 10);
+                return isNaN(parsed) ? null : parsed;
+            }
+            
             // Salary validation
             function validateSalaries() {
-                const minSalary = parseFloat(minSalaryInput.value);
-                const maxSalary = parseFloat(maxSalaryInput.value);
+                const minSalary = parseNumber(minSalaryInput.value);
+                const maxSalary = parseNumber(maxSalaryInput.value);
                 const salaryType = salaryTypeInput.value.toUpperCase();
                 
                 // Clear custom validity
@@ -626,13 +737,52 @@
             }
             
             if (workingHoursInput) {
-                workingHoursInput.addEventListener('blur', function() {
-                    validateTextField(this, 0, 255, 'Working hours');
+                workingHoursInput.addEventListener('change', function() {
+                    validateDropdown(this, 'Working hours');
+                });
+            }
+            
+            // Salary formatting on blur
+            if (minSalaryInput) {
+                minSalaryInput.addEventListener('blur', function() {
+                    const value = parseNumber(this.value);
+                    if (value) {
+                        this.value = formatNumber(value);
+                    }
+                    validateSalaries();
+                });
+                
+                // Allow only numbers and commas
+                minSalaryInput.addEventListener('input', function() {
+                    this.value = this.value.replace(/[^0-9,]/g, '');
+                });
+            }
+            
+            if (maxSalaryInput) {
+                maxSalaryInput.addEventListener('blur', function() {
+                    const value = parseNumber(this.value);
+                    if (value) {
+                        this.value = formatNumber(value);
+                    }
+                    validateSalaries();
+                });
+                
+                // Allow only numbers and commas
+                maxSalaryInput.addEventListener('input', function() {
+                    this.value = this.value.replace(/[^0-9,]/g, '');
                 });
             }
 
             // Form submission validation
             form.addEventListener('submit', function(event) {
+                console.log('=== FORM SUBMIT EVENT TRIGGERED ===');
+                console.log('Form action:', form.action);
+                console.log('Form method:', form.method);
+                
+                // Show loading state
+                const submitBtn = form.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                
                 // Run all validations
                 const isSalaryValid = validateSalaries();
                 const isDateValid = validateDates();
@@ -643,26 +793,115 @@
                 const isReqValid = validateTextField(requirementsInput, 1, 4000, 'Requirements');
                 const isBenValid = validateTextField(benefitsInput, 0, 2000, 'Benefits');
                 const isLocValid = validateTextField(locationInput, 1, 255, 'Working location');
-                const isWorkHoursValid = validateTextField(workingHoursInput, 0, 255, 'Working hours');
+                const isWorkHoursValid = validateDropdown(workingHoursInput, 'Working hours');
                 
                 const allCustomValid = isSalaryValid && isDateValid && isExperienceValid && 
                                       isJobTitleValid && isDescValid && isReqValid && 
                                       isBenValid && isLocValid && isWorkHoursValid;
                 
+                // Convert formatted salary values back to numbers before submission
+                if (allCustomValid && form.checkValidity()) {
+                    if (minSalaryInput && minSalaryInput.value) {
+                        minSalaryInput.value = parseNumber(minSalaryInput.value) || '';
+                    }
+                    if (maxSalaryInput && maxSalaryInput.value) {
+                        maxSalaryInput.value = parseNumber(maxSalaryInput.value) || '';
+                    }
+                }
+                
                 if (!form.checkValidity() || !allCustomValid) {
+                    console.log('=== FORM VALIDATION FAILED ===');
+                    console.log('Form checkValidity:', form.checkValidity());
+                    console.log('Custom validation:', allCustomValid);
+                    
                     event.preventDefault();
                     event.stopPropagation();
                     
                     // Scroll to first invalid field
                     const firstInvalid = form.querySelector(':invalid');
                     if (firstInvalid) {
+                        console.log('First invalid field:', firstInvalid.name, firstInvalid.validationMessage);
                         firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         firstInvalid.focus();
                     }
+                    
+                    // Show error message
+                    showNotification('Please fix the errors in the form before submitting.', 'error');
+                } else {
+                    console.log('=== FORM VALIDATION PASSED ===');
+                    console.log('Submitting form to:', form.action);
+                    
+                    // Show loading state (but don't disable inputs until after form submits)
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Creating Job Posting...';
+                    
+                    // Show success message
+                    showNotification('Creating job posting...', 'info');
+                    
+                    // Disable submit button to prevent double submission
+                    setTimeout(function() {
+                        submitBtn.disabled = true;
+                    }, 100);
                 }
                 
                 form.classList.add('was-validated');
             }, false);
+            
+            // Notification system
+            function showNotification(message, type = 'info') {
+                // Remove existing notifications
+                const existingNotifications = document.querySelectorAll('.custom-notification');
+                existingNotifications.forEach(n => n.remove());
+                
+                const notification = document.createElement('div');
+                let alertClass = 'info';
+                if (type === 'error') alertClass = 'danger';
+                else if (type === 'success') alertClass = 'success';
+                
+                notification.className = 'custom-notification alert alert-' + alertClass;
+                notification.style.cssText = 
+                    'position: fixed;' +
+                    'top: 20px;' +
+                    'right: 20px;' +
+                    'z-index: 9999;' +
+                    'min-width: 300px;' +
+                    'animation: slideInRight 0.3s ease;';
+                
+                let icon = 'info-circle';
+                if (type === 'error') icon = 'exclamation-triangle';
+                else if (type === 'success') icon = 'check-circle';
+                
+                notification.innerHTML = 
+                    '<i class="fas fa-' + icon + ' me-2"></i>' +
+                    message +
+                    '<button type="button" class="btn-close float-end" onclick="this.parentElement.remove()"></button>';
+                
+                document.body.appendChild(notification);
+                
+                // Auto remove after 5 seconds
+                setTimeout(function() {
+                    if (notification.parentElement) {
+                        notification.style.animation = 'slideOutRight 0.3s ease';
+                        setTimeout(function() { 
+                            if (notification.parentElement) {
+                                notification.remove(); 
+                            }
+                        }, 300);
+                    }
+                }, 5000);
+            }
+            
+            // Add CSS for notification animations
+            const style = document.createElement('style');
+            style.textContent = 
+                '@keyframes slideInRight {' +
+                '    from { transform: translateX(100%); opacity: 0; }' +
+                '    to { transform: translateX(0); opacity: 1; }' +
+                '}' +
+                '@keyframes slideOutRight {' +
+                '    from { transform: translateX(0); opacity: 1; }' +
+                '    to { transform: translateX(100%); opacity: 0; }' +
+                '}';
+            document.head.appendChild(style);
             
             // Prevent form submission on Enter key (except in submit button)
             form.addEventListener('keydown', function(event) {
@@ -675,34 +914,115 @@
 </script>
 
 <style>
-/* Custom styles for Job Posting form */
-.job-posting-card {
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+/* Enhanced styles for Job Posting form */
+.content-area {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+    padding: 2rem;
 }
 
-.job-posting-card .card-header {
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #e9ecef;
+.page-head {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 1.5rem;
+    border-radius: 15px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    margin-bottom: 2rem;
 }
 
-.job-posting-card .card-header h4 {
+.page-title {
     color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.page-subtitle {
+    color: #6c757d;
     margin-bottom: 0;
 }
 
+.job-posting-card {
+    background: rgba(255, 255, 255, 0.95);
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    overflow: hidden;
+}
+
+.job-posting-card .card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 1.5rem;
+}
+
+.job-posting-card .card-header h4 {
+    color: white;
+    margin-bottom: 0;
+    font-weight: 600;
+}
+
+.card.mb-4 {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.card.mb-4:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+}
+
+.card.mb-4 .card-header {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+    border: none;
+    font-weight: 600;
+    padding: 1rem 1.5rem;
+    border-radius: 15px 15px 0 0;
+}
+
 .form-label {
-    font-weight: 500;
-    color: #495057;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 0.75rem;
 }
 
 .form-label i {
     width: 20px;
+    color: #667eea;
+    margin-right: 0.5rem;
+}
+
+.form-control {
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+    background: white;
+}
+
+.form-control[readonly] {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-color: #dee2e6;
     color: #6c757d;
 }
 
 .form-text {
     font-size: 0.825rem;
     color: #6c757d;
+    margin-top: 0.5rem;
 }
 
 .char-counter {
@@ -710,12 +1030,107 @@
     color: #6c757d;
     text-align: right;
     margin-top: 0.25rem;
+    font-weight: 500;
+}
+
+.btn {
+    border-radius: 10px;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
+}
+
+.btn-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(245, 87, 108, 0.6);
+    color: white;
+}
+
+.btn-outline-secondary {
+    border: 2px solid #6c757d;
+    color: #6c757d;
+    background: transparent;
+}
+
+.btn-outline-secondary:hover {
+    background: #6c757d;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.alert {
+    border: none;
+    border-radius: 15px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+    color: #721c24;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+    color: #155724;
+}
+
+/* Enhanced validation styles */
+.was-validated .form-control:invalid,
+.form-control.is-invalid {
+    border-color: #dc3545;
+    background: rgba(220, 53, 69, 0.05);
+}
+
+.was-validated .form-control:invalid:focus,
+.form-control.is-invalid:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+}
+
+.was-validated .form-control:valid,
+.form-control.is-valid {
+    border-color: #198754;
+    background: rgba(25, 135, 84, 0.05);
+}
+
+.was-validated .form-control:valid:focus,
+.form-control.is-valid:focus {
+    border-color: #198754;
+    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+}
+
+.invalid-feedback {
+    font-weight: 500;
+    font-size: 0.875rem;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .content-area {
         padding: 1rem;
+    }
+    
+    .page-head {
+        padding: 1rem;
+        margin-bottom: 1rem;
     }
     
     .job-posting-card {
@@ -730,19 +1145,69 @@
     .d-md-flex.justify-content-md-end {
         flex-direction: column-reverse;
     }
+    
+    .card.mb-4 .card-header {
+        padding: 0.75rem 1rem;
+    }
 }
 
-/* Form validation styles */
-.was-validated .form-control:invalid:focus,
-.form-control.is-invalid:focus {
-    border-color: #dc3545;
-    box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+/* Loading animation for form submission */
+.btn-primary:disabled {
+    background: linear-gradient(135deg, #6c757d 0%, #adb5bd 100%);
+    cursor: not-allowed;
 }
 
-.was-validated .form-control:valid:focus,
-.form-control.is-valid:focus {
-    border-color: #198754;
-    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+/* Smooth transitions */
+* {
+    transition: all 0.3s ease;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+/* Custom notification styles */
+.custom-notification {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(10px);
+}
+
+.custom-notification .btn-close {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    opacity: 0.7;
+}
+
+.custom-notification .btn-close:hover {
+    opacity: 1;
+}
+
+/* Form loading state */
+.form-loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.form-loading .form-control {
+    background-color: #f8f9fa !important;
 }
 </style>
 </body>
