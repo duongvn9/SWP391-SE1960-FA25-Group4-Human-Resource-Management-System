@@ -507,7 +507,7 @@ public class AppealRequestServlet extends HttpServlet {
                     }
                 }
 
-            } catch (Exception fileError) {
+            } catch (ServletException | IOException | SQLException fileError) {
                 // Attachment handling failed - log error and rollback the request creation
                 Logger.getLogger(AppealRequestServlet.class.getName()).log(Level.SEVERE,
                     String.format("Attachment handling failed for appeal request ID: %d, error: %s",
