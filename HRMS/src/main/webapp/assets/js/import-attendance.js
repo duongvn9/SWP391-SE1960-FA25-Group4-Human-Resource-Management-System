@@ -31,25 +31,9 @@ function filterEmployeeList(input) {
 }
 
 // ---------------------------
-// CLICK EVENT CHỌN NHÂN VIÊN
+// CLICK EVENT CHỌN NHÂN VIÊN - REMOVED
+// Xử lý trong JSP inline script để tránh conflict
 // ---------------------------
-document.addEventListener("click", e => {
-    // Click chọn 1 nhân viên trong dropdown
-    if (e.target.matches(".custom-dropdown li")) {
-        const li = e.target;
-        const wrapper = li.closest(".employee-select-wrapper");
-        const input = wrapper.querySelector(".employee-input");
-        const hidden = wrapper.querySelector(".employee-id-hidden");
-
-        input.value = li.textContent.trim();
-        hidden.value = li.dataset.id;
-        wrapper.querySelector(".custom-dropdown").style.display = "none";
-    }
-    // Click ra ngoài dropdown -> ẩn
-    else if (!e.target.closest(".employee-select-wrapper")) {
-        document.querySelectorAll(".custom-dropdown").forEach(d => d.style.display = "none");
-    }
-});
 
 // ---------------------------
 // COLLECT MANUAL DATA

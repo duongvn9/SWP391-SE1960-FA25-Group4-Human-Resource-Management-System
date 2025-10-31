@@ -206,6 +206,14 @@
                     </div>
 
                     <!-- Error/Success Messages -->
+                    <c:if test="${not empty errorMessage}">
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            ${errorMessage}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    </c:if>
+
                     <c:if test="${not empty sessionScope.errorMessage}">
                         <div class="alert alert-danger alert-dismissible fade show" role="alert">
                             <i class="fas fa-exclamation-circle me-2"></i>
@@ -242,8 +250,9 @@
                                         <option value="">-- Search and select user --</option>
                                         <c:forEach var="user" items="${users}">
                                             <option value="${user.id}" data-employee-code="${user.employeeCode}"
-                                                data-email="${user.emailCompany}" ${preSelectedUserId !=null &&
-                                                preSelectedUserId==user.id ? 'selected' : '' }>
+                                                data-email="${user.emailCompany}" ${(preSelectedUserId !=null &&
+                                                preSelectedUserId==user.id) || (selectedUserId !=null &&
+                                                selectedUserId==user.id.toString()) ? 'selected' : '' }>
                                                 ${user.fullName} (${user.employeeCode})
                                                 <c:if test="${not empty user.emailCompany}">
                                                     - ${user.emailCompany}
@@ -261,7 +270,7 @@
                                     </label>
                                     <input type="text" class="form-control" id="username" name="username" required
                                         minlength="3" maxlength="100" pattern="[a-zA-Z0-9._-]+"
-                                        placeholder="Enter username">
+                                        placeholder="Enter username" value="${username != null ? username : ''}">
                                     <small class="text-muted">3-100 characters</small>
                                 </div>
 
@@ -281,7 +290,8 @@
                                             <i class="fas fa-envelope me-1"></i>Email Login (Optional)
                                         </label>
                                         <input type="email" class="form-control" id="emailLogin" name="emailLogin"
-                                            maxlength="255" placeholder="Leave empty to use company email">
+                                            maxlength="255" placeholder="Leave empty to use company email"
+                                            value="${emailLogin != null ? emailLogin : ''}">
                                         <small class="text-muted">If empty, company email will be used</small>
                                     </div>
                                 </div>
@@ -371,14 +381,17 @@
                         matcher: customMatcher
                     });
 
-                    // Auto-fill if user is pre-selected
+                    // Auto-fill if user is pre-selected or form data exists
                     const selectedUserId = $('#userId').val();
+                    const hasFormUsername = document.getElementById('username').value.trim() !== '';
+
                     if (selectedUserId) {
                         const selectedOption = $('#userId option:selected');
                         const employeeCode = selectedOption.data('employee-code');
                         const email = selectedOption.data('email');
 
-                        if (employeeCode) {
+                        // Only auto-fill username if not already filled from session
+                        if (employeeCode && !hasFormUsername) {
                             document.getElementById('username').value = employeeCode.toLowerCase();
                         }
                         if (email) {

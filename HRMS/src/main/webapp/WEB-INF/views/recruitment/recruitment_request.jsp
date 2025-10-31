@@ -166,14 +166,9 @@
                                             <label class="form-label"><i class="bi bi-geo-alt"></i><i
                                                     class="fas fa-map-marker-alt"></i> Working Location <span
                                                     class="text-danger">*</span></label>
-                                            <select name="workingLocation" id="workingLocation" class="form-select"
-                                                required>
-                                                <option value="">Select Location</option>
-                                                <option value="HRMS office, Hanoi">HRMS office, Hanoi</option>
-                                                <option value="HRMS office, Ho Chi Minh City">HRMS office, Ho Chi Minh
-                                                    City</option>
-                                                <option value="Remote">Remote</option>
-                                            </select>
+                                            <input type="text" name="workingLocation" id="workingLocation" 
+                                                   class="form-control" value="Ha Noi" readonly 
+                                                   style="background-color: #f8f9fa; cursor: not-allowed;" />
                                         </div>
 
                                         <div class="mb-3">

@@ -256,6 +256,7 @@ public class JobPostingEditServlet extends HttpServlet {
         JobPostingFormDto dto = new JobPostingFormDto();
         
         // Basic information
+        dto.setPositionName(request.getParameter("positionName"));
         dto.setJobTitle(request.getParameter("jobTitle"));
         dto.setCode(request.getParameter("code"));
         dto.setJobLevel(request.getParameter("jobLevel"));
