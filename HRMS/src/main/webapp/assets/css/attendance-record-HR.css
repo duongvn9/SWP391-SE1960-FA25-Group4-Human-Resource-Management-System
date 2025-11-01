@@ -439,6 +439,17 @@
     cursor: default;
 }
 
+.pagination-dots {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    padding: 6px 10px;
+    color: var(--gray);
+    font-weight: 500;
+    cursor: default;
+}
+
 /* ---------------------------
    RESPONSIVE
 ----------------------------*/

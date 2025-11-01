@@ -173,11 +173,18 @@
             <version>master-SNAPSHOT</version>
         </dependency>
 
-        <!-- Apache HttpClient for Google OAuth -->
+        <!-- Apache HttpClient for Google OAuth and OCR -->
         <dependency>
             <groupId>org.apache.httpcomponents.client5</groupId>
             <artifactId>httpclient5</artifactId>
             <version>5.2.1</version>
+        </dependency>
+
+        <!-- Apache Commons Codec for Base64 encoding -->
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.15</version>
         </dependency>
 
         <!-- Jakarta EL Implementation -->

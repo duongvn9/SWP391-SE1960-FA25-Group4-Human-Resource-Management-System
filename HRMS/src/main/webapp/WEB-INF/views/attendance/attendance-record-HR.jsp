@@ -233,42 +233,59 @@
                                 <button type="submit" name="page" value="${currentPage - 1}" class="pagination-link">Previous</button>
                             </c:if>
 
-                            <!-- Xác định startPage và endPage -->
-                            <c:set var="displayPages" value="5" />
-                            <c:set var="halfPages" value="${displayPages / 2}" />
+                            <!-- Tính toán pagination logic -->
+                            <c:set var="maxVisiblePages" value="5" />
+                            <c:set var="halfVisible" value="2" />
 
-                            <c:set var="startPage" value="${currentPage - halfPages}" />
-                            <c:set var="endPage" value="${currentPage + halfPages}" />
+                            <!-- Tính startPage và endPage -->
+                            <c:choose>
+                                <c:when test="${totalPages <= maxVisiblePages}">
+                                    <!-- Nếu tổng số trang <= 5, hiển thị tất cả -->
+                                    <c:set var="startPage" value="1" />
+                                    <c:set var="endPage" value="${totalPages}" />
+                                </c:when>
+                                <c:when test="${currentPage <= halfVisible + 1}">
+                                    <!-- Nếu ở đầu, hiển thị từ 1 đến maxVisiblePages -->
+                                    <c:set var="startPage" value="1" />
+                                    <c:set var="endPage" value="${maxVisiblePages}" />
+                                </c:when>
+                                <c:when test="${currentPage >= totalPages - halfVisible}">
+                                    <!-- Nếu ở cuối, hiển thị maxVisiblePages trang cuối -->
+                                    <c:set var="startPage" value="${totalPages - maxVisiblePages + 1}" />
+                                    <c:set var="endPage" value="${totalPages}" />
+                                </c:when>
+                                <c:otherwise>
+                                    <!-- Ở giữa, hiển thị currentPage ± halfVisible -->
+                                    <c:set var="startPage" value="${currentPage - halfVisible}" />
+                                    <c:set var="endPage" value="${currentPage + halfVisible}" />
+                                </c:otherwise>
+                            </c:choose>
 
-                            <!-- Điều chỉnh nếu startPage < 1 hoặc endPage > totalPages -->
-                            <c:if test="${startPage < 1}">
-                                <c:set var="startPage" value="1" />
-                            </c:if>
-                            <c:if test="${endPage > totalPages}">
-                                <c:set var="endPage" value="${totalPages}" />
-                            </c:if>
-
-                            <!-- Trang đầu nếu startPage > 1 -->
+                            <!-- Hiển thị trang đầu và dấu ... nếu cần -->
                             <c:if test="${startPage > 1}">
                                 <button type="submit" name="page" value="1" class="pagination-link">1</button>
-                                <span>...</span>
+                                <c:if test="${startPage > 2}">
+                                    <span class="pagination-dots">...</span>
+                                </c:if>
                             </c:if>
 
-                            <!-- Các trang giữa -->
+                            <!-- Hiển thị các trang trong khoảng startPage đến endPage -->
                             <c:forEach var="i" begin="${startPage}" end="${endPage}">
                                 <c:choose>
                                     <c:when test="${i == currentPage}">
-                                        <span class="pagination-current"><b>${i}</b></span>
-                                            </c:when>
-                                            <c:otherwise>
+                                        <span class="pagination-current">${i}</span>
+                                    </c:when>
+                                    <c:otherwise>
                                         <button type="submit" name="page" value="${i}" class="pagination-link">${i}</button>
                                     </c:otherwise>
                                 </c:choose>
                             </c:forEach>
 
-                            <!-- Trang cuối nếu endPage < totalPages -->
+                            <!-- Hiển thị dấu ... và trang cuối nếu cần -->
                             <c:if test="${endPage < totalPages}">
-                                <span>...</span>
+                                <c:if test="${endPage < totalPages - 1}">
+                                    <span class="pagination-dots">...</span>
+                                </c:if>
                                 <button type="submit" name="page" value="${totalPages}" class="pagination-link">${totalPages}</button>
                             </c:if>
 

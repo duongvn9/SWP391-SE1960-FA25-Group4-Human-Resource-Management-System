@@ -22,6 +22,7 @@ import group4.hrms.model.Position;
 import group4.hrms.model.RequestType;
 import group4.hrms.model.User;
 import group4.hrms.service.RequestListService;
+import group4.hrms.util.RecruitmentPermissionHelper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -39,52 +40,26 @@ public class RecruitmentApprovedListServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        // Authorization: accept if any of these true:
-        // - session user.positionId == 7 or 8
-        // - session attribute "userRole" equals HR or HRM
-        // - SessionUtil.hasAnyRole(request, "HR", "HRM")
+        // Kiểm tra session đăng nhập
         jakarta.servlet.http.HttpSession session = request.getSession(false);
         if (session == null) {
-            // Not logged in -> redirect to login
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
 
-        boolean allowed = false;
-        // 1) positionId check (HR=8, HRM=7)
-        Object userObj = session.getAttribute("user");
-        if (userObj instanceof User user) {
-            if (user.getPositionId() != null) {
-                Long posId = user.getPositionId();
-                if (posId == 7L || posId == 8L) {
-                    allowed = true;
-                }
+        // Kiểm tra quyền xem recruitment requests (HR, HRM, Department Manager)
+        Long positionId = (Long) session.getAttribute("userPositionId");
+        
+        // Nếu vẫn null, thử lấy từ user object
+        if (positionId == null) {
+            Object userObj = session.getAttribute("user");
+            if (userObj instanceof group4.hrms.model.User) {
+                group4.hrms.model.User user = (group4.hrms.model.User) userObj;
+                positionId = user.getPositionId();
             }
         }
-
-        // 2) userRole string in session (older pages set sessionScope.userRole)
-        if (!allowed) {
-            Object roleAttr = session.getAttribute("userRole");
-            if (roleAttr != null) {
-                String roleStr = roleAttr.toString();
-                if ("HR".equalsIgnoreCase(roleStr) || "HRM".equalsIgnoreCase(roleStr)) {
-                    allowed = true;
-                }
-            }
-        }
-
-        // 3) fallback to SessionUtil (checks roles string and admin flag)
-        if (!allowed) {
-            try {
-                if (group4.hrms.util.SessionUtil.hasAnyRole(request, "HR", "HRM")) {
-                    allowed = true;
-                }
-            } catch (Exception ignored) {
-                // safe fallback
-            }
-        }
-
-        if (!allowed) {
+        
+        if (!RecruitmentPermissionHelper.canViewRecruitmentRequest(positionId)) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
