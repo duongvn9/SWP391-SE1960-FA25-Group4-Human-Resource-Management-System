@@ -9,6 +9,7 @@ import group4.hrms.dto.RecruitmentDetailsDto;
 import group4.hrms.model.Request;
 import group4.hrms.model.RequestType;
 import group4.hrms.util.FileUploadUtil;
+import group4.hrms.util.RecruitmentPermissionHelper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -39,17 +40,23 @@ public class RecruitmentRequestCreateServlet extends HttpServlet {
             return;
         }
 
-        /*
-         // Kiểm tra quyền (chỉ Department Manager được tạo request)
-        String positionName = (String) session.getAttribute("positionName");
-        System.out.println("[DEBUG] positionName in session: " + positionName);
-            if (positionName == null || !positionName.equals("Department Manager")) {
-                // access-denied.jsp does not exist in this project; forward to login with an error message
-                req.setAttribute("error", "Access denied: you do not have permission to create recruitment requests.");
-                req.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(req, res);
-                return;
+        // Kiểm tra quyền tạo recruitment request (chỉ Department Manager - positionId = 9)
+        Long positionId = (Long) session.getAttribute("userPositionId");
+        
+        // Nếu vẫn null, thử lấy từ user object
+        if (positionId == null) {
+            Object userObj = session.getAttribute("user");
+            if (userObj instanceof group4.hrms.model.User) {
+                group4.hrms.model.User user = (group4.hrms.model.User) userObj;
+                positionId = user.getPositionId();
             }
-        */
+        }
+        
+        if (!RecruitmentPermissionHelper.canCreateRecruitmentRequest(positionId)) {
+            // Redirect về trang dashboard nếu không có quyền
+            res.sendRedirect(req.getContextPath() + "/dashboard");
+            return;
+        }
 
         try {
             // 1. HANDLE ATTACHMENT: could be multiple files or a drive link (both optional)
@@ -74,7 +81,7 @@ public class RecruitmentRequestCreateServlet extends HttpServlet {
                 try {
                     for (jakarta.servlet.http.Part p : req.getParts()) {
                         if (p.getName().equals("attachments") && p.getSize() > 0) {
-                            String stored = FileUploadUtil.uploadPart(p, "uploads/recruitments", req);
+                            String stored = FileUploadUtil.saveUploadedFile(p, "recruitments");
                             if (stored != null) {
                                 attachmentsList.add(stored);
                             }

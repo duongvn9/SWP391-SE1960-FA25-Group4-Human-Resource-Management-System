@@ -12,6 +12,7 @@ import group4.hrms.model.JobPosting;
 import group4.hrms.service.DepartmentService;
 import group4.hrms.service.JobPostingService;
 import group4.hrms.service.PositionService;
+import group4.hrms.util.SecurityUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -105,6 +106,9 @@ public class JobPostingViewServlet extends HttpServlet {
                 request.setAttribute("rejectionDateFormatted", formattedDate);
                 logger.info("✅ Formatted rejection date: {}", formattedDate);
             }
+
+            // Set CSRF token for forms
+            request.setAttribute("csrfToken", SecurityUtil.getCsrfToken(request.getSession()));
 
             // forward to JSP
             request.getRequestDispatcher("/WEB-INF/views/job-postings/view.jsp").forward(request, response);
