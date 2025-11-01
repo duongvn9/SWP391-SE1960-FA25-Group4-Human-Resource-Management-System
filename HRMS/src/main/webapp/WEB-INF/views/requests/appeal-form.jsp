@@ -351,145 +351,145 @@
 
                             <!-- Attachment -->
                             <div class="mb-3">
-                            <label class="form-label">
-                            <i class="fas fa-paperclip"></i> Attachment
-                            <span class="text-danger">*</span>
-                            </label>
+                                <label class="form-label">
+                                    <i class="fas fa-paperclip"></i> Attachment
+                                    <span class="text-danger">*</span>
+                                </label>
 
-                            <!-- Attachment Type Selection -->
-                            <div class="mb-2">
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="attachmentType"
-                                           id="attachmentTypeFile" value="file" ${empty attachmentType ||
-                                                                                  attachmentType=='file' ? 'checked' : '' }>
-                                    <label class="form-check-label" for="attachmentTypeFile">
-                                        <i class="fas fa-upload me-1"></i> Upload Files
-                                    </label>
+                                <!-- Attachment Type Selection -->
+                                <div class="mb-2">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="attachmentType"
+                                               id="attachmentTypeFile" value="file" ${empty attachmentType ||
+                                                                                      attachmentType=='file' ? 'checked' : '' }>
+                                        <label class="form-check-label" for="attachmentTypeFile">
+                                            <i class="fas fa-upload me-1"></i> Upload Files
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="attachmentType"
+                                               id="attachmentTypeLink" value="link" ${attachmentType=='link' ? 'checked'
+                                                                                      : '' }>
+                                        <label class="form-check-label" for="attachmentTypeLink">
+                                            <i class="fas fa-link me-1"></i> Google Drive Link
+                                        </label>
+                                    </div>
                                 </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="attachmentType"
-                                           id="attachmentTypeLink" value="link" ${attachmentType=='link' ? 'checked'
-                                                                                  : '' }>
-                                    <label class="form-check-label" for="attachmentTypeLink">
-                                        <i class="fas fa-link me-1"></i> Google Drive Link
-                                    </label>
+
+                                <!-- File Upload Section -->
+                                <div id="fileUploadSection">
+                                    <input type="file" class="form-control" id="attachments" name="attachments"
+                                           accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" multiple />
+                                    <div class="form-text">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Accepted formats: PDF, DOC, DOCX, JPG, PNG (Max 5MB per file, multiple files
+                                        allowed)
+                                    </div>
+                                </div>
+
+                                <!-- Google Drive Link Section -->
+                                <div id="driveLinkSection" style="display: none;">
+                                    <input type="url" class="form-control" id="driveLink" name="driveLink"
+                                           placeholder="https://drive.google.com/..." value="${driveLink}" />
+                                    <div class="form-text">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Provide a Google Drive link to your supporting documents. Make sure the link
+                                        is publicly accessible or shared with HR.
+                                    </div>
+                                </div>
+
+                                <!-- Attachment Error Message -->
+                                <div id="attachmentError" class="text-danger mt-2" style="display: none;">
+                                    <i class="fas fa-exclamation-circle me-1"></i>
+                                    Please provide either file attachments or a Google Drive link as evidence.
                                 </div>
                             </div>
 
-                            <!-- File Upload Section -->
-                            <div id="fileUploadSection">
-                                <input type="file" class="form-control" id="attachments" name="attachments"
-                                       accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" multiple />
-                                <div class="form-text">
-                                    <i class="fas fa-info-circle me-1"></i>
-                                    Accepted formats: PDF, DOC, DOCX, JPG, PNG (Max 5MB per file, multiple files
-                                    allowed)
-                                </div>
+                            <!-- Actions -->
+                            <div class="mt-4 d-grid gap-2 d-md-flex justify-content-md-end"
+                                 style="margin-bottom: 2rem !important; margin-right: 2rem !important;">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane me-1"></i> Submit Dispute
+                                </button>
                             </div>
 
-                            <!-- Google Drive Link Section -->
-                            <div id="driveLinkSection" style="display: none;">
-                                <input type="url" class="form-control" id="driveLink" name="driveLink"
-                                       placeholder="https://drive.google.com/..." value="${driveLink}" />
-                                <div class="form-text">
-                                    <i class="fas fa-info-circle me-1"></i>
-                                    Provide a Google Drive link to your supporting documents. Make sure the link
-                                    is publicly accessible or shared with HR.
-                                </div>
-                            </div>
-
-                            <!-- Attachment Error Message -->
-                            <div id="attachmentError" class="text-danger mt-2" style="display: none;">
-                                <i class="fas fa-exclamation-circle me-1"></i>
-                                Please provide either file attachments or a Google Drive link as evidence.
-                            </div>
+                        </form>
                     </div>
-
-                    <!-- Actions -->
-                    <div class="mt-4 d-grid gap-2 d-md-flex justify-content-md-end"
-                         style="margin-bottom: 2rem !important; margin-right: 2rem !important;">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-paper-plane me-1"></i> Submit Dispute
-                        </button>
-                    </div>
-
-                    </form>
                 </div>
-            </div>
 
-            <!-- Attendance Record Selection Popup -->
-            <div id="selectRecordPopup" class="d-none">
-                <div class="popup-content">
-                    <div class="popup-header d-flex justify-content-between align-items-center mb-2">
-                        <h5>Select Attendance Records</h5>
-                        <button type="button" id="closePopupBtn">X</button>
-                    </div>
-
-                    <!-- Form để submit dữ liệu -->
-                    <form id="attendanceForm" method="post"
-                          action="${pageContext.request.contextPath}/requests/appeal/create">
-
-                        <!-- Filter: Period -->
-                        <div class="mb-3">
-                            <label for="periodFilter">Filter by Period:</label>
-                            <select id="periodFilter" name="periodFilter" class="form-select">
-                                <option value="">-- All Periods --</option>
-                                <c:forEach var="p" items="${periodList}">
-                                    <option value="${p.id}" <c:if test="${p.id == currentPeriodId}">selected</c:if>>
-                                        ${p.name}
-                                    </option>
-                                </c:forEach>
-                            </select>
+                <!-- Attendance Record Selection Popup -->
+                <div id="selectRecordPopup" class="d-none">
+                    <div class="popup-content">
+                        <div class="popup-header d-flex justify-content-between align-items-center mb-2">
+                            <h5>Select Attendance Records</h5>
+                            <button type="button" id="closePopupBtn">X</button>
                         </div>
 
-                        <!-- Attendance Table -->
-                        <table class="table table-bordered table-hover" id="attendanceTable">
-                            <thead>
-                                <tr>
-                                    <th>Select</th>
-                                    <th>Date</th>
-                                    <th>Check-in</th>
-                                    <th>Check-out</th>
-                                    <th>Status</th>
-                                    <th>Source</th>
-                                    <th>Period</th>
-                                </tr>
-                            </thead>
-                            <tbody id="attendanceTableBody">
-                                <c:forEach var="log" items="${attendanceList}">
-                                    <tr data-period-name="${log.period}">
-                                        <td>
-                                            <input type="checkbox" class="form-check-input select-checkbox" />
-                                        </td>
-                                        <td>${log.date}</td>
-                                        <td>${log.checkIn}</td>
-                                        <td>${log.checkOut}</td>
-                                        <td>${log.status}</td>
-                                        <td>${log.source}</td>
-                                        <td>${log.period}</td>
+                        <!-- Form để submit dữ liệu -->
+                        <form id="attendanceForm" method="post"
+                              action="${pageContext.request.contextPath}/requests/appeal/create">
+
+                            <!-- Filter: Period -->
+                            <div class="mb-3">
+                                <label for="periodFilter">Filter by Period:</label>
+                                <select id="periodFilter" name="periodFilter" class="form-select">
+                                    <option value="">-- All Periods --</option>
+                                    <c:forEach var="p" items="${periodList}">
+                                        <option value="${p.id}" <c:if test="${p.id == currentPeriodId}">selected</c:if>>
+                                            ${p.name}
+                                        </option>
+                                    </c:forEach>
+                                </select>
+                            </div>
+
+                            <!-- Attendance Table -->
+                            <table class="table table-bordered table-hover" id="attendanceTable">
+                                <thead>
+                                    <tr>
+                                        <th>Select</th>
+                                        <th>Date</th>
+                                        <th>Check-in</th>
+                                        <th>Check-out</th>
+                                        <th>Status</th>
+                                        <th>Source</th>
+                                        <th>Period</th>
                                     </tr>
-                                </c:forEach>
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody id="attendanceTableBody">
+                                    <c:forEach var="log" items="${attendanceList}">
+                                        <tr data-period-name="${log.period}">
+                                            <td>
+                                                <input type="checkbox" class="form-check-input select-checkbox" />
+                                            </td>
+                                            <td>${log.date}</td>
+                                            <td>${log.checkIn}</td>
+                                            <td>${log.checkOut}</td>
+                                            <td>${log.status}</td>
+                                            <td>${log.source}</td>
+                                            <td>${log.period}</td>
+                                        </tr>
+                                    </c:forEach>
+                                </tbody>
+                            </table>
 
-                        <!-- Frontend Pagination Controls -->
-                        <div class="pagination-controls mt-2">
-                            <ul class="pagination" id="paginationContainer"></ul>
-                        </div>
+                            <!-- Frontend Pagination Controls -->
+                            <div class="pagination-controls mt-2">
+                                <ul class="pagination" id="paginationContainer"></ul>
+                            </div>
 
-                        <!-- Ẩn input để gửi dữ liệu selected records -->
-                        <input type="hidden" name="action" value="submitSelectedRecords" />
-                        <input type="hidden" name="records" id="recordsInput" />
+                            <!-- Ẩn input để gửi dữ liệu selected records -->
+                            <input type="hidden" name="action" value="submitSelectedRecords" />
+                            <input type="hidden" name="records" id="recordsInput" />
 
-                        <!-- Popup Actions -->
-                        <div class="popup-actions mt-3 d-flex justify-content-end gap-2">
-                            <button type="submit" id="submitSelectedRecords" class="btn btn-primary">Submit</button>
-                            <button type="button" id="closePopupBtn2" class="btn btn-secondary">X</button>
-                        </div>
-                    </form>
+                            <!-- Popup Actions -->
+                            <div class="popup-actions mt-3 d-flex justify-content-end gap-2">
+                                <button type="submit" id="submitSelectedRecords" class="btn btn-primary">Submit</button>
+                                <button type="button" id="closePopupBtn2" class="btn btn-secondary">X</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
-        </div>
-        <script src="${pageContext.request.contextPath}/assets/js/appeal-request.js"></script>
+            <script src="${pageContext.request.contextPath}/assets/js/appeal-request.js"></script>
     </body>
 </html>

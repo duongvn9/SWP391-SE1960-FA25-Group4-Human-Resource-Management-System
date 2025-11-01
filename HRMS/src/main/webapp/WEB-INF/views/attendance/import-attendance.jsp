@@ -7,7 +7,6 @@
             <jsp:param name="pageTitle" value="Import Attendance - HRMS" />
             <jsp:param name="pageCss" value="import-attendance.css" />
         </jsp:include>
-
         <style>
             .employee-select-wrapper {
                 position: relative;
