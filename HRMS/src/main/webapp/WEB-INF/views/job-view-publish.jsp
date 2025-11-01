@@ -3,6 +3,8 @@
 <%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
 <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 
+<fmt:setLocale value="en" />
+
 <%-- Function to format job type --%>
 <c:set var="formattedJobType" value="${job.jobType}" />
 <c:choose>
@@ -286,7 +288,7 @@
 
                         <!-- Apply Button -->
                         <div class="apply-section">
-                            <button class="btn btn-apply">
+                            <button class="btn btn-apply" onclick="showApplicationModal('${job.id}', '${fn:escapeXml(job.title)}')">
                                 <i class="fas fa-paper-plane me-2"></i>Apply Now
                             </button>
                             <p class="apply-note">Ready to join our team? Send us your CV and let's start the conversation!</p>
@@ -297,6 +299,14 @@
                 <!-- Sidebar -->
                 <div class="col-lg-4">
                     <div class="job-sidebar" data-aos="fade-up" data-aos-delay="200">
+                        <!-- Apply Now (sidebar) -->
+                        <div class="sidebar-card sidebar-apply-top">
+                            <div class="apply-top">
+                                <button class="btn btn-apply w-100" onclick="showApplicationModal('${job.id}', '${fn:escapeXml(job.title)}')">
+                                    <i class="fas fa-paper-plane me-2"></i>Apply Now
+                                </button>
+                            </div>
+                        </div>
                         <!-- Quick Info Card -->
                         <div class="sidebar-card">
                             <h4 class="sidebar-title">
@@ -826,6 +836,555 @@
             to {
                 opacity: 1;
                 transform: translateY(0);
+            }
+        }
+    </style>
+
+    <!-- Application Modal -->
+    <div class="modal fade" id="applicationModal" tabindex="-1" aria-labelledby="applicationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <h5 class="modal-title" id="applicationModalLabel">
+                        <i class="fas fa-paper-plane me-2"></i>Apply for Position
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="applicationForm" enctype="multipart/form-data">
+                        <input type="hidden" id="jobId" name="jobId" />
+                        
+                        <!-- CCCD Information Section - Required -->
+                        <div class="form-section">
+                            <h6 class="section-title">
+                                <i class="fas fa-id-card me-2"></i>Citizen ID (CCCD) Information <span class="text-danger">*</span>
+                            </h6>
+                            <div class="mb-3">
+                                <label for="cccdFrontUpload" class="form-label">Upload CCCD Front Image <span class="text-danger">*</span></label>
+                                <input type="file" class="form-control" id="cccdFrontUpload" name="cccdFrontUpload" 
+                                       accept="image/jpeg,image/jpg,image/png" required>
+                                <div class="form-text">
+                                    <strong>Please upload the front side of your Vietnamese Citizen ID Card (CCCD) first, then click "Extract Information" to automatically fill the form fields below.</strong><br>
+                                    Supported formats: JPG, PNG (Max size: 10MB)
+                                </div>
+                                <button type="button" class="btn btn-primary btn-sm mt-2" id="processOCRBtn" disabled>
+                                    <i class="fas fa-magic me-1"></i>Extract Information
+                                </button>
+                                <div id="ocrStatus" class="mt-2" style="display: none;">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-spinner fa-spin me-2"></i>Processing CCCD image...
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="cccd" class="form-label">CCCD Number <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="cccd" name="cccd" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="cccdName" class="form-label">Full Name from CCCD <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="cccdName" name="cccdName" required>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="cccdDob" class="form-label">Date of Birth <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="cccdDob" name="cccdDob" 
+                                           placeholder="DD/MM/YYYY" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="cccdGender" class="form-label">Gender <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="cccdGender" name="cccdGender" required>
+                                        <option value="">Select Gender</option>
+                                        <option value="NAM">Male</option>
+                                        <option value="NU">Female</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="cccdHometown" class="form-label">Hometown/Origin <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="cccdHometown" name="cccdHometown" required>
+                            </div>
+                        </div>
+
+                        <!-- Contact Information Section -->
+                        <div class="form-section">
+                            <h6 class="section-title">
+                                <i class="fas fa-envelope me-2"></i>Contact Information
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
+                                    <input type="email" class="form-control" id="email" name="email" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="phone" class="form-label">Phone Number <span class="text-danger">*</span></label>
+                                    <input type="tel" class="form-control" id="phone" name="phone" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Address Information Section -->
+                        <div class="form-section">
+                            <h6 class="section-title">
+                                <i class="fas fa-map-marker-alt me-2"></i>Address Information
+                            </h6>
+                            <div class="mb-3">
+                                <label for="addressLine1" class="form-label">Address Line 1</label>
+                                <input type="text" class="form-control" id="addressLine1" name="addressLine1" placeholder="Street address">
+                            </div>
+                            <div class="mb-3">
+                                <label for="addressLine2" class="form-label">Address Line 2</label>
+                                <input type="text" class="form-control" id="addressLine2" name="addressLine2" placeholder="Apartment, suite, etc. (optional)">
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="city" class="form-label">City</label>
+                                    <input type="text" class="form-control" id="city" name="city">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="state" class="form-label">State/Province</label>
+                                    <input type="text" class="form-control" id="state" name="state">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="postalCode" class="form-label">Postal Code</label>
+                                    <input type="text" class="form-control" id="postalCode" name="postalCode">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="country" class="form-label">Country</label>
+                                <input type="text" class="form-control" id="country" name="country" value="Vietnam">
+                            </div>
+                        </div>
+
+                        <!-- Resume/CV Section -->
+                        <div class="form-section">
+                            <h6 class="section-title">
+                                <i class="fas fa-file-alt me-2"></i>Resume/CV <span class="text-danger">*</span>
+                            </h6>
+                            <div class="mb-3">
+                                <label for="resumeUrl" class="form-label">Resume/CV Link <span class="text-danger">*</span></label>
+                                <input type="url" class="form-control" id="resumeUrl" name="resumeUrl" 
+                                       placeholder="https://drive.google.com/... or https://linkedin.com/..." required>
+                                <div class="form-text">Provide a link to your online resume (Google Drive, LinkedIn, etc.)</div>
+                            </div>
+                        </div>
+
+
+
+                        <!-- Terms and Conditions -->
+                        <div class="form-section">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="agreeTerms" name="agreeTerms" required>
+                                <label class="form-check-label" for="agreeTerms">
+                                    I confirm that all information provided is accurate and complete <span class="text-danger">*</span>
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cancel
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="submitApplication()">
+                        <i class="fas fa-paper-plane me-1"></i>Submit Application
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center py-4">
+                    <div class="success-icon mb-3">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h5 class="mb-3">Application Submitted Successfully!</h5>
+                    <p class="text-muted mb-4">Thank you for your interest in this position. We have received your application with CCCD information and will review it shortly. You will hear from us within 5-7 business days.</p>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                        <i class="fas fa-check me-1"></i>Got it
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showApplicationModal(jobId, jobTitle) {
+            // Set job information
+            document.getElementById('jobId').value = jobId;
+            document.getElementById('applicationModalLabel').innerHTML = 
+                '<i class="fas fa-paper-plane me-2"></i>Apply for: ' + jobTitle;
+            
+            // Reset form
+            document.getElementById('applicationForm').reset();
+            
+            // Show modal
+            var modal = new bootstrap.Modal(document.getElementById('applicationModal'));
+            modal.show();
+        }
+
+        function submitApplication() {
+            var form = document.getElementById('applicationForm');
+            if (!form) {
+                alert('Form not found!');
+                return;
+            }
+            
+            // Get submit button
+            var submitBtn = document.querySelector('button[onclick="submitApplication()"]');
+            if (!submitBtn) {
+                alert('Submit button not found!');
+                return;
+            }
+            
+            try {
+                // Custom validation for resume
+                var resumeUrl = document.getElementById('resumeUrl') ? document.getElementById('resumeUrl').value : '';
+                
+                if (!resumeUrl || resumeUrl.trim() === '') {
+                    alert('Please provide a link to your resume');
+                    return;
+                }
+                
+                // CCCD validation (required)
+                var cccdNumber = document.getElementById('cccd').value;
+                if (!cccdNumber || cccdNumber.trim() === '') {
+                    alert('CCCD number is required. Please upload CCCD image and extract information.');
+                    return;
+                }
+                
+                // Basic validation
+                if (!form.checkValidity()) {
+                    form.reportValidity();
+                    return;
+                }
+
+                // No file size check needed for URL
+                
+                var cccdFront = document.getElementById('cccdFront') ? document.getElementById('cccdFront').files[0] : null;
+                var cccdBack = document.getElementById('cccdBack') ? document.getElementById('cccdBack').files[0] : null;
+                
+                if (cccdFront && cccdFront.size > 5 * 1024 * 1024) {
+                    alert('CCCD front image size must be less than 5MB');
+                    return;
+                }
+                
+                if (cccdBack && cccdBack.size > 5 * 1024 * 1024) {
+                    alert('CCCD back image size must be less than 5MB');
+                    return;
+                }
+
+                // Show loading state
+                var originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Submitting...';
+                submitBtn.disabled = true;
+
+                // Create FormData for form submission
+                var formData = new FormData(form);
+
+                // Submit to server
+                fetch('${pageContext.request.contextPath}/submit-application', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(function(response) {
+                    if (!response.ok) {
+                        // Try to get detailed error message from response
+                        return response.text().then(function(errorText) {
+                            try {
+                                var errorData = JSON.parse(errorText);
+                                throw new Error('Server Error (' + response.status + '): ' + (errorData.message || 'Unknown error'));
+                            } catch (e) {
+                                throw new Error('Server Error (' + response.status + '): ' + errorText);
+                            }
+                        });
+                    }
+                    return response.json();
+                })
+                .then(function(data) {
+                    // Reset button
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                    
+                    if (data.success) {
+                        // Hide application modal
+                        var applicationModal = bootstrap.Modal.getInstance(document.getElementById('applicationModal'));
+                        if (applicationModal) {
+                            applicationModal.hide();
+                        }
+                        
+                        // Show success modal
+                        var successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                        if (successModal) {
+                            successModal.show();
+                        }
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Error submitting application:', error);
+                    
+                    // Reset button
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                    
+                    alert('An error occurred while submitting your application. Please try again.\nError: ' + error.message);
+                });
+                
+            } catch (error) {
+                alert('JavaScript error: ' + error.message);
+            }
+        }
+
+        // No resume type switching needed anymore
+
+        // File input validation (only for images now)
+        function validateFile(input, type) {
+            var file = input.files[0];
+            if (!file) return;
+
+            var maxSize = 5 * 1024 * 1024; // 5MB
+            var allowedTypes;
+            
+            if (type === 'image') {
+                allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+            }
+
+            if (!allowedTypes.includes(file.type)) {
+                alert('Please select a valid image format (JPG, PNG, GIF)');
+                input.value = '';
+                return;
+            }
+
+            if (file.size > maxSize) {
+                alert('File size must be less than 5MB');
+                input.value = '';
+                return;
+            }
+        }
+
+        // OCR Processing Function
+        function processOCR() {
+            var fileInput = document.getElementById('cccdFrontUpload');
+            var file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select a CCCD image first');
+                return;
+            }
+            
+            // Show loading state
+            var btn = document.getElementById('processOCRBtn');
+            var originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Processing...';
+            btn.disabled = true;
+            
+            document.getElementById('ocrStatus').style.display = 'block';
+            
+            // Create FormData
+            var formData = new FormData();
+            formData.append('file', file);
+            
+            // Call OCR API
+            fetch('${pageContext.request.contextPath}/api/ocr', {
+                method: 'POST',
+                body: formData
+            })
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                // Reset button
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                document.getElementById('ocrStatus').style.display = 'none';
+                
+                if (data.error) {
+                    alert('OCR Error: ' + data.message);
+                    return;
+                }
+                
+                // Fill form fields with OCR results
+                if (data.SO_CAN_CUOC_CONG_DAN) {
+                    document.getElementById('cccd').value = data.SO_CAN_CUOC_CONG_DAN;
+                }
+                if (data.TEN) {
+                    document.getElementById('cccdName').value = data.TEN;
+                }
+                if (data.NGAY_SINH) {
+                    document.getElementById('cccdDob').value = data.NGAY_SINH;
+                }
+                if (data.GIOI_TINH) {
+                    document.getElementById('cccdGender').value = data.GIOI_TINH;
+                }
+                if (data.QUE_QUAN) {
+                    document.getElementById('cccdHometown').value = data.QUE_QUAN;
+                }
+                // Note: NGAY_HET_HAN is only used for validation in OCRServlet, not stored
+                
+                // Show success message
+                var successAlert = document.createElement('div');
+                successAlert.className = 'alert alert-success mt-2';
+                successAlert.innerHTML = '<i class="fas fa-check-circle me-2"></i>CCCD information extracted successfully! Please review and edit if needed.';
+                document.getElementById('ocrStatus').innerHTML = '';
+                document.getElementById('ocrStatus').appendChild(successAlert);
+                document.getElementById('ocrStatus').style.display = 'block';
+                
+                // Hide success message after 5 seconds
+                setTimeout(function() {
+                    document.getElementById('ocrStatus').style.display = 'none';
+                }, 5000);
+            })
+            .catch(function(error) {
+                // Reset button
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                document.getElementById('ocrStatus').style.display = 'none';
+                
+                console.error('OCR Error:', error);
+                alert('An error occurred while processing the image. Please try again.');
+            });
+        }
+
+        // Add event listeners for OCR
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // CCCD Front Upload handler
+            document.getElementById('cccdFrontUpload').addEventListener('change', function(e) {
+                validateFile(e.target, 'image');
+                // Enable OCR button when file is selected
+                var processBtn = document.getElementById('processOCRBtn');
+                if (e.target.files[0]) {
+                    processBtn.disabled = false;
+                } else {
+                    processBtn.disabled = true;
+                }
+            });
+            
+            // OCR button click handler
+            document.getElementById('processOCRBtn').addEventListener('click', processOCR);
+        });
+    </script>
+
+    <style>
+        /* Application Modal Styles */
+        .form-section {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .form-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 15px;
+            font-size: 1rem;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .form-control, .form-select {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px 12px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        .form-text {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        .form-check-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .form-check-label a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .form-check-label a:hover {
+            text-decoration: underline;
+        }
+
+        /* Success Modal Styles */
+        .success-icon {
+            font-size: 4rem;
+            color: #28a745;
+        }
+
+        .success-icon i {
+            animation: successPulse 0.6s ease-out;
+        }
+
+        @keyframes successPulse {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Modal Enhancements */
+        .modal-content {
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            border: none;
+            padding: 20px 30px;
+        }
+
+        .modal-body {
+            padding: 30px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .modal-footer {
+            border: none;
+            padding: 20px 30px;
+            background-color: #f8f9fa;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .modal-body {
+                padding: 20px;
+            }
+            
+            .modal-header, .modal-footer {
+                padding: 15px 20px;
             }
         }
     </style>

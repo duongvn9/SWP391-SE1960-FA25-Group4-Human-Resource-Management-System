@@ -46,6 +46,24 @@ public class JobsServlet extends HttpServlet {
         if (jobPostingService != null) {
             Map<String, Object> criteria = new HashMap<>();
             criteria.put("status", "PUBLISHED");
+            // Filtering params from UI
+            String title = req.getParameter("title");
+            String deptIdStr = req.getParameter("departmentId");
+            String jobType = req.getParameter("jobType");
+            if (title != null && !title.trim().isEmpty()) {
+                criteria.put("searchQuery", title.trim());
+            }
+            if (deptIdStr != null && !deptIdStr.trim().isEmpty()) {
+                try {
+                    Long deptId = Long.parseLong(deptIdStr);
+                    criteria.put("departmentId", deptId);
+                } catch (NumberFormatException e) {
+                    // ignore invalid id
+                }
+            }
+            if (jobType != null && !jobType.trim().isEmpty()) {
+                criteria.put("jobType", jobType.trim());
+            }
             jobs = jobPostingService.findJobPostings(criteria, page, pageSize);
             totalItems = jobPostingService.countJobPostings(criteria);
         }
@@ -56,6 +74,26 @@ public class JobsServlet extends HttpServlet {
             List<Department> departments = departmentService.getAllDepartments();
             req.setAttribute("departments", departments);
         }
+
+        // Build query string to preserve filters in pagination links
+        StringBuilder qs = new StringBuilder();
+        String titleParam = req.getParameter("title");
+        String departmentParam = req.getParameter("departmentId");
+        String jobTypeParam = req.getParameter("jobType");
+        try {
+            if (titleParam != null && !titleParam.isEmpty()) {
+                qs.append("&title=").append(java.net.URLEncoder.encode(titleParam, java.nio.charset.StandardCharsets.UTF_8.toString()));
+            }
+            if (departmentParam != null && !departmentParam.isEmpty()) {
+                qs.append("&departmentId=").append(java.net.URLEncoder.encode(departmentParam, java.nio.charset.StandardCharsets.UTF_8.toString()));
+            }
+            if (jobTypeParam != null && !jobTypeParam.isEmpty()) {
+                qs.append("&jobType=").append(java.net.URLEncoder.encode(jobTypeParam, java.nio.charset.StandardCharsets.UTF_8.toString()));
+            }
+        } catch (Exception e) {
+            // ignore encoding issues
+        }
+        req.setAttribute("queryString", qs.toString());
 
         req.setAttribute("jobs", jobs);
         req.setAttribute("currentPage", page);
