@@ -1,11 +1,11 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.core" prefix="m" %>
 <!DOCTYPE html>
 <html>
     <head>
         <meta charset="UTF-8">
-        <title>My Attendance</title>  
+        <title>My Attendance</title>
         <jsp:include page="../layout/head.jsp">
             <jsp:param name="pageTitle" value="attendance-record-emp" />
         </jsp:include>
@@ -25,26 +25,32 @@
                     <h2 class="page-title">My Attendance Records</h2>
 
                     <!-- Filter Form -->
-                    <form id="filterForm" class="filter-form" method="post" action="${pageContext.request.contextPath}/attendance/record/emp">
+                    <form id="filterForm" class="filter-form" method="post"
+                          action="${pageContext.request.contextPath}/attendance/record/emp">
                         <div class="filter-group">
                             <label for="startDate" class="filter-label">From:</label>
-                            <input type="date" id="startDate" name="startDate" value="${startDate}" class="filter-input">
+                            <input type="date" id="startDate" name="startDate" value="${startDate}"
+                                   class="filter-input">
                         </div>
 
                         <div class="filter-group">
                             <label for="endDate" class="filter-label">To:</label>
-                            <input type="date" id="endDate" name="endDate" value="${endDate}" class="filter-input">
+                            <input type="date" id="endDate" name="endDate" value="${endDate}"
+                                   class="filter-input">
                         </div>
 
                         <div class="filter-group">
                             <label for="status" class="filter-label">Status:</label>
                             <select id="status" name="status" class="filter-select">
                                 <option value="">All</option>
-                                <option value="On time" ${status == 'On time' ? 'selected' : ''}>On time</option>
-                                <option value="Late" ${status == 'Late' ? 'selected' : ''}>Late</option>
-                                <option value="Shift day" ${status == 'Shift day' ? 'selected' : ''}>Shift day</option>
-                                <option value="leaving early" ${status == 'leaving early' ? 'selected' : ''}>leaving early</option>
-                                <option value="Over Time" ${status == 'Over Time' ? 'selected' : ''}>Over Time</option>
+                                <option value="On time" ${status=='On time' ? 'selected' : '' }>On time</option>
+                                <option value="Late" ${status=='Late' ? 'selected' : '' }>Late</option>
+                                <option value="Shift day" ${status=='Shift day' ? 'selected' : '' }>Shift day
+                                </option>
+                                <option value="leaving early" ${status=='leaving early' ? 'selected' : '' }>
+                                    leaving early</option>
+                                <option value="Over Time" ${status=='Over Time' ? 'selected' : '' }>Over Time
+                                </option>
                             </select>
                         </div>
 
@@ -52,8 +58,8 @@
                             <label for="source" class="filter-label">Source:</label>
                             <select id="source" name="source" class="filter-select">
                                 <option value="">All</option>
-                                <option value="Manual" ${source == 'Manual' ? 'selected' : ''}>Manual</option>
-                                <option value="excel" ${source == 'Import' ? 'selected' : ''}>Excel</option>
+                                <option value="Manual" ${source=='Manual' ? 'selected' : '' }>Manual</option>
+                                <option value="excel" ${source=='Import' ? 'selected' : '' }>Excel</option>
                             </select>
                         </div>
 
@@ -62,40 +68,49 @@
                             <select id="periodSelect" name="periodSelect" class="filter-select">
                                 <option value="">-- All Periods --</option>
                                 <c:forEach var="p" items="${periodList}">
-                                    <option value="${p.id}" ${selectedPeriodId == p.id ? 'selected' : ''}>${p.name}</option>
-                                </c:forEach>
+                                    <option value="${p.id}" ${selectedPeriodId==p.id ? 'selected' : '' }>
+                                        ${p.name}</option>
+                                    </c:forEach>
                             </select>
                         </div>
 
                         <div class="filter-actions">
                             <button type="submit" class="btn btn-filter">Filter</button>
-                            <button type="submit" name="action" value="reset" class="btn btn-reset">Reset</button>
+                            <button type="submit" name="action" value="reset"
+                                    class="btn btn-reset">Reset</button>
                         </div>
 
                         <!-- Hidden input lưu các record đã chọn -->
-                        <input type="hidden" id="selectedLogDates" name="selected_log_dates" value="${selectedLogDates}">
+                        <input type="hidden" id="selectedLogDates" name="selected_log_dates"
+                               value="${selectedLogDates}">
                     </form>
-                    <br/>
+                    <br />
 
                     <!-- Export Form (ẩn, dùng JS để submit) -->
-                    <form id="exportForm" class="export-form" action="${pageContext.request.contextPath}/attendance/record/emp" method="post">
+                    <form id="exportForm" class="export-form"
+                          action="${pageContext.request.contextPath}/attendance/record/emp" method="post">
                         <input type="hidden" name="exportType" id="exportType">
-                        <input type="hidden" name="employeeKeyword" id="exportEmployeeKeyword" value="${employeeKeyword}">
+                        <input type="hidden" name="employeeKeyword" id="exportEmployeeKeyword"
+                               value="${employeeKeyword}">
                         <input type="hidden" name="department" id="exportDepartment" value="${department}">
                         <input type="hidden" name="startDate" id="exportStartDate" value="${startDate}">
                         <input type="hidden" name="endDate" id="exportEndDate" value="${endDate}">
                         <input type="hidden" name="status" id="exportStatus" value="${status}">
                         <input type="hidden" name="source" id="exportSource" value="${source}">
-                        <input type="hidden" name="periodSelect" id="exportPeriodSelect" value="${selectedPeriodId}">
+                        <input type="hidden" name="periodSelect" id="exportPeriodSelect"
+                               value="${selectedPeriodId}">
                     </form>
 
                     <!-- Export / Submit Buttons -->
                     <div class="export-buttons">
-                        <button type="button" id="exportXLSBtn" class="btn btn-export btn-xls">Export XLS</button>
-                        <button type="button" id="exportCSVBtn" class="btn btn-export btn-csv">Export CSV</button>
-                        <button type="button" id="exportPDFBtn" class="btn btn-export btn-pdf">Export PDF</button>
+                        <button type="button" id="exportXLSBtn" class="btn btn-export btn-xls">Export
+                            XLS</button>
+                        <button type="button" id="exportCSVBtn" class="btn btn-export btn-csv">Export
+                            CSV</button>
+                        <button type="button" id="exportPDFBtn" class="btn btn-export btn-pdf">Export
+                            PDF</button>
                     </div>
-                    <br/>
+                    <br />
 
                     <!-- Attendance Table -->
                     <table id="attendanceTable" class="attendance-table" border="1" cellpadding="6">
@@ -214,36 +229,35 @@
             </div>
         </main>
     </div>
-</div>
-<script>
-    (function () {
-        document.addEventListener('DOMContentLoaded', function () {
-            // accept either elements with .nav-item.dropdown or any .dropdown inside .nav-right
-            const dropdowns = document.querySelectorAll('.nav-item.dropdown, .nav-right .dropdown');
+    <script>
+        (function () {
+            document.addEventListener('DOMContentLoaded', function () {
+                // accept either elements with .nav-item.dropdown or any .dropdown inside .nav-right
+                const dropdowns = document.querySelectorAll('.nav-item.dropdown, .nav-right .dropdown');
 
-            dropdowns.forEach(drop => {
-                const toggle = drop.querySelector('.dropdown-toggle');
-                const menu = drop.querySelector('.dropdown-menu');
+                dropdowns.forEach(drop => {
+                    const toggle = drop.querySelector('.dropdown-toggle');
+                    const menu = drop.querySelector('.dropdown-menu');
 
-                if (!toggle || !menu)
-                    return;
+                    if (!toggle || !menu)
+                        return;
 
-                // click vào toggle để mở/đóng menu
-                toggle.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    menu.classList.toggle('show');
-                });
+                    // click vào toggle để mở/đóng menu
+                    toggle.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        menu.classList.toggle('show');
+                    });
 
-                // click ngoài dropdown thì đóng menu
-                document.addEventListener('click', function (e) {
-                    if (!drop.contains(e.target)) {
-                        menu.classList.remove('show');
-                    }
+                    // click ngoài dropdown thì đóng menu
+                    document.addEventListener('click', function (e) {
+                        if (!drop.contains(e.target)) {
+                            menu.classList.remove('show');
+                        }
+                    });
                 });
             });
-        });
-    })();
-</script>
-<script src="${pageContext.request.contextPath}/assets/js/attendance-record-emp.js"></script> 
+        })();
+    </script>
+    <script src="${pageContext.request.contextPath}/assets/js/attendance-record-emp.js"></script>
 </body>
 </html>
