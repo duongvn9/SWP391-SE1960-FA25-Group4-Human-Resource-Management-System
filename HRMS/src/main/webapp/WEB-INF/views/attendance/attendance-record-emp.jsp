@@ -10,7 +10,6 @@
             <jsp:param name="pageTitle" value="attendance-record-emp" />
         </jsp:include>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/attendance-record-emp.css">
-
     </head>
     <body class="attendance-page">
         <div class="page-wrapper">
@@ -45,12 +44,13 @@
                                 <option value="">All</option>
                                 <option value="On time" ${status=='On time' ? 'selected' : '' }>On time</option>
                                 <option value="Late" ${status=='Late' ? 'selected' : '' }>Late</option>
-                                <option value="Shift day" ${status=='Shift day' ? 'selected' : '' }>Shift day
-                                </option>
-                                <option value="leaving early" ${status=='leaving early' ? 'selected' : '' }>
-                                    leaving early</option>
+                                <option value="Early Leave" ${status=='Early Leave' ? 'selected' : '' }>Early
+                                    Leave</option>
+                                <option value="Late & Early Leave" ${status=='Late & Early Leave' ? 'selected'
+                                                                     : '' }>Late & Early Leave</option>
                                 <option value="Over Time" ${status=='Over Time' ? 'selected' : '' }>Over Time
                                 </option>
+                                <option value="Invalid" ${status=='Invalid' ? 'selected' : '' }>Invalid</option>
                             </select>
                         </div>
 
@@ -101,7 +101,7 @@
                                value="${selectedPeriodId}">
                     </form>
 
-                    <!-- Export / Submit Buttons -->
+                    <!-- ========== ACTION BUTTONS ========== -->
                     <div class="export-buttons">
                         <button type="button" id="exportXLSBtn" class="btn btn-export btn-xls">Export
                             XLS</button>
@@ -109,36 +109,39 @@
                             CSV</button>
                         <button type="button" id="exportPDFBtn" class="btn btn-export btn-pdf">Export
                             PDF</button>
+                        <button type="button" id="viewSummaryBtn" class="btn btn-summary">View Summary</button>
                     </div>
-                    <br />
 
-                    <!-- Attendance Table -->
-                    <table id="attendanceTable" class="attendance-table" border="1" cellpadding="6">
-                        <thead>
-                            <tr>
-                                <th class="col-date">Date</th>
-                                <th class="col-checkin">Check-in</th>
-                                <th class="col-checkout">Check-out</th>
-                                <th class="col-status">Status</th>
-                                <th class="col-source">Source</th>
-                                <th class="col-period">Period</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <c:forEach var="record" items="${attendanceList}">
-                                <tr class="attendance-row">
-                                    <td class="cell-date">${record.dateStr}</td>
-                                    <td class="cell-checkin">${record.checkInStr}</td>
-                                    <td class="cell-checkout">${record.checkOutStr}</td>
-                                    <td class="cell-status">${record.status}</td>
-                                    <td class="cell-source">${record.source}</td>
-                                    <td class="cell-period">${record.period}</td>
+                    <!-- ========== MAIN TABLE ========== -->
+                    <div class="table-wrapper">
+                        <table id="attendanceTable" class="attendance-table" border="1" cellspacing="0"
+                               cellpadding="6">
+                            <thead>
+                                <tr>
+                                    <th class="col-date">Date</th>
+                                    <th class="col-checkin">Check-in</th>
+                                    <th class="col-checkout">Check-out</th>
+                                    <th class="col-status">Status</th>
+                                    <th class="col-source">Source</th>
+                                    <th class="col-period">Period</th>
                                 </tr>
-                            </c:forEach>
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                <c:forEach var="record" items="${attendanceList}">
+                                    <tr class="attendance-row">
+                                        <td class="cell-date">${record.dateStr}</td>
+                                        <td class="cell-checkin">${record.checkInStr}</td>
+                                        <td class="cell-checkout">${record.checkOutStr}</td>
+                                        <td class="cell-status">${record.status}</td>
+                                        <td class="cell-source">${record.source}</td>
+                                        <td class="cell-period">${record.period}</td>
+                                    </tr>
+                                </c:forEach>
+                            </tbody>
+                        </table>
+                    </div>
 
-                    <!-- Pagination POST -->
+                    <!-- ========== PAGINATION ========== -->
                     <div class="pagination" style="margin-top: 10px;">
                         <!-- Previous -->
                         <c:if test="${currentPage > 1}">
@@ -229,35 +232,63 @@
             </div>
         </main>
     </div>
-    <script>
-        (function () {
-            document.addEventListener('DOMContentLoaded', function () {
-                // accept either elements with .nav-item.dropdown or any .dropdown inside .nav-right
-                const dropdowns = document.querySelectorAll('.nav-item.dropdown, .nav-right .dropdown');
 
-                dropdowns.forEach(drop => {
-                    const toggle = drop.querySelector('.dropdown-toggle');
-                    const menu = drop.querySelector('.dropdown-menu');
-
-                    if (!toggle || !menu)
-                        return;
-
-                    // click vào toggle để mở/đóng menu
-                    toggle.addEventListener('click', function (e) {
-                        e.preventDefault();
-                        menu.classList.toggle('show');
-                    });
-
-                    // click ngoài dropdown thì đóng menu
-                    document.addEventListener('click', function (e) {
-                        if (!drop.contains(e.target)) {
-                            menu.classList.remove('show');
-                        }
-                    });
-                });
-            });
-        })();
-    </script>
+    <!-- Attendance Summary Popup -->
+    <div id="summaryModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Attendance Summary</h3>
+                <span class="close-btn" id="closeSummaryModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <label>Total Working Days:</label>
+                        <span id="totalWorkingDays">--</span>
+                    </div>
+                    <div class="summary-item">
+                        <label>Days On Time:</label>
+                        <span id="daysOnTime">--</span>
+                    </div>
+                    <div class="summary-item">
+                        <label>Days Late:</label>
+                        <span id="daysLate">--</span>
+                    </div>
+                    <div class="summary-item">
+                        <label>Days Early Leaving:</label>
+                        <span id="daysEarlyLeaving">--</span>
+                    </div>
+                    <div class="summary-item">
+                        <label>Days Late & Early Leaving:</label>
+                        <span id="daysLateAndEarlyLeaving">--</span>
+                    </div>
+                    <div class="summary-item">
+                        <label>Days Absent:</label>
+                        <span id="daysAbsent">--</span>
+                    </div>
+                    <div class="summary-item">
+                        <label>Total Hours Worked:</label>
+                        <span id="totalHoursWorked">--</span>
+                    </div>
+                    <div class="summary-item">
+                        <label>Average Working Hours:</label>
+                        <span id="averageWorkingHours">--</span>
+                    </div>
+                    <div class="summary-item">
+                        <label>Overtime Hours:</label>
+                        <span id="overtimeHours">--</span>
+                    </div>
+                    <div class="summary-item">
+                        <label>Workday Ratio:</label>
+                        <span id="workdayRatio">--</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="closeSummaryBtn">Close</button>
+            </div>
+        </div>
+    </div>
     <script src="${pageContext.request.contextPath}/assets/js/attendance-record-emp.js"></script>
 </body>
 </html>

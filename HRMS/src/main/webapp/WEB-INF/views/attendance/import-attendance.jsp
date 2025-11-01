@@ -459,7 +459,6 @@
                                     <th>Date</th>
                                     <th>Check-in</th>
                                     <th>Check-out</th>
-                                    <th>Status</th>
                                         <c:if test="${not empty invalidLogs}">
                                         <th>Error</th>
                                         </c:if>
@@ -506,22 +505,6 @@
                                                     <input type="time" class="form-control checkout-input"
                                                            value="${log.checkOut}" style="background-color:#ffe6e6;">
                                                 </td>
-                                                <td class="manual-cell">
-                                                    <select class="form-control status-input"
-                                                            style="background-color:#ffe6e6;">
-                                                        <option value="">Select status</option>
-                                                        <option value="Late" ${log.status=='Late' ? 'selected' : ''
-                                                                }>Late</option>
-                                                        <option value="On Time" ${log.status=='On Time' ? 'selected'
-                                                                                  : '' }>On Time</option>
-                                                        <option value="Shift day" ${log.status=='Shift day'
-                                                                                    ? 'selected' : '' }>Shift day</option>
-                                                        <option value="leaving early" ${log.status=='leaving early'
-                                                                                        ? 'selected' : '' }>leaving early</option>
-                                                        <option value="Over Time" ${log.status=='Over Time'
-                                                                                    ? 'selected' : '' }>Over Time</option>
-                                                    </select>
-                                                </td>
                                                 <td class="manual-cell error-cell">
                                                     <span class="error-text">${log.error}</span>
                                                 </td>
@@ -558,16 +541,6 @@
                                                 <input type="time" class="form-control checkout-input">
                                                 <div class="error-message"></div>
                                             </td>
-                                            <td class="manual-cell">
-                                                <select class="form-control status-input">
-                                                    <option value="">Select status</option>
-                                                    <option value="Late">Late</option>
-                                                    <option value="On Time">On Time</option>
-                                                    <option value="Shift day">Shift day</option>
-                                                    <option value="leaving early">leaving early</option>
-                                                    <option value="Over Time">Over Time</option>
-                                                </select>
-                                            </td>
                                             <c:if test="${not empty invalidLogs}">
                                                 <td class="manual-cell error-cell">
                                                     <span class="error-text"></span>
@@ -600,16 +573,6 @@
                                 <td class="manual-cell"><input type="date" class="form-control date-input"></td>
                                 <td class="manual-cell"><input type="time" class="form-control checkin-input"></td>
                                 <td class="manual-cell"><input type="time" class="form-control checkout-input"></td>
-                                <td class="manual-cell">
-                                    <select class="form-control status-input">
-                                        <option value="">Select status</option>
-                                        <option value="Late">Late</option>
-                                        <option value="On Time">On Time</option>
-                                        <option value="Shift day">Shift day</option>
-                                        <option value="leaving early">leaving early</option>
-                                        <option value="Over Time">Over Time</option>
-                                    </select>
-                                </td>
                             </tr>
                         </template>
 
