@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yêu cầu liên hệ mới - HRMS</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+        }
+
+        .header {
+            background-color: #dc3545;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .content {
+            padding: 30px;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .info-box {
+            background-color: #f9f9f9;
+            border-left: 3px solid #dc3545;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .info-row {
+            margin: 8px 0;
+        }
+
+        .label {
+            font-weight: bold;
+            color: #555;
+        }
+
+        .message-box {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 20px 0;
+            white-space: pre-wrap;
+        }
+
+        .footer {
+            background-color: #f9f9f9;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h2 style="margin: 0;">YÊU CẦU LIÊN HỆ MỚI</h2>
+            <p style="margin: 5px 0 0 0;">Thông báo nội bộ HRMS</p>
+        </div>
+
+        <div class="content">
+            <p><strong>Có yêu cầu liên hệ mới cần xử lý</strong></p>
+
+            <div class="info-box">
+                <div class="info-row">
+                    <span class="label">Mã tham chiếu:</span> {{referenceId}}
+                </div>
+                <div class="info-row">
+                    <span class="label">Họ tên:</span> {{fullName}}
+                </div>
+                <div class="info-row">
+                    <span class="label">Email:</span> <a href="mailto:{{email}}">{{email}}</a>
+                </div>
+                <div class="info-row">
+                    <span class="label">Điện thoại:</span> {{phone}}
+                </div>
+                <div class="info-row">
+                    <span class="label">Loại:</span> {{contactType}}
+                </div>
+                <div class="info-row">
+                    <span class="label">Tiêu đề:</span> {{subject}}
+                </div>
+                <div class="info-row">
+                    <span class="label">Ngày gửi:</span> {{submittedDate}}
+                </div>
+            </div>
+
+            <p><strong>Nội dung:</strong></p>
+            <div class="message-box">{{message}}</div>
+
+            <p><strong>Lưu ý:</strong> Vui lòng phản hồi trong vòng 24-48 giờ làm việc.</p>
+        </div>
+
+        <div class="footer">
+            <p><strong>HRMS Internal Notification</strong></p>
+            <p>Email tự động từ hệ thống HRMS</p>
+        </div>
+    </div>
+</body>
+
+</html>

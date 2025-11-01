@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xác nhận đơn ứng tuyển - HRMS</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+        }
+
+        .header {
+            background-color: #28a745;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .content {
+            padding: 30px;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .info-box {
+            background-color: #f9f9f9;
+            border-left: 3px solid #28a745;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .info-row {
+            margin: 8px 0;
+        }
+
+        .label {
+            font-weight: bold;
+            color: #555;
+        }
+
+        .timeline {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .timeline-step {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .footer {
+            background-color: #f9f9f9;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h2 style="margin: 0;">✓ Đơn ứng tuyển đã được tiếp nhận</h2>
+            <p style="margin: 5px 0 0 0;">HRMS - Hệ thống Quản lý Nhân sự</p>
+        </div>
+
+        <div class="content">
+            <p>Thân chào Anh/Chị <strong>{{applicantName}}</strong>,</p>
+
+            <p>HRMS chân thành cảm ơn Anh/Chị đã quan tâm và ứng tuyển vào vị trí tại công ty chúng tôi. Chúng tôi xác
+                nhận đã nhận được hồ sơ ứng tuyển của Anh/Chị với thông tin như sau:</p>
+
+            <div class="info-box">
+                <div class="info-row">
+                    <span class="label">Mã hồ sơ:</span> {{applicationId}}
+                </div>
+                <div class="info-row">
+                    <span class="label">Vị trí ứng tuyển:</span> {{jobPosition}}
+                </div>
+                <div class="info-row">
+                    <span class="label">Ngày nộp hồ sơ:</span> {{submittedDate}}
+                </div>
+                <div class="info-row">
+                    <span class="label">Email:</span> {{applicantEmail}}
+                </div>
+                <div class="info-row">
+                    <span class="label">Số điện thoại:</span> {{applicantPhone}}
+                </div>
+            </div>
+
+            <div class="timeline">
+                <p><strong>Quy trình xét duyệt hồ sơ:</strong></p>
+                <p>Quy trình xét duyệt hồ sơ của Anh/Chị sẽ diễn ra từ <strong>07 - 10 ngày làm việc</strong>.</p>
+                <p style="margin-top: 10px;">Nếu sau <strong>10 ngày làm việc</strong> kể từ khi ứng tuyển, Anh/Chị
+                    không nhận được phản hồi của chúng tôi, điều đó có nghĩa là hồ sơ của Anh/Chị chưa phù hợp với vị
+                    trí này.</p>
+                <p style="margin-top: 10px;">Chúng tôi vẫn sẽ lưu trữ hồ sơ của Anh/Chị và sẽ liên hệ với Anh/Chị trong
+                    trường hợp có các vị trí tuyển dụng khác phù hợp với kinh nghiệm của Anh/Chị hơn.</p>
+            </div>
+
+            <p><strong>Lưu ý:</strong> Vui lòng lưu giữ mã hồ sơ <strong>{{applicationId}}</strong> để tra cứu và tham
+                khảo.</p>
+
+            <p>Một lần nữa, HRMS chân thành cảm ơn Anh/Chị đã dành sự quan tâm cho vị trí này.</p>
+
+            <p>Trân trọng,<br><strong>Bộ phận Tuyển dụng</strong><br><strong>HRMS</strong></p>
+        </div>
+
+        <div class="footer">
+            <p><strong>HRMS - Human Resource Management System</strong></p>
+            <p>Email: hrms8386@gmail.com</p>
+        </div>
+    </div>
+</body>
+
+</html>
