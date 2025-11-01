@@ -173,7 +173,7 @@
 
                             <div class="col-lg-4 col-md-6 mb-4" data-aos="fade-up"
                                 data-aos-delay="${(status.index % 3) * 100 + 100}">
-                          <div class="job-card clickable-card" onclick="showJobDetail('${job.id}')" 
+                                <div class="job-card clickable-card" onclick="showJobDetail('${job.id}')" 
                                      title="Click to view job details">
                                     <div class="job-header">
                                         <div class="job-icon">
@@ -255,8 +255,8 @@
                                     </div>
 
                                     <div class="job-footer">
-                    <button type="button" class="btn btn-hero-outline job-detail-btn"
-                        onclick="event.stopPropagation(); showJobDetail('${job.id}')">
+                                        <button type="button" class="btn btn-hero-outline job-detail-btn"
+                                                onclick="event.stopPropagation(); showJobDetail('${job.id}')"
                                             <i class="fas fa-eye me-2"></i>View Details
                                         </button>
                                         <a href="${pageContext.request.contextPath}/job-view-publish?id=${job.id}"
@@ -329,7 +329,48 @@
         </div>
     </section>
 
-    <!-- Job Detail Modal -->
+    <script>
+        function showJobDetail(jobId) {
+            // Show loading state
+            document.getElementById('jobDetailModalLabel').innerHTML = 
+                '<i class="fas fa-briefcase me-2"></i>Loading...';
+            document.getElementById('jobDetailContent').innerHTML = 
+                '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-2">Loading job details...</p></div>';
+            
+            // Update full page link
+            document.getElementById('viewFullPageBtn').href = 
+                '${pageContext.request.contextPath}/job-view-publish?id=' + jobId;
+            
+            // Show modal immediately
+            var modal = new bootstrap.Modal(document.getElementById('jobDetailModal'));
+            modal.show();
+            
+            // Redirect to full page after a short delay
+            setTimeout(function() {
+                window.location.href = '${pageContext.request.contextPath}/job-view-publish?id=' + jobId;
+            }, 1000);
+        }
+
+        // Add click effect for job cards
+        document.addEventListener('DOMContentLoaded', function() {
+            var jobCards = document.querySelectorAll('.job-card');
+            jobCards.forEach(function(card) {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-10px) scale(1.02)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0) scale(1)';
+                });
+            });
+        });
+    </script>
+
+    <jsp:include page="/WEB-INF/views/layout/footer.jsp" />
+</body>
+
+</html>    <!-
+- Job Detail Modal -->
     <div class="modal fade" id="jobDetailModal" tabindex="-1" aria-labelledby="jobDetailModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
@@ -651,45 +692,3 @@
             }
         }
     </style>
-
-    <script>
-        function showJobDetail(jobId) {
-            // Show loading state
-            document.getElementById('jobDetailModalLabel').innerHTML = 
-                '<i class="fas fa-briefcase me-2"></i>Loading...';
-            document.getElementById('jobDetailContent').innerHTML = 
-                '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-2">Loading job details...</p></div>';
-            
-            // Update full page link
-            document.getElementById('viewFullPageBtn').href = 
-                '${pageContext.request.contextPath}/job-view-publish?id=' + jobId;
-            
-            // Show modal immediately
-            var modal = new bootstrap.Modal(document.getElementById('jobDetailModal'));
-            modal.show();
-            
-            // Redirect to full page after a short delay
-            setTimeout(function() {
-                window.location.href = '${pageContext.request.contextPath}/job-view-publish?id=' + jobId;
-            }, 1000);
-        }
-
-        // Add click effect for job cards
-        document.addEventListener('DOMContentLoaded', function() {
-            var jobCards = document.querySelectorAll('.job-card');
-            jobCards.forEach(function(card) {
-                card.addEventListener('mouseenter', function() {
-                    this.style.transform = 'translateY(-10px) scale(1.02)';
-                });
-                
-                card.addEventListener('mouseleave', function() {
-                    this.style.transform = 'translateY(0) scale(1)';
-                });
-            });
-        });
-    </script>
-
-    <jsp:include page="/WEB-INF/views/layout/footer.jsp" />
-</body>
-
-</html>

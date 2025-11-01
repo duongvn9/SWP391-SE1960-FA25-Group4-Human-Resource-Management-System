@@ -176,11 +176,20 @@
                     line-height: 1.4;
                     margin: 0;
                     padding: 0;
+                    white-space: pre-wrap;
+                    word-break: break-word;
                 }
 
-                /* Chỉ áp dụng width cho cột error khi nó hiển thị */
-                .manual-table th:last-child,
-                .manual-table td:last-child {
+                .error-text:empty {
+                    display: none;
+                }
+
+                .error-text:not(:empty) {
+                    display: block !important;
+                }
+
+                /* Style cho cột error - chỉ khi có lỗi */
+                .manual-table .error-cell {
                     width: 200px;
                     min-width: 150px;
                 }
@@ -515,11 +524,9 @@
                                                                 ? 'selected' : '' }>Over Time</option>
                                                         </select>
                                                     </td>
-                                                    <c:if test="${not empty invalidLogs}">
-                                                        <td class="manual-cell error-cell">
-                                                            <span class="error-text">${log.error}</span>
-                                                        </td>
-                                                    </c:if>
+                                                    <td class="manual-cell error-cell">
+                                                        <span class="error-text">${log.error}</span>
+                                                    </td>
                                                 </tr>
                                             </c:forEach>
                                         </c:when>
@@ -605,11 +612,6 @@
                                             <option value="Over Time">Over Time</option>
                                         </select>
                                     </td>
-                                    <c:if test="${not empty invalidLogs}">
-                                        <td class="manual-cell error-cell">
-                                            <span class="error-text"></span>
-                                        </td>
-                                    </c:if>
                                 </tr>
                             </template>
 
@@ -635,11 +637,35 @@
             <script src="${pageContext.request.contextPath}/assets/js/import-attendance.js"></script>
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
             <script>
-                document.getElementById("addRowBtn").addEventListener("click", () => {
-                    const tbody = document.querySelector("#manualTable tbody");
-                    const template = document.getElementById("manualRowTemplate");
-                    const newRow = template.content.cloneNode(true);
-                    tbody.appendChild(newRow);
+                document.addEventListener("DOMContentLoaded", () => {
+                    document.getElementById("addRowBtn").addEventListener("click", () => {
+                        const tbody = document.querySelector("#manualTable tbody");
+                        const template = document.getElementById("manualRowTemplate");
+                        const newRow = template.content.cloneNode(true);
+
+                        // Check if error column exists and add error cell if needed
+                        const headerRow = document.querySelector("#manualTable thead tr");
+                        const hasErrorColumn = headerRow.querySelector("th:last-child").textContent.trim() === "Error";
+
+                        if (hasErrorColumn) {
+                            const newRowElement = newRow.querySelector("tr");
+                            const errorCell = document.createElement("td");
+                            errorCell.className = "manual-cell error-cell";
+                            errorCell.innerHTML = '<span class="error-text"></span>';
+                            newRowElement.appendChild(errorCell);
+                        }
+
+                        tbody.appendChild(newRow);
+
+                        // Add validation to the new row
+                        setTimeout(() => {
+                            const newRows = document.querySelectorAll(".manual-row");
+                            const lastRow = newRows[newRows.length - 1];
+                            if (lastRow && window.addValidationToRow) {
+                                window.addValidationToRow(lastRow);
+                            }
+                        }, 100);
+                    });
                 });
             </script>
 
@@ -726,64 +752,64 @@
 
                     // Chọn item - Improved version (DISABLED - using onclick instead)
                     /*document.addEventListener('click', e => {
-                        console.log('Click event triggered on:', e.target); // Debug log
-
-                        // Try multiple ways to find the li element
-                        let li = null;
-                        if (e.target.tagName === 'LI' && e.target.closest('.custom-dropdown')) {
-                            li = e.target;
-                        } else {
-                            li = e.target.closest('.custom-dropdown li');
-                        }
-
-                        if (li) {
-                            console.log('Found li element:', li); // Debug log
-                            console.log('Li innerHTML:', li.innerHTML); // Debug log
-                            console.log('Li textContent:', li.textContent); // Debug log
-
-                            const wrapper = li.closest('.employee-select-wrapper');
-                            const input = wrapper ? wrapper.querySelector('.employee-input') : null;
-                            const hidden = wrapper ? wrapper.querySelector('.employee-id-hidden') : null;
-
-                            // Lấy text đầy đủ từ li và set vào input
-                            const fullText = li.textContent.trim();
-                            console.log('Selected employee fullText:', fullText); // Debug log
-                            console.log('Employee ID:', li.dataset.id); // Debug log
-                            console.log('Input element:', input); // Debug log
-                            console.log('Wrapper element:', wrapper); // Debug log
-
-                            if (input) {
-                                // Force set the value
-                                input.value = fullText;
-                                input.setAttribute('value', fullText);
-                                console.log('Input value set to:', input.value); // Debug log
-
-                                // Trigger change event
-                                input.dispatchEvent(new Event('change', { bubbles: true }));
-                            }
-
-                            if (hidden) {
-                                hidden.value = li.dataset.id;
-                                console.log('Hidden value set to:', hidden.value); // Debug log
-                            }
-
-                            // Hide dropdown
-                            const dropdown = wrapper ? wrapper.querySelector('.custom-dropdown') : null;
-                            if (dropdown) {
-                                dropdown.style.display = 'none';
-                            }
-
-                            // Prevent further event propagation
-                            e.preventDefault();
-                            e.stopPropagation();
-                            return false;
-                        }
-
-                        // Click ra ngoài → ẩn tất cả dropdown
-                        if (!e.target.closest('.employee-select-wrapper')) {
-                            document.querySelectorAll('.custom-dropdown').forEach(dl => dl.style.display = 'none');
-                        }
-                    });*/
+                     console.log('Click event triggered on:', e.target); // Debug log
+                     
+                     // Try multiple ways to find the li element
+                     let li = null;
+                     if (e.target.tagName === 'LI' && e.target.closest('.custom-dropdown')) {
+                     li = e.target;
+                     } else {
+                     li = e.target.closest('.custom-dropdown li');
+                     }
+                     
+                     if (li) {
+                     console.log('Found li element:', li); // Debug log
+                     console.log('Li innerHTML:', li.innerHTML); // Debug log
+                     console.log('Li textContent:', li.textContent); // Debug log
+                     
+                     const wrapper = li.closest('.employee-select-wrapper');
+                     const input = wrapper ? wrapper.querySelector('.employee-input') : null;
+                     const hidden = wrapper ? wrapper.querySelector('.employee-id-hidden') : null;
+                     
+                     // Lấy text đầy đủ từ li và set vào input
+                     const fullText = li.textContent.trim();
+                     console.log('Selected employee fullText:', fullText); // Debug log
+                     console.log('Employee ID:', li.dataset.id); // Debug log
+                     console.log('Input element:', input); // Debug log
+                     console.log('Wrapper element:', wrapper); // Debug log
+                     
+                     if (input) {
+                     // Force set the value
+                     input.value = fullText;
+                     input.setAttribute('value', fullText);
+                     console.log('Input value set to:', input.value); // Debug log
+                     
+                     // Trigger change event
+                     input.dispatchEvent(new Event('change', { bubbles: true }));
+                     }
+                     
+                     if (hidden) {
+                     hidden.value = li.dataset.id;
+                     console.log('Hidden value set to:', hidden.value); // Debug log
+                     }
+                     
+                     // Hide dropdown
+                     const dropdown = wrapper ? wrapper.querySelector('.custom-dropdown') : null;
+                     if (dropdown) {
+                     dropdown.style.display = 'none';
+                     }
+                     
+                     // Prevent further event propagation
+                     e.preventDefault();
+                     e.stopPropagation();
+                     return false;
+                     }
+                     
+                     // Click ra ngoài → ẩn tất cả dropdown
+                     if (!e.target.closest('.employee-select-wrapper')) {
+                     document.querySelectorAll('.custom-dropdown').forEach(dl => dl.style.display = 'none');
+                     }
+                     });*/
 
                     // Simple click outside to hide dropdown
                     document.addEventListener('click', e => {
@@ -944,7 +970,8 @@
                         clearInputError(input);
 
                         const time = input.value;
-                        if (!time) return true; // Empty is OK for individual validation
+                        if (!time)
+                            return true; // Empty is OK for individual validation
 
                         if (!isTimeInRange(time)) {
                             showInputError(input, "Time must be between 06:00 and 23:59");
@@ -971,73 +998,67 @@
                         return true;
                     }
 
-                    // Backend validation - chỉ validate những thứ cần thiết cho import
-                    function validateRowForImport(row) {
-                        clearRowError(row);
-
-                        const employeeInput = row.querySelector(".employee-input");
-                        const dateInput = row.querySelector(".date-input");
-                        const checkinInput = row.querySelector(".checkin-input");
-                        const checkoutInput = row.querySelector(".checkout-input");
-                        const statusInput = row.querySelector(".status-input");
-
-                        const employee = employeeInput ? employeeInput.value.trim() : "";
-                        const date = dateInput ? dateInput.value : "";
-                        const checkin = checkinInput ? checkinInput.value : "";
-                        const checkout = checkoutInput ? checkoutInput.value : "";
-                        const status = statusInput ? statusInput.value : "";
-
-                        // Check if row is completely empty
-                        if (!employee && !date && !checkin && !checkout && !status) {
-                            return true; // Empty row is OK
-                        }
-
-                        // Required fields validation (backend sẽ xử lý các lỗi khác như trùng lặp, employee không tồn tại)
-                        if (!employee) {
-                            showRowError(row, "Employee is required");
-                            return false;
-                        }
-
-                        if (!date) {
-                            showRowError(row, "Date is required");
-                            return false;
-                        }
-
-                        if (!checkin) {
-                            showRowError(row, "Check-in time is required");
-                            return false;
-                        }
-
-                        if (!checkout) {
-                            showRowError(row, "Check-out time is required");
-                            return false;
-                        }
-
-                        if (!status) {
-                            showRowError(row, "Status is required");
-                            return false;
-                        }
-
-                        // Check future date
-                        if (date) {
-                            const selectedDate = new Date(date);
-                            const today = new Date();
-                            today.setHours(0, 0, 0, 0);
-                            if (selectedDate > today) {
-                                showRowError(row, "Date cannot be in the future");
-                                return false;
-                            }
-                        }
-
-                        return true;
+                    // Clear error messages from error column
+                    function clearAllRowErrors() {
+                        const rows = document.querySelectorAll(".manual-row");
+                        rows.forEach(row => {
+                            clearRowError(row);
+                        });
                     }
 
-                    // Add event listeners to existing rows
+                    // Add error column to table when needed
+                    function addErrorColumn() {
+                        const table = document.getElementById("manualTable");
+                        const headerRow = table.querySelector("thead tr");
+                        const rows = table.querySelectorAll("tbody tr");
+
+                        // Check if error column already exists
+                        if (headerRow.querySelector("th:last-child").textContent.trim() === "Error") {
+                            return;
+                        }
+
+                        // Add header
+                        const errorHeader = document.createElement("th");
+                        errorHeader.textContent = "Error";
+                        headerRow.appendChild(errorHeader);
+
+                        // Add error cell to each row
+                        rows.forEach(row => {
+                            const errorCell = document.createElement("td");
+                            errorCell.className = "manual-cell error-cell";
+                            errorCell.innerHTML = '<span class="error-text"></span>';
+                            row.appendChild(errorCell);
+                        });
+                    }
+
+                    // Remove error column from table when not needed
+                    function removeErrorColumn() {
+                        const table = document.getElementById("manualTable");
+                        const headerRow = table.querySelector("thead tr");
+                        const rows = table.querySelectorAll("tbody tr");
+
+                        // Check if error column exists
+                        const lastHeader = headerRow.querySelector("th:last-child");
+                        if (lastHeader && lastHeader.textContent.trim() === "Error") {
+                            // Remove header
+                            lastHeader.remove();
+
+                            // Remove error cell from each row
+                            rows.forEach(row => {
+                                const lastCell = row.querySelector("td:last-child");
+                                if (lastCell && lastCell.classList.contains("error-cell")) {
+                                    lastCell.remove();
+                                }
+                            });
+                        }
+                    }
+
+                    // Add event listeners to existing rows for basic frontend validation only
                     function addValidationToRow(row) {
                         const checkinInput = row.querySelector(".checkin-input");
                         const checkoutInput = row.querySelector(".checkout-input");
 
-                        // Frontend validation cho time inputs
+                        // Only keep basic time validation for user experience
                         if (checkinInput) {
                             checkinInput.addEventListener("blur", () => {
                                 validateTimeInput(checkinInput);
@@ -1069,84 +1090,33 @@
                         }
                     }
 
-                    // Validate all rows before form submission
-                    function validateAllRowsForImport() {
-                        let hasErrors = false;
-                        const rows = document.querySelectorAll(".manual-row");
-
-                        rows.forEach(row => {
-                            // Validate for import (backend validation)
-                            if (!validateRowForImport(row)) {
-                                hasErrors = true;
-                            }
-
-                            // Also check frontend validation errors
-                            const timeInputs = row.querySelectorAll(".checkin-input, .checkout-input");
-                            timeInputs.forEach(input => {
-                                const errorDiv = input.parentElement.querySelector(".error-message");
-                                if (errorDiv && errorDiv.style.display === "block") {
-                                    hasErrors = true;
-                                }
-                            });
-                        });
-
-                        return !hasErrors;
-                    }
 
 
 
-                    // Add form submission validation
+
+                    // Clear error messages on form submission - let backend handle validation
                     const importForm = document.getElementById("manualImportForm");
                     if (importForm) {
                         importForm.addEventListener("submit", function (e) {
-                            if (!validateAllRowsForImport()) {
-                                e.preventDefault();
-
-                                // Hiển thị thông báo lỗi thay vì alert
-                                let feedbackDiv = document.getElementById("manualFeedback");
-                                if (!feedbackDiv) {
-                                    feedbackDiv = document.createElement("div");
-                                    feedbackDiv.id = "manualFeedback";
-                                    feedbackDiv.className = "alert alert-danger";
-                                    feedbackDiv.style.marginBottom = "15px";
-                                    const table = document.getElementById("manualTable");
-                                    table.parentNode.insertBefore(feedbackDiv, table);
-                                }
-
-                                feedbackDiv.textContent = "Please fix all validation errors before importing.";
-                                feedbackDiv.style.display = "block";
-
-                                // Scroll to top để user thấy thông báo
-                                feedbackDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-                                return false;
-                            } else {
-                                // Clear any previous error messages
-                                const feedbackDiv = document.getElementById("manualFeedback");
-                                if (feedbackDiv) {
-                                    feedbackDiv.style.display = "none";
-                                }
+                            // Clear any previous error messages
+                            const feedbackDiv = document.getElementById("manualFeedback");
+                            if (feedbackDiv) {
+                                feedbackDiv.style.display = "none";
                             }
+
+                            // Clear all error messages from error column before submission
+                            // Backend will populate them if there are validation errors
+                            clearAllRowErrors();
                         });
                     }
+
+                    // Make function global for use in other scripts
+                    window.addValidationToRow = addValidationToRow;
 
                     // Initialize validation for existing rows
                     document.querySelectorAll(".manual-row").forEach(addValidationToRow);
 
-                    // Override the add row function to include validation
-                    const originalAddRowBtn = document.getElementById("addRowBtn");
-                    if (originalAddRowBtn) {
-                        originalAddRowBtn.addEventListener("click", () => {
-                            // Wait for the new row to be added
-                            setTimeout(() => {
-                                const newRows = document.querySelectorAll(".manual-row");
-                                const lastRow = newRows[newRows.length - 1];
-                                if (lastRow) {
-                                    addValidationToRow(lastRow);
-                                }
-                            }, 100);
-                        });
-                    }
+                    // Note: addRowBtn event listener is handled in the first script above
                 });
             </script>
         </body>
