@@ -793,7 +793,7 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                 boolean hasConflict = false;
                 String errorMessage = null;
 
-                // === Basic validation - All fields are required ===
+                // === Basic validation - Required fields ===
                 if (log.getUserId() == null) {
                     errorMessage = "Employee is required";
                     log.setError(errorMessage);
@@ -808,15 +808,8 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                     continue;
                 }
 
-                if (log.getCheckIn() == null) {
-                    errorMessage = "Check-in time is required";
-                    log.setError(errorMessage);
-                    invalidLogs.add(log);
-                    continue;
-                }
-
-                if (log.getCheckOut() == null) {
-                    errorMessage = "Check-out time is required";
+                if (log.getCheckIn() == null && log.getCheckOut() == null) {
+                    errorMessage = "At least one of check-in or check-out time is required";
                     log.setError(errorMessage);
                     invalidLogs.add(log);
                     continue;
@@ -1087,7 +1080,7 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                 boolean hasConflict = false;
                 String errorMessage = null;
 
-                // === Basic validation - All fields are required ===
+                // === Basic validation - Required fields ===
                 if (log.getUserId() == null) {
                     errorMessage = "Employee is required";
                     log.setError(errorMessage);
@@ -1102,15 +1095,8 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                     continue;
                 }
 
-                if (log.getCheckIn() == null) {
-                    errorMessage = "Check-in time is required";
-                    log.setError(errorMessage);
-                    invalidLogs.add(log);
-                    continue;
-                }
-
-                if (log.getCheckOut() == null) {
-                    errorMessage = "Check-out time is required";
+                if (log.getCheckIn() == null && log.getCheckOut() == null) {
+                    errorMessage = "At least one of check-in or check-out time is required";
                     log.setError(errorMessage);
                     invalidLogs.add(log);
                     continue;
@@ -1359,7 +1345,7 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                     continue;
                 }
                 if (log.getCheckIn() == null && log.getCheckOut() == null) {
-                    log.setError("Invalid: both checkIn and checkOut are missing");
+                    log.setError("Invalid: at least one of check-in or check-out time is required");
                     invalidLogs.add(log);
                     continue;
                 }
@@ -1388,10 +1374,10 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                 // Kiểm tra kỳ công đã khóa
                 // -----------------------------
                 String checkPeriodSql = """
-    SELECT COALESCE(tp.is_locked, FALSE)
-    FROM timesheet_periods tp
-    WHERE ? BETWEEN tp.date_start AND tp.date_end
-    """;
+                SELECT COALESCE(tp.is_locked, FALSE)
+                FROM timesheet_periods tp
+                WHERE ? BETWEEN tp.date_start AND tp.date_end
+                """;
                 try (PreparedStatement stmt = conn.prepareStatement(checkPeriodSql)) {
                     stmt.setDate(1, java.sql.Date.valueOf(log.getDate()));
                     try (ResultSet rs = stmt.executeQuery()) {
@@ -1530,12 +1516,6 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
 
             if (log.getDate() == null) {
                 log.setError("Invalid: date is missing");
-                invalidLogs.add(log);
-                continue;
-            }
-
-            if (log.getCheckIn() == null && log.getCheckOut() == null) {
-                log.setError("Invalid: both checkIn and checkOut are missing");
                 invalidLogs.add(log);
                 continue;
             }
