@@ -192,6 +192,19 @@ public class EmploymentContract {
         this.updatedAt = LocalDateTime.now();
     }
     
+    /**
+     * Tự động cập nhật status sang expired nếu hợp đồng đã hết hạn
+     * và status hiện tại không phải là terminated
+     */
+    public void updateStatusIfExpired() {
+        if (endDate != null && 
+            !endDate.isAfter(LocalDate.now()) && 
+            !"terminated".equalsIgnoreCase(this.status) &&
+            !"expired".equalsIgnoreCase(this.status)) {
+            this.expire();
+        }
+    }
+    
     @Override
     public String toString() {
         return "EmploymentContract{" +

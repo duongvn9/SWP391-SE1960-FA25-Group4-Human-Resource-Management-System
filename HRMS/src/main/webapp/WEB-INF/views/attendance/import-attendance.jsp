@@ -1,7 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <html>
-
     <head>
         <title>Import Attendance</title>
         <jsp:include page="../layout/head.jsp">
@@ -334,7 +333,6 @@
                                         <a href="?action=Preview&page=${currentPage - 1}"
                                            class="page-btn prev-btn">Previous</a>
                                     </c:if>
-
                                     <c:set var="startPage" value="${currentPage - 1}" />
                                     <c:set var="endPage" value="${currentPage + 1}" />
 
@@ -1010,6 +1008,8 @@
                             if (checkoutInput && checkoutInput.value) {
                                 validateTimeOrder(checkinInput, checkoutInput);
                             }
+
+                            clearAllRowErrors();
                         });
                     }
 
@@ -1028,10 +1028,6 @@
                         });
                     }
                 }
-
-
-
-
 
                 // Clear error messages on form submission - let backend handle validation
                 const importForm = document.getElementById("manualImportForm");
@@ -1059,5 +1055,4 @@
             });
         </script>
     </body>
-
 </html>

@@ -299,7 +299,6 @@
                                     </div>
                                 </c:if>
                                 <input type="hidden" id="selected_logs_data" name="selected_logs_data" />
-
                                 <div class="form-text">
                                     Click "Select record" to choose the attendance logs you want to dispute. Then
                                     fill in the corrected times.
@@ -1127,10 +1126,16 @@
                             return;
                         }
 
-                        if (checkOut && !isTimeInRange(checkOut)) {
-                            showError(checkOutInput, "Check-out time must be between 06:00 and 23:59.");
-                            checkOutInput.value = "";
-                            return;
+                        if (currentPage < totalPages) {
+                            const next = document.createElement("li");
+                            next.className = "page-item";
+                            next.innerHTML = `<a class="page-link" href="#">Next</a>`;
+                            next.addEventListener("click", e => {
+                                e.preventDefault();
+                                currentPage++;
+                                renderRows();
+                            });
+                            paginationContainer.appendChild(next);
                         }
 
                         if (checkIn && checkOut && checkIn >= checkOut) {

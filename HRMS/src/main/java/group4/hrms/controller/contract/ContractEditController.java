@@ -80,20 +80,78 @@ public class ContractEditController extends HttpServlet {
             
             EmploymentContract contract = contractOpt.get();
             
-            // Update fields
-            contract.setUserId(Long.parseLong(request.getParameter("userId")));
-            contract.setContractNo(request.getParameter("contractNo"));
-            contract.setContractType(request.getParameter("contractType"));
-            contract.setStartDate(LocalDate.parse(request.getParameter("startDate")));
+            // Validation 1: Không được edit hợp đồng đã expired hoặc terminated
+            if ("expired".equalsIgnoreCase(contract.getStatus()) || 
+                "terminated".equalsIgnoreCase(contract.getStatus())) {
+                // Load form data and show error
+                List<User> users = userDao.findAll();
+                List<Department> departments = departmentDao.findAll();
+                List<Position> positions = positionDao.findAll();
+                
+                request.setAttribute("contract", contract);
+                request.setAttribute("users", users);
+                request.setAttribute("departments", departments);
+                request.setAttribute("positions", positions);
+                request.setAttribute("errorMessage", "Cannot edit expired or terminated contracts");
+                
+                request.getRequestDispatcher("/WEB-INF/views/contracts/contract-form.jsp")
+                        .forward(request, response);
+                return;
+            }
             
-            String endDateStr = request.getParameter("endDate");
-            contract.setEndDate((endDateStr != null && !endDateStr.isEmpty()) 
-                    ? LocalDate.parse(endDateStr) : null);
-                    
-            contract.setBaseSalary(new BigDecimal(request.getParameter("baseSalary")));
-            contract.setCurrency(request.getParameter("currency"));
-            contract.setStatus(request.getParameter("status"));
-            contract.setNote(request.getParameter("note"));
+            // Get new values from form
+            String contractNo = request.getParameter("contractNo");
+            String contractType = request.getParameter("contractType");
+            String baseSalaryStr = request.getParameter("baseSalary");
+            String currency = request.getParameter("currency");
+            String newStatus = request.getParameter("status");
+            String note = request.getParameter("note");
+            
+            String errorMessage = null;
+            
+            // Validation 2: Chỉ được phép thay đổi status sang terminated (không được chọn expired thủ công)
+            if ("expired".equalsIgnoreCase(newStatus)) {
+                errorMessage = "Cannot manually set status to Expired. Status will be automatically updated when contract expires";
+            }
+            
+            // If validation failed, return to form with current data
+            if (errorMessage != null) {
+                // Update contract with form data for display
+                contract.setContractNo(contractNo);
+                contract.setContractType(contractType);
+                contract.setBaseSalary(new BigDecimal(baseSalaryStr));
+                contract.setCurrency(currency);
+                contract.setNote(note);
+                
+                List<User> users = userDao.findAll();
+                List<Department> departments = departmentDao.findAll();
+                List<Position> positions = positionDao.findAll();
+                
+                request.setAttribute("contract", contract);
+                request.setAttribute("users", users);
+                request.setAttribute("departments", departments);
+                request.setAttribute("positions", positions);
+                request.setAttribute("errorMessage", errorMessage);
+                
+                request.getRequestDispatcher("/WEB-INF/views/contracts/contract-form.jsp")
+                        .forward(request, response);
+                return;
+            }
+            
+            // Auto-update status to expired nếu hợp đồng đã hết hạn
+            LocalDate today = LocalDate.now();
+            LocalDate endDate = contract.getEndDate();
+            if (endDate != null && !endDate.isAfter(today) && !"terminated".equalsIgnoreCase(newStatus)) {
+                newStatus = "expired";
+            }
+            
+            // Update fields (không cho phép thay đổi employee, startDate, endDate)
+            contract.setContractNo(contractNo);
+            contract.setContractType(contractType);
+            contract.setBaseSalary(new BigDecimal(baseSalaryStr));
+            contract.setCurrency(currency);
+            contract.setStatus(newStatus);
+            contract.setNote(note);
             
             // Update in database
             contractDao.update(contract);

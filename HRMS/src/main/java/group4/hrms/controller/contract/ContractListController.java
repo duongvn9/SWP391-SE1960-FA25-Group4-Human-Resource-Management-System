@@ -35,12 +35,40 @@ public class ContractListController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         try {
-            // Get all contracts
-            List<EmploymentContract> contracts = contractDao.findAll();
+            // Get filter parameters
+            String searchQuery = request.getParameter("search");
+            String statusFilter = request.getParameter("status");
+            String typeFilter = request.getParameter("type");
             
-            // Convert to DTOs with user info
+            // Get pagination parameters
+            int page = 1;
+            int pageSize = 10;
+            try {
+                if (request.getParameter("page") != null) {
+                    page = Integer.parseInt(request.getParameter("page"));
+                }
+                if (request.getParameter("pageSize") != null) {
+                    pageSize = Integer.parseInt(request.getParameter("pageSize"));
+                }
+            } catch (NumberFormatException e) {
+                // Use default values
+            }
+            
+            // Get all contracts
+            List<EmploymentContract> allContracts = contractDao.findAll();
+            
+            // Convert to DTOs with user info and apply filters
             List<EmploymentContractDto> contractDtos = new ArrayList<>();
-            for (EmploymentContract contract : contracts) {
+            for (EmploymentContract contract : allContracts) {
+                // Auto-update status to expired if contract has ended
+                String oldStatus = contract.getStatus();
+                contract.updateStatusIfExpired();
+                
+                // Save to database if status changed
+                if (!oldStatus.equals(contract.getStatus())) {
+                    contractDao.update(contract);
+                }
+                
                 EmploymentContractDto dto = new EmploymentContractDto(contract);
                 
                 // Get user info
@@ -51,10 +79,57 @@ public class ContractListController extends HttpServlet {
                     dto.setUsername(user.getEmployeeCode());
                 }
                 
-                contractDtos.add(dto);
+                // Apply filters
+                boolean matchesSearch = true;
+                boolean matchesStatus = true;
+                boolean matchesType = true;
+                
+                if (searchQuery != null && !searchQuery.trim().isEmpty()) {
+                    String query = searchQuery.toLowerCase();
+                    matchesSearch = dto.getContractNo().toLowerCase().contains(query) ||
+                                  dto.getUserFullName().toLowerCase().contains(query) ||
+                                  dto.getUsername().toLowerCase().contains(query);
+                }
+                
+                if (statusFilter != null && !statusFilter.isEmpty() && !statusFilter.equals("all")) {
+                    matchesStatus = dto.getStatus().equalsIgnoreCase(statusFilter);
+                }
+                
+                if (typeFilter != null && !typeFilter.isEmpty() && !typeFilter.equals("all")) {
+                    matchesType = dto.getContractType().equalsIgnoreCase(typeFilter);
+                }
+                
+                if (matchesSearch && matchesStatus && matchesType) {
+                    contractDtos.add(dto);
+                }
             }
             
-            request.setAttribute("contracts", contractDtos);
+            // Calculate pagination
+            int totalContracts = contractDtos.size();
+            int totalPages = (int) Math.ceil((double) totalContracts / pageSize);
+            
+            // Ensure page is within bounds
+            if (page < 1) page = 1;
+            if (page > totalPages && totalPages > 0) page = totalPages;
+            
+            // Get contracts for current page
+            int startIndex = (page - 1) * pageSize;
+            int endIndex = Math.min(startIndex + pageSize, totalContracts);
+            List<EmploymentContractDto> paginatedContracts = new ArrayList<>();
+            if (startIndex < totalContracts) {
+                paginatedContracts = contractDtos.subList(startIndex, endIndex);
+            }
+            
+            // Set attributes
+            request.setAttribute("contracts", paginatedContracts);
+            request.setAttribute("currentPage", page);
+            request.setAttribute("totalPages", totalPages);
+            request.setAttribute("totalContracts", totalContracts);
+            request.setAttribute("pageSize", pageSize);
+            request.setAttribute("searchQuery", searchQuery);
+            request.setAttribute("statusFilter", statusFilter);
+            request.setAttribute("typeFilter", typeFilter);
+            
             request.getRequestDispatcher("/WEB-INF/views/contracts/contract-list.jsp")
                     .forward(request, response);
                     

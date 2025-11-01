@@ -115,8 +115,8 @@ public class JobPostingEditServlet extends HttpServlet {
             // Pass job posting to view
             request.setAttribute("jobPosting", jobPosting);
             
-            // Set CSRF token
-            request.setAttribute("csrfToken", SecurityUtil.generateCsrfToken(request.getSession()));
+            // Set CSRF token - get existing or create new one
+            request.setAttribute("csrfToken", SecurityUtil.getCsrfToken(request.getSession()));
             
             // Forward to edit form
             request.getRequestDispatcher("/WEB-INF/views/job-postings/edit.jsp")
