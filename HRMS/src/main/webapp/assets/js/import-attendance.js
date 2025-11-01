@@ -48,15 +48,14 @@ function collectManualData() {
         const date = row.querySelector(".date-input")?.value || null;
         const checkIn = row.querySelector(".checkin-input")?.value || null;
         const checkOut = row.querySelector(".checkout-input")?.value || null;
-        const status = row.querySelector(".status-input")?.value || null;
+        // Status sẽ được tính tự động, không cần thu thập
 
-        if (userId || date || checkIn || checkOut || status) {
+        if (userId || date || checkIn || checkOut) {
             data.push({
                 userId: userId ? Number(userId) : null,
                 date: date,
                 checkIn: checkIn,
-                checkOut: checkOut,
-                status: status
+                checkOut: checkOut
             });
         }
     });
