@@ -5,7 +5,7 @@
 
         <head>
             <jsp:include page="../layout/head.jsp">
-                <jsp:param name="pageTitle" value="User Management - HRMS" />
+                <jsp:param name="pageTitle" value="Employee Management - HRMS" />
                 <jsp:param name="pageCss" value="dashboard.css" />
             </jsp:include>
             <style>
@@ -444,11 +444,11 @@
                     <!-- Page Header -->
                     <div class="page-header">
                         <div class="d-flex justify-content-between align-items-center">
-                            <h2 class="mb-0">User Management</h2>
+                            <h2 class="mb-0">Employee Management</h2>
                             <c:if test="${canCreateUser}">
                                 <a href="${pageContext.request.contextPath}/employees/users/create"
                                     class="btn btn-primary">
-                                    <i class="fas fa-plus me-2"></i>Add New User
+                                    <i class="fas fa-plus me-2"></i>Add New Employee
                                 </a>
                             </c:if>
                         </div>
@@ -517,7 +517,7 @@
                     <!-- User List Table -->
                     <div class="table-card">
                         <div class="card-header">
-                            <h5 class="mb-0"><i class="fas fa-users me-2"></i>User List</h5>
+                            <h5 class="mb-0"><i class="fas fa-users me-2"></i>Employee List</h5>
                         </div>
 
                         <!-- DEBUG INFO -->
