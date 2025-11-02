@@ -1,6 +1,7 @@
 package group4.hrms.controller;
 
 import group4.hrms.dao.TimesheetPeriodDao;
+import group4.hrms.service.AttendanceService;
 import group4.hrms.service.ExportService;
 import group4.hrms.util.PaginationUtil;
 import java.io.IOException;
@@ -18,6 +19,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -68,6 +70,7 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
                 status = "";
                 source = "";
             } else {
+                // Giữ nguyên giá trị filter mà user đã nhập
                 startDate = (startDateStr != null && !startDateStr.isEmpty()) ? LocalDate.parse(startDateStr) : null;
                 endDate = (endDateStr != null && !endDateStr.isEmpty()) ? LocalDate.parse(endDateStr) : null;
 
@@ -142,6 +145,54 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
             req.setAttribute("currentPage", currentPage);
             req.setAttribute("totalPages", totalPages);
 
+            // Debug logging (temporary - can be removed later)
+            System.out.println("DEBUG doPost - selectedPeriodId: " + selectedPeriodId + 
+                ", selectedPeriod: " + (selectedPeriod != null ? selectedPeriod.getName() : "null") + 
+                ", startDate: " + startDate + ", endDate: " + endDate);
+            
+            // Tính toán attendance summary chỉ khi có period cụ thể
+            if (selectedPeriodId != null && selectedPeriod != null) {
+                try {
+                    // Tạo biến riêng cho việc tính summary
+                    LocalDate summaryStartDate = startDate;
+                    LocalDate summaryEndDate = endDate;
+                    
+                    // Nếu user không nhập startDate/endDate, lấy từ period
+                    if (summaryStartDate == null && selectedPeriod.getStartDate() != null) {
+                        summaryStartDate = selectedPeriod.getStartDate();
+                    }
+                    if (summaryEndDate == null && selectedPeriod.getEndDate() != null) {
+                        summaryEndDate = selectedPeriod.getEndDate();
+                    }
+                    
+                    // Fallback nếu period cũng không có startDate/endDate
+                    if (summaryStartDate == null || summaryEndDate == null) {
+                        LocalDate now = LocalDate.now();
+                        if (summaryStartDate == null) {
+                            summaryStartDate = now.withDayOfMonth(1);
+                        }
+                        if (summaryEndDate == null) {
+                            summaryEndDate = now.withDayOfMonth(now.lengthOfMonth());
+                        }
+                    }
+                    
+                    Map<String, Object> summary = AttendanceService.calculateAttendanceSummary(
+                        userId, summaryStartDate, summaryEndDate
+                    );
+                    req.setAttribute("attendanceSummary", summary);
+                    req.setAttribute("showSummaryButton", true);
+                } catch (Exception e) {
+                    Logger.getLogger(AttendanceRecordEmpServlet.class.getName()).log(Level.WARNING, "Error calculating attendance summary in doPost", e);
+                    req.setAttribute("showSummaryButton", false);
+                }
+            } else {
+                // Không có period cụ thể -> ẩn nút summary
+                Logger.getLogger(AttendanceRecordEmpServlet.class.getName()).log(Level.WARNING, 
+                    "Cannot calculate summary - missing period: periodId={0}, period={1}", 
+                    new Object[]{selectedPeriodId, selectedPeriod});
+                req.setAttribute("showSummaryButton", false);
+            }
+
             req.getRequestDispatcher("/WEB-INF/views/attendance/attendance-record-emp.jsp").forward(req, resp);
 
         } catch (SQLException ex) {
@@ -175,39 +226,48 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
             Long selectedPeriodId = null;
             TimesheetPeriod selectedPeriod = null;
 
+            // Xử lý period trước
             if (periodIdStr != null && !periodIdStr.isEmpty()) {
                 try {
                     selectedPeriodId = Long.valueOf(periodIdStr);
                     selectedPeriod = tDAO.findById(selectedPeriodId).orElse(null);
                 } catch (NumberFormatException e) {
                     selectedPeriodId = null;
+                    selectedPeriod = null;
                 }
             }
 
+            // Nếu không có period được chọn, lấy current period làm mặc định
             if (selectedPeriodId == null) {
                 selectedPeriod = tDAO.findCurrentPeriod();
                 if (selectedPeriod != null) {
                     selectedPeriodId = selectedPeriod.getId();
-                    startDate = selectedPeriod.getStartDate();
-                    endDate = selectedPeriod.getEndDate();
-                } else {
-                    LocalDate now = LocalDate.now();
-                    startDate = now.withDayOfMonth(1);
-                    endDate = now.withDayOfMonth(now.lengthOfMonth());
-                }
-            } else {
-                if (startDateStr != null && !startDateStr.isEmpty() && endDateStr != null && !endDateStr.isEmpty()) {
-                    startDate = LocalDate.parse(startDateStr);
-                    endDate = LocalDate.parse(endDateStr);
-                } else if (selectedPeriod != null) {
-                    startDate = selectedPeriod.getStartDate();
-                    endDate = selectedPeriod.getEndDate();
-                } else {
-                    LocalDate now = LocalDate.now();
-                    startDate = now.withDayOfMonth(1);
-                    endDate = now.withDayOfMonth(now.lengthOfMonth());
                 }
             }
+
+            // Xử lý startDate và endDate - ưu tiên giá trị user nhập, nếu không có thì lấy từ period
+            if (startDateStr != null && !startDateStr.isEmpty()) {
+                startDate = LocalDate.parse(startDateStr);
+            } else if (selectedPeriod != null) {
+                // Nếu user không nhập startDate, lấy từ period làm mặc định
+                startDate = selectedPeriod.getStartDate();
+            } else {
+                // Fallback nếu không có period
+                startDate = LocalDate.now().withDayOfMonth(1);
+            }
+
+            if (endDateStr != null && !endDateStr.isEmpty()) {
+                endDate = LocalDate.parse(endDateStr);
+            } else if (selectedPeriod != null) {
+                // Nếu user không nhập endDate, lấy từ period làm mặc định
+                endDate = selectedPeriod.getEndDate();
+            } else {
+                // Fallback nếu không có period
+                LocalDate now = LocalDate.now();
+                endDate = now.withDayOfMonth(now.lengthOfMonth());
+            }
+            
+
 
             List<AttendanceLogDto> attendanceList = dao.findByFilter(
                     userId, null, null, startDate, endDate, status, source, selectedPeriodId,
@@ -229,6 +289,32 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
             req.setAttribute("selectedPeriod", selectedPeriod);
             req.setAttribute("currentPage", currentPage);
             req.setAttribute("totalPages", totalPages);
+
+            // Debug logging (temporary - can be removed later)
+            System.out.println("DEBUG doGet - selectedPeriodId: " + selectedPeriodId + 
+                ", selectedPeriod: " + (selectedPeriod != null ? selectedPeriod.getName() : "null") + 
+                ", startDate: " + startDate + ", endDate: " + endDate);
+            
+            // Tính toán attendance summary chỉ khi có period cụ thể và startDate/endDate hợp lệ
+            if (selectedPeriodId != null && selectedPeriod != null && startDate != null && endDate != null) {
+                try {
+                    // Sử dụng startDate và endDate cho summary
+                    Map<String, Object> summary = AttendanceService.calculateAttendanceSummary(
+                        userId, startDate, endDate
+                    );
+                    req.setAttribute("attendanceSummary", summary);
+                    req.setAttribute("showSummaryButton", true);
+                } catch (Exception e) {
+                    Logger.getLogger(AttendanceRecordEmpServlet.class.getName()).log(Level.WARNING, "Error calculating attendance summary in doGet", e);
+                    req.setAttribute("showSummaryButton", false);
+                }
+            } else {
+                // Không có period cụ thể hoặc startDate/endDate null -> ẩn nút summary
+                Logger.getLogger(AttendanceRecordEmpServlet.class.getName()).log(Level.WARNING, 
+                    "Cannot calculate summary - missing data: periodId={0}, period={1}, startDate={2}, endDate={3}", 
+                    new Object[]{selectedPeriodId, selectedPeriod, startDate, endDate});
+                req.setAttribute("showSummaryButton", false);
+            }
 
             req.getRequestDispatcher("/WEB-INF/views/attendance/attendance-record-emp.jsp").forward(req, resp);
 

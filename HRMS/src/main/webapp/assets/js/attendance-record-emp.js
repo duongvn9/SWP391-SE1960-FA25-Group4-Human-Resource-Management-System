@@ -151,7 +151,32 @@ function initializeSummaryModal() {
         viewSummaryBtn.addEventListener('click', function (e) {
             e.preventDefault();
             console.log('View Summary button clicked');
-            // TODO: Call backend API to get summary data
+            
+            // Dữ liệu summary đã được tính toán ở backend và gửi kèm trong page
+            // Lấy dữ liệu từ các data attributes hoặc hidden elements
+            const summaryData = getSummaryDataFromPage();
+            
+            console.log('Summary data from backend:', summaryData);
+            
+            if (summaryData && Object.keys(summaryData).length > 0) {
+                // Update modal content with data from backend
+                updateSummaryModal(summaryData);
+            } else {
+                // Fallback: set all values to 0
+                console.log('No summary data found, using default values');
+                updateSummaryModal({
+                    totalWorkingDays: 0,
+                    daysOnTime: 0,
+                    daysLate: 0,
+                    daysEarlyLeaving: 0,
+                    daysLateAndEarlyLeaving: 0,
+                    daysAbsent: 0,
+                    totalHoursWorked: 0,
+                    overtimeHours: 0
+                });
+            }
+            
+            // Show modal
             summaryModal.classList.add('show');
         });
     } else {
@@ -188,4 +213,108 @@ function initializeSummaryModal() {
             closeSummary();
         }
     });
+}
+
+// Function to get summary data from page (from backend)
+function getSummaryDataFromPage() {
+    // Try to get data from window object (set by JSP)
+    if (window.attendanceSummary) {
+        return window.attendanceSummary;
+    }
+    
+    // Fallback: try to get from data attributes or hidden elements
+    const summaryElement = document.getElementById('attendanceSummaryData');
+    if (summaryElement) {
+        try {
+            return JSON.parse(summaryElement.textContent || summaryElement.value);
+        } catch (e) {
+            console.error('Error parsing summary data:', e);
+        }
+    }
+    
+    return null;
+}
+
+
+
+// Function to get summary data from page (from backend)
+function getSummaryDataFromPage() {
+    // Try to get data from window object (set by JSP)
+    if (window.attendanceSummary) {
+        return window.attendanceSummary;
+    }
+    
+    // Fallback: try to get from data attributes or hidden elements
+    const summaryElement = document.getElementById('attendanceSummaryData');
+    if (summaryElement) {
+        try {
+            return JSON.parse(summaryElement.textContent || summaryElement.value);
+        } catch (e) {
+            console.error('Error parsing summary data:', e);
+        }
+    }
+    
+    return null;
+}
+
+// Function to update modal with summary data
+function updateSummaryModal(data) {
+    const elements = {
+        'totalWorkingDays': data.totalWorkingDays || 0,
+        'daysOnTime': data.daysOnTime || 0,
+        'daysLate': data.daysLate || 0,
+        'daysEarlyLeaving': data.daysEarlyLeaving || 0,
+        'daysLateAndEarlyLeaving': data.daysLateAndEarlyLeaving || 0,
+        'daysAbsent': data.daysAbsent || 0,
+        'totalHoursWorked': data.totalHoursWorked || 0,
+        'overtimeHours': data.overtimeHours || 0
+    };
+    
+    // Update each element
+    Object.keys(elements).forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.textContent = elements[id];
+        }
+    });
+}
+
+function updateSummaryModal(data) {
+    const elements = {
+        'totalWorkingDays': data.totalWorkingDays || 0,
+        'daysOnTime': data.daysOnTime || 0,
+        'daysLate': data.daysLate || 0,
+        'daysEarlyLeaving': data.daysEarlyLeaving || 0,
+        'daysLateAndEarlyLeaving': data.daysLateAndEarlyLeaving || 0,
+        'daysAbsent': data.daysAbsent || 0,
+        'totalHoursWorked': data.totalHoursWorked || 0,
+        'overtimeHours': data.overtimeHours || 0
+    };
+    
+    // Update each element
+    Object.keys(elements).forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.textContent = elements[id];
+        }
+    });
+}
+
+function getSummaryDataFromPage() {
+    // Try to get data from window object (set by JSP)
+    if (window.attendanceSummary) {
+        return window.attendanceSummary;
+    }
+    
+    // Fallback: try to get from data attributes or hidden elements
+    const summaryElement = document.getElementById('attendanceSummaryData');
+    if (summaryElement) {
+        try {
+            return JSON.parse(summaryElement.textContent || summaryElement.value);
+        } catch (e) {
+            console.error('Error parsing summary data:', e);
+        }
+    }
+    
+    return null;
 }

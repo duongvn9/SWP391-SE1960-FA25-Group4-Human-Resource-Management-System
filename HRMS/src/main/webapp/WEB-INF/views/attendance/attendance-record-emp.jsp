@@ -109,7 +109,9 @@
                             CSV</button>
                         <button type="button" id="exportPDFBtn" class="btn btn-export btn-pdf">Export
                             PDF</button>
-                        <button type="button" id="viewSummaryBtn" class="btn btn-summary">View Summary</button>
+                        <c:if test="${showSummaryButton}">
+                            <button type="button" id="viewSummaryBtn" class="btn btn-summary">View Summary</button>
+                        </c:if>
                     </div>
 
                     <!-- ========== MAIN TABLE ========== -->
@@ -229,6 +231,7 @@
                             </form>
                         </c:if>
                     </div>
+                </main>
             </div>
         </main>
     </div>
@@ -244,43 +247,35 @@
                 <div class="summary-grid">
                     <div class="summary-item">
                         <label>Total Working Days:</label>
-                        <span id="totalWorkingDays">--</span>
+                        <span id="totalWorkingDays">0</span>
                     </div>
                     <div class="summary-item">
                         <label>Days On Time:</label>
-                        <span id="daysOnTime">--</span>
+                        <span id="daysOnTime">0</span>
                     </div>
                     <div class="summary-item">
                         <label>Days Late:</label>
-                        <span id="daysLate">--</span>
+                        <span id="daysLate">0</span>
                     </div>
                     <div class="summary-item">
                         <label>Days Early Leaving:</label>
-                        <span id="daysEarlyLeaving">--</span>
+                        <span id="daysEarlyLeaving">0</span>
                     </div>
                     <div class="summary-item">
                         <label>Days Late & Early Leaving:</label>
-                        <span id="daysLateAndEarlyLeaving">--</span>
+                        <span id="daysLateAndEarlyLeaving">0</span>
                     </div>
                     <div class="summary-item">
                         <label>Days Absent:</label>
-                        <span id="daysAbsent">--</span>
+                        <span id="daysAbsent">0</span>
                     </div>
                     <div class="summary-item">
                         <label>Total Hours Worked:</label>
-                        <span id="totalHoursWorked">--</span>
-                    </div>
-                    <div class="summary-item">
-                        <label>Average Working Hours:</label>
-                        <span id="averageWorkingHours">--</span>
+                        <span id="totalHoursWorked">0</span>
                     </div>
                     <div class="summary-item">
                         <label>Overtime Hours:</label>
-                        <span id="overtimeHours">--</span>
-                    </div>
-                    <div class="summary-item">
-                        <label>Workday Ratio:</label>
-                        <span id="workdayRatio">--</span>
+                        <span id="overtimeHours">0</span>
                     </div>
                 </div>
             </div>
@@ -289,6 +284,35 @@
             </div>
         </div>
     </div>
+
+    <!-- Hidden element to store attendance summary data from backend -->
+    <script type="application/json" id="attendanceSummaryData">
+        <c:if test="${not empty attendanceSummary}">
+            {
+                "totalWorkingDays": ${attendanceSummary.totalWorkingDays != null ? attendanceSummary.totalWorkingDays : 0},
+                "daysOnTime": ${attendanceSummary.daysOnTime != null ? attendanceSummary.daysOnTime : 0},
+                "daysLate": ${attendanceSummary.daysLate != null ? attendanceSummary.daysLate : 0},
+                "daysEarlyLeaving": ${attendanceSummary.daysEarlyLeaving != null ? attendanceSummary.daysEarlyLeaving : 0},
+                "daysLateAndEarlyLeaving": ${attendanceSummary.daysLateAndEarlyLeaving != null ? attendanceSummary.daysLateAndEarlyLeaving : 0},
+                "daysAbsent": ${attendanceSummary.daysAbsent != null ? attendanceSummary.daysAbsent : 0},
+                "totalHoursWorked": ${attendanceSummary.totalHoursWorked != null ? attendanceSummary.totalHoursWorked : 0},
+                "overtimeHours": ${attendanceSummary.overtimeHours != null ? attendanceSummary.overtimeHours : 0}
+            }
+        </c:if>
+        <c:if test="${empty attendanceSummary}">
+            {
+                "totalWorkingDays": 0,
+                "daysOnTime": 0,
+                "daysLate": 0,
+                "daysEarlyLeaving": 0,
+                "daysLateAndEarlyLeaving": 0,
+                "daysAbsent": 0,
+                "totalHoursWorked": 0,
+                "overtimeHours": 0
+            }
+        </c:if>
+    </script>
+
     <script src="${pageContext.request.contextPath}/assets/js/attendance-record-emp.js"></script>
 </body>
 </html>
