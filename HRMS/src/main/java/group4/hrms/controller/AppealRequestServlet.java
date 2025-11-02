@@ -14,6 +14,7 @@ import group4.hrms.model.Request;
 import group4.hrms.model.TimesheetPeriod;
 import group4.hrms.model.User;
 import group4.hrms.service.AttachmentService;
+import group4.hrms.service.AttendanceService;
 import group4.hrms.util.SessionUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
@@ -220,11 +221,7 @@ public class AppealRequestServlet extends HttpServlet {
                     continue;
                 }
 
-                if (status == null || status.trim().isEmpty()) {
-                    hasValidationErrors = true;
-                    validationErrors.append("Status is required for all edited records. ");
-                    continue;
-                }
+                // Status sẽ được tính tự động, không cần validate
 
                 // Create DTO for conflict checking
                 try {
@@ -233,7 +230,9 @@ public class AppealRequestServlet extends HttpServlet {
                     dto.setDate(LocalDate.parse(date));
                     dto.setCheckIn(LocalTime.parse(checkIn));
                     dto.setCheckOut(LocalTime.parse(checkOut));
-                    dto.setStatus(status);
+                    // Tự động tính status
+                    String calculatedStatus = AttendanceService.calculateAttendanceStatus(dto);
+                    dto.setStatus(calculatedStatus);
                     dto.setSource("appeal");
                     editedLogs.add(dto);
                 } catch (Exception e) {

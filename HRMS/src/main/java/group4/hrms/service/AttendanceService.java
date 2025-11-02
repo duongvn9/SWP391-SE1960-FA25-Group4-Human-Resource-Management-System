@@ -75,7 +75,9 @@ public class AttendanceService {
                     }
                 }
 
-                dto.setStatus(ExcelUtil.parseString(row.getCell(6)));
+                // Tự động tính status thay vì đọc từ Excel
+                String calculatedStatus = calculateAttendanceStatus(dto);
+                dto.setStatus(calculatedStatus);
                 dto.setSource("Excel");
                 dto.setPeriod(ExcelUtil.parseString(row.getCell(7)));
 
@@ -91,6 +93,84 @@ public class AttendanceService {
         }
     }
 
+    public static String calculateAttendanceStatus(AttendanceLogDto dto) {
+        // Kiểm tra dữ liệu đầu vào
+        if (dto == null || dto.getDate() == null) {
+            return "Invalid";
+        }
+        
+        LocalTime checkIn = dto.getCheckIn();
+        LocalTime checkOut = dto.getCheckOut();
+        
+        // Nếu chỉ có in hoặc chỉ có out thì invalid
+        if (checkIn == null || checkOut == null) {
+            return "Invalid";
+        }
+        
+        // Giờ làm việc chuẩn
+        LocalTime standardMorningStart = LocalTime.of(8, 0);   // 08:00
+        LocalTime standardMorningEnd = LocalTime.of(12, 0);    // 12:00
+        LocalTime standardAfternoonStart = LocalTime.of(13, 0); // 13:00
+        LocalTime standardAfternoonEnd = LocalTime.of(17, 0);   // 17:00
+        
+        // Ân hạn (10 phút)
+        int graceMinutes = 10;
+        LocalTime lateThreshold = standardMorningStart.plusMinutes(graceMinutes); // 08:10
+        LocalTime earlyThreshold = standardAfternoonEnd.minusMinutes(graceMinutes); // 16:50
+        
+        // TODO: Kiểm tra đơn nghỉ phép và OT (cần implement sau khi có DAO tương ứng)
+        // boolean hasAMLeave = checkLeaveRequest(dto.getUserId(), dto.getDate(), "AM");
+        // boolean hasPMLeave = checkLeaveRequest(dto.getUserId(), dto.getDate(), "PM");
+        // boolean hasApprovedOT = checkOTRequest(dto.getUserId(), dto.getDate());
+        
+        // Tạm thời set false cho các trường hợp này
+        boolean hasAMLeave = false;
+        boolean hasPMLeave = false;
+        boolean hasApprovedOT = false;
+        
+        // Nếu có OT được duyệt
+        if (hasApprovedOT) {
+            return "Over Time";
+        }
+        
+        boolean isLate = false;
+        boolean isEarlyLeave = false;
+        
+        // Kiểm tra đi muộn
+        if (!hasAMLeave && checkIn.isAfter(lateThreshold)) {
+            isLate = true;
+        }
+        
+        // Kiểm tra về sớm
+        if (!hasPMLeave && checkOut.isBefore(earlyThreshold)) {
+            isEarlyLeave = true;
+        }
+        
+        // Xác định status
+        if (isLate && isEarlyLeave) {
+            return "Late & Early Leave";
+        } else if (isLate) {
+            return "Late";
+        } else if (isEarlyLeave) {
+            return "Early Leave";
+        } else {
+            return "On time";
+        }
+    }
+    
+    public static List<AttendanceLogDto> calculateStatusForList(List<AttendanceLogDto> dtos) {
+        if (dtos == null) {
+            return new ArrayList<>();
+        }
+        
+        for (AttendanceLogDto dto : dtos) {
+            String calculatedStatus = calculateAttendanceStatus(dto);
+            dto.setStatus(calculatedStatus);
+        }
+        
+        return dtos;
+    }
+
     public static void processImport(List<AttendanceLogDto> dtos, String action, Path tempFilePath, HttpServletRequest req) throws SQLException, IOException {
         if ("Preview".equalsIgnoreCase(action)) {
             req.setAttribute("previewLogs", dtos);
@@ -103,7 +183,10 @@ public class AttendanceService {
             List<AttendanceLogDto> excelValidLogs = excelValidation.get("valid");
             List<AttendanceLogDto> invalidLogsDto = excelValidation.get("invalid"); // lưu tạm danh sách invalid từ Excel
 
-            // Bước 2: Kiểm tra mâu thuẫn với DB
+            // Bước 2: Tính lại status cho các bản ghi hợp lệ
+            calculateStatusForList(excelValidLogs);
+            
+            // Bước 3: Kiểm tra mâu thuẫn với DB
             Map<String, List<AttendanceLogDto>> dbValidation = attendanceLogDAO.validateAndImportExcelLogs(excelValidLogs);
             List<AttendanceLogDto> dbValidLogs = dbValidation.get("valid");
             List<AttendanceLogDto> dbInvalidLogs = dbValidation.get("invalid");
