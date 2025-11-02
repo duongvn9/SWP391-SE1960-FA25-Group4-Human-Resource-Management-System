@@ -509,7 +509,7 @@
                                         aria-controls="usersWithoutAccountCollapse" onclick="loadUsersWithoutAccount()">
                                         <div class="d-flex justify-content-between align-items-center mb-2">
                                             <h5 class="mb-0">
-                                                <i class="fas fa-user-plus me-2"></i>Users Without Account
+                                                <i class="fas fa-user-plus me-2"></i>Employee Without Account
                                                 <span class="badge bg-primary" id="usersWithoutAccountCount">
                                                     <c:choose>
                                                         <c:when test="${not empty usersWithoutAccount}">
@@ -520,8 +520,8 @@
                                             </h5>
                                             <i class="fas fa-chevron-down toggle-icon"></i>
                                         </div>
-                                        <p class="mb-0 small">The following users don't have accounts yet. Click on a
-                                            user
+                                        <p class="mb-0 small">The following employee don't have accounts yet. Click on a
+                                            employee
                                             to create an account.</p>
                                     </div>
                                     <div class="collapse mt-2" id="usersWithoutAccountCollapse">
@@ -532,7 +532,7 @@
                                                     role="status">
                                                     <span class="visually-hidden">Loading...</span>
                                                 </div>
-                                                <p class="mt-2 mb-0 small text-muted">Loading users...</p>
+                                                <p class="mt-2 mb-0 small text-muted">Loading employee...</p>
                                             </div>
                                             <!-- Content will be loaded here -->
                                             <div class="row g-2" id="usersWithoutAccountList" style="display: none;">
