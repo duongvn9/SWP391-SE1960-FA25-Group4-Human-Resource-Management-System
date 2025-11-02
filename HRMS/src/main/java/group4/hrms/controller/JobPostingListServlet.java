@@ -138,8 +138,8 @@ public class JobPostingListServlet extends HttpServlet {
         request.setAttribute("totalItems", totalCount);
         request.setAttribute("totalPages", totalPages);
         
-        // Set CSRF token
-        request.setAttribute("csrfToken", SecurityUtil.generateCsrfToken(request.getSession()));
+        // Set CSRF token - get existing or create new one
+        request.setAttribute("csrfToken", SecurityUtil.getCsrfToken(request.getSession()));
         
         // Forward to view
         request.getRequestDispatcher("/WEB-INF/views/job-postings/list.jsp")
