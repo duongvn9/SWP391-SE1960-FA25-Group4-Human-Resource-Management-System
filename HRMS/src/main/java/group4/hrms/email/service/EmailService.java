@@ -6,9 +6,13 @@ import group4.hrms.email.model.EmailEventType;
 import group4.hrms.email.model.EmailQueue;
 import group4.hrms.email.model.EmailTemplate;
 import group4.hrms.model.Application;
+import group4.hrms.util.DatabaseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -354,9 +358,12 @@ public class EmailService {
     private Map<String, Object> buildApplicationConfirmationData(Application application) {
         Map<String, Object> data = new HashMap<>();
 
+        // Lấy job title từ database
+        String jobTitle = getJobTitle(application.getJobId());
+
         data.put("applicantName", application.getFullName());
         data.put("applicationId", application.getId() != null ? application.getId().toString() : "N/A");
-        data.put("jobPosition", application.getJobId() != null ? application.getJobId().toString() : "N/A");
+        data.put("jobPosition", jobTitle);
         data.put("applicantEmail", application.getEmail());
         data.put("applicantPhone", application.getPhone() != null ? application.getPhone() : "Không cung cấp");
         data.put("submittedDate", application.getCreatedAt().format(DATETIME_FORMATTER));
@@ -376,15 +383,49 @@ public class EmailService {
     private Map<String, Object> buildCvNotificationData(Application application) {
         Map<String, Object> data = new HashMap<>();
 
+        // Lấy job title từ database
+        String jobTitle = getJobTitle(application.getJobId());
+
         data.put("applicationId", application.getId() != null ? application.getId().toString() : "N/A");
         data.put("applicantName", application.getFullName());
         data.put("applicantEmail", application.getEmail());
         data.put("applicantPhone", application.getPhone() != null ? application.getPhone() : "Không cung cấp");
-        data.put("jobPosition", application.getJobId() != null ? application.getJobId().toString() : "N/A");
+        data.put("jobPosition", jobTitle);
         data.put("jobId", application.getJobId() != null ? application.getJobId().toString() : "N/A");
         data.put("submittedDate", application.getCreatedAt().format(DATETIME_FORMATTER));
 
         return data;
+    }
+
+    /**
+     * Lấy job title từ database theo jobId
+     * 
+     * @param jobId Job ID
+     * @return Job title hoặc "N/A" nếu không tìm thấy
+     */
+    private String getJobTitle(Long jobId) {
+        if (jobId == null) {
+            return "N/A";
+        }
+
+        String sql = "SELECT title FROM job_postings WHERE id = ?";
+
+        try (Connection conn = DatabaseUtil.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, jobId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("title");
+                }
+            }
+
+        } catch (SQLException e) {
+            logger.error("Lỗi khi lấy job title cho jobId {}: {}", jobId, e.getMessage(), e);
+        }
+
+        return "Job ID: " + jobId;
     }
 
     /**
