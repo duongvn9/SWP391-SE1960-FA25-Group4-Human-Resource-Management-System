@@ -24,11 +24,16 @@ public class EmploymentContractDto {
     private LocalDate endDate;
     private BigDecimal baseSalary;
     private String currency;
-    private String status;
+    private String status;             // Contract lifecycle: active, expired, terminated
+    private String approvalStatus;     // Approval workflow: pending, approved, rejected
     private String filePath;
     private String note;
     private Long createdByAccountId;
+    private Long approvedByAccountId;
+    private LocalDateTime approvedAt;
+    private String rejectedReason;
     private String createdByName;      // Join từ accounts/users
+    private String approvedByName;     // Join từ accounts/users
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
@@ -47,6 +52,7 @@ public class EmploymentContractDto {
     private String statusColor;
     private String formattedCreatedAt;
     private String formattedUpdatedAt;
+    private String formattedApprovedAt;
     
     // Constructors
     public EmploymentContractDto() {}
@@ -62,9 +68,13 @@ public class EmploymentContractDto {
             this.baseSalary = contract.getBaseSalary();
             this.currency = contract.getCurrency();
             this.status = contract.getStatus();
+            this.approvalStatus = contract.getApprovalStatus();
             this.filePath = contract.getFilePath();
             this.note = contract.getNote();
             this.createdByAccountId = contract.getCreatedByAccountId();
+            this.approvedByAccountId = contract.getApprovedByAccountId();
+            this.approvedAt = contract.getApprovedAt();
+            this.rejectedReason = contract.getRejectedReason();
             this.createdAt = contract.getCreatedAt();
             this.updatedAt = contract.getUpdatedAt();
             
@@ -81,6 +91,7 @@ public class EmploymentContractDto {
             this.contractTypeDisplay = formatContractType(contract.getContractType());
             this.formattedCreatedAt = formatDateTime(contract.getCreatedAt());
             this.formattedUpdatedAt = formatDateTime(contract.getUpdatedAt());
+            this.formattedApprovedAt = formatDateTime(contract.getApprovedAt());
             
             // Format status with color
             formatStatus(contract.getStatus());
@@ -155,6 +166,18 @@ public class EmploymentContractDto {
         }
         
         switch (status.toLowerCase()) {
+            case "pending":
+                this.statusDisplay = "Pending Approval";
+                this.statusColor = "warning";
+                break;
+            case "approved":
+                this.statusDisplay = "Approved";
+                this.statusColor = "info";
+                break;
+            case "rejected":
+                this.statusDisplay = "Rejected";
+                this.statusColor = "danger";
+                break;
             case "active":
                 this.statusDisplay = "Active";
                 this.statusColor = "success";
@@ -262,6 +285,14 @@ public class EmploymentContractDto {
         this.status = status;
     }
     
+    public String getApprovalStatus() {
+        return approvalStatus;
+    }
+    
+    public void setApprovalStatus(String approvalStatus) {
+        this.approvalStatus = approvalStatus;
+    }
+    
     public String getFilePath() {
         return filePath;
     }
@@ -286,12 +317,44 @@ public class EmploymentContractDto {
         this.createdByAccountId = createdByAccountId;
     }
     
+    public Long getApprovedByAccountId() {
+        return approvedByAccountId;
+    }
+    
+    public void setApprovedByAccountId(Long approvedByAccountId) {
+        this.approvedByAccountId = approvedByAccountId;
+    }
+    
+    public LocalDateTime getApprovedAt() {
+        return approvedAt;
+    }
+    
+    public void setApprovedAt(LocalDateTime approvedAt) {
+        this.approvedAt = approvedAt;
+    }
+    
+    public String getRejectedReason() {
+        return rejectedReason;
+    }
+    
+    public void setRejectedReason(String rejectedReason) {
+        this.rejectedReason = rejectedReason;
+    }
+    
     public String getCreatedByName() {
         return createdByName;
     }
     
     public void setCreatedByName(String createdByName) {
         this.createdByName = createdByName;
+    }
+    
+    public String getApprovedByName() {
+        return approvedByName;
+    }
+    
+    public void setApprovedByName(String approvedByName) {
+        this.approvedByName = approvedByName;
     }
     
     public LocalDateTime getCreatedAt() {
@@ -414,6 +477,14 @@ public class EmploymentContractDto {
     
     public void setFormattedUpdatedAt(String formattedUpdatedAt) {
         this.formattedUpdatedAt = formattedUpdatedAt;
+    }
+    
+    public String getFormattedApprovedAt() {
+        return formattedApprovedAt;
+    }
+    
+    public void setFormattedApprovedAt(String formattedApprovedAt) {
+        this.formattedApprovedAt = formattedApprovedAt;
     }
     
     /**

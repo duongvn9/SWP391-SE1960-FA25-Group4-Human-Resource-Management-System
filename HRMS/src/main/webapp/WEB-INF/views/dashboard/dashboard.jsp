@@ -36,11 +36,11 @@
                             </div>
                         </div>
 
-                        <!-- Chỉ hiển thị KPI và Charts cho HR và HRM -->
-                        <c:if test="${canViewDashboardData}">
+                        <!-- Hiển thị KPI và Charts cho HR, HRM và Admin -->
+                        <c:if test="${canViewDashboardData || isAdmin}">
                         <!-- Employee Statistics Cards -->
                         <div class="row mb-4">
-                            <div class="col-lg-3 col-md-6 mb-3">
+                            <div class="${isAdmin ? 'col-lg-6' : 'col-lg-3'} col-md-6 mb-3">
                                 <div class="dashboard-card">
                                     <div class="stat-card primary">
                                         <div class="icon">
@@ -48,11 +48,27 @@
                                         </div>
                                         <span class="stat-number">${kpis.totalEmployees}</span>
                                         <div class="stat-label">Total Employees</div>
-                                        <small class="text-muted">${kpis.activeEmployees} active</small>
+                                        <small class="text-muted">${kpis.totalDepartments} departments</small>
                                     </div>
                                 </div>
                             </div>
+                            
+                            <c:if test="${isAdmin}">
+                            <div class="col-lg-6 col-md-6 mb-3">
+                                <div class="dashboard-card">
+                                    <div class="stat-card success">
+                                        <div class="icon">
+                                            <i class="fas fa-user-shield"></i>
+                                        </div>
+                                        <span class="stat-number">${kpis.totalAccounts}</span>
+                                        <div class="stat-label">Total Accounts</div>
+                                        <small class="text-muted">${kpis.activeAccounts} active</small>
+                                    </div>
+                                </div>
+                            </div>
+                            </c:if>
 
+                            <c:if test="${!isAdmin}">
                             <div class="col-lg-3 col-md-6 mb-3">
                                 <div class="dashboard-card">
                                     <div class="stat-card success">
@@ -75,12 +91,9 @@
                                         <div class="icon">
                                             <i class="fas fa-clock"></i>
                                         </div>
-                                        <span class="stat-number">
-                                            <fmt:formatNumber value="${kpis.totalOtHoursThisMonth}"
-                                                maxFractionDigits="1" />
-                                        </span>
-                                        <div class="stat-label">OT Hours (This Month)</div>
-                                        <small class="text-muted">${kpis.pendingOtRequests} pending requests</small>
+                                        <span class="stat-number">${kpis.pendingOtRequests}</span>
+                                        <div class="stat-label">Pending OT Requests</div>
+                                        <small class="text-muted">All pending requests</small>
                                     </div>
                                 </div>
                             </div>
@@ -93,16 +106,17 @@
                                         </div>
                                         <span class="stat-number">${kpis.pendingLeaveRequests}</span>
                                         <div class="stat-label">Pending Leave Requests</div>
-                                        <small class="text-muted">${kpis.approvedLeavesToday} on leave today</small>
+                                        <small class="text-muted">All pending requests</small>
                                     </div>
                                 </div>
                             </div>
+                            </c:if>
                         </div>
 
                         <!-- Charts Row 1 -->
                         <div class="row mb-4">
                             <!-- Department Distribution -->
-                            <div class="col-lg-6 mb-3">
+                            <div class="${isAdmin ? 'col-lg-6' : 'col-lg-4'} mb-3">
                                 <div class="dashboard-card">
                                     <h5 class="mb-3">
                                         <i class="fas fa-building me-2"></i>Employees by Department
@@ -113,20 +127,49 @@
                                 </div>
                             </div>
 
-                            <!-- Request Status -->
+                            <!-- Account Status - Only for Admin -->
+                            <c:if test="${isAdmin}">
                             <div class="col-lg-6 mb-3">
                                 <div class="dashboard-card">
                                     <h5 class="mb-3">
-                                        <i class="fas fa-tasks me-2"></i>Requests Status (This Month)
+                                        <i class="fas fa-user-shield me-2"></i>Accounts by Status
                                     </h5>
                                     <div class="chart-container">
-                                        <canvas id="requestStatusChart"></canvas>
+                                        <canvas id="accountStatusChart"></canvas>
                                     </div>
                                 </div>
                             </div>
+                            </c:if>
+
+                            <!-- OT Request Status - Only for HR/HRM -->
+                            <c:if test="${!isAdmin}">
+                            <div class="col-lg-4 mb-3">
+                                <div class="dashboard-card">
+                                    <h5 class="mb-3">
+                                        <i class="fas fa-clock me-2"></i>OT Request Status
+                                    </h5>
+                                    <div class="chart-container">
+                                        <canvas id="otRequestStatusChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Leave Request Status - Only for HR/HRM -->
+                            <div class="col-lg-4 mb-3">
+                                <div class="dashboard-card">
+                                    <h5 class="mb-3">
+                                        <i class="fas fa-calendar-alt me-2"></i>Leave Request Status
+                                    </h5>
+                                    <div class="chart-container">
+                                        <canvas id="leaveRequestStatusChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            </c:if>
                         </div>
 
-                        <!-- Charts Row 2 -->
+                        <!-- Charts Row 2 - Only for HR/HRM -->
+                        <c:if test="${!isAdmin}">
                         <div class="row mb-4">
                             <!-- Attendance Trend -->
                             <div class="col-lg-6 mb-3">
@@ -152,8 +195,10 @@
                                 </div>
                             </div>
                         </div>
+                        </c:if>
 
-                        <!-- Payroll Summary -->
+                        <!-- Payroll Summary - Only for HR/HRM -->
+                        <c:if test="${!isAdmin}">
                         <div class="row mb-4">
                             <div class="col-lg-4 col-md-6 mb-3">
                                 <div class="dashboard-card">
@@ -203,9 +248,10 @@
                                 </div>
                             </div>
                         </div>
+                        </c:if>
 
                         <!-- Quick Actions for Admin -->
-                        <c:if test="${sessionScope.userRole == 'ADMIN' || sessionScope.userRole == 'Admin'}">
+                        <c:if test="${isAdmin}">
                             <div class="row mb-4">
                                 <div class="col-12">
                                     <div class="dashboard-card">
@@ -213,7 +259,7 @@
                                             <i class="fas fa-bolt me-2 text-warning"></i>Quick Admin Actions
                                         </h5>
                                         <div class="row">
-                                            <div class="col-lg-3 col-md-6 mb-3">
+                                            <div class="col-lg-4 col-md-6 mb-3">
                                                 <a href="${pageContext.request.contextPath}/admin/accounts"
                                                     class="btn btn-outline-primary w-100 py-3 text-decoration-none">
                                                     <i class="fas fa-user-shield fs-2 d-block mb-2"></i>
@@ -222,8 +268,8 @@
                                                     <small class="text-muted">Create, edit, delete accounts</small>
                                                 </a>
                                             </div>
-                                            <div class="col-lg-3 col-md-6 mb-3">
-                                                <a href="${pageContext.request.contextPath}/system/settings"
+                                            <div class="col-lg-4 col-md-6 mb-3">
+                                                <a href="${pageContext.request.contextPath}/settings"
                                                     class="btn btn-outline-secondary w-100 py-3 text-decoration-none">
                                                     <i class="fas fa-cogs fs-2 d-block mb-2"></i>
                                                     <strong>System Settings</strong>
@@ -231,17 +277,8 @@
                                                     <small class="text-muted">System configuration</small>
                                                 </a>
                                             </div>
-                                            <div class="col-lg-3 col-md-6 mb-3">
-                                                <a href="${pageContext.request.contextPath}/reports"
-                                                    class="btn btn-outline-info w-100 py-3 text-decoration-none">
-                                                    <i class="fas fa-chart-bar fs-2 d-block mb-2"></i>
-                                                    <strong>Comprehensive Reports</strong>
-                                                    <br>
-                                                    <small class="text-muted">View detailed reports</small>
-                                                </a>
-                                            </div>
-                                            <div class="col-lg-3 col-md-6 mb-3">
-                                                <a href="${pageContext.request.contextPath}/identity/employees"
+                                            <div class="col-lg-4 col-md-6 mb-3">
+                                                <a href="${pageContext.request.contextPath}/employees/users"
                                                     class="btn btn-outline-success w-100 py-3 text-decoration-none">
                                                     <i class="fas fa-users-cog fs-2 d-block mb-2"></i>
                                                     <strong>Employee Management</strong>
@@ -281,8 +318,8 @@
                     <jsp:include page="../layout/dashboard-footer.jsp" />
                 </div>
 
-                <!-- Chỉ load charts nếu user có quyền xem dashboard data -->
-                <c:if test="${canViewDashboardData}">
+                <!-- Load charts cho HR, HRM và Admin -->
+                <c:if test="${canViewDashboardData || isAdmin}">
                 <script>
                     // Chart.js configuration
                     Chart.defaults.font.family = "'Inter', sans-serif";
@@ -342,40 +379,96 @@
                         });
                     }
 
-                    // Request Status Chart
-                    const reqCtx = document.getElementById('requestStatusChart');
-                    let reqChart;
-                    if (reqCtx) {
-                        const reqLabels = [
-                            <c:forEach items="${kpis.requestsByStatus}" var="entry" varStatus="status">
+                    // Account Status Chart (Admin only)
+                    const accCtx = document.getElementById('accountStatusChart');
+                    if (accCtx) {
+                        const accData = {
+                            labels: ['Active', 'Inactive', 'Locked'],
+                            datasets: [{
+                                data: [
+                                    ${kpis.activeAccounts != null ? kpis.activeAccounts : 0},
+                                    ${kpis.inactiveAccounts != null ? kpis.inactiveAccounts : 0},
+                                    ${kpis.lockedAccounts != null ? kpis.lockedAccounts : 0}
+                                ],
+                                backgroundColor: ['#198754', '#6c757d', '#dc3545']
+                            }]
+                        };
+                        new Chart(accCtx, {
+                            type: 'pie',
+                            data: accData,
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: { 
+                                        position: 'right',
+                                        labels: {
+                                            boxWidth: 15,
+                                            padding: 10,
+                                            font: { size: 12 }
+                                        }
+                                    },
+                                    tooltip: {
+                                        callbacks: {
+                                            label: function(context) {
+                                                const label = context.label || '';
+                                                const value = context.parsed || 0;
+                                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                                return label + ': ' + value + ' (' + percentage + '%)';
+                                            }
+                                        }
+                                    }
+                                },
+                                onClick: (event, elements) => {
+                                    if (elements.length > 0) {
+                                        const index = elements[0].index;
+                                        const statusName = accData.labels[index].toLowerCase();
+                                        console.log('Clicked account status:', statusName);
+                                        showChartModal(
+                                            'View Account List',
+                                            `Do you want to view <strong>${accData.labels[index]}</strong> accounts?`,
+                                            '${pageContext.request.contextPath}/employees/accounts?status=' + statusName
+                                        );
+                                    }
+                                }
+                            }
+                        });
+                    }
+
+                    // Map colors based on status name (shared by OT and Leave charts)
+                    const statusColors = {
+                        'PENDING': '#ffc107',    // Yellow
+                        'APPROVED': '#198754',   // Green
+                        'REJECTED': '#dc3545',   // Red
+                        'DRAFT': '#6c757d'       // Gray
+                    };
+
+                    // OT Request Status Chart
+                    const otReqCtx = document.getElementById('otRequestStatusChart');
+                    if (otReqCtx) {
+                        const otReqLabels = [
+                            <c:forEach items="${kpis.otRequestsByStatus}" var="entry" varStatus="status">
                                 '${entry.key}'${!status.last ? ',' : ''}
                             </c:forEach>
                         ];
                         
-                        // Map colors based on status name
-                        const statusColors = {
-                            'PENDING': '#ffc107',    // Yellow
-                            'APPROVED': '#198754',   // Green
-                            'REJECTED': '#dc3545',   // Red
-                            'DRAFT': '#6c757d'       // Gray
-                        };
+                        const otReqColors = otReqLabels.map(label => statusColors[label] || '#6c757d');
                         
-                        const reqColors = reqLabels.map(label => statusColors[label] || '#6c757d');
-                        
-                        const reqData = {
-                            labels: reqLabels,
+                        const otReqData = {
+                            labels: otReqLabels,
                             datasets: [{
                                 data: [
-                                    <c:forEach items="${kpis.requestsByStatus}" var="entry" varStatus="status">
+                                    <c:forEach items="${kpis.otRequestsByStatus}" var="entry" varStatus="status">
                                         ${entry.value}${!status.last ? ',' : ''}
                                     </c:forEach>
                                 ],
-                                backgroundColor: reqColors
+                                backgroundColor: otReqColors
                             }]
                         };
-                        reqChart = new Chart(reqCtx, {
+                        new Chart(otReqCtx, {
                             type: 'pie',
-                            data: reqData,
+                            data: otReqData,
                             options: {
                                 responsive: true,
                                 maintainAspectRatio: false,
@@ -392,12 +485,66 @@
                                 onClick: (event, elements) => {
                                     if (elements.length > 0) {
                                         const index = elements[0].index;
-                                        const statusName = reqData.labels[index];
-                                        console.log('Clicked request status:', statusName);
+                                        const statusName = otReqData.labels[index];
+                                        console.log('Clicked OT request status:', statusName);
                                         showChartModal(
-                                            'View Request List',
-                                            `Do you want to view all <strong>${statusName}</strong> requests?`,
-                                            '${pageContext.request.contextPath}/requests/list?status=' + encodeURIComponent(statusName) + '&scope=all'
+                                            'View OT Request List',
+                                            `Do you want to view all <strong>${statusName}</strong> OT requests?`,
+                                            '${pageContext.request.contextPath}/requests/ot?status=' + encodeURIComponent(statusName)
+                                        );
+                                    }
+                                }
+                            }
+                        });
+                    }
+
+                    // Leave Request Status Chart
+                    const leaveReqCtx = document.getElementById('leaveRequestStatusChart');
+                    if (leaveReqCtx) {
+                        const leaveReqLabels = [
+                            <c:forEach items="${kpis.leaveRequestsByStatus}" var="entry" varStatus="status">
+                                '${entry.key}'${!status.last ? ',' : ''}
+                            </c:forEach>
+                        ];
+                        
+                        const leaveReqColors = leaveReqLabels.map(label => statusColors[label] || '#6c757d');
+                        
+                        const leaveReqData = {
+                            labels: leaveReqLabels,
+                            datasets: [{
+                                data: [
+                                    <c:forEach items="${kpis.leaveRequestsByStatus}" var="entry" varStatus="status">
+                                        ${entry.value}${!status.last ? ',' : ''}
+                                    </c:forEach>
+                                ],
+                                backgroundColor: leaveReqColors
+                            }]
+                        };
+                        new Chart(leaveReqCtx, {
+                            type: 'pie',
+                            data: leaveReqData,
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: { 
+                                        position: 'right',
+                                        labels: {
+                                            boxWidth: 15,
+                                            padding: 8,
+                                            font: { size: 11 }
+                                        }
+                                    }
+                                },
+                                onClick: (event, elements) => {
+                                    if (elements.length > 0) {
+                                        const index = elements[0].index;
+                                        const statusName = leaveReqData.labels[index];
+                                        console.log('Clicked leave request status:', statusName);
+                                        showChartModal(
+                                            'View Leave Request List',
+                                            `Do you want to view all <strong>${statusName}</strong> leave requests?`,
+                                            '${pageContext.request.contextPath}/requests/leave?status=' + encodeURIComponent(statusName)
                                         );
                                     }
                                 }
