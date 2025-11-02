@@ -40,7 +40,21 @@ public class ContractEditController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         try {
-            Long id = Long.parseLong(request.getParameter("id"));
+            // Get current user
+            User currentUser = (User) request.getSession().getAttribute("user");
+            if (currentUser == null) {
+                response.sendRedirect(request.getContextPath() + "/login");
+                return;
+            }
+            
+            // Get contract ID
+            String idStr = request.getParameter("id");
+            if (idStr == null || idStr.trim().isEmpty()) {
+                response.sendRedirect(request.getContextPath() + "/contracts?error=Missing contract ID");
+                return;
+            }
+            
+            Long id = Long.parseLong(idStr);
             Optional<EmploymentContract> contractOpt = contractDao.findById(id);
             
             if (!contractOpt.isPresent()) {
@@ -48,21 +62,33 @@ public class ContractEditController extends HttpServlet {
                 return;
             }
             
-            // Load data for form
+            EmploymentContract contract = contractOpt.get();
+            
+            // Check if contract can be edited
+            if (!contract.canBeEditedBy(currentUser.getId())) {
+                response.sendRedirect(request.getContextPath() + 
+                    "/contracts?error=" + java.net.URLEncoder.encode(
+                        "You do not have permission to edit this contract. Approval Status: " + contract.getApprovalStatus(), "UTF-8"));
+                return;
+            }
+             
+            // Load reference data
             List<User> users = userDao.findAll();
             List<Department> departments = departmentDao.findAll();
             List<Position> positions = positionDao.findAll();
             
-            request.setAttribute("contract", contractOpt.get());
+            request.setAttribute("contract", contract);
             request.setAttribute("users", users);
             request.setAttribute("departments", departments);
             request.setAttribute("positions", positions);
+            request.setAttribute("isEdit", true);
             
             request.getRequestDispatcher("/WEB-INF/views/contracts/contract-form.jsp")
                     .forward(request, response);
                     
-        } catch (SQLException e) {
-            throw new ServletException("Error loading contract", e);
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect(request.getContextPath() + "/contracts?error=" + e.getMessage());
         }
     }
     
@@ -70,6 +96,13 @@ public class ContractEditController extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         try {
+            // Get current user
+            User currentUser = (User) request.getSession().getAttribute("user");
+            if (currentUser == null) {
+                response.sendRedirect(request.getContextPath() + "/login");
+                return;
+            }
+            
             Long id = Long.parseLong(request.getParameter("id"));
             Optional<EmploymentContract> contractOpt = contractDao.findById(id);
             
@@ -80,83 +113,92 @@ public class ContractEditController extends HttpServlet {
             
             EmploymentContract contract = contractOpt.get();
             
-            // Validation 1: Không được edit hợp đồng đã expired hoặc terminated
-            if ("expired".equalsIgnoreCase(contract.getStatus()) || 
-                "terminated".equalsIgnoreCase(contract.getStatus())) {
-                // Load form data and show error
-                List<User> users = userDao.findAll();
-                List<Department> departments = departmentDao.findAll();
-                List<Position> positions = positionDao.findAll();
-                
-                request.setAttribute("contract", contract);
-                request.setAttribute("users", users);
-                request.setAttribute("departments", departments);
-                request.setAttribute("positions", positions);
-                request.setAttribute("errorMessage", "Cannot edit expired or terminated contracts");
-                
-                request.getRequestDispatcher("/WEB-INF/views/contracts/contract-form.jsp")
-                        .forward(request, response);
+            // Check if contract can be edited
+            if (!contract.canBeEditedBy(currentUser.getId())) {
+                response.sendRedirect(request.getContextPath() + 
+                    "/contracts?error=" + java.net.URLEncoder.encode(
+                        "You do not have permission to edit this contract", "UTF-8"));
                 return;
             }
             
-            // Get new values from form
+            // Get form data
             String contractNo = request.getParameter("contractNo");
             String contractType = request.getParameter("contractType");
+            String startDateStr = request.getParameter("startDate");
+            String endDateStr = request.getParameter("endDate");
             String baseSalaryStr = request.getParameter("baseSalary");
             String currency = request.getParameter("currency");
-            String newStatus = request.getParameter("status");
             String note = request.getParameter("note");
+            
+            // Parse data
+            LocalDate startDate = LocalDate.parse(startDateStr);
+            LocalDate endDate = (endDateStr != null && !endDateStr.isEmpty()) 
+                    ? LocalDate.parse(endDateStr) : null;
+            BigDecimal baseSalary = new BigDecimal(baseSalaryStr);
             
             String errorMessage = null;
             
-            // Validation 2: Chỉ được phép thay đổi status sang terminated (không được chọn expired thủ công)
-            if ("expired".equalsIgnoreCase(newStatus)) {
-                errorMessage = "Cannot manually set status to Expired. Status will be automatically updated when contract expires";
+            // Validation
+            if (endDate != null && !startDate.isBefore(endDate)) {
+                errorMessage = "Start date must be before end date";
+            } else if ("indefinite".equalsIgnoreCase(contractType) && endDate != null) {
+                errorMessage = "Indefinite contracts cannot have an end date";
+            } else if (("fixed_term".equalsIgnoreCase(contractType) || "probation".equalsIgnoreCase(contractType)) && endDate == null) {
+                errorMessage = "Fixed-term and probation contracts must have an end date";
             }
             
-            // If validation failed, return to form with current data
             if (errorMessage != null) {
-                // Update contract with form data for display
-                contract.setContractNo(contractNo);
-                contract.setContractType(contractType);
-                contract.setBaseSalary(new BigDecimal(baseSalaryStr));
-                contract.setCurrency(currency);
-                contract.setNote(note);
-                
+                // Return to form with error
                 List<User> users = userDao.findAll();
                 List<Department> departments = departmentDao.findAll();
                 List<Position> positions = positionDao.findAll();
+                
+                contract.setContractNo(contractNo);
+                contract.setContractType(contractType);
+                contract.setStartDate(startDate);
+                contract.setEndDate(endDate);
+                contract.setBaseSalary(baseSalary);
+                contract.setCurrency(currency);
+                contract.setNote(note);
                 
                 request.setAttribute("contract", contract);
                 request.setAttribute("users", users);
                 request.setAttribute("departments", departments);
                 request.setAttribute("positions", positions);
                 request.setAttribute("errorMessage", errorMessage);
+                request.setAttribute("isEdit", true);
                 
                 request.getRequestDispatcher("/WEB-INF/views/contracts/contract-form.jsp")
                         .forward(request, response);
                 return;
             }
             
-            // Auto-update status to expired nếu hợp đồng đã hết hạn
-            LocalDate today = LocalDate.now();
-            LocalDate endDate = contract.getEndDate();
-            if (endDate != null && !endDate.isAfter(today) && !"terminated".equalsIgnoreCase(newStatus)) {
-                newStatus = "expired";
-            }
-            
-            // Update fields (không cho phép thay đổi employee, startDate, endDate)
+            // Update contract fields
             contract.setContractNo(contractNo);
             contract.setContractType(contractType);
-            contract.setBaseSalary(new BigDecimal(baseSalaryStr));
+            contract.setStartDate(startDate);
+            contract.setEndDate(endDate);
+            contract.setBaseSalary(baseSalary);
             contract.setCurrency(currency);
-            contract.setStatus(newStatus);
             contract.setNote(note);
+            
+            // If contract was REJECTED, reset to PENDING for re-approval
+            if ("rejected".equalsIgnoreCase(contract.getApprovalStatus())) {
+                contract.setApprovalStatus("pending");
+                contract.setRejectedReason(null);
+                contract.setApprovedByAccountId(null);
+                contract.setApprovedAt(null);
+            }
             
             // Update in database
             contractDao.update(contract);
             
-            response.sendRedirect(request.getContextPath() + "/contracts?success=Contract updated successfully");
+            String successMessage = "rejected".equalsIgnoreCase(contract.getApprovalStatus())
+                ? "Contract updated and resubmitted for approval"
+                : "Contract updated successfully";
+            
+            response.sendRedirect(request.getContextPath() + 
+                "/contracts?success=" + java.net.URLEncoder.encode(successMessage, "UTF-8"));
             
         } catch (Exception e) {
             e.printStackTrace();
@@ -164,3 +206,6 @@ public class ContractEditController extends HttpServlet {
         }
     }
 }
+        
+
+
