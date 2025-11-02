@@ -11,6 +11,13 @@ public class DashboardKpiDto {
     private int totalEmployees;
     private int activeEmployees;
     private int newEmployeesThisMonth;
+    private int totalDepartments;
+    
+    // Account metrics
+    private int totalAccounts;
+    private int activeAccounts;
+    private int inactiveAccounts;
+    private int lockedAccounts;
     
     // Leave metrics
     private int pendingLeaveRequests;
@@ -40,6 +47,8 @@ public class DashboardKpiDto {
     // Request status breakdown
     private Map<String, Integer> requestsByStatus;
     private Map<String, Integer> requestsByType;
+    private Map<String, Integer> otRequestsByStatus;
+    private Map<String, Integer> leaveRequestsByStatus;
     
     // Monthly trends (last 6 months)
     private Map<String, Integer> employeeTrend;
@@ -73,6 +82,46 @@ public class DashboardKpiDto {
 
     public void setNewEmployeesThisMonth(int newEmployeesThisMonth) {
         this.newEmployeesThisMonth = newEmployeesThisMonth;
+    }
+    
+    public int getTotalDepartments() {
+        return totalDepartments;
+    }
+    
+    public void setTotalDepartments(int totalDepartments) {
+        this.totalDepartments = totalDepartments;
+    }
+    
+    public int getTotalAccounts() {
+        return totalAccounts;
+    }
+    
+    public void setTotalAccounts(int totalAccounts) {
+        this.totalAccounts = totalAccounts;
+    }
+    
+    public int getActiveAccounts() {
+        return activeAccounts;
+    }
+    
+    public void setActiveAccounts(int activeAccounts) {
+        this.activeAccounts = activeAccounts;
+    }
+    
+    public int getInactiveAccounts() {
+        return inactiveAccounts;
+    }
+    
+    public void setInactiveAccounts(int inactiveAccounts) {
+        this.inactiveAccounts = inactiveAccounts;
+    }
+    
+    public int getLockedAccounts() {
+        return lockedAccounts;
+    }
+    
+    public void setLockedAccounts(int lockedAccounts) {
+        this.lockedAccounts = lockedAccounts;
     }
 
     public int getPendingLeaveRequests() {
@@ -233,5 +282,21 @@ public class DashboardKpiDto {
 
     public void setAttendanceTrend(Map<String, Double> attendanceTrend) {
         this.attendanceTrend = attendanceTrend;
+    }
+
+    public Map<String, Integer> getOtRequestsByStatus() {
+        return otRequestsByStatus;
+    }
+
+    public void setOtRequestsByStatus(Map<String, Integer> otRequestsByStatus) {
+        this.otRequestsByStatus = otRequestsByStatus;
+    }
+
+    public Map<String, Integer> getLeaveRequestsByStatus() {
+        return leaveRequestsByStatus;
+    }
+
+    public void setLeaveRequestsByStatus(Map<String, Integer> leaveRequestsByStatus) {
+        this.leaveRequestsByStatus = leaveRequestsByStatus;
     }
 }

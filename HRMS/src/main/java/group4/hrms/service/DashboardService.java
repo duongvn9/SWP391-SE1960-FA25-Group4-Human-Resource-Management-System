@@ -33,6 +33,13 @@ public class DashboardService {
             kpis.setTotalEmployees(dashboardDao.getTotalEmployees());
             kpis.setActiveEmployees(dashboardDao.getActiveEmployees());
             kpis.setNewEmployeesThisMonth(dashboardDao.getNewEmployeesThisMonth());
+            kpis.setTotalDepartments(dashboardDao.getTotalDepartments());
+            
+            // Account metrics
+            kpis.setTotalAccounts(dashboardDao.getTotalAccounts());
+            kpis.setActiveAccounts(dashboardDao.getActiveAccounts());
+            kpis.setInactiveAccounts(dashboardDao.getInactiveAccounts());
+            kpis.setLockedAccounts(dashboardDao.getLockedAccounts());
 
             // Leave metrics
             kpis.setPendingLeaveRequests(dashboardDao.getPendingLeaveRequests());
@@ -41,7 +48,7 @@ public class DashboardService {
 
             // OT metrics
             kpis.setPendingOtRequests(dashboardDao.getPendingOtRequests());
-            double totalOtHours = dashboardDao.getTotalOtHoursThisMonth();
+            double totalOtHours = dashboardDao.getTotalOtHours(); // Changed to get all time OT hours
             kpis.setTotalOtHoursThisMonth(totalOtHours);
             
             int activeEmployees = kpis.getActiveEmployees();
@@ -65,6 +72,8 @@ public class DashboardService {
             kpis.setEmployeesByPosition(dashboardDao.getEmployeesByPosition());
             kpis.setRequestsByStatus(dashboardDao.getRequestsByStatus());
             kpis.setRequestsByType(dashboardDao.getRequestsByType());
+            kpis.setOtRequestsByStatus(dashboardDao.getOtRequestsByStatus());
+            kpis.setLeaveRequestsByStatus(dashboardDao.getLeaveRequestsByStatus());
 
             // Trends
             kpis.setEmployeeTrend(dashboardDao.getEmployeeTrend());
