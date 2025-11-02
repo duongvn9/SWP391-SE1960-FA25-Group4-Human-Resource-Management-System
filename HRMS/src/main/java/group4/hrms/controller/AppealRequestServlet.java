@@ -167,10 +167,7 @@ public class AppealRequestServlet extends HttpServlet {
 
             // --- Lấy danh sách bản ghi cũ + mới từ JS ---
             String selectedLogsData = req.getParameter("selected_logs_data");
-
-            System.out.println("----------------------------");
-            System.out.println(selectedLogsData);
-            System.out.println("--------------------------------");
+            String newRecordsData = req.getParameter("new_records_data");
 
             List<Map<String, Map<String, String>>> recordsList = new ArrayList<>();
             if (selectedLogsData != null && !selectedLogsData.isEmpty()) {
@@ -180,17 +177,29 @@ public class AppealRequestServlet extends HttpServlet {
                             new TypeReference<List<Map<String, Map<String, String>>>>() {
                     });
                 } catch (JsonProcessingException e) {
+                    System.out.println("Error parsing selected logs data: " + e.getMessage());
                 }
             }
 
-            System.out.println("recordsList size: " + recordsList.size());
-            System.out.println(recordsList);
+            List<Map<String, String>> newRecordsList = new ArrayList<>();
+            if (newRecordsData != null && !newRecordsData.isEmpty()) {
+                ObjectMapper mapper = new ObjectMapper();
+                try {
+                    newRecordsList = mapper.readValue(newRecordsData,
+                            new TypeReference<List<Map<String, String>>>() {
+                    });
+                } catch (JsonProcessingException e) {
+                    System.out.println("Error parsing new records data: " + e.getMessage());
+                }
+            }
 
             // === VALIDATION: Check edit fields completeness and conflicts ===
             List<AttendanceLogDto> editedLogs = new ArrayList<>();
+            List<AttendanceLogDto> newLogs = new ArrayList<>();
             boolean hasValidationErrors = false;
             StringBuilder validationErrors = new StringBuilder();
 
+            // Validate edited records
             for (Map<String, Map<String, String>> record : recordsList) {
                 Map<String, String> newRecord = record.get("newRecord");
                 if (newRecord == null) {
@@ -201,7 +210,6 @@ public class AppealRequestServlet extends HttpServlet {
                 String date = newRecord.get("date");
                 String checkIn = newRecord.get("checkIn");
                 String checkOut = newRecord.get("checkOut");
-                String status = newRecord.get("status");
 
                 if (date == null || date.trim().isEmpty()) {
                     hasValidationErrors = true;
@@ -221,8 +229,6 @@ public class AppealRequestServlet extends HttpServlet {
                     continue;
                 }
 
-                // Status sẽ được tính tự động, không cần validate
-
                 // Create DTO for conflict checking
                 try {
                     AttendanceLogDto dto = new AttendanceLogDto();
@@ -230,7 +236,6 @@ public class AppealRequestServlet extends HttpServlet {
                     dto.setDate(LocalDate.parse(date));
                     dto.setCheckIn(LocalTime.parse(checkIn));
                     dto.setCheckOut(LocalTime.parse(checkOut));
-                    // Tự động tính status
                     String calculatedStatus = AttendanceService.calculateAttendanceStatus(dto);
                     dto.setStatus(calculatedStatus);
                     dto.setSource("appeal");
@@ -241,42 +246,112 @@ public class AppealRequestServlet extends HttpServlet {
                 }
             }
 
-            // Check for conflicts using appeal-specific validation method
-            if (!hasValidationErrors && !editedLogs.isEmpty()) {
-                // For appeal requests, we need to validate edited records against existing records
-                // but exclude the original records being edited from conflict checking
-                List<Map<String, Map<String, String>>> originalRecords = recordsList;
+            // Validate new records
+            for (Map<String, String> newRecord : newRecordsList) {
+                // Validate required fields
+                String date = newRecord.get("date");
+                String checkIn = newRecord.get("checkIn");
+                String checkOut = newRecord.get("checkOut");
 
-                System.out.println("=== APPEAL VALIDATION DEBUG ===");
-                System.out.println("Edited logs count: " + editedLogs.size());
-                System.out.println("Original records count: " + originalRecords.size());
-                for (AttendanceLogDto editedLog : editedLogs) {
-                    System.out.println("Edited log: " + editedLog.getDate() + " "
-                            + editedLog.getCheckIn() + "-" + editedLog.getCheckOut());
-                }
-                for (Map<String, Map<String, String>> originalRecord : originalRecords) {
-                    Map<String, String> oldRec = originalRecord.get("oldRecord");
-                    if (oldRec != null) {
-                        System.out.println("Original record: " + oldRec.get("date") + " "
-                                + oldRec.get("checkIn") + "-" + oldRec.get("checkOut"));
-                    }
-                }
-
-                Map<String, List<AttendanceLogDto>> validationResult = dao.validateAppealLogs(editedLogs, originalRecords);
-                List<AttendanceLogDto> invalidLogs = validationResult.get("invalid");
-
-                if (!invalidLogs.isEmpty()) {
+                if (date == null || date.trim().isEmpty()) {
                     hasValidationErrors = true;
-                    for (AttendanceLogDto invalidLog : invalidLogs) {
-                        if (invalidLog.getError() != null) {
-                            System.out.println("Validation error: " + invalidLog.getError());
-                            validationErrors.append(invalidLog.getError()).append(" ");
+                    validationErrors.append("Date is required for all new records. ");
+                    continue;
+                }
+
+                if (checkIn == null || checkIn.trim().isEmpty()) {
+                    hasValidationErrors = true;
+                    validationErrors.append("Check-in time is required for all new records. ");
+                    continue;
+                }
+
+                if (checkOut == null || checkOut.trim().isEmpty()) {
+                    hasValidationErrors = true;
+                    validationErrors.append("Check-out time is required for all new records. ");
+                    continue;
+                }
+
+                // Create DTO for conflict checking
+                try {
+                    AttendanceLogDto dto = new AttendanceLogDto();
+                    dto.setUserId(userId);
+                    dto.setDate(LocalDate.parse(date));
+                    dto.setCheckIn(LocalTime.parse(checkIn));
+                    dto.setCheckOut(LocalTime.parse(checkOut));
+                    String calculatedStatus = AttendanceService.calculateAttendanceStatus(dto);
+                    dto.setStatus(calculatedStatus);
+                    dto.setSource("appeal");
+                    newLogs.add(dto);
+                } catch (Exception e) {
+                    hasValidationErrors = true;
+                    validationErrors.append("Invalid date/time format in new records. ");
+                }
+            }
+
+            // Check for conflicts using appeal-specific validation method
+            if (!hasValidationErrors && (!editedLogs.isEmpty() || !newLogs.isEmpty())) {
+                // Validate edited records against existing records (excluding original records being edited)
+                if (!editedLogs.isEmpty()) {
+                    List<Map<String, Map<String, String>>> originalRecords = recordsList;
+
+                    System.out.println("=== APPEAL VALIDATION DEBUG (EDITED RECORDS) ===");
+                    System.out.println("Edited logs count: " + editedLogs.size());
+                    System.out.println("Original records count: " + originalRecords.size());
+                    for (AttendanceLogDto editedLog : editedLogs) {
+                        System.out.println("Edited log: " + editedLog.getDate() + " "
+                                + editedLog.getCheckIn() + "-" + editedLog.getCheckOut());
+                    }
+                    for (Map<String, Map<String, String>> originalRecord : originalRecords) {
+                        Map<String, String> oldRec = originalRecord.get("oldRecord");
+                        if (oldRec != null) {
+                            System.out.println("Original record: " + oldRec.get("date") + " "
+                                    + oldRec.get("checkIn") + "-" + oldRec.get("checkOut"));
                         }
                     }
-                } else {
-                    System.out.println("All edited logs are valid!");
+
+                    Map<String, List<AttendanceLogDto>> validationResult = dao.validateAppealLogs(editedLogs, originalRecords);
+                    List<AttendanceLogDto> invalidLogs = validationResult.get("invalid");
+
+                    if (!invalidLogs.isEmpty()) {
+                        hasValidationErrors = true;
+                        for (AttendanceLogDto invalidLog : invalidLogs) {
+                            if (invalidLog.getError() != null) {
+                                System.out.println("Validation error: " + invalidLog.getError());
+                                validationErrors.append(invalidLog.getError()).append(" ");
+                            }
+                        }
+                    } else {
+                        System.out.println("All edited logs are valid!");
+                    }
+                    System.out.println("=== END APPEAL VALIDATION DEBUG (EDITED RECORDS) ===");
                 }
-                System.out.println("=== END APPEAL VALIDATION DEBUG ===");
+
+                // Validate new records against existing records (no exclusions needed)
+                if (!newLogs.isEmpty()) {
+                    System.out.println("=== APPEAL VALIDATION DEBUG (NEW RECORDS) ===");
+                    System.out.println("New logs count: " + newLogs.size());
+                    for (AttendanceLogDto newLog : newLogs) {
+                        System.out.println("New log: " + newLog.getDate() + " "
+                                + newLog.getCheckIn() + "-" + newLog.getCheckOut());
+                    }
+
+                    // For new records, use manual validation (no original records to exclude)
+                    Map<String, List<AttendanceLogDto>> validationResult = dao.validateManualLogs(newLogs);
+                    List<AttendanceLogDto> invalidLogs = validationResult.get("invalid");
+
+                    if (!invalidLogs.isEmpty()) {
+                        hasValidationErrors = true;
+                        for (AttendanceLogDto invalidLog : invalidLogs) {
+                            if (invalidLog.getError() != null) {
+                                System.out.println("Validation error: " + invalidLog.getError());
+                                validationErrors.append(invalidLog.getError()).append(" ");
+                            }
+                        }
+                    } else {
+                        System.out.println("All new logs are valid!");
+                    }
+                    System.out.println("=== END APPEAL VALIDATION DEBUG (NEW RECORDS) ===");
+                }
             }
 
             // If validation fails, preserve form data and show error
@@ -308,12 +383,14 @@ public class AppealRequestServlet extends HttpServlet {
                             dto.setPeriod(oldRec.get("period"));
                             preservedRecords.add(dto);
                         } catch (Exception e) {
-                            // Skip invalid records
                         }
                     }
                 }
 
                 req.setAttribute("records", preservedRecords);
+                
+                // Preserve new records data for form redisplay
+                req.setAttribute("preservedNewRecords", newRecordsList);
                 req.setAttribute("message", "Validation Error: " + validationErrors.toString().trim());
 
                 // Get required data for form display
@@ -351,9 +428,11 @@ public class AppealRequestServlet extends HttpServlet {
 
             // Extract attendance dates from records
             List<String> attendanceDates = new ArrayList<>();
+            boolean hasContent = false;
+
+            // Add edited records section (keep only "records" for backward compatibility)
             if (!recordsList.isEmpty()) {
-                // Add records section for backward compatibility
-                detailJsonBuilder.append("\"records\":[");
+                detailJsonBuilder.append("\"Edit records\":[");
                 for (int i = 0; i < recordsList.size(); i++) {
                     Map<String, Map<String, String>> pair = recordsList.get(i);
                     detailJsonBuilder.append("{");
@@ -371,17 +450,49 @@ public class AppealRequestServlet extends HttpServlet {
                     }
                     detailJsonBuilder.append("},");
 
-                    // newRecord
+                    // newRecord with calculated status
                     detailJsonBuilder.append("\"newRecord\":{");
                     Map<String, String> newRec = pair.get("newRecord");
+                    
+                    // Calculate status for the new record
+                    String calculatedStatus = "";
+                    try {
+                        AttendanceLogDto tempDto = new AttendanceLogDto();
+                        tempDto.setUserId(userId);
+                        tempDto.setDate(LocalDate.parse(newRec.get("date")));
+                        tempDto.setCheckIn(LocalTime.parse(newRec.get("checkIn")));
+                        tempDto.setCheckOut(LocalTime.parse(newRec.get("checkOut")));
+                        calculatedStatus = AttendanceService.calculateAttendanceStatus(tempDto);
+                    } catch (Exception e) {
+                        calculatedStatus = "Invalid";
+                        System.out.println("Error calculating status for edited record: " + e.getMessage());
+                    }
+                    
                     j = 0;
                     for (Map.Entry<String, String> entry : newRec.entrySet()) {
-                        detailJsonBuilder.append("\"").append(entry.getKey()).append("\":\"")
-                                .append(entry.getValue()).append("\"");
+                        String key = entry.getKey();
+                        String value = entry.getValue();
+                        
+                        // Override status with calculated value
+                        if ("status".equals(key)) {
+                            value = calculatedStatus;
+                        }
+                        
+                        detailJsonBuilder.append("\"").append(key).append("\":\"")
+                                .append(value).append("\"");
                         if (j++ < newRec.size() - 1) {
                             detailJsonBuilder.append(",");
                         }
                     }
+                    
+                    // Add status if it wasn't in the original map
+                    if (!newRec.containsKey("status")) {
+                        if (j > 0) {
+                            detailJsonBuilder.append(",");
+                        }
+                        detailJsonBuilder.append("\"status\":\"").append(calculatedStatus).append("\"");
+                    }
+                    
                     detailJsonBuilder.append("}");
 
                     detailJsonBuilder.append("}");
@@ -394,10 +505,67 @@ public class AppealRequestServlet extends HttpServlet {
                         attendanceDates.add(oldRec.get("date"));
                     }
                 }
-                detailJsonBuilder.append("],");
+                detailJsonBuilder.append("]");
+                hasContent = true;
+            }
 
-                // Add attendanceDates array for AppealRequestDetail compatibility
-                detailJsonBuilder.append("\"attendanceDates\":[");
+            // Add new records section
+            if (!newRecordsList.isEmpty()) {
+                if (hasContent) {
+                    detailJsonBuilder.append(",");
+                }
+                detailJsonBuilder.append("\"newRecords\":[");
+                for (int i = 0; i < newRecordsList.size(); i++) {
+                    Map<String, String> newRec = newRecordsList.get(i);
+                    detailJsonBuilder.append("{");
+                    
+                    // Calculate status for the new record
+                    String calculatedStatus = "";
+                    try {
+                        AttendanceLogDto tempDto = new AttendanceLogDto();
+                        tempDto.setUserId(userId);
+                        tempDto.setDate(LocalDate.parse(newRec.get("date")));
+                        tempDto.setCheckIn(LocalTime.parse(newRec.get("checkIn")));
+                        tempDto.setCheckOut(LocalTime.parse(newRec.get("checkOut")));
+                        calculatedStatus = AttendanceService.calculateAttendanceStatus(tempDto);
+                    } catch (Exception e) {
+                        calculatedStatus = "Invalid";
+                        System.out.println("Error calculating status for new record: " + e.getMessage());
+                    }
+                    
+                    int j = 0;
+                    for (Map.Entry<String, String> entry : newRec.entrySet()) {
+                        detailJsonBuilder.append("\"").append(entry.getKey()).append("\":\"")
+                                .append(entry.getValue()).append("\"");
+                        if (j++ < newRec.size() - 1) {
+                            detailJsonBuilder.append(",");
+                        }
+                    }
+                    
+                    // Add calculated status
+                    if (j > 0) {
+                        detailJsonBuilder.append(",");
+                    }
+                    detailJsonBuilder.append("\"status\":\"").append(calculatedStatus).append("\"");
+                    
+                    detailJsonBuilder.append("}");
+                    
+                    if (i < newRecordsList.size() - 1) {
+                        detailJsonBuilder.append(",");
+                    }
+
+                    // Extract date for attendanceDates array
+                    if (newRec.containsKey("date") && !attendanceDates.contains(newRec.get("date"))) {
+                        attendanceDates.add(newRec.get("date"));
+                    }
+                }
+                detailJsonBuilder.append("]");
+                hasContent = true;
+            }
+
+            // Add attendanceDates array for AppealRequestDetail compatibility
+            if (hasContent && !attendanceDates.isEmpty()) {
+                detailJsonBuilder.append(",\"attendanceDates\":[");
                 for (int i = 0; i < attendanceDates.size(); i++) {
                     detailJsonBuilder.append("\"").append(attendanceDates.get(i)).append("\"");
                     if (i < attendanceDates.size() - 1) {
@@ -407,14 +575,13 @@ public class AppealRequestServlet extends HttpServlet {
                 detailJsonBuilder.append("]");
             }
 
-            // Add reason field (maps to detail_text)
+            // Add detail_text field (remove reason field as it's redundant with title and detail)
             if (detailText != null && !detailText.isEmpty()) {
-                if (!recordsList.isEmpty()) {
+                if (hasContent) {
                     detailJsonBuilder.append(",");
                 }
-                detailJsonBuilder.append("\"reason\":\"").append(escapeJson(detailText)).append("\"");
-                // Keep detail_text for backward compatibility
-                detailJsonBuilder.append(",\"detail_text\":\"").append(escapeJson(detailText)).append("\"");
+                detailJsonBuilder.append("\"detail_text\":\"").append(escapeJson(detailText)).append("\"");
+                hasContent = true;
             }
 
             detailJsonBuilder.append("}");
@@ -597,7 +764,6 @@ public class AppealRequestServlet extends HttpServlet {
 
             req.setAttribute("attendanceList", attendanceList);
 
-            // --- Forward tới form ---
             req.getRequestDispatcher("/WEB-INF/views/requests/appeal-form.jsp").forward(req, resp);
 
         } catch (SQLException ex) {

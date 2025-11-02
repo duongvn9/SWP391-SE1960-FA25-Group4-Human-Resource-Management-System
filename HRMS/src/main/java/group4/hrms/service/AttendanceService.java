@@ -15,13 +15,16 @@ import java.nio.file.Path;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -271,19 +274,19 @@ public class AttendanceService {
         if (userId == null) {
             throw new IllegalArgumentException("UserId cannot be null");
         }
+
         Map<String, Object> summary = new HashMap<>();
 
         AttendanceLogDao attendanceDao = new AttendanceLogDao();
         RequestDao requestDao = new RequestDao();
 
-        // Lấy tất cả attendance records trong khoảng thời gian
+        // ===== 1. Lấy danh sách chấm công =====
         List<AttendanceLogDto> attendanceList = attendanceDao.findByFilter(
                 userId, null, null, startDate, endDate, null, null, null,
                 Integer.MAX_VALUE, 0, false
         );
 
-        // Khởi tạo các biến đếm
-        int totalWorkingDays = 0;
+        // ===== 2. Khởi tạo biến thống kê =====
         int daysOnTime = 0;
         int daysLate = 0;
         int daysEarlyLeaving = 0;
@@ -292,13 +295,7 @@ public class AttendanceService {
         double totalHoursWorked = 0.0;
         double overtimeHours = 0.0;
 
-        // Tạo map để tra cứu attendance theo ngày
-        Map<LocalDate, AttendanceLogDto> attendanceMap = new HashMap<>();
-        for (AttendanceLogDto record : attendanceList) {
-            attendanceMap.put(record.getDate(), record);
-        }
-
-        // Lấy danh sách approved leave requests trong khoảng thời gian
+        // ===== 3. Lấy đơn nghỉ phép & OT đã duyệt =====
         List<Request> approvedLeaveRequests = requestDao.findByUserIdAndDateRange(
                 userId,
                 startDate.atStartOfDay(),
@@ -307,114 +304,140 @@ public class AttendanceService {
                 null
         );
 
-        // Lấy danh sách approved OT requests trong khoảng thời gian
         List<Request> approvedOTRequests = requestDao.findOTRequestsByUserIdAndDateRange(
                 userId,
                 startDate.atStartOfDay(),
                 endDate.atTime(23, 59, 59)
         );
 
-        // Tạo set các ngày có leave được duyệt
+        // ===== 4. Map ngày có phép =====
         Map<LocalDate, Boolean> leaveDates = new HashMap<>();
         for (Request leaveRequest : approvedLeaveRequests) {
             try {
-                // Parse JSON để lấy startDate và endDate
-                String detailJson = leaveRequest.getDetailJson();
-                if (detailJson != null && leaveRequest.getLeaveDetail() != null) {
+                if (leaveRequest.getLeaveDetail() != null) {
                     LocalDate leaveStart = LocalDate.parse(leaveRequest.getLeaveDetail().getStartDate());
                     LocalDate leaveEnd = LocalDate.parse(leaveRequest.getLeaveDetail().getEndDate());
-
-                    // Đánh dấu tất cả ngày trong khoảng leave
-                    LocalDate current = leaveStart;
-                    while (!current.isAfter(leaveEnd)) {
-                        if (!current.isBefore(startDate) && !current.isAfter(endDate)) {
-                            leaveDates.put(current, true);
+                    LocalDate date = leaveStart;
+                    while (!date.isAfter(leaveEnd)) {
+                        if (!date.isBefore(startDate) && !date.isAfter(endDate)) {
+                            leaveDates.put(date, true);
                         }
-                        current = current.plusDays(1);
+                        date = date.plusDays(1);
                     }
                 }
             } catch (Exception e) {
-                // Ignore parsing errors
+                // Ignore parse errors
             }
         }
 
-        // Tạo set các ngày có OT được duyệt
+        // ===== 5. Map ngày có OT =====
         Map<LocalDate, Boolean> otDates = new HashMap<>();
         for (Request otRequest : approvedOTRequests) {
             try {
-                if (otRequest.getDetailJson() != null && otRequest.getOtDetail() != null) {
+                if (otRequest.getOtDetail() != null) {
                     LocalDate otDate = LocalDate.parse(otRequest.getOtDetail().getOtDate());
                     if (!otDate.isBefore(startDate) && !otDate.isAfter(endDate)) {
                         otDates.put(otDate, true);
                     }
                 }
             } catch (Exception e) {
-                // Ignore parsing errors
+                // Ignore parse errors
             }
         }
 
-        // Chỉ tính toán dựa trên attendance records thực tế có
-        for (AttendanceLogDto record : attendanceList) {
-            totalWorkingDays++;
+        // ===== 6. Lọc bỏ các bản ghi chỉ có in hoặc chỉ có out =====
+        List<AttendanceLogDto> validAttendanceList = attendanceList.stream()
+                .filter(r -> r != null && r.getDate() != null && r.getCheckIn() != null && r.getCheckOut() != null)
+                .collect(Collectors.toList());
 
-            // Tính số giờ làm việc
-            if (record.getCheckIn() != null && record.getCheckOut() != null) {
-                long minutes = ChronoUnit.MINUTES.between(record.getCheckIn(), record.getCheckOut());
-                double hours = minutes / 60.0;
+        // ===== 7. Tính số ngày có bản ghi hợp lệ =====
+        int totalWorkingDays = 0;
+        if (!validAttendanceList.isEmpty()) {
+            Set<LocalDate> recordedDates = validAttendanceList.stream()
+                    .map(AttendanceLogDto::getDate)
+                    .collect(Collectors.toSet());
+            totalWorkingDays = recordedDates.size();
+        }
 
-                // Trừ giờ nghỉ trưa (1 tiếng)
-                if (hours > 4) { // Chỉ trừ nếu làm việc hơn 4 tiếng
-                    hours -= 1.0;
-                }
+        // ===== 8. Gom nhóm bản ghi theo ngày =====
+        Map<LocalDate, List<AttendanceLogDto>> groupedByDate = validAttendanceList.stream()
+                .collect(Collectors.groupingBy(AttendanceLogDto::getDate));
 
-                totalHoursWorked += Math.max(0, hours);
+        Set<LocalDate> attendedDates = new HashSet<>();
 
-                // Tính overtime nếu có OT được duyệt
-                if (otDates.containsKey(record.getDate())) {
-                    // Giờ làm việc chuẩn là 8 tiếng
-                    double standardHours = 8.0;
-                    if (hours > standardHours) {
-                        overtimeHours += (hours - standardHours);
-                    }
+        // ===== 9. Tính toán theo ngày =====
+        for (Map.Entry<LocalDate, List<AttendanceLogDto>> entry : groupedByDate.entrySet()) {
+            LocalDate date = entry.getKey();
+            List<AttendanceLogDto> logsOfDay = entry.getValue();
+            attendedDates.add(date);
+
+            // --- Tổng thời gian ngày ---
+            long totalMinutesOfDay = 0;
+            for (AttendanceLogDto log : logsOfDay) {
+                long minutes = ChronoUnit.MINUTES.between(log.getCheckIn(), log.getCheckOut());
+                if (minutes > 0) {
+                    totalMinutesOfDay += minutes;
                 }
             }
 
-            // Tính lại status để đảm bảo chính xác
-            String originalStatus = record.getStatus();
-            String calculatedStatus = calculateAttendanceStatus(record);
+            double dailyHours = totalMinutesOfDay / 60.0;
 
-            // Debug log để kiểm tra
-            System.out.println("DEBUG Summary - Date: " + record.getDate()
-                    + ", CheckIn: " + record.getCheckIn()
-                    + ", CheckOut: " + record.getCheckOut()
-                    + ", Original Status: " + originalStatus
-                    + ", Calculated Status: " + calculatedStatus);
+            // Nếu chỉ có 1 ca > 4h => trừ 1h nghỉ trưa
+            if (logsOfDay.size() == 1 && dailyHours > 4.0) {
+                dailyHours -= 1.0;
+            }
 
-            // Phân loại theo status đã tính lại
-            if (calculatedStatus != null) {
-                switch (calculatedStatus) {
-                    case "On Time" ->
-                        daysOnTime++;
+            if (dailyHours < 0) {
+                dailyHours = 0;
+            }
+
+            totalHoursWorked += dailyHours;
+
+            // --- Tính OT ---
+            if (otDates.containsKey(date)) {
+                double standardHours = 8.0;
+                if (dailyHours > standardHours) {
+                    overtimeHours += (dailyHours - standardHours);
+                }
+            }
+
+            // --- Xác định status ngày ---
+            boolean lateFlag = false;
+            boolean earlyFlag = false;
+
+            for (AttendanceLogDto log : logsOfDay) {
+                String s = calculateAttendanceStatus(log);
+                if (s == null) {
+                    continue;
+                }
+
+                switch (s) {
                     case "Late" ->
-                        daysLate++;
+                        lateFlag = true;
                     case "Early Leave" ->
-                        daysEarlyLeaving++;
-                    case "Late & Early Leave" ->
-                        daysLateAndEarlyLeaving++;
-                    case "Over Time" ->
-                        daysOnTime++; // OT vẫn tính là on time
-                    default -> {
-                        // Invalid hoặc status khác không tính vào
-                        System.out.println("DEBUG Summary - Unhandled status: " + calculatedStatus);
+                        earlyFlag = true;
+                    case "Late & Early Leave" -> {
+                        lateFlag = true;
+                        earlyFlag = true;
                     }
                 }
             }
+
+            if (lateFlag && earlyFlag) {
+                daysLateAndEarlyLeaving++;
+            } else if (lateFlag) {
+                daysLate++;
+            } else if (earlyFlag) {
+                daysEarlyLeaving++;
+            } else {
+                daysOnTime++;
+            }
         }
 
-        // Days absent = 0 (không tự động tính absent)
-        daysAbsent = 0;
+        // ===== 10. Tính ngày vắng =====
+        daysAbsent = Math.max(0, totalWorkingDays - attendedDates.size());
 
-        // Đưa kết quả vào map (bỏ averageWorkingHours và workdayRatio)
+        // ===== 11. Tổng hợp kết quả =====
         summary.put("totalWorkingDays", totalWorkingDays);
         summary.put("daysOnTime", daysOnTime);
         summary.put("daysLate", daysLate);

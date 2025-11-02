@@ -109,7 +109,7 @@
                             CSV</button>
                         <button type="button" id="exportPDFBtn" class="btn btn-export btn-pdf">Export
                             PDF</button>
-                        <c:if test="${showSummaryButton}">
+                            <c:if test="${showSummaryButton}">
                             <button type="button" id="viewSummaryBtn" class="btn btn-summary">View Summary</button>
                         </c:if>
                     </div>
@@ -266,16 +266,8 @@
                         <span id="daysLateAndEarlyLeaving">0</span>
                     </div>
                     <div class="summary-item">
-                        <label>Days Absent:</label>
-                        <span id="daysAbsent">0</span>
-                    </div>
-                    <div class="summary-item">
                         <label>Total Hours Worked:</label>
                         <span id="totalHoursWorked">0</span>
-                    </div>
-                    <div class="summary-item">
-                        <label>Overtime Hours:</label>
-                        <span id="overtimeHours">0</span>
                     </div>
                 </div>
             </div>

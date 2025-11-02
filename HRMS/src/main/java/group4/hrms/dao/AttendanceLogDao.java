@@ -956,58 +956,91 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                         existingPairs.add(Pair.of(in, out));
                     }
 
-                    // Kiểm tra trùng với các cặp
+                    // Kiểm tra conflict với existing pairs
                     for (Pair<LocalDateTime, LocalDateTime> pair : existingPairs) {
                         LocalDateTime existIn = pair.getLeft();
                         LocalDateTime existOut = pair.getRight();
 
                         boolean overlap = false;
+                        
                         if (newCheckIn != null && newCheckOut != null) {
+                            // Cả check-in và check-out: kiểm tra overlap khoảng thời gian
                             overlap = newCheckIn.isBefore(existOut) && newCheckOut.isAfter(existIn);
                         } else if (newCheckIn != null) {
-                            overlap = !newCheckIn.isBefore(existIn) && !newCheckIn.isAfter(existOut);
+                            // Chỉ có check-in: kiểm tra xem có bản ghi nào nằm sau check-in này không
+                            // Conflict nếu: newCheckIn < existOut (có bản ghi kết thúc sau check-in mới)
+                            overlap = newCheckIn.isBefore(existOut);
                         } else if (newCheckOut != null) {
-                            overlap = !newCheckOut.isBefore(existIn) && !newCheckOut.isAfter(existOut);
+                            // Chỉ có check-out: kiểm tra xem có bản ghi nào nằm trước check-out này không  
+                            // Conflict nếu: newCheckOut > existIn (có bản ghi bắt đầu trước check-out mới)
+                            overlap = newCheckOut.isAfter(existIn);
                         }
 
                         if (overlap) {
                             log.setOldCheckIn(existIn.toLocalTime());
                             log.setOldCheckOut(existOut.toLocalTime());
-                            errorMessage = String.format("Attendance overlaps with existing record (%s - %s)", 
-                                existIn.toLocalTime().toString(), existOut.toLocalTime().toString());
+                            if (newCheckIn != null && newCheckOut != null) {
+                                errorMessage = String.format("Attendance overlaps with existing record (%s - %s)", 
+                                    existIn.toLocalTime().toString(), existOut.toLocalTime().toString());
+                            } else if (newCheckIn != null) {
+                                errorMessage = String.format("Check-in conflicts with existing record starting at %s", 
+                                    existIn.toLocalTime().toString());
+                            } else {
+                                errorMessage = String.format("Check-out conflicts with existing record ending at %s", 
+                                    existOut.toLocalTime().toString());
+                            }
                             log.setError(errorMessage);
                             hasConflict = true;
-                            System.out.println("Invalid because overlap: " + log.getEmployeeName()
-                                    + ", newCheckIn=" + newCheckIn + ", newCheckOut=" + newCheckOut
-                                    + ", existIn=" + existIn + ", existOut=" + existOut);
                             break;
                         }
                     }
 
-                    // Kiểm tra các check-in/check-out dư thừa (không ghép được)
+                    // Kiểm tra conflict với unpaired records
                     if (!hasConflict) {
+                        // Kiểm tra với unpaired check-ins
                         for (LocalDateTime extraIn : remainingIns) {
-                            if (newCheckIn != null && !newCheckIn.isBefore(extraIn) && !newCheckIn.isAfter(extraIn.plusHours(8))) {
-                                errorMessage = String.format("Check-in conflicts with existing unpaired check-in at %s", 
-                                    extraIn.toLocalTime().toString());
-                                log.setError(errorMessage);
-                                hasConflict = true;
-                                System.out.println("Invalid because extra IN: " + log.getEmployeeName()
-                                        + ", newCheckIn=" + newCheckIn + ", extraIn=" + extraIn);
-                                break;
+                            if (newCheckIn != null) {
+                                // Chỉ có check-in: conflict nếu có unpaired check-in sau nó
+                                if (newCheckIn.isBefore(extraIn)) {
+                                    errorMessage = String.format("Check-in conflicts with existing unpaired check-in at %s", 
+                                        extraIn.toLocalTime().toString());
+                                    log.setError(errorMessage);
+                                    hasConflict = true;
+                                    break;
+                                }
+                            } else if (newCheckOut != null) {
+                                // Chỉ có check-out: conflict nếu có unpaired check-in trước nó
+                                if (newCheckOut.isAfter(extraIn)) {
+                                    errorMessage = String.format("Check-out conflicts with existing unpaired check-in at %s", 
+                                        extraIn.toLocalTime().toString());
+                                    log.setError(errorMessage);
+                                    hasConflict = true;
+                                    break;
+                                }
                             }
                         }
 
+                        // Kiểm tra với unpaired check-outs
                         if (!hasConflict) {
                             for (LocalDateTime extraOut : remainingOuts) {
-                                if (newCheckOut != null && !newCheckOut.isBefore(extraOut.minusHours(8)) && !newCheckOut.isAfter(extraOut)) {
-                                    errorMessage = String.format("Check-out conflicts with existing unpaired check-out at %s", 
-                                        extraOut.toLocalTime().toString());
-                                    log.setError(errorMessage);
-                                    hasConflict = true;
-                                    System.out.println("Invalid because extra OUT: " + log.getEmployeeName()
-                                            + ", newCheckOut=" + newCheckOut + ", extraOut=" + extraOut);
-                                    break;
+                                if (newCheckIn != null) {
+                                    // Chỉ có check-in: conflict nếu có unpaired check-out sau nó
+                                    if (newCheckIn.isBefore(extraOut)) {
+                                        errorMessage = String.format("Check-in conflicts with existing unpaired check-out at %s", 
+                                            extraOut.toLocalTime().toString());
+                                        log.setError(errorMessage);
+                                        hasConflict = true;
+                                        break;
+                                    }
+                                } else if (newCheckOut != null) {
+                                    // Chỉ có check-out: conflict nếu có unpaired check-out trước nó
+                                    if (newCheckOut.isAfter(extraOut)) {
+                                        errorMessage = String.format("Check-out conflicts with existing unpaired check-out at %s", 
+                                            extraOut.toLocalTime().toString());
+                                        log.setError(errorMessage);
+                                        hasConflict = true;
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -1452,27 +1485,80 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                 }
 
                 // -----------------------------
-                // Kiểm tra trùng
+                // Kiểm tra conflict với existing pairs
                 // -----------------------------
                 for (Pair<LocalDateTime, LocalDateTime> pair : existingPairs) {
                     LocalDateTime existIn = pair.getLeft();
                     LocalDateTime existOut = pair.getRight();
 
                     boolean overlap = false;
+                    
                     if (newCheckIn != null && newCheckOut != null) {
+                        // Cả check-in và check-out: kiểm tra overlap khoảng thời gian
                         overlap = newCheckIn.isBefore(existOut) && newCheckOut.isAfter(existIn);
                     } else if (newCheckIn != null) {
-                        overlap = !newCheckIn.isBefore(existIn) && !newCheckIn.isAfter(existOut);
+                        // Chỉ có check-in: kiểm tra xem có bản ghi nào nằm sau check-in này không
+                        overlap = newCheckIn.isBefore(existOut);
                     } else if (newCheckOut != null) {
-                        overlap = !newCheckOut.isBefore(existIn) && !newCheckOut.isAfter(existOut);
+                        // Chỉ có check-out: kiểm tra xem có bản ghi nào nằm trước check-out này không
+                        overlap = newCheckOut.isAfter(existIn);
                     }
 
                     if (overlap) {
                         log.setOldCheckIn(existIn.toLocalTime());
                         log.setOldCheckOut(existOut.toLocalTime());
-                        log.setError("Invalid: duplicate or overlapping attendance");
+                        if (newCheckIn != null && newCheckOut != null) {
+                            log.setError("Invalid: duplicate or overlapping attendance");
+                        } else if (newCheckIn != null) {
+                            log.setError("Invalid: check-in conflicts with existing record");
+                        } else {
+                            log.setError("Invalid: check-out conflicts with existing record");
+                        }
                         hasConflict = true;
                         break;
+                    }
+                }
+                
+                // Kiểm tra conflict với unpaired records
+                if (!hasConflict) {
+                    // Kiểm tra với unpaired check-ins
+                    for (LocalDateTime extraIn : remainingIns) {
+                        if (newCheckIn != null) {
+                            // Chỉ có check-in: conflict nếu có unpaired check-in sau nó
+                            if (newCheckIn.isBefore(extraIn)) {
+                                log.setError("Invalid: check-in conflicts with existing unpaired check-in");
+                                hasConflict = true;
+                                break;
+                            }
+                        } else if (newCheckOut != null) {
+                            // Chỉ có check-out: conflict nếu có unpaired check-in trước nó
+                            if (newCheckOut.isAfter(extraIn)) {
+                                log.setError("Invalid: check-out conflicts with existing unpaired check-in");
+                                hasConflict = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // Kiểm tra với unpaired check-outs
+                    if (!hasConflict) {
+                        for (LocalDateTime extraOut : remainingOuts) {
+                            if (newCheckIn != null) {
+                                // Chỉ có check-in: conflict nếu có unpaired check-out sau nó
+                                if (newCheckIn.isBefore(extraOut)) {
+                                    log.setError("Invalid: check-in conflicts with existing unpaired check-out");
+                                    hasConflict = true;
+                                    break;
+                                }
+                            } else if (newCheckOut != null) {
+                                // Chỉ có check-out: conflict nếu có unpaired check-out trước nó
+                                if (newCheckOut.isAfter(extraOut)) {
+                                    log.setError("Invalid: check-out conflicts with existing unpaired check-out");
+                                    hasConflict = true;
+                                    break;
+                                }
+                            }
+                        }
                     }
                 }
 
