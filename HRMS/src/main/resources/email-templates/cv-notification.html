@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ứng viên mới nộp CV - HRMS</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+        }
+
+        .header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .content {
+            padding: 30px;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .info-box {
+            background-color: #f9f9f9;
+            border-left: 3px solid #007bff;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .info-row {
+            margin: 8px 0;
+        }
+
+        .label {
+            font-weight: bold;
+            color: #555;
+        }
+
+        .action-button {
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+
+        .footer {
+            background-color: #f9f9f9;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h2 style="margin: 0;">🎯 ỨNG VIÊN MỚI NỘP CV</h2>
+            <p style="margin: 5px 0 0 0;">Thông báo nội bộ HRMS</p>
+        </div>
+
+        <div class="content">
+            <p><strong>Có ứng viên mới nộp CV cần xem xét</strong></p>
+
+            <div class="info-box">
+                <div class="info-row">
+                    <span class="label">Mã hồ sơ:</span> {{applicationId}}
+                </div>
+                <div class="info-row">
+                    <span class="label">Họ tên ứng viên:</span> {{applicantName}}
+                </div>
+                <div class="info-row">
+                    <span class="label">Email:</span> <a href="mailto:{{applicantEmail}}">{{applicantEmail}}</a>
+                </div>
+                <div class="info-row">
+                    <span class="label">Số điện thoại:</span> {{applicantPhone}}
+                </div>
+                <div class="info-row">
+                    <span class="label">Vị trí ứng tuyển:</span> {{jobPosition}}
+                </div>
+                <div class="info-row">
+                    <span class="label">Mã công việc:</span> {{jobId}}
+                </div>
+                <div class="info-row">
+                    <span class="label">Ngày nộp:</span> {{submittedDate}}
+                </div>
+            </div>
+
+            <p><strong>Hành động cần thực hiện:</strong></p>
+            <ul>
+                <li>Xem xét hồ sơ ứng viên trong vòng 7-10 ngày làm việc</li>
+                <li>Liên hệ ứng viên nếu hồ sơ phù hợp</li>
+                <li>Cập nhật trạng thái hồ sơ trong hệ thống</li>
+            </ul>
+
+            <p><strong>Lưu ý:</strong> Email xác nhận đã được gửi tự động cho ứng viên.</p>
+        </div>
+
+        <div class="footer">
+            <p><strong>HRMS Internal Notification</strong></p>
+            <p>Email tự động từ hệ thống HRMS</p>
+        </div>
+    </div>
+</body>
+
+</html>

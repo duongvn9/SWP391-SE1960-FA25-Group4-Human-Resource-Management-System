@@ -97,10 +97,10 @@ public class JobPostingCreateServlet extends HttpServlet {
             request.setAttribute("positions", java.util.Collections.emptyList());
         }
 
-        // CSRF token for form
-        String csrfToken = SecurityUtil.generateCsrfToken(request.getSession());
+        // CSRF token for form - get existing or create new one
+        String csrfToken = SecurityUtil.getCsrfToken(request.getSession());
         request.setAttribute("csrfToken", csrfToken);
-        logger.info("Generated CSRF token for form: {}", csrfToken);
+        logger.info("Set CSRF token for form: {}", csrfToken);
 
         // If requestId is provided, load recruitment request and prefill fields
         String requestIdStr = request.getParameter("requestId");

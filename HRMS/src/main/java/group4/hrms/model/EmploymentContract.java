@@ -19,16 +19,21 @@ public class EmploymentContract {
     private LocalDate endDate;         // ngày kết thúc (nullable for indefinite)
     private BigDecimal baseSalary;     // lương cơ bản
     private String currency;           // VND, USD, etc.
-    private String status;             // active, expired, terminated
+    private String status;             // Contract lifecycle: active, expired, terminated
+    private String approvalStatus;     // Approval workflow: pending, approved, rejected
     private String filePath;           // file hợp đồng đã ký
     private String note;               // ghi chú
     private Long createdByAccountId;   // ai tạo hợp đồng
+    private Long approvedByAccountId;  // ai approve hợp đồng (HRM)
+    private LocalDateTime approvedAt;  // thời gian approve
+    private String rejectedReason;     // lý do reject
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
     // Constructors
     public EmploymentContract() {
-        this.status = "active";
+        this.status = "draft";  // Default contract status (draft until approved)
+        this.approvalStatus = "pending";  // Default to pending for approval workflow
         this.currency = "VND";
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
@@ -140,6 +145,38 @@ public class EmploymentContract {
         this.createdByAccountId = createdByAccountId;
     }
     
+    public Long getApprovedByAccountId() {
+        return approvedByAccountId;
+    }
+    
+    public void setApprovedByAccountId(Long approvedByAccountId) {
+        this.approvedByAccountId = approvedByAccountId;
+    }
+    
+    public LocalDateTime getApprovedAt() {
+        return approvedAt;
+    }
+    
+    public void setApprovedAt(LocalDateTime approvedAt) {
+        this.approvedAt = approvedAt;
+    }
+    
+    public String getApprovalStatus() {
+        return approvalStatus;
+    }
+    
+    public void setApprovalStatus(String approvalStatus) {
+        this.approvalStatus = approvalStatus;
+    }
+    
+    public String getRejectedReason() {
+        return rejectedReason;
+    }
+    
+    public void setRejectedReason(String rejectedReason) {
+        this.rejectedReason = rejectedReason;
+    }
+    
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -157,6 +194,25 @@ public class EmploymentContract {
     }
     
     // Business methods
+    
+    // Approval status methods
+    public boolean isApprovalPending() {
+        return "pending".equalsIgnoreCase(this.approvalStatus);
+    }
+    
+    public boolean isApprovalApproved() {
+        return "approved".equalsIgnoreCase(this.approvalStatus);
+    }
+    
+    public boolean isApprovalRejected() {
+        return "rejected".equalsIgnoreCase(this.approvalStatus);
+    }
+    
+    // Contract status methods
+    public boolean isDraft() {
+        return "draft".equalsIgnoreCase(this.status);
+    }
+    
     public boolean isActive() {
         return "active".equalsIgnoreCase(this.status);
     }
@@ -164,6 +220,52 @@ public class EmploymentContract {
     public boolean isExpired() {
         return "expired".equalsIgnoreCase(this.status) || 
                (endDate != null && endDate.isBefore(LocalDate.now()));
+    }
+    
+    public boolean isTerminated() {
+        return "terminated".equalsIgnoreCase(this.status);
+    }
+    
+    /**
+     * Check if contract can be edited
+     * - PENDING approval: HR can edit before HRM approval
+     * - REJECTED approval: Only creator can edit to resubmit
+     */
+    public boolean canBeEdited() {
+        return isApprovalPending() || isApprovalRejected();
+    }
+    
+    /**
+     * Check if a specific account can edit this contract
+     */
+    public boolean canBeEditedBy(Long accountId) {
+        if (accountId == null) return false;
+        
+        if (isApprovalPending()) {
+            // PENDING: Any HR can edit
+            return true;
+        }
+        
+        if (isApprovalRejected()) {
+            // REJECTED: Only creator can edit
+            return accountId.equals(this.createdByAccountId);
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Check if contract can be approved (only PENDING approval_status)
+     */
+    public boolean canBeApproved() {
+        return isApprovalPending();
+    }
+    
+    /**
+     * Check if contract can be rejected (only PENDING approval_status)
+     */
+    public boolean canBeRejected() {
+        return isApprovalPending();
     }
     
     public boolean isIndefinite() {
@@ -190,6 +292,19 @@ public class EmploymentContract {
     public void expire() {
         this.status = "expired";
         this.updatedAt = LocalDateTime.now();
+    }
+    
+    /**
+     * Tự động cập nhật status sang expired nếu hợp đồng đã hết hạn
+     * và status hiện tại không phải là terminated
+     */
+    public void updateStatusIfExpired() {
+        if (endDate != null && 
+            !endDate.isAfter(LocalDate.now()) && 
+            !"terminated".equalsIgnoreCase(this.status) &&
+            !"expired".equalsIgnoreCase(this.status)) {
+            this.expire();
+        }
     }
     
     @Override

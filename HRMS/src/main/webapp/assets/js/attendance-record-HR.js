@@ -1,6 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
     const toggle = document.getElementById("switchInput");
-    const status = document.getElementById("sliderStatus");
     const exportForm = document.getElementById("exportForm");
     const exportTypeInput = document.getElementById("exportType");
     const editBtn = document.getElementById("editBtn");
@@ -90,7 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
-// submit update/delete row
+    // submit update/delete row
     window.submitAction = (btn, actionType) => {
         const rowForm = btn.closest("form.actionForm");
         if (!rowForm)
@@ -179,15 +178,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("editModal").style.display = "flex";
     };
 
-
     window.closeModal = () => {
         document.getElementById("editModal").style.display = "none";
-    };
-
-    window.submitEdit = () => {
-        const form = document.getElementById("editForm");
-        form.action = `${window.location.origin}/HRMS/attendance/record/HR`;
-        form.method = "POST";
-        form.submit();
     };
 });

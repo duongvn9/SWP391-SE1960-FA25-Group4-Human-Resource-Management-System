@@ -155,7 +155,9 @@ public class ImportAttendanceServlet extends HttpServlet {
                         dto.setDate(extractDate(obj, "date"));
                         dto.setCheckIn(extractTime(obj, "checkIn"));
                         dto.setCheckOut(extractTime(obj, "checkOut"));
-                        dto.setStatus(extractString(obj, "status"));
+                        // Tự động tính status thay vì đọc từ input
+                        String calculatedStatus = AttendanceService.calculateAttendanceStatus(dto);
+                        dto.setStatus(calculatedStatus);
 
                         manualLogs.add(dto);
                     }

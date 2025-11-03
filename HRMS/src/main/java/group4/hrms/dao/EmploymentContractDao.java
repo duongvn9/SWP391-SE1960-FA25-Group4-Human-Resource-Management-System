@@ -33,6 +33,7 @@ public class EmploymentContractDao extends BaseDao<EmploymentContract, Long> {
         contract.setBaseSalary(rs.getBigDecimal("base_salary"));
         contract.setCurrency(rs.getString("currency"));
         contract.setStatus(rs.getString("status"));
+        contract.setApprovalStatus(rs.getString("approval_status"));
         contract.setFilePath(rs.getString("file_path"));
         contract.setNote(rs.getString("note"));
         
@@ -41,6 +42,13 @@ public class EmploymentContractDao extends BaseDao<EmploymentContract, Long> {
             contract.setCreatedByAccountId(createdBy);
         }
         
+        Long approvedBy = rs.getLong("approved_by_account_id");
+        if (!rs.wasNull()) {
+            contract.setApprovedByAccountId(approvedBy);
+        }
+        
+        contract.setApprovedAt(getLocalDateTime(rs, "approved_at"));
+        contract.setRejectedReason(rs.getString("rejected_reason"));
         contract.setCreatedAt(getLocalDateTime(rs, "created_at"));
         contract.setUpdatedAt(getLocalDateTime(rs, "updated_at"));
         
@@ -60,15 +68,17 @@ public class EmploymentContractDao extends BaseDao<EmploymentContract, Long> {
     @Override
     protected String createInsertSql() {
         return "INSERT INTO employment_contracts (user_id, contract_no, contract_type, start_date, end_date, " +
-               "base_salary, currency, status, file_path, note, created_by_account_id, created_at, updated_at) " +
-               "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+               "base_salary, currency, status, approval_status, file_path, note, created_by_account_id, approved_by_account_id, " +
+               "approved_at, rejected_reason, created_at, updated_at) " +
+               "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     }
     
     @Override
     protected String createUpdateSql() {
         return "UPDATE employment_contracts SET user_id = ?, contract_no = ?, contract_type = ?, " +
-               "start_date = ?, end_date = ?, base_salary = ?, currency = ?, status = ?, " +
-               "file_path = ?, note = ?, created_by_account_id = ?, updated_at = ? WHERE id = ?";
+               "start_date = ?, end_date = ?, base_salary = ?, currency = ?, status = ?, approval_status = ?, " +
+               "file_path = ?, note = ?, created_by_account_id = ?, approved_by_account_id = ?, " +
+               "approved_at = ?, rejected_reason = ?, updated_at = ? WHERE id = ?";
     }
     
     @Override
@@ -81,15 +91,23 @@ public class EmploymentContractDao extends BaseDao<EmploymentContract, Long> {
         stmt.setBigDecimal(6, contract.getBaseSalary());
         stmt.setString(7, contract.getCurrency());
         stmt.setString(8, contract.getStatus());
-        stmt.setString(9, contract.getFilePath());
-        stmt.setString(10, contract.getNote());
+        stmt.setString(9, contract.getApprovalStatus());
+        stmt.setString(10, contract.getFilePath());
+        stmt.setString(11, contract.getNote());
         if (contract.getCreatedByAccountId() != null) {
-            stmt.setLong(11, contract.getCreatedByAccountId());
+            stmt.setLong(12, contract.getCreatedByAccountId());
         } else {
-            stmt.setNull(11, Types.BIGINT);
+            stmt.setNull(12, Types.BIGINT);
         }
-        setTimestamp(stmt, 12, contract.getCreatedAt() != null ? contract.getCreatedAt() : LocalDateTime.now());
-        setTimestamp(stmt, 13, contract.getUpdatedAt() != null ? contract.getUpdatedAt() : LocalDateTime.now());
+        if (contract.getApprovedByAccountId() != null) {
+            stmt.setLong(13, contract.getApprovedByAccountId());
+        } else {
+            stmt.setNull(13, Types.BIGINT);
+        }
+        setTimestamp(stmt, 14, contract.getApprovedAt());
+        stmt.setString(15, contract.getRejectedReason());
+        setTimestamp(stmt, 16, contract.getCreatedAt() != null ? contract.getCreatedAt() : LocalDateTime.now());
+        setTimestamp(stmt, 17, contract.getUpdatedAt() != null ? contract.getUpdatedAt() : LocalDateTime.now());
     }
     
     @Override
@@ -102,15 +120,23 @@ public class EmploymentContractDao extends BaseDao<EmploymentContract, Long> {
         stmt.setBigDecimal(6, contract.getBaseSalary());
         stmt.setString(7, contract.getCurrency());
         stmt.setString(8, contract.getStatus());
-        stmt.setString(9, contract.getFilePath());
-        stmt.setString(10, contract.getNote());
+        stmt.setString(9, contract.getApprovalStatus());
+        stmt.setString(10, contract.getFilePath());
+        stmt.setString(11, contract.getNote());
         if (contract.getCreatedByAccountId() != null) {
-            stmt.setLong(11, contract.getCreatedByAccountId());
+            stmt.setLong(12, contract.getCreatedByAccountId());
         } else {
-            stmt.setNull(11, Types.BIGINT);
+            stmt.setNull(12, Types.BIGINT);
         }
-        setTimestamp(stmt, 12, LocalDateTime.now());
-        stmt.setLong(13, contract.getId());
+        if (contract.getApprovedByAccountId() != null) {
+            stmt.setLong(13, contract.getApprovedByAccountId());
+        } else {
+            stmt.setNull(13, Types.BIGINT);
+        }
+        setTimestamp(stmt, 14, contract.getApprovedAt());
+        stmt.setString(15, contract.getRejectedReason());
+        setTimestamp(stmt, 16, LocalDateTime.now());
+        stmt.setLong(17, contract.getId());
     }
     
     // Business methods
@@ -255,6 +281,221 @@ public class EmploymentContractDao extends BaseDao<EmploymentContract, Long> {
             
         } catch (SQLException e) {
             logger.error("Error updating contract status {}: {}", contractId, e.getMessage(), e);
+            throw e;
+        }
+    }
+    
+    /**
+     * Generate contract number theo format CONTRACT-YYYY-XXX
+     */
+    public String generateContractNo() throws SQLException {
+        int currentYear = java.time.Year.now().getValue();
+        String yearPrefix = "CONTRACT-" + currentYear + "-";
+        
+        String sql = "SELECT contract_no FROM employment_contracts " +
+                    "WHERE contract_no LIKE ? " +
+                    "ORDER BY contract_no DESC LIMIT 1";
+        
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, yearPrefix + "%");
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    String lastContractNo = rs.getString("contract_no");
+                    // Extract number from CONTRACT-2025-001
+                    String[] parts = lastContractNo.split("-");
+                    if (parts.length == 3) {
+                        int lastNumber = Integer.parseInt(parts[2]);
+                        int nextNumber = lastNumber + 1;
+                        return String.format("%s%03d", yearPrefix, nextNumber);
+                    }
+                }
+            }
+            
+            // First contract of the year
+            return yearPrefix + "001";
+            
+        } catch (SQLException e) {
+            logger.error("Error generating contract number: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+    
+    /**
+     * Lấy danh sách user IDs có active contract
+     */
+    public List<Long> findUserIdsWithActiveContract() throws SQLException {
+        List<Long> userIds = new ArrayList<>();
+        String sql = "SELECT DISTINCT user_id FROM employment_contracts WHERE status = 'active'";
+        
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            while (rs.next()) {
+                userIds.add(rs.getLong("user_id"));
+            }
+            
+            return userIds;
+            
+        } catch (SQLException e) {
+            logger.error("Error finding user IDs with active contract: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+    
+    /**
+     * Lấy danh sách user IDs có BẤT KỲ contract nào (bất kể status: draft, active, expired)
+     * Dùng để lọc "Users Without Contract" - chỉ hiển thị users chưa từng có contract
+     */
+    public List<Long> findUserIdsWithAnyContract() throws SQLException {
+        List<Long> userIds = new ArrayList<>();
+        String sql = "SELECT DISTINCT user_id FROM employment_contracts";
+        
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            while (rs.next()) {
+                userIds.add(rs.getLong("user_id"));
+            }
+            
+            return userIds;
+            
+        } catch (SQLException e) {
+            logger.error("Error finding user IDs with any contract: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+    
+    /**
+     * Approve contract (HRM only)
+     * When approved, set approval_status = 'approved' and status = 'active'
+     */
+    public boolean approve(Long contractId, Long approverAccountId) throws SQLException {
+        if (contractId == null || approverAccountId == null) {
+            return false;
+        }
+        
+        String sql = "UPDATE employment_contracts SET approval_status = 'approved', status = 'active', " +
+                    "approved_by_account_id = ?, approved_at = ?, updated_at = ? WHERE id = ? AND approval_status = 'pending'";
+        
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            LocalDateTime now = LocalDateTime.now();
+            stmt.setLong(1, approverAccountId);
+            setTimestamp(stmt, 2, now);
+            setTimestamp(stmt, 3, now);
+            stmt.setLong(4, contractId);
+            
+            int rowsAffected = stmt.executeUpdate();
+            
+            if (rowsAffected > 0) {
+                logger.info("Approved contract {} by account {}", contractId, approverAccountId);
+                return true;
+            }
+            
+            return false;
+            
+        } catch (SQLException e) {
+            logger.error("Error approving contract {}: {}", contractId, e.getMessage(), e);
+            throw e;
+        }
+    }
+    
+    /**
+     * Reject contract with reason (HRM only)
+     */
+    public boolean reject(Long contractId, Long approverAccountId, String reason) throws SQLException {
+        if (contractId == null || approverAccountId == null || reason == null) {
+            return false;
+        }
+        
+        String sql = "UPDATE employment_contracts SET approval_status = 'rejected', " +
+                    "approved_by_account_id = ?, rejected_reason = ?, updated_at = ? WHERE id = ? AND approval_status = 'pending'";
+        
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setLong(1, approverAccountId);
+            stmt.setString(2, reason);
+            setTimestamp(stmt, 3, LocalDateTime.now());
+            stmt.setLong(4, contractId);
+            
+            int rowsAffected = stmt.executeUpdate();
+            
+            if (rowsAffected > 0) {
+                logger.info("Rejected contract {} by account {} with reason: {}", contractId, approverAccountId, reason);
+                return true;
+            }
+            
+            return false;
+            
+        } catch (SQLException e) {
+            logger.error("Error rejecting contract {}: {}", contractId, e.getMessage(), e);
+            throw e;
+        }
+    }
+    
+    /**
+     * Get full name from users table by account ID (JOIN accounts -> users)
+     */
+    public String getFullNameByAccountId(Long accountId) throws SQLException {
+        if (accountId == null) {
+            return null;
+        }
+        
+        String sql = "SELECT u.full_name FROM accounts a " +
+                    "JOIN users u ON a.user_id = u.id " +
+                    "WHERE a.id = ?";
+        
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setLong(1, accountId);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("full_name");
+                }
+            }
+            
+            return null;
+            
+        } catch (SQLException e) {
+            logger.error("Error getting full name by account ID {}: {}", accountId, e.getMessage(), e);
+            throw e;
+        }
+    }
+    
+    /**
+     * Đếm số lượng contracts theo approval status
+     */
+    public long countByApprovalStatus(String approvalStatus) throws SQLException {
+        if (approvalStatus == null || approvalStatus.trim().isEmpty()) {
+            return 0;
+        }
+        
+        String sql = "SELECT COUNT(*) FROM employment_contracts WHERE approval_status = ?";
+        
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, approvalStatus);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getLong(1);
+                }
+            }
+            
+            return 0;
+            
+        } catch (SQLException e) {
+            logger.error("Error counting contracts by approval status {}: {}", approvalStatus, e.getMessage(), e);
             throw e;
         }
     }

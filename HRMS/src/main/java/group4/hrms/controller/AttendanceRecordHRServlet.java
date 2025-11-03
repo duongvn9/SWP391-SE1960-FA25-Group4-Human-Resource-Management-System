@@ -9,6 +9,7 @@ import group4.hrms.model.AttendanceLog;
 import group4.hrms.model.TimesheetPeriod;
 import group4.hrms.model.User;
 import group4.hrms.service.AttendanceMapper;
+import group4.hrms.service.AttendanceService;
 import group4.hrms.service.ExportService;
 import group4.hrms.util.PaginationUtil;
 import java.io.IOException;
@@ -342,7 +343,9 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             record.setDate(LocalDate.parse(dateStr));
             record.setCheckIn(LocalTime.parse(checkInStr));
             record.setCheckOut(LocalTime.parse(checkOutStr));
-            record.setStatus(status);
+            // Tự động tính status thay vì dùng input từ form
+            String calculatedStatus = AttendanceService.calculateAttendanceStatus(record);
+            record.setStatus(calculatedStatus);
             record.setSource(source);
             record.setPeriod(period);
 

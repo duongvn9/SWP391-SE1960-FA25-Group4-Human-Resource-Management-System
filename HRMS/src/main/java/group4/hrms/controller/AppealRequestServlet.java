@@ -14,6 +14,7 @@ import group4.hrms.model.Request;
 import group4.hrms.model.TimesheetPeriod;
 import group4.hrms.model.User;
 import group4.hrms.service.AttachmentService;
+import group4.hrms.service.AttendanceService;
 import group4.hrms.util.SessionUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
@@ -29,7 +30,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -131,27 +131,23 @@ public class AppealRequestServlet extends HttpServlet {
                 req.setAttribute("currentPeriod", currentPeriod);
                 req.setAttribute("currentPeriodId", currentPeriodId);
 
-                // --- Lấy toàn bộ attendance logs của user trong kỳ công hiện tại ---
+                // --- Lấy toàn bộ attendance logs của user từ tất cả các kỳ công ---
                 List<AttendanceLogDto> attendanceList = new ArrayList<>();
-                if (currentPeriod != null) {
-                    LocalDate startDate = currentPeriod.getStartDate();
-                    LocalDate endDate = currentPeriod.getEndDate();
-
-                    // Lấy tất cả bản ghi của user trong kỳ công hiện tại, không giới hạn số lượng
-                    attendanceList = dao.findByFilter(
-                            userId,
-                            null, // departmentId
-                            null, // employeeId (all)
-                            startDate,
-                            endDate,
-                            null,
-                            null,
-                            currentPeriodId,
-                            Integer.MAX_VALUE,
-                            0,
-                            true
-                    );
-                }
+                
+                // Lấy tất cả attendance records của user (không giới hạn theo period)
+                attendanceList = dao.findByFilter(
+                        userId,
+                        null, // departmentId
+                        null, // employeeId (all)
+                        null, // startDate - không giới hạn
+                        null, // endDate - không giới hạn
+                        null,
+                        null,
+                        null, // periodId - không giới hạn theo period
+                        Integer.MAX_VALUE,
+                        0,
+                        true
+                );
 
                 req.setAttribute("attendanceList", attendanceList);
 
@@ -197,7 +193,9 @@ public class AppealRequestServlet extends HttpServlet {
 
             for (Map<String, Map<String, String>> record : recordsList) {
                 Map<String, String> newRecord = record.get("newRecord");
-                if (newRecord == null) continue;
+                if (newRecord == null) {
+                    continue;
+                }
 
                 // Validate required fields
                 String date = newRecord.get("date");
@@ -223,11 +221,7 @@ public class AppealRequestServlet extends HttpServlet {
                     continue;
                 }
 
-                if (status == null || status.trim().isEmpty()) {
-                    hasValidationErrors = true;
-                    validationErrors.append("Status is required for all edited records. ");
-                    continue;
-                }
+                // Status sẽ được tính tự động, không cần validate
 
                 // Create DTO for conflict checking
                 try {
@@ -236,7 +230,9 @@ public class AppealRequestServlet extends HttpServlet {
                     dto.setDate(LocalDate.parse(date));
                     dto.setCheckIn(LocalTime.parse(checkIn));
                     dto.setCheckOut(LocalTime.parse(checkOut));
-                    dto.setStatus(status);
+                    // Tự động tính status
+                    String calculatedStatus = AttendanceService.calculateAttendanceStatus(dto);
+                    dto.setStatus(calculatedStatus);
                     dto.setSource("appeal");
                     editedLogs.add(dto);
                 } catch (Exception e) {
@@ -250,25 +246,25 @@ public class AppealRequestServlet extends HttpServlet {
                 // For appeal requests, we need to validate edited records against existing records
                 // but exclude the original records being edited from conflict checking
                 List<Map<String, Map<String, String>>> originalRecords = recordsList;
-                
+
                 System.out.println("=== APPEAL VALIDATION DEBUG ===");
                 System.out.println("Edited logs count: " + editedLogs.size());
                 System.out.println("Original records count: " + originalRecords.size());
                 for (AttendanceLogDto editedLog : editedLogs) {
-                    System.out.println("Edited log: " + editedLog.getDate() + " " + 
-                        editedLog.getCheckIn() + "-" + editedLog.getCheckOut());
+                    System.out.println("Edited log: " + editedLog.getDate() + " "
+                            + editedLog.getCheckIn() + "-" + editedLog.getCheckOut());
                 }
                 for (Map<String, Map<String, String>> originalRecord : originalRecords) {
                     Map<String, String> oldRec = originalRecord.get("oldRecord");
                     if (oldRec != null) {
-                        System.out.println("Original record: " + oldRec.get("date") + " " + 
-                            oldRec.get("checkIn") + "-" + oldRec.get("checkOut"));
+                        System.out.println("Original record: " + oldRec.get("date") + " "
+                                + oldRec.get("checkIn") + "-" + oldRec.get("checkOut"));
                     }
                 }
-                
+
                 Map<String, List<AttendanceLogDto>> validationResult = dao.validateAppealLogs(editedLogs, originalRecords);
                 List<AttendanceLogDto> invalidLogs = validationResult.get("invalid");
-                
+
                 if (!invalidLogs.isEmpty()) {
                     hasValidationErrors = true;
                     for (AttendanceLogDto invalidLog : invalidLogs) {
@@ -288,19 +284,19 @@ public class AppealRequestServlet extends HttpServlet {
                 // Preserve form data
                 req.setAttribute("title", title);
                 req.setAttribute("detail", detailText);
-                
+
                 // Preserve attachment data
                 String attachmentType = req.getParameter("attachmentType");
                 String driveLink = req.getParameter("driveLink");
                 req.setAttribute("attachmentType", attachmentType);
                 req.setAttribute("driveLink", driveLink);
-                
+
                 // Convert recordsList back to records for display
                 List<AttendanceLogDto> preservedRecords = new ArrayList<>();
                 for (Map<String, Map<String, String>> record : recordsList) {
                     Map<String, String> oldRec = record.get("oldRecord");
                     Map<String, String> newRec = record.get("newRecord");
-                    
+
                     if (oldRec != null && newRec != null) {
                         AttendanceLogDto dto = new AttendanceLogDto();
                         try {
@@ -316,10 +312,10 @@ public class AppealRequestServlet extends HttpServlet {
                         }
                     }
                 }
-                
+
                 req.setAttribute("records", preservedRecords);
                 req.setAttribute("message", "Validation Error: " + validationErrors.toString().trim());
-                
+
                 // Get required data for form display
                 List<TimesheetPeriod> periodList = tDAO.findAll();
                 req.setAttribute("periodList", periodList);
@@ -327,15 +323,12 @@ public class AppealRequestServlet extends HttpServlet {
                 Long currentPeriodId = currentPeriod != null ? currentPeriod.getId() : null;
                 req.setAttribute("currentPeriod", currentPeriod);
                 req.setAttribute("currentPeriodId", currentPeriodId);
-                
+
                 List<AttendanceLogDto> attendanceList = new ArrayList<>();
-                if (currentPeriod != null) {
-                    LocalDate startDate = currentPeriod.getStartDate();
-                    LocalDate endDate = currentPeriod.getEndDate();
-                    attendanceList = dao.findByFilter(userId, null, null, startDate, endDate, null, null, currentPeriodId, Integer.MAX_VALUE, 0, true);
-                }
+                // Lấy tất cả attendance records của user (không giới hạn theo period)
+                attendanceList = dao.findByFilter(userId, null, null, null, null, null, null, null, Integer.MAX_VALUE, 0, true);
                 req.setAttribute("attendanceList", attendanceList);
-                
+
                 req.getRequestDispatcher("/WEB-INF/views/requests/appeal-form.jsp").forward(req, resp);
                 return;
             }
@@ -444,83 +437,77 @@ public class AppealRequestServlet extends HttpServlet {
 
                     if (driveLink != null && !driveLink.trim().isEmpty()) {
                         Logger.getLogger(AppealRequestServlet.class.getName()).info(
-                            String.format("Processing Google Drive link for appeal request ID: %d - URL: %s",
-                                requestId, driveLink));
+                                String.format("Processing Google Drive link for appeal request ID: %d - URL: %s",
+                                        requestId, driveLink));
 
                         // Save external link to database
                         Attachment linkAttachment = attachmentService.saveExternalLink(
-                            driveLink.trim(),
-                            requestId,
-                            "REQUEST",
-                            accountId,
-                            "Google Drive Link");
+                                driveLink.trim(),
+                                requestId,
+                                "REQUEST",
+                                accountId,
+                                "Google Drive Link");
 
                         Logger.getLogger(AppealRequestServlet.class.getName()).info(
-                            String.format("Successfully saved external link attachment: id=%d",
-                                linkAttachment.getId()));
+                                String.format("Successfully saved external link attachment: id=%d",
+                                        linkAttachment.getId()));
                     }
 
                 } else {
                     // Handle file uploads (default)
                     Collection<Part> fileParts = req.getParts().stream()
-                        .filter(part -> "attachments".equals(part.getName()) && part.getSize() > 0)
-                        .collect(Collectors.toList());
+                            .filter(part -> "attachments".equals(part.getName()) && part.getSize() > 0)
+                            .collect(Collectors.toList());
 
                     if (!fileParts.isEmpty()) {
                         Logger.getLogger(AppealRequestServlet.class.getName()).info(
-                            String.format("Processing %d file attachment(s) for appeal request ID: %d",
-                                fileParts.size(), requestId));
+                                String.format("Processing %d file attachment(s) for appeal request ID: %d",
+                                        fileParts.size(), requestId));
 
                         // Get upload base path - save to webapp/assets/img/Request/
                         String uploadBasePath = req.getServletContext().getRealPath("/assets/img/Request");
                         if (uploadBasePath == null) {
                             // Fallback to system temp directory if realPath is not available
                             uploadBasePath = System.getProperty("java.io.tmpdir");
-                            Logger.getLogger(AppealRequestServlet.class.getName()).warning(
-                                "Using temp directory for uploads: " + uploadBasePath);
+                            Logger.getLogger(AppealRequestServlet.class.getName()).log(Level.WARNING, "Using temp directory for uploads: {0}", uploadBasePath);
                         } else {
                             // Create directory if it doesn't exist
                             java.io.File uploadDir = new java.io.File(uploadBasePath);
                             if (!uploadDir.exists()) {
                                 boolean created = uploadDir.mkdirs();
                                 if (created) {
-                                    Logger.getLogger(AppealRequestServlet.class.getName()).info(
-                                        "Created upload directory: " + uploadBasePath);
+                                    Logger.getLogger(AppealRequestServlet.class.getName()).log(Level.INFO, "Created upload directory: {0}", uploadBasePath);
                                 } else {
-                                    Logger.getLogger(AppealRequestServlet.class.getName()).warning(
-                                        "Failed to create upload directory: " + uploadBasePath);
+                                    Logger.getLogger(AppealRequestServlet.class.getName()).log(Level.WARNING, "Failed to create upload directory: {0}", uploadBasePath);
                                 }
                             }
                         }
 
                         // Save files to filesystem and database
                         List<Attachment> attachments = attachmentService.saveFiles(
-                            fileParts,
-                            requestId,
-                            "REQUEST",
-                            accountId,
-                            uploadBasePath);
+                                fileParts,
+                                requestId,
+                                "REQUEST",
+                                accountId,
+                                uploadBasePath);
 
                         Logger.getLogger(AppealRequestServlet.class.getName()).info(
-                            String.format("Successfully saved %d file attachment(s) for appeal request ID: %d",
-                                attachments.size(), requestId));
+                                String.format("Successfully saved %d file attachment(s) for appeal request ID: %d",
+                                        attachments.size(), requestId));
                     }
                 }
 
-            } catch (Exception fileError) {
+            } catch (ServletException | IOException | SQLException fileError) {
                 // Attachment handling failed - log error and rollback the request creation
                 Logger.getLogger(AppealRequestServlet.class.getName()).log(Level.SEVERE,
-                    String.format("Attachment handling failed for appeal request ID: %d, error: %s",
-                        requestId, fileError.getMessage()), fileError);
+                        String.format("Attachment handling failed for appeal request ID: %d, error: %s",
+                                requestId, fileError.getMessage()), fileError);
 
                 // TODO: Implement transaction rollback - delete the created request
                 // For now, we'll throw an exception to inform the user
-                throw new Exception("Appeal request was created but attachment handling failed. " +
-                    "Please contact IT support with request ID: " + requestId, fileError);
+                throw new Exception("Appeal request was created but attachment handling failed. "
+                        + "Please contact IT support with request ID: " + requestId, fileError);
             }
-
-
-
 
             // --- Lấy danh sách các kỳ công (periods) ---
             List<TimesheetPeriod> periodList = tDAO.findAll();
@@ -534,25 +521,20 @@ public class AppealRequestServlet extends HttpServlet {
 
             // --- Lấy toàn bộ attendance logs của user trong kỳ công hiện tại ---
             List<AttendanceLogDto> attendanceList = new ArrayList<>();
-            if (currentPeriod != null) {
-                LocalDate startDate = currentPeriod.getStartDate();
-                LocalDate endDate = currentPeriod.getEndDate();
-
-                // Lấy tất cả bản ghi của user trong kỳ công hiện tại, không giới hạn số lượng
-                attendanceList = dao.findByFilter(
-                        userId,
-                        null, // departmentId
-                        null, // employeeId (all)
-                        startDate,
-                        endDate,
-                        null,
-                        null,
-                        currentPeriodId,
-                        Integer.MAX_VALUE,
-                        0,
-                        true
-                );
-            }
+            // Lấy tất cả attendance records của user (không giới hạn theo period)
+            attendanceList = dao.findByFilter(
+                    userId,
+                    null, // departmentId
+                    null, // employeeId (all)
+                    null, // startDate - không giới hạn
+                    null, // endDate - không giới hạn
+                    null,
+                    null,
+                    null, // periodId - không giới hạn theo period
+                    Integer.MAX_VALUE,
+                    0,
+                    true
+            );
 
             req.setAttribute("attendanceList", attendanceList);
             req.setAttribute("success", "Create appeal attendance request successfully!");
@@ -595,27 +577,23 @@ public class AppealRequestServlet extends HttpServlet {
             req.setAttribute("currentPeriod", currentPeriod);
             req.setAttribute("currentPeriodId", currentPeriodId);
 
-            // --- Lấy toàn bộ attendance logs của user trong kỳ công hiện tại ---
+            // --- Lấy toàn bộ attendance logs của user từ tất cả các kỳ công ---
             List<AttendanceLogDto> attendanceList = new ArrayList<>();
-            if (currentPeriod != null) {
-                LocalDate startDate = currentPeriod.getStartDate();
-                LocalDate endDate = currentPeriod.getEndDate();
-
-                // Lấy tất cả bản ghi của user trong kỳ công hiện tại, không giới hạn số lượng
-                attendanceList = dao.findByFilter(
-                        userId,
-                        null, // departmentId
-                        null, // employeeId (all)
-                        startDate,
-                        endDate,
-                        null, // status
-                        null, // source
-                        currentPeriodId,
-                        Integer.MAX_VALUE, // số lượng bản ghi cực lớn
-                        0,
-                        true
-                );
-            }
+            
+            // Lấy tất cả attendance records của user (không giới hạn theo period)
+            attendanceList = dao.findByFilter(
+                    userId,
+                    null, // departmentId
+                    null, // employeeId (all)
+                    null, // startDate - không giới hạn
+                    null, // endDate - không giới hạn
+                    null, // status
+                    null, // source
+                    null, // periodId - không giới hạn theo period
+                    Integer.MAX_VALUE, // số lượng bản ghi cực lớn
+                    0,
+                    true
+            );
 
             req.setAttribute("attendanceList", attendanceList);
 
