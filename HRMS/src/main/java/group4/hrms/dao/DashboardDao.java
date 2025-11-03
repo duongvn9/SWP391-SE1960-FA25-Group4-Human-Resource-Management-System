@@ -26,6 +26,32 @@ public class DashboardDao {
         String sql = "SELECT COUNT(*) FROM users WHERE status = 'active'";
         return executeCountQuery(sql);
     }
+    
+    public int getTotalDepartments() {
+        String sql = "SELECT COUNT(*) FROM departments";
+        return executeCountQuery(sql);
+    }
+    
+    // Account metrics
+    public int getTotalAccounts() {
+        String sql = "SELECT COUNT(*) FROM accounts";
+        return executeCountQuery(sql);
+    }
+    
+    public int getActiveAccounts() {
+        String sql = "SELECT COUNT(*) FROM accounts WHERE status = 'active'";
+        return executeCountQuery(sql);
+    }
+    
+    public int getInactiveAccounts() {
+        String sql = "SELECT COUNT(*) FROM accounts WHERE status = 'inactive'";
+        return executeCountQuery(sql);
+    }
+    
+    public int getLockedAccounts() {
+        String sql = "SELECT COUNT(*) FROM accounts WHERE status = 'locked'";
+        return executeCountQuery(sql);
+    }
 
     public int getNewEmployeesThisMonth() {
         String sql = "SELECT COUNT(*) FROM users WHERE YEAR(created_at) = YEAR(CURDATE()) AND MONTH(created_at) = MONTH(CURDATE())";
@@ -87,6 +113,30 @@ public class DashboardDao {
             logger.error("Error getting total OT hours", e);
         }
         return 0.0;
+    }
+
+    public double getTotalOtHours() {
+        String sql = """
+            SELECT COALESCE(SUM(CAST(JSON_UNQUOTE(JSON_EXTRACT(detail, '$.totalHours')) AS DECIMAL(10,2))), 0)
+            FROM requests
+            WHERE request_type_id = 7 
+            AND status = 'APPROVED'
+            """;
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getDouble(1);
+            }
+        } catch (SQLException e) {
+            logger.error("Error getting total OT hours (all time)", e);
+        }
+        return 0.0;
+    }
+
+    public int getTotalOtRequests() {
+        String sql = "SELECT COUNT(*) FROM requests WHERE request_type_id = 7 AND status = 'APPROVED'";
+        return executeCountQuery(sql);
     }
 
     // Attendance metrics
@@ -243,6 +293,48 @@ public class DashboardDao {
             }
         } catch (SQLException e) {
             logger.error("Error getting requests by status", e);
+        }
+        return result;
+    }
+
+    public Map<String, Integer> getOtRequestsByStatus() {
+        Map<String, Integer> result = new LinkedHashMap<>();
+        String sql = """
+            SELECT status, COUNT(*) as count
+            FROM requests
+            WHERE request_type_id = 7
+            GROUP BY status
+            ORDER BY count DESC
+            """;
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                result.put(rs.getString("status"), rs.getInt("count"));
+            }
+        } catch (SQLException e) {
+            logger.error("Error getting OT requests by status", e);
+        }
+        return result;
+    }
+
+    public Map<String, Integer> getLeaveRequestsByStatus() {
+        Map<String, Integer> result = new LinkedHashMap<>();
+        String sql = """
+            SELECT status, COUNT(*) as count
+            FROM requests
+            WHERE request_type_id = 6
+            GROUP BY status
+            ORDER BY count DESC
+            """;
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                result.put(rs.getString("status"), rs.getInt("count"));
+            }
+        } catch (SQLException e) {
+            logger.error("Error getting Leave requests by status", e);
         }
         return result;
     }
