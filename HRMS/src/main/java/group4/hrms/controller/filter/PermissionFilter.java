@@ -20,9 +20,10 @@ public class PermissionFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
-
+        
         if (request instanceof HttpServletRequest) {
             HttpServletRequest httpRequest = (HttpServletRequest) request;
+            logger.debug("PermissionFilter processing: {}", httpRequest.getRequestURI());
 
             // Set permission flags as request attributes
             request.setAttribute("canViewUserList", PermissionUtil.canViewUserList(httpRequest));
