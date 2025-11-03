@@ -473,6 +473,25 @@ public class OTRequestController extends HttpServlet {
             OTBalance otBalance = service.getOTBalance(user.getId());
             request.setAttribute("otBalance", otBalance);
 
+            // Reload holidays for current year and next 2 years to pass to JavaScript
+            logger.info("Reloading holidays for current and future years...");
+            int currentYear = java.time.Year.now().getValue();
+
+            java.util.List<String> allHolidays = new java.util.ArrayList<>();
+            java.util.List<String> allCompensatoryDays = new java.util.ArrayList<>();
+
+            // Load holidays for current year, next year, and year after
+            for (int year = currentYear; year <= currentYear + 2; year++) {
+                allHolidays.addAll(service.getHolidaysForYear(year));
+                allCompensatoryDays.addAll(service.getCompensatoryDaysForYear(year));
+            }
+
+            logger.info("Reloaded " + allHolidays.size() + " holidays and "
+                + allCompensatoryDays.size() + " compensatory days for years "
+                + currentYear + "-" + (currentYear + 2));
+            request.setAttribute("holidays", allHolidays);
+            request.setAttribute("compensatoryDays", allCompensatoryDays);
+
             // Reload subordinates for dropdown
             try {
                 UserDao userDao = new UserDao();
