@@ -386,6 +386,15 @@
                                                     </a>
                                                 </li>
                                             </c:if>
+                                            <!-- Application Management - Only HR Manager (7) and HR Staff (8) -->
+                                            <c:if test="${sessionScope.user != null && (sessionScope.user.positionId == 7 || sessionScope.user.positionId == 8)}">
+                                                <li>
+                                                    <a href="${pageContext.request.contextPath}/applications"
+                                                        class="nav-link ${param.currentPage == 'applications' ? 'active' : ''}">
+                                                        <i class="fas fa-file-alt"></i><span>Application Management</span>
+                                                    </a>
+                                                </li>
+                                            </c:if>
                                         </ul>
                                     </li>
                                 </c:if>
