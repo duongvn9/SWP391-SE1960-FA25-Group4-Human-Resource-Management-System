@@ -641,9 +641,34 @@ public class LeaveRequestController extends HttpServlet {
                 }
             }
 
+            // Load holidays for current year and next 2 years to pass to JavaScript
+            logger.info("Reloading holidays for current and future years...");
+            java.util.List<String> allHolidays = new java.util.ArrayList<>();
+            java.util.List<String> allCompensatoryDays = new java.util.ArrayList<>();
+
+            // Use OTRequestService to get holiday data
+            group4.hrms.service.OTRequestService otService = new group4.hrms.service.OTRequestService(
+                    new group4.hrms.dao.RequestDao(),
+                    new group4.hrms.dao.RequestTypeDao(),
+                    new group4.hrms.dao.HolidayDao(),
+                    new group4.hrms.dao.HolidayCalendarDao(),
+                    new group4.hrms.dao.UserDao());
+
+            // Load holidays for current year, next year, and year after
+            for (int year = currentYear; year <= currentYear + 2; year++) {
+                allHolidays.addAll(otService.getHolidaysForYear(year));
+                allCompensatoryDays.addAll(otService.getCompensatoryDaysForYear(year));
+            }
+
+            logger.info("Reloaded " + allHolidays.size() + " holidays and "
+                    + allCompensatoryDays.size() + " compensatory days for years "
+                    + currentYear + "-" + (currentYear + 2));
+
             request.setAttribute("leaveTypes", leaveTypes);
             request.setAttribute("leaveTypeRules", leaveTypeRules);
             request.setAttribute("leaveBalances", leaveBalances);
+            request.setAttribute("holidays", allHolidays);
+            request.setAttribute("compensatoryDays", allCompensatoryDays);
             request.setAttribute("currentYear", currentYear);
             request.setAttribute("userGender", userGender);
 
