@@ -6,11 +6,11 @@
 console.log('OT Form script loaded');
 
 /**
- * Show validation toast notification instead of alert
+ * Show server message toast notification (for server errors/success only)
  * @param {string} message - The message to display
  * @param {string} type - The type of notification ('error', 'warning', 'info', 'success')
  */
-function showValidationToast(message, type = 'error') {
+function showServerToast(message, type = 'error') {
     const toast = document.getElementById('validationToast');
     const toastTitle = document.getElementById('toastTitle');
     const toastMessage = document.getElementById('toastMessage');
@@ -63,14 +63,14 @@ document.addEventListener('DOMContentLoaded', function() {
     if (serverSuccess) {
         const successMessage = serverSuccess.value;
         if (successMessage) {
-            showValidationToast(successMessage, 'success');
+            showServerToast(successMessage, 'success');
         }
     }
 
     if (serverError) {
         const errorMessage = serverError.value;
         if (errorMessage) {
-            showValidationToast(errorMessage, 'error');
+            showServerToast(errorMessage, 'error');
         }
     }
 
@@ -102,6 +102,10 @@ document.addEventListener('DOMContentLoaded', function() {
             holidays = holidaysData.holidays || [];
             compensatoryDays = holidaysData.compensatoryDays || [];
             console.log('Loaded holidays from server:', holidays.length, 'holidays,', compensatoryDays.length, 'compensatory days');
+
+            // Set global variables for use by other scripts
+            window.holidays = holidays;
+            window.compensatoryDays = compensatoryDays;
         } else {
             console.warn('Holidays data element not found, using empty arrays');
         }
@@ -661,6 +665,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         });
+    }
+
+    // Restore saved OT date and trigger holiday detection (for form reload after errors)
+    if (otDateInput && otDateInput.value) {
+        console.log('Restoring saved OT date:', otDateInput.value);
+        // Trigger change event to update OT type display
+        otDateInput.dispatchEvent(new Event('change'));
+    }
+
+    // Restore saved time values and trigger OT hours calculation
+    if (startTimeInput && startTimeInput.value && endTimeInput && endTimeInput.value) {
+        console.log('Restoring saved time values:', startTimeInput.value, '-', endTimeInput.value);
+        updateOTHours();
     }
 
     console.log('OT form initialized successfully');

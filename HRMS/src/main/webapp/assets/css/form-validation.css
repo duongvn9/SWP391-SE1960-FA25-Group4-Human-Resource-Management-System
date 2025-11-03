@@ -1,0 +1,406 @@
+/**
+ * Enhanced Form Validation Styles
+ * Common styles for both Leave and OT forms
+ */
+
+/* Field validation styles */
+.form-control.is-invalid,
+.form-select.is-invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.form-control.is-valid,
+.form-select.is-valid {
+    border-color: #198754;
+    box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25);
+}
+
+/* Invalid feedback styling */
+.invalid-feedback {
+    display: block;
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 0.875em;
+    color: #dc3545 !important;
+    font-weight: 600;
+    text-shadow: none;
+}
+
+.invalid-feedback i {
+    margin-right: 0.25rem;
+}
+
+/* Valid feedback styling */
+.valid-feedback {
+    display: block;
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 0.875em;
+    color: #198754;
+    font-weight: 500;
+}
+
+/* Radio button validation - only show message, no red border */
+.form-check-input.is-invalid {
+    border-color: inherit;
+}
+
+.form-check-input.is-invalid:checked {
+    background-color: inherit;
+    border-color: inherit;
+}
+
+/* Checkbox validation - only show message, no red border */
+input[type="checkbox"].is-invalid {
+    border-color: inherit;
+    box-shadow: none;
+}
+
+/* Error alert styling */
+.validation-error-alert {
+    border-left: 4px solid #dc3545;
+    background-color: #fef2f2 !important;
+    border-color: #dc3545;
+    animation: slideInDown 0.3s ease-out;
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+
+.validation-error-alert .alert-heading {
+    color: #b91c1c !important;
+    font-weight: 800 !important;
+    font-size: 1.1rem !important;
+    text-shadow: none !important;
+}
+
+.validation-error-alert ul {
+    margin-bottom: 0;
+    padding-left: 1.2rem;
+}
+
+.validation-error-alert li {
+    margin-bottom: 0.5rem;
+    color: #b91c1c !important;
+    font-weight: 600 !important;
+    font-size: 0.95rem !important;
+    text-shadow: none !important;
+}
+
+.validation-error-alert li:last-child {
+    margin-bottom: 0;
+}
+
+/* Success alert styling */
+.validation-success-alert {
+    border-left: 4px solid #198754;
+    background-color: #d1e7dd;
+    border-color: #badbcc;
+    animation: slideInDown 0.3s ease-out;
+}
+
+/* Field group validation */
+.field-group.has-error {
+    border: 1px solid #dc3545;
+    border-radius: 0.375rem;
+    padding: 0.75rem;
+    background-color: rgba(220, 53, 69, 0.05);
+}
+
+.field-group.has-error .form-label {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+/* Required field indicator */
+.form-label .text-danger {
+    font-weight: bold;
+    margin-left: 0.25rem;
+}
+
+/* Validation animations */
+@keyframes slideInDown {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.shake {
+    animation: shake 0.5s ease-in-out;
+}
+
+/* Focus styles for better accessibility */
+.form-control:focus,
+.form-select:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.form-control.is-invalid:focus,
+.form-select.is-invalid:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+/* Submit button states */
+.btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.btn.loading {
+    position: relative;
+    color: transparent;
+}
+
+.btn.loading::after {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Tooltip for validation messages */
+.validation-tooltip {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1070;
+    display: block;
+    margin: 0.125rem 0 0;
+    font-family: var(--bs-font-sans-serif);
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.5;
+    text-align: left;
+    text-decoration: none;
+    text-shadow: none;
+    text-transform: none;
+    letter-spacing: normal;
+    word-break: normal;
+    word-spacing: normal;
+    white-space: normal;
+    line-break: auto;
+    font-size: 0.875rem;
+    word-wrap: break-word;
+    opacity: 1;
+}
+
+.validation-tooltip .tooltip-arrow {
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-color: transparent;
+    border-style: solid;
+}
+
+.validation-tooltip .tooltip-inner {
+    max-width: 200px;
+    padding: 0.25rem 0.5rem;
+    color: #fff;
+    text-align: center;
+    background-color: #dc3545;
+    border-radius: 0.375rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .validation-error-alert {
+        margin: 0 -15px 1rem -15px;
+        border-radius: 0;
+        border-left: none;
+        border-top: 4px solid #dc3545;
+    }
+
+    .invalid-feedback {
+        font-size: 0.8rem;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .validation-error-alert {
+        background-color: rgba(220, 53, 69, 0.15);
+        border-color: rgba(220, 53, 69, 0.3);
+        color: #f8d7da;
+    }
+
+    .validation-error-alert .alert-heading,
+    .validation-error-alert li {
+        color: #f8d7da;
+    }
+
+    .field-group.has-error {
+        background-color: rgba(220, 53, 69, 0.1);
+        border-color: rgba(220, 53, 69, 0.3);
+    }
+}
+/*
+Toast notification styling */
+.toast .toast-header.bg-danger {
+    background-color: #dc3545 !important;
+    color: #ffffff !important;
+}
+
+.toast .toast-header.bg-danger .btn-close-white {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+.toast .toast-body {
+    color: #212529 !important;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.toast.border-0 {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Enhanced error text contrast */
+.text-danger {
+    color: #dc3545 !important;
+    font-weight: 600 !important;
+}
+
+.alert-danger {
+    color: #721c24 !important;
+    background-color: #f8d7da !important;
+    border-color: #dc3545 !important;
+}
+
+/* High contrast validation messages */
+.validation-error-alert {
+    border: 2px solid #dc3545 !important;
+}
+
+.validation-error-alert .fas {
+    color: #dc3545 !important;
+}
+
+/* Force high contrast text - override all other CSS */
+.validation-error-alert,
+.validation-error-alert *:not(.fas) {
+    color: #b91c1c !important;
+    text-shadow: none !important;
+}
+
+.validation-error-alert {
+    background-color: #fef2f2 !important;
+    border-color: #dc3545 !important;
+}
+
+.validation-error-alert .alert-heading {
+    font-weight: 800 !important;
+    color: #b91c1c !important;
+}
+
+.validation-error-alert li {
+    font-weight: 600 !important;
+    color: #b91c1c !important;
+}
+
+.validation-error-alert ul {
+    color: #b91c1c !important;
+}
+
+.validation-error-alert .fas.fa-exclamation-triangle {
+    color: #dc3545 !important;
+}
+
+/* Override Bootstrap and other CSS */
+.validation-error-alert.alert-danger {
+    color: #b91c1c !important;
+    background-color: #fef2f2 !important;
+}
+
+/* Ensure text is always visible */
+.validation-error-alert h5,
+.validation-error-alert ul,
+.validation-error-alert li,
+.validation-error-alert p,
+.validation-error-alert span {
+    color: #b91c1c !important;
+    opacity: 1 !important;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .validation-error-alert {
+        background-color: rgba(220, 53, 69, 0.2) !important;
+        border-color: rgba(220, 53, 69, 0.5) !important;
+        color: #f8d7da !important;
+    }
+
+    .validation-error-alert .alert-heading,
+    .validation-error-alert li {
+        color: #f8d7da !important;
+    }
+
+    .field-group.has-error {
+        background-color: rgba(220, 53, 69, 0.15) !important;
+        border-color: rgba(220, 53, 69, 0.4) !important;
+    }
+
+    .invalid-feedback {
+        color: #ff6b6b !important;
+    }
+}
+/*
+ Ultimate override for validation error text - highest specificity */
+body .validation-error-alert,
+body .validation-error-alert h1,
+body .validation-error-alert h2,
+body .validation-error-alert h3,
+body .validation-error-alert h4,
+body .validation-error-alert h5,
+body .validation-error-alert h6,
+body .validation-error-alert p,
+body .validation-error-alert span,
+body .validation-error-alert div,
+body .validation-error-alert ul,
+body .validation-error-alert li,
+body .validation-error-alert .alert-heading {
+    color: #b91c1c !important;
+    font-weight: 600 !important;
+    text-shadow: none !important;
+    opacity: 1 !important;
+}
+
+body .validation-error-alert .alert-heading {
+    font-weight: 800 !important;
+}
+
+body .validation-error-alert {
+    background-color: #fef2f2 !important;
+    border: 2px solid #dc3545 !important;
+}
+
+/* Debug styles to ensure visibility */
+.validation-error-alert {
+    z-index: 9999 !important;
+    position: relative !important;
+}

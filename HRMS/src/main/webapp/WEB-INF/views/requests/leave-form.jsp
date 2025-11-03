@@ -190,6 +190,22 @@
                                     <input type="hidden" id="serverErrorType" value="${errorType}">
                                     <input type="hidden" id="serverSuccess" value="${success}">
 
+                                    <!-- Holiday Data for JavaScript -->
+                                    <script type="application/json" id="holidaysData">
+                                        {
+                                            "holidays": [
+                                                <c:forEach var="holiday" items="${holidays}" varStatus="status">
+                                                    "${holiday}"<c:if test="${!status.last}">,</c:if>
+                                                </c:forEach>
+                                            ],
+                                            "compensatoryDays": [
+                                                <c:forEach var="compensatoryDay" items="${compensatoryDays}" varStatus="status">
+                                                    "${compensatoryDay}"<c:if test="${!status.last}">,</c:if>
+                                                </c:forEach>
+                                            ]
+                                        }
+                                    </script>
+
                                     <!-- Form -->
                                     <form method="post"
                                         action="${pageContext.request.contextPath}/requests/leave/create"
@@ -1110,86 +1126,7 @@
                                 alertDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
                             }
 
-                            // Form validation
-                            document.getElementById('leaveRequestForm').addEventListener('submit', async function (e) {
-                                e.preventDefault(); // Prevent default submission initially
-
-                                // Validate request title
-                                const requestTitleInput = document.getElementById('requestTitle');
-                                if (!requestTitleInput.value || requestTitleInput.value.trim() === '') {
-                                    displayValidationErrors(['Please enter a request title']);
-                                    requestTitleInput.focus();
-                                    return false;
-                                }
-
-                                if (requestTitleInput.value.trim().length < 5) {
-                                    displayValidationErrors(['Request title must be at least 5 characters long']);
-                                    requestTitleInput.focus();
-                                    return false;
-                                }
-
-                                // Validate certificate requirement
-                                const selectedLeaveType = document.getElementById('leaveTypeCode').value;
-                                if (selectedLeaveType && leaveTypeRules[selectedLeaveType]) {
-                                    const rules = leaveTypeRules[selectedLeaveType];
-                                    if (rules.requiresCertificate) {
-                                        // Check if attachment provided (file or link)
-                                        const attachmentType = document.querySelector('input[name="attachmentType"]:checked')?.value;
-                                        const hasFile = document.getElementById('attachments')?.files?.length > 0;
-                                        const hasLink = document.getElementById('driveLink')?.value?.trim() !== '';
-
-                                        if (!hasFile && !hasLink) {
-                                            displayValidationErrors(['This leave type requires supporting documents (certificate). Please upload a file or provide a Google Drive link.']);
-                                            document.getElementById('supportingDocumentsSection').scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                            return false;
-                                        }
-                                    }
-                                }
-
-                                const durationType = document.querySelector('input[name="durationType"]:checked')?.value;
-                                const isHalfDay = durationType === 'HALF_DAY';
-
-                                // Set hidden field for isHalfDay
-                                document.getElementById('isHalfDay').value = isHalfDay ? 'true' : 'false';
-
-                                // Validate half-day specific requirements
-                                if (isHalfDay) {
-                                    const startDate = startDateInput.value;
-                                    const halfDayPeriodElement = document.querySelector('input[name="halfDayPeriod"]:checked');
-                                    const halfDayPeriod = halfDayPeriodElement ? halfDayPeriodElement.value : null;
-
-                                    // Perform async validation
-                                    const validationResult = await validateHalfDayRequest(startDate, halfDayPeriod);
-
-                                    if (!validationResult.valid) {
-                                        displayValidationErrors(validationResult.errors);
-                                        this.classList.add('was-validated');
-                                        return false;
-                                    }
-
-                                    // Set end date same as start date for half-day
-                                    endDateInput.value = startDateInput.value;
-                                }
-
-                                // Check standard form validity
-                                if (!this.checkValidity()) {
-                                    this.classList.add('was-validated');
-                                    return false;
-                                }
-
-                                this.classList.add('was-validated');
-
-                                // Disable submit button to prevent double submission
-                                const submitBtn = document.getElementById('submitBtn');
-                                if (submitBtn) {
-                                    submitBtn.disabled = true;
-                                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Submitting...';
-                                }
-
-                                // Remove event listener to prevent infinite loop, then submit
-                                this.removeEventListener('submit', arguments.callee);
-                                this.submit();
-                            });
+                            // Form validation is now handled by leave-form-validation.js
 
                             // File upload preview functionality
                             const attachmentsInput = document.getElementById('attachments');
@@ -1575,6 +1512,79 @@
                             }
                         });
                     </script>
+
+                    <!-- Make data available globally for validation -->
+                    <script>
+                        // Global variables for validation
+                        window.leaveTypeRules = {};
+                        window.leaveBalanceData = {};
+                        window.holidays = [];
+                        window.compensatoryDays = [];
+
+                        try {
+                            window.leaveTypeRules = JSON.parse(document.getElementById('leaveTypeRulesData').textContent);
+                            window.leaveBalanceData = JSON.parse(document.getElementById('leaveBalanceData').textContent);
+                            const holidaysData = JSON.parse(document.getElementById('holidaysData').textContent);
+                            window.holidays = holidaysData.holidays || [];
+                            window.compensatoryDays = holidaysData.compensatoryDays || [];
+                        } catch (e) {
+                            console.warn('Could not load form data:', e);
+                        }
+                    </script>
+
+                    <!-- Restore saved values and trigger holiday detection -->
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            // Wait a bit to ensure all scripts are loaded
+                            setTimeout(function() {
+                                console.log('Checking for saved values to restore...');
+
+                                // Check if we have saved start date and trigger validation
+                                const startDateInput = document.getElementById('startDate');
+                                const endDateInput = document.getElementById('endDate');
+
+                                if (startDateInput && startDateInput.value) {
+                                    console.log('Restoring saved start date:', startDateInput.value);
+                                    // Trigger change event to update duration calculation and holiday detection
+                                    startDateInput.dispatchEvent(new Event('change'));
+                                }
+
+                                if (endDateInput && endDateInput.value) {
+                                    console.log('Restoring saved end date:', endDateInput.value);
+                                    // Trigger change event to update duration calculation
+                                    endDateInput.dispatchEvent(new Event('change'));
+                                }
+
+                                // Check if we have saved half-day period and trigger validation
+                                const savedHalfDayPeriod = '${savedHalfDayPeriod}';
+                                if (savedHalfDayPeriod && (savedHalfDayPeriod === 'AM' || savedHalfDayPeriod === 'PM')) {
+                                    console.log('Restoring saved half-day period:', savedHalfDayPeriod);
+                                    const halfDayRadio = document.querySelector('input[name="halfDayPeriod"][value="' + savedHalfDayPeriod + '"]');
+                                    if (halfDayRadio) {
+                                        halfDayRadio.checked = true;
+                                        // Trigger change event for validation
+                                        halfDayRadio.dispatchEvent(new Event('change'));
+                                    }
+                                }
+
+                                // Check if we have saved duration type and trigger validation
+                                const savedIsHalfDayValue = '${savedIsHalfDay}';
+                                if (savedIsHalfDayValue === 'true') {
+                                    console.log('Restoring saved duration type: HALF_DAY');
+                                    const halfDayRadio = document.getElementById('durationHalfDay');
+                                    if (halfDayRadio) {
+                                        halfDayRadio.checked = true;
+                                        halfDayRadio.dispatchEvent(new Event('change'));
+                                    }
+                                }
+
+                                console.log('Saved values restoration completed');
+                            }, 200); // Wait 200ms for scripts to load
+                        });
+                    </script>
+
+                    <!-- Enhanced Form Validation -->
+                    <script src="${pageContext.request.contextPath}/assets/js/leave-form-validation.js"></script>
 
                 </body>
 
