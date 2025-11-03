@@ -32,8 +32,6 @@
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
             padding: 2rem;
-            max-width: 800px;
-            margin: 0 auto;
         }
         
         @media (max-width: 768px) {
@@ -146,7 +144,9 @@
                         <select class="form-select" id="userId" name="userId" required ${not empty contract ? 'disabled' : ''}>
                             <option value="">Select Employee</option>
                             <c:forEach var="user" items="${users}">
-                                <option value="${user.id}" ${displayData.userId == user.id ? 'selected' : ''}>
+                                <option value="${user.id}" 
+                                        ${(not empty preSelectedUserId && preSelectedUserId == user.id) || 
+                                          displayData.userId == user.id ? 'selected' : ''}>
                                     ${user.fullName} (${user.employeeCode})
                                 </option>
                             </c:forEach>
@@ -155,6 +155,11 @@
                             <input type="hidden" name="userId" value="${contract.userId}">
                             <small class="text-muted">Employee cannot be changed after contract creation</small>
                         </c:if>
+                        <c:if test="${empty contract && not empty preSelectedUserId}">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle"></i> Employee pre-selected from users without contract list
+                            </small>
+                        </c:if>
                     </div>
                     
                     <!-- Contract Number -->
@@ -162,9 +167,12 @@
                         <label for="contractNo" class="form-label">Contract Number <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="contractNo" name="contractNo" 
                                value="${not empty displayData ? displayData.contractNo : generatedContractNo}" 
-                               ${empty contract ? 'readonly' : ''} required>
+                               readonly required>
                         <c:if test="${empty contract}">
                             <small class="text-muted">Auto-generated contract number</small>
+                        </c:if>
+                        <c:if test="${not empty contract}">
+                            <small class="text-muted">Contract number cannot be changed</small>
                         </c:if>
                     </div>
                     
@@ -228,31 +236,23 @@
                         </div>
                     </div>
                     
-                    <!-- Status -->
+                    <!-- Status (Read-only) -->
                     <div class="mb-3">
-                        <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
+                        <label for="status" class="form-label">Status</label>
                         <c:choose>
                             <c:when test="${not empty contract}">
-                                <select class="form-select" id="status" name="status" required 
-                                        ${contract.status == 'expired' || contract.status == 'terminated' ? 'disabled' : ''}>
-                                    <option value="active" ${empty contract.status || contract.status == 'active' ? 'selected' : ''}>Active</option>
-                                    <option value="terminated" ${contract.status == 'terminated' ? 'selected' : ''}>Terminated</option>
-                                    <c:if test="${contract.status == 'expired'}">
-                                        <option value="expired" selected>Expired</option>
-                                    </c:if>
-                                </select>
-                                <c:if test="${contract.status == 'expired' || contract.status == 'terminated'}">
-                                    <input type="hidden" name="status" value="${contract.status}">
-                                    <small class="text-muted">Status cannot be changed for expired or terminated contracts</small>
-                                </c:if>
-                                <c:if test="${contract.status != 'expired' && contract.status != 'terminated'}">
-                                    <small class="text-muted">Status will automatically change to "Expired" when end date is reached</small>
-                                </c:if>
+                                <c:set var="statusDisplay" value="${contract.status == 'active' ? 'Active' : 
+                                                                     contract.status == 'expired' ? 'Expired' : 
+                                                                     contract.status == 'terminated' ? 'Terminated' : 'Draft'}" />
+                                <c:set var="statusValue" value="${empty contract.status ? 'draft' : contract.status}" />
+                                <input type="text" class="form-control" value="${statusDisplay}" readonly>
+                                <input type="hidden" name="status" value="${statusValue}">
+                                <small class="text-muted">Status is managed automatically by the system and cannot be changed manually</small>
                             </c:when>
                             <c:otherwise>
-                                <input type="text" class="form-control" value="Active" readonly>
-                                <input type="hidden" name="status" value="active">
-                                <small class="text-muted">New contracts will be created with "Active" status by default</small>
+                                <input type="text" class="form-control" value="Draft" readonly>
+                                <input type="hidden" name="status" value="draft">
+                                <small class="text-muted">New contracts will be created with "Draft" status and require HRM approval</small>
                             </c:otherwise>
                         </c:choose>
                     </div>

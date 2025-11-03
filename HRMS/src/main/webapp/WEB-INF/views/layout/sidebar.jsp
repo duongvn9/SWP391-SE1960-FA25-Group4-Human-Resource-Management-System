@@ -227,7 +227,7 @@
                                 <li>
                                     <a href="${pageContext.request.contextPath}/employees/users"
                                         class="nav-link ${param.currentPage == 'user-list' ? 'active' : ''}">
-                                        <i class="fas fa-user"></i><span>User List</span>
+                                        <i class="fas fa-user"></i><span>Employee List</span>
                                     </a>
                                 </li>
                                 <% } %>

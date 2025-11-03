@@ -14,6 +14,7 @@ import group4.hrms.model.Request;
 import group4.hrms.model.TimesheetPeriod;
 import group4.hrms.model.User;
 import group4.hrms.service.AttachmentService;
+import group4.hrms.service.AttendanceService;
 import group4.hrms.util.SessionUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
@@ -130,27 +131,23 @@ public class AppealRequestServlet extends HttpServlet {
                 req.setAttribute("currentPeriod", currentPeriod);
                 req.setAttribute("currentPeriodId", currentPeriodId);
 
-                // --- Lấy toàn bộ attendance logs của user trong kỳ công hiện tại ---
+                // --- Lấy toàn bộ attendance logs của user từ tất cả các kỳ công ---
                 List<AttendanceLogDto> attendanceList = new ArrayList<>();
-                if (currentPeriod != null) {
-                    LocalDate startDate = currentPeriod.getStartDate();
-                    LocalDate endDate = currentPeriod.getEndDate();
-
-                    // Lấy tất cả bản ghi của user trong kỳ công hiện tại, không giới hạn số lượng
-                    attendanceList = dao.findByFilter(
-                            userId,
-                            null, // departmentId
-                            null, // employeeId (all)
-                            startDate,
-                            endDate,
-                            null,
-                            null,
-                            currentPeriodId,
-                            Integer.MAX_VALUE,
-                            0,
-                            true
-                    );
-                }
+                
+                // Lấy tất cả attendance records của user (không giới hạn theo period)
+                attendanceList = dao.findByFilter(
+                        userId,
+                        null, // departmentId
+                        null, // employeeId (all)
+                        null, // startDate - không giới hạn
+                        null, // endDate - không giới hạn
+                        null,
+                        null,
+                        null, // periodId - không giới hạn theo period
+                        Integer.MAX_VALUE,
+                        0,
+                        true
+                );
 
                 req.setAttribute("attendanceList", attendanceList);
 
@@ -224,11 +221,7 @@ public class AppealRequestServlet extends HttpServlet {
                     continue;
                 }
 
-                if (status == null || status.trim().isEmpty()) {
-                    hasValidationErrors = true;
-                    validationErrors.append("Status is required for all edited records. ");
-                    continue;
-                }
+                // Status sẽ được tính tự động, không cần validate
 
                 // Create DTO for conflict checking
                 try {
@@ -237,7 +230,9 @@ public class AppealRequestServlet extends HttpServlet {
                     dto.setDate(LocalDate.parse(date));
                     dto.setCheckIn(LocalTime.parse(checkIn));
                     dto.setCheckOut(LocalTime.parse(checkOut));
-                    dto.setStatus(status);
+                    // Tự động tính status
+                    String calculatedStatus = AttendanceService.calculateAttendanceStatus(dto);
+                    dto.setStatus(calculatedStatus);
                     dto.setSource("appeal");
                     editedLogs.add(dto);
                 } catch (Exception e) {
@@ -330,11 +325,8 @@ public class AppealRequestServlet extends HttpServlet {
                 req.setAttribute("currentPeriodId", currentPeriodId);
 
                 List<AttendanceLogDto> attendanceList = new ArrayList<>();
-                if (currentPeriod != null) {
-                    LocalDate startDate = currentPeriod.getStartDate();
-                    LocalDate endDate = currentPeriod.getEndDate();
-                    attendanceList = dao.findByFilter(userId, null, null, startDate, endDate, null, null, currentPeriodId, Integer.MAX_VALUE, 0, true);
-                }
+                // Lấy tất cả attendance records của user (không giới hạn theo period)
+                attendanceList = dao.findByFilter(userId, null, null, null, null, null, null, null, Integer.MAX_VALUE, 0, true);
                 req.setAttribute("attendanceList", attendanceList);
 
                 req.getRequestDispatcher("/WEB-INF/views/requests/appeal-form.jsp").forward(req, resp);
@@ -529,25 +521,20 @@ public class AppealRequestServlet extends HttpServlet {
 
             // --- Lấy toàn bộ attendance logs của user trong kỳ công hiện tại ---
             List<AttendanceLogDto> attendanceList = new ArrayList<>();
-            if (currentPeriod != null) {
-                LocalDate startDate = currentPeriod.getStartDate();
-                LocalDate endDate = currentPeriod.getEndDate();
-
-                // Lấy tất cả bản ghi của user trong kỳ công hiện tại, không giới hạn số lượng
-                attendanceList = dao.findByFilter(
-                        userId,
-                        null, // departmentId
-                        null, // employeeId (all)
-                        startDate,
-                        endDate,
-                        null,
-                        null,
-                        currentPeriodId,
-                        Integer.MAX_VALUE,
-                        0,
-                        true
-                );
-            }
+            // Lấy tất cả attendance records của user (không giới hạn theo period)
+            attendanceList = dao.findByFilter(
+                    userId,
+                    null, // departmentId
+                    null, // employeeId (all)
+                    null, // startDate - không giới hạn
+                    null, // endDate - không giới hạn
+                    null,
+                    null,
+                    null, // periodId - không giới hạn theo period
+                    Integer.MAX_VALUE,
+                    0,
+                    true
+            );
 
             req.setAttribute("attendanceList", attendanceList);
             req.setAttribute("success", "Create appeal attendance request successfully!");
@@ -590,27 +577,23 @@ public class AppealRequestServlet extends HttpServlet {
             req.setAttribute("currentPeriod", currentPeriod);
             req.setAttribute("currentPeriodId", currentPeriodId);
 
-            // --- Lấy toàn bộ attendance logs của user trong kỳ công hiện tại ---
+            // --- Lấy toàn bộ attendance logs của user từ tất cả các kỳ công ---
             List<AttendanceLogDto> attendanceList = new ArrayList<>();
-            if (currentPeriod != null) {
-                LocalDate startDate = currentPeriod.getStartDate();
-                LocalDate endDate = currentPeriod.getEndDate();
-
-                // Lấy tất cả bản ghi của user trong kỳ công hiện tại, không giới hạn số lượng
-                attendanceList = dao.findByFilter(
-                        userId,
-                        null, // departmentId
-                        null, // employeeId (all)
-                        startDate,
-                        endDate,
-                        null, // status
-                        null, // source
-                        currentPeriodId,
-                        Integer.MAX_VALUE, // số lượng bản ghi cực lớn
-                        0,
-                        true
-                );
-            }
+            
+            // Lấy tất cả attendance records của user (không giới hạn theo period)
+            attendanceList = dao.findByFilter(
+                    userId,
+                    null, // departmentId
+                    null, // employeeId (all)
+                    null, // startDate - không giới hạn
+                    null, // endDate - không giới hạn
+                    null, // status
+                    null, // source
+                    null, // periodId - không giới hạn theo period
+                    Integer.MAX_VALUE, // số lượng bản ghi cực lớn
+                    0,
+                    true
+            );
 
             req.setAttribute("attendanceList", attendanceList);
 
