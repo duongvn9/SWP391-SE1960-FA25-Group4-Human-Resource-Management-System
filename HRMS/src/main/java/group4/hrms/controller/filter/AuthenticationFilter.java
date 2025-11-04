@@ -20,6 +20,7 @@ import java.io.IOException;
     "/recruitment/*",
     "/attendance/*",
     "/payroll/*",
+    "/payslips",
     "/settings/*",
     "/admin/*"
 })

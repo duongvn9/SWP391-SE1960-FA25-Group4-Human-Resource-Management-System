@@ -1,0 +1,1848 @@
+/* =========================================================
+   PAYSLIP LIST PAGE - MODERN DESIGN
+   Tham khảo từ OT Form và Leave Form
+   ========================================================= */
+
+:root {
+    --payslip-primary: #4f46e5;
+    --payslip-primary-700: #4338ca;
+    --payslip-muted: #6c757d;
+    --payslip-danger: #ef4444;
+    --payslip-warning: #f59e0b;
+    --payslip-success: #10b981;
+    --payslip-info: #3b82f6;
+    --payslip-radius: 14px;
+    --payslip-shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.06);
+    --payslip-shadow-md: 0 10px 28px rgba(17, 24, 39, 0.1);
+    --payslip-shadow-lg: 0 20px 40px rgba(17, 24, 39, 0.15);
+}
+
+/* Content Area Background */
+.payslip-page .content-area {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    min-height: calc(100vh - 70px);
+    padding: 1.5rem;
+}
+
+/* Page Header */
+.payslip-page .page-head {
+    margin-bottom: 1.5rem;
+    padding: 1.25rem;
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+    border-radius: var(--payslip-radius);
+    border-left: 4px solid var(--payslip-primary);
+}
+
+.payslip-page .page-title {
+    font-weight: 800;
+    margin: 0;
+    color: #111827;
+    font-size: 1.75rem;
+    display: flex;
+    align-items: center;
+}
+
+.payslip-page .page-title i {
+    color: var(--payslip-primary);
+    margin-right: 0.75rem;
+}
+
+.payslip-page .page-subtitle {
+    color: var(--payslip-muted);
+    margin: 0.5rem 0 0;
+    font-size: 0.95rem;
+}
+
+/* Summary Counters - Modern Card Design */
+.payslip-page .summary-counters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.payslip-page .counter-card {
+    border: 0;
+    border-radius: var(--payslip-radius);
+    background: #fff;
+    box-shadow: var(--payslip-shadow-md);
+    overflow: hidden;
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+    padding: 1.5rem;
+    position: relative;
+}
+
+.payslip-page .counter-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(135deg, var(--payslip-primary) 0%, #764ba2 100%);
+}
+
+.payslip-page .counter-card:hover {
+    box-shadow: var(--payslip-shadow-lg);
+    transform: translateY(-3px);
+}
+
+.payslip-page .counter-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.payslip-page .counter-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.payslip-page .counter-icon.primary {
+    background: rgba(102, 126, 234, 0.1);
+    color: #667eea;
+}
+
+.payslip-page .counter-icon.success {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+.payslip-page .counter-icon.warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+.payslip-page .counter-icon.danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.payslip-page .counter-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #111827;
+    line-height: 1;
+    margin: 0;
+}
+
+.payslip-page .counter-label {
+    color: #6b7280;
+    font-size: 0.8125rem;
+    margin-top: 0.375rem;
+    font-weight: 500;
+    margin: 0;
+}
+
+/* Filter Section - Modern Card Design */
+.payslip-page .filter-section {
+    border: 0;
+    border-radius: var(--payslip-radius);
+    background: #fff;
+    box-shadow: var(--payslip-shadow-md);
+    overflow: hidden;
+    margin-bottom: 2rem;
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.payslip-page .filter-section:hover {
+    box-shadow: var(--payslip-shadow-lg);
+    transform: translateY(-2px);
+}
+
+.payslip-page .filter-section .card-header {
+    background: linear-gradient(135deg, var(--payslip-primary) 0%, #764ba2 100%);
+    border: 0;
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+}
+
+.payslip-page .filter-section .card-header h5 {
+    margin: 0;
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+}
+
+.payslip-page .filter-toggle {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.payslip-page .filter-toggle:hover {
+    transform: scale(1.1);
+}
+
+.payslip-page .filter-badge {
+    background: rgba(255, 255, 255, 0.25);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 16px;
+    font-size: 0.75rem;
+    margin-left: 0.5rem;
+    font-weight: 700;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.payslip-page .filter-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    align-items: end;
+}
+
+.payslip-page .filter-group label {
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 0.4rem;
+    font-size: 0.8125rem;
+    display: flex;
+    align-items: center;
+}
+
+.payslip-page .filter-group label i {
+    margin-right: 0.4rem;
+    color: #667eea;
+    font-size: 0.75rem;
+}
+
+.payslip-page .filter-group input,
+.payslip-page .filter-group select {
+    border-radius: 12px;
+    border: 2px solid #e5e7eb;
+    background: #fff;
+    padding: 0.7rem 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    font-size: 0.875rem;
+}
+
+.payslip-page .filter-group input:hover,
+.payslip-page .filter-group select:hover {
+    border-color: #c7d2fe;
+}
+
+.payslip-page .filter-group input:focus,
+.payslip-page .filter-group select:focus {
+    border-color: var(--payslip-primary);
+    box-shadow: 0 0 0 0.2rem rgba(79, 70, 229, 0.18);
+    outline: none;
+}
+
+.payslip-page .filter-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+/* Buttons - Modern Style */
+.payslip-page .btn {
+    border-radius: 12px;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.payslip-page .btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.payslip-page .btn:active::before {
+    width: 300px;
+    height: 300px;
+}
+
+.payslip-page .btn-primary {
+    background: linear-gradient(135deg, var(--payslip-primary) 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+}
+
+.payslip-page .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(79, 70, 229, 0.5);
+    background: linear-gradient(135deg, var(--payslip-primary-700) 0%, #6a3f8f 100%);
+}
+
+.payslip-page .btn-secondary {
+    background: #6b7280;
+    color: white;
+    box-shadow: 0 4px 15px rgba(107, 114, 128, 0.3);
+}
+
+.payslip-page .btn-secondary:hover {
+    background: #4b5563;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(107, 114, 128, 0.4);
+}
+
+/* Issues Panel - Alert Style */
+.payslip-page .issues-panel {
+    border-radius: 12px;
+    border: 0;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    font-weight: 500;
+    animation: slideDown 0.3s ease;
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+    border-left: 4px solid var(--payslip-warning);
+    box-shadow: var(--payslip-shadow-sm);
+}
+
+.payslip-page .issues-panel h6 {
+    color: #92400e;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.payslip-page .issues-panel h6 i {
+    font-size: 1.25rem;
+}
+
+.payslip-page .issues-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.payslip-page .issues-list li {
+    color: #92400e;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(146, 64, 14, 0.15);
+    font-weight: 500;
+}
+
+.payslip-page .issues-list li:last-child {
+    border-bottom: none;
+}
+
+/* Table Card - Modern Design */
+.payslip-page .table-card {
+    border: 0;
+    border-radius: var(--payslip-radius);
+    background: #fff;
+    box-shadow: var(--payslip-shadow-md);
+    overflow: hidden;
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.payslip-page .table-card:hover {
+    box-shadow: var(--payslip-shadow-lg);
+    transform: translateY(-2px);
+}
+
+.payslip-page .table-card .card-header {
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%);
+    border: 0;
+    border-bottom: 2px solid #eef2ff;
+    padding: 1.25rem 1.5rem;
+}
+
+.payslip-page .table-card .card-header h5 {
+    margin: 0;
+    color: var(--payslip-primary);
+    font-weight: 700;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+}
+
+.payslip-page .table thead th {
+    background: #f8fafc;
+    color: #374151;
+    font-weight: 700;
+    border-bottom: 2px solid #e5e7eb;
+    padding: 1.25rem 1rem;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+}
+
+.payslip-page .table tbody tr:hover {
+    background: #f8fafc;
+}
+
+/* Status Badges */
+.payslip-page .status-badge {
+    padding: 0.4rem 0.875rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.payslip-page .status-badge.generated {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #065f46;
+    border: 1px solid #10b981;
+}
+
+.payslip-page .status-badge.dirty {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+    border: 1px solid #f59e0b;
+}
+
+/* Animations */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Add fade-in animation to main sections */
+.payslip-page .summary-counters {
+    animation: fadeIn 0.6s ease;
+}
+
+.payslip-page .filter-section {
+    animation: fadeIn 0.7s ease;
+}
+
+.payslip-page .table-card {
+    animation: fadeIn 0.8s ease;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .payslip-page .summary-counters {
+        grid-template-columns: 1fr;
+    }
+
+    .payslip-page .filter-row {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .payslip-page .filter-actions {
+        flex-direction: column;
+    }
+
+    .payslip-page .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}/*
+ Filter Card Body */
+.payslip-page .filter-section .card-body {
+    padding: 1.75rem 1.5rem;
+    background: #fff;
+}
+
+/* Form Controls Enhancement */
+.payslip-page .form-control,
+.payslip-page .form-select {
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    background: #fff;
+}
+
+.payslip-page .form-control:hover,
+.payslip-page .form-select:hover {
+    border-color: #9ca3af;
+}
+
+.payslip-page .form-control:focus,
+.payslip-page .form-select:focus {
+    border-color: var(--payslip-primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    outline: none;
+}
+
+/* Filter Row Layout */
+.payslip-page .filter-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.payslip-page .filter-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.payslip-page .filter-group label {
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+}
+
+.payslip-page .filter-group label i {
+    margin-right: 0.5rem;
+    color: var(--payslip-primary);
+    font-size: 0.85rem;
+}
+
+/* Filter Actions */
+.payslip-page .filter-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-start;
+}
+
+.payslip-page .filter-actions .btn {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.9rem;
+    border-radius: 8px;
+}
+
+/* Button Improvements */
+.payslip-page .btn-primary {
+    background: var(--payslip-primary);
+    border: none;
+    color: white;
+    font-weight: 600;
+}
+
+.payslip-page .btn-primary:hover {
+    background: var(--payslip-primary-700);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.payslip-page .btn-secondary {
+    background: #6b7280;
+    border: none;
+    color: white;
+    font-weight: 600;
+}
+
+.payslip-page .btn-secondary:hover {
+    background: #4b5563;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
+}
+
+/* Remove button ripple effect that might cause issues */
+.payslip-page .btn::before {
+    display: none;
+}
+
+/* Breadcrumb Enhancement */
+.payslip-page .breadcrumb {
+    background: transparent;
+    padding: 0;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.payslip-page .breadcrumb-item + .breadcrumb-item::before {
+    content: "›";
+    color: #9ca3af;
+    font-weight: 600;
+}
+
+.payslip-page .breadcrumb-item a {
+    color: var(--payslip-primary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.payslip-page .breadcrumb-item a:hover {
+    color: var(--payslip-primary-700);
+}
+
+.payslip-page .breadcrumb-item.active {
+    color: #6b7280;
+    font-weight: 500;
+}/* Fil
+ter Card Body */
+.payslip-page .filter-section .card-body {
+    padding: 1.5rem;
+    background: #fff;
+}
+
+.payslip-page .filter-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    align-items: end;
+}
+
+.payslip-page .filter-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.payslip-page .filter-group label {
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+}
+
+.payslip-page .filter-group label i {
+    margin-right: 0.5rem;
+    color: var(--payslip-primary);
+    font-size: 0.875rem;
+}
+
+.payslip-page .filter-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* Form Controls Enhancement */
+.payslip-page .form-control,
+.payslip-page .form-select {
+    border-radius: 8px;
+    border: 2px solid #e5e7eb;
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+}
+
+.payslip-page .form-control:focus,
+.payslip-page .form-select:focus {
+    border-color: var(--payslip-primary);
+    box-shadow: 0 0 0 0.2rem rgba(79, 70, 229, 0.15);
+}
+
+/* Status Badges Enhancement */
+.payslip-page .status-badge {
+    padding: 0.375rem 0.75rem;
+    border-radius: 16px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.payslip-page .status-badge.generated {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #065f46;
+    border: 1px solid #10b981;
+}
+
+.payslip-page .status-badge.dirty {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+    border: 1px solid #f59e0b;
+}
+
+.payslip-page .status-badge.pending {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    color: #1e40af;
+    border: 1px solid #3b82f6;
+}
+
+/* Action Buttons in Table */
+.payslip-page .btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8125rem;
+    border-radius: 6px;
+}
+
+.payslip-page .btn-outline-primary {
+    color: var(--payslip-primary);
+    border-color: var(--payslip-primary);
+}
+
+.payslip-page .btn-outline-primary:hover {
+    background-color: var(--payslip-primary);
+    border-color: var(--payslip-primary);
+    color: white;
+}
+
+.payslip-page .btn-outline-success {
+    color: var(--payslip-success);
+    border-color: var(--payslip-success);
+}
+
+.payslip-page .btn-outline-success:hover {
+    background-color: var(--payslip-success);
+    border-color: var(--payslip-success);
+    color: white;
+}
+
+.payslip-page .btn-outline-warning {
+    color: var(--payslip-warning);
+    border-color: var(--payslip-warning);
+}
+
+.payslip-page .btn-outline-warning:hover {
+    background-color: var(--payslip-warning);
+    border-color: var(--payslip-warning);
+    color: white;
+}
+
+/* Bulk Actions Card Enhancement */
+.payslip-page .card {
+    border: 0;
+    border-radius: var(--payslip-radius);
+    box-shadow: var(--payslip-shadow-md);
+    transition: all 0.3s ease;
+}
+
+.payslip-page .card:hover {
+    box-shadow: var(--payslip-shadow-lg);
+    transform: translateY(-2px);
+}
+
+.payslip-page .card .card-header {
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(139, 92, 246, 0.05) 100%);
+    border: 0;
+    border-bottom: 2px solid #eef2ff;
+    padding: 1.25rem 1.5rem;
+    border-radius: var(--payslip-radius) var(--payslip-radius) 0 0;
+}
+
+.payslip-page .card .card-header h5,
+.payslip-page .card .card-header h6 {
+    color: var(--payslip-primary);
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+.payslip-page .card .card-header h5 i,
+.payslip-page .card .card-header h6 i {
+    color: var(--payslip-primary);
+}
+
+.payslip-page .card .card-body {
+    padding: 1.5rem;
+}
+
+/* Issues Panel Specific Styling */
+.payslip-page .card.border-danger .card-header {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    color: #dc2626;
+    border-bottom: 2px solid #fca5a5;
+}
+
+.payslip-page .card.border-danger .card-header h6 {
+    color: #dc2626;
+}
+
+.payslip-page .card.border-warning .card-header {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #d97706;
+    border-bottom: 2px solid #fbbf24;
+}
+
+.payslip-page .card.border-warning .card-header h6 {
+    color: #d97706;
+}
+
+/* List Group Enhancement */
+.payslip-page .list-group-item {
+    border: 0;
+    border-bottom: 1px solid #f3f4f6;
+    padding: 1rem 0;
+    transition: background-color 0.2s ease;
+}
+
+.payslip-page .list-group-item:hover {
+    background-color: #f9fafb;
+}
+
+.payslip-page .list-group-item:last-child {
+    border-bottom: 0;
+}
+
+.payslip-page .list-group-item .fw-medium {
+    color: #111827;
+    font-weight: 600;
+}
+
+.payslip-page .list-group-item .text-muted {
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.payslip-page .list-group-item .small {
+    font-size: 0.8125rem;
+}
+
+/* Button Group Enhancement */
+.payslip-page .btn-group .btn {
+    border-radius: 6px;
+    margin-right: 0.25rem;
+    font-size: 0.8125rem;
+    padding: 0.375rem 0.75rem;
+}
+
+.payslip-page .btn-group .btn:last-child {
+    margin-right: 0;
+}
+
+/* Modal Enhancement */
+.payslip-page .modal-content {
+    border: 0;
+    border-radius: var(--payslip-radius);
+    box-shadow: var(--payslip-shadow-lg);
+}
+
+.payslip-page .modal-header {
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(139, 92, 246, 0.05) 100%);
+    border-bottom: 2px solid #eef2ff;
+    border-radius: var(--payslip-radius) var(--payslip-radius) 0 0;
+    padding: 1.25rem 1.5rem;
+}
+
+.payslip-page .modal-title {
+    color: var(--payslip-primary);
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+}
+
+.payslip-page .modal-title i {
+    color: var(--payslip-primary);
+}
+
+.payslip-page .modal-body {
+    padding: 1.5rem;
+}
+
+.payslip-page .modal-footer {
+    border-top: 1px solid #e5e7eb;
+    padding: 1rem 1.5rem;
+}
+
+/* Progress Bar Enhancement */
+.payslip-page .progress {
+    height: 8px;
+    border-radius: 4px;
+    background-color: #f3f4f6;
+    overflow: hidden;
+}
+
+.payslip-page .progress-bar {
+    background: linear-gradient(135deg, var(--payslip-primary) 0%, #764ba2 100%);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+/* Alert Enhancement */
+.payslip-page .alert {
+    border: 0;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    border-left: 4px solid;
+}
+
+.payslip-page .alert-info {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    color: #1e40af;
+    border-left-color: var(--payslip-info);
+}
+
+.payslip-page .alert-warning {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+    border-left-color: var(--payslip-warning);
+}
+
+.payslip-page .alert-danger {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    color: #dc2626;
+    border-left-color: var(--payslip-danger);
+}
+
+.payslip-page .alert-success {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #065f46;
+    border-left-color: var(--payslip-success);
+}
+
+/* Badge Enhancement */
+.payslip-page .badge {
+    font-weight: 600;
+    padding: 0.375rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+}
+
+.payslip-page .badge.bg-secondary {
+    background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%) !important;
+}
+
+.payslip-page .badge.bg-light {
+    background: #f8fafc !important;
+    color: #374151;
+    border: 1px solid #e5e7eb;
+}
+
+/* Form Check Enhancement */
+.payslip-page .form-check {
+    padding-left: 1.75rem;
+}
+
+.payslip-page .form-check-input {
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-top: 0.125rem;
+    border: 2px solid #d1d5db;
+    border-radius: 4px;
+}
+
+.payslip-page .form-check-input:checked {
+    background-color: var(--payslip-primary);
+    border-color: var(--payslip-primary);
+}
+
+.payslip-page .form-check-input:focus {
+    border-color: var(--payslip-primary);
+    box-shadow: 0 0 0 0.2rem rgba(79, 70, 229, 0.15);
+}
+
+.payslip-page .form-check-label {
+    font-weight: 500;
+    color: #374151;
+    margin-left: 0.5rem;
+}
+
+/* Table Enhancement */
+.payslip-page .table {
+    margin-bottom: 0;
+}
+
+.payslip-page .table thead th {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    color: #374151;
+    font-weight: 700;
+    border-bottom: 2px solid #e5e7eb;
+    padding: 1rem;
+    text-transform: uppercase;
+    font-size: 0.8125rem;
+    letter-spacing: 0.5px;
+}
+
+.payslip-page .table tbody td {
+    padding: 1rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.payslip-page .table tbody tr:hover {
+    background-color: #f9fafb;
+}
+
+/* Pagination Enhancement */
+.payslip-page .pagination {
+    margin: 0;
+}
+
+.payslip-page .page-link {
+    border: 2px solid #e5e7eb;
+    color: var(--payslip-primary);
+    padding: 0.5rem 0.75rem;
+    margin: 0 0.125rem;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.payslip-page .page-link:hover {
+    background-color: var(--payslip-primary);
+    border-color: var(--payslip-primary);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.payslip-page .page-item.active .page-link {
+    background-color: var(--payslip-primary);
+    border-color: var(--payslip-primary);
+    color: white;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.payslip-page .page-item.disabled .page-link {
+    color: #9ca3af;
+    background-color: #f9fafb;
+    border-color: #e5e7eb;
+}
+/* Respo
+nsive Design */
+@media (max-width: 1200px) {
+    .payslip-page .summary-counters {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .payslip-page .filter-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .payslip-page .content-area {
+        padding: 1rem;
+    }
+
+    .payslip-page .page-head {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .payslip-page .page-title {
+        font-size: 1.5rem;
+    }
+
+    .payslip-page .page-subtitle {
+        font-size: 0.875rem;
+    }
+
+    .payslip-page .summary-counters {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .payslip-page .counter-card {
+        padding: 1.25rem;
+    }
+
+    .payslip-page .counter-value {
+        font-size: 1.5rem;
+    }
+
+    .payslip-page .filter-section .card-body {
+        padding: 1rem;
+    }
+
+    .payslip-page .filter-row {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .payslip-page .filter-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .payslip-page .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .payslip-page .table-responsive {
+        font-size: 0.875rem;
+    }
+
+    .payslip-page .table thead th {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.75rem;
+    }
+
+    .payslip-page .table tbody td {
+        padding: 0.75rem 0.5rem;
+    }
+
+    .payslip-page .btn-group {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .payslip-page .btn-group .btn {
+        margin-right: 0;
+        margin-bottom: 0.25rem;
+        border-radius: 6px;
+    }
+
+    .payslip-page .btn-group .btn:last-child {
+        margin-bottom: 0;
+    }
+
+    .payslip-page .modal-dialog {
+        margin: 0.5rem;
+    }
+
+    .payslip-page .modal-body {
+        padding: 1rem;
+    }
+
+    .payslip-page .modal-footer {
+        padding: 0.75rem 1rem;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .payslip-page .modal-footer .btn {
+        width: 100%;
+    }
+
+    .payslip-page .list-group-item {
+        padding: 0.75rem 0;
+    }
+
+    .payslip-page .card .card-header {
+        padding: 1rem;
+    }
+
+    .payslip-page .card .card-body {
+        padding: 1rem;
+    }
+
+    .payslip-page .alert {
+        padding: 0.75rem 1rem;
+    }
+
+    .payslip-page .breadcrumb {
+        font-size: 0.8125rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .payslip-page .content-area {
+        padding: 0.75rem;
+    }
+
+    .payslip-page .page-head {
+        padding: 0.75rem;
+        text-align: center;
+    }
+
+    .payslip-page .page-title {
+        font-size: 1.25rem;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .payslip-page .counter-card {
+        padding: 1rem;
+        text-align: center;
+    }
+
+    .payslip-page .counter-card-header {
+        justify-content: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .payslip-page .counter-value {
+        font-size: 1.25rem;
+    }
+
+    .payslip-page .counter-label {
+        font-size: 0.75rem;
+    }
+
+    .payslip-page .filter-section .card-header h5 {
+        font-size: 0.9rem;
+    }
+
+    .payslip-page .filter-badge {
+        font-size: 0.6875rem;
+        padding: 0.125rem 0.5rem;
+    }
+
+    .payslip-page .btn {
+        padding: 0.625rem 1rem;
+        font-size: 0.875rem;
+    }
+
+    .payslip-page .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+
+    .payslip-page .status-badge {
+        font-size: 0.6875rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+    .payslip-page .table thead th {
+        padding: 0.5rem 0.25rem;
+        font-size: 0.6875rem;
+    }
+
+    .payslip-page .table tbody td {
+        padding: 0.5rem 0.25rem;
+        font-size: 0.8125rem;
+    }
+
+    .payslip-page .pagination {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .payslip-page .page-link {
+        padding: 0.375rem 0.5rem;
+        font-size: 0.8125rem;
+        margin: 0.125rem;
+    }
+}/*
+Advanced Animations and Interactions */
+.payslip-page .counter-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.payslip-page .counter-card::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transform: rotate(45deg);
+    transition: all 0.6s ease;
+    opacity: 0;
+}
+
+.payslip-page .counter-card:hover::after {
+    animation: shimmer 1.5s en-out;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%) translateY(-100%) rotate(45deg);
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(100%) translateY(100%) rotate(45deg);
+        opacity: 0;
+    }
+}
+
+/* Button Ripple Effect */
+.payslip-page .btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.payslip-page .btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.payslip-page .btn:active::before {
+    width: 300px;
+    height: 300px;
+}
+
+/* Loading States */
+.payslip-page .btn.loading {
+    pointer-events: none;
+    position: relative;
+}
+
+.payslip-page .btn.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Smooth Transitions for All Interactive Elements */
+.payslip-page * {
+    transition: all 0.2s ease;
+}
+
+.payslip-page .card,
+.payslip-page .btn,
+.payslip-page .form-control,
+.payslip-page .form-select,
+.payslip-page .list-group-item,
+.payslip-page .page-link {
+    transition: all 0.3s ease;
+}
+
+/* Focus States Enhancement */
+.payslip-page .btn:focus,
+.payslip-page .form-control:focus,
+.payslip-page .form-select:focus,
+.payslip-page .form-check-input:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+}
+
+/* Hover Effects for Interactive Elements */
+.payslip-page .list-group-item:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.payslip-page .status-badge:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Staggered Animation for Lists */
+.payslip-page .list-group-item {
+    animation: slideInLeft 0.5s ease forwards;
+    opacity: 0;
+    transform: translateX(-20px);
+}
+
+.payslip-page .list-group-item:nth-child(1) { animation-delay: 0.1s; }
+.payslip-page .list-group-item:nth-child(2) { animation-delay: 0.2s; }
+.payslip-page .list-group-item:nth-child(3) { animation-delay: 0.3s; }
+.payslip-page .list-group-item:nth-child(4) { animation-delay: 0.4s; }
+.payslip-page .list-group-item:nth-child(5) { animation-delay: 0.5s; }
+
+@keyframes slideInLeft {
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Progress Bar Animation */
+.payslip-page .progress-bar {
+    position: relative;
+    overflow: hidden;
+}
+
+.payslip-page .progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background-image: linear-gradient(
+        -45deg,
+        rgba(255, 255, 255, 0.2) 25%,
+        transparent 25%,
+        transparent 50%,
+        rgba(255, 255, 255, 0.2) 50%,
+        rgba(255, 255, 255, 0.2) 75%,
+        transparent 75%,
+        transparent
+    );
+    background-size: 50px 50px;
+    animation: move 2s linear infinite;
+}
+
+@keyframes move {
+    0% {
+        background-position: 0 0;
+    }
+    100% {
+        background-position: 50px 50px;
+    }
+}
+
+/* Toast/Alert Slide In Animation */
+.payslip-page .alert {
+    animation: slideInDown 0.5s ease;
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Modal Entrance Animation */
+.payslip-page .modal.fade .modal-dialog {
+    transform: scale(0.8) translateY(-50px);
+    transition: all 0.3s ease;
+}
+
+.payslip-page .modal.show .modal-dialog {
+    transform: scale(1) translateY(0);
+}
+
+/* Skeleton Loading Animation for Empty States */
+.payslip-page .skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Pulse Animation for Important Elements */
+.payslip-page .pulse {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(79, 70, 229, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(79, 70, 229, 0);
+    }
+}
+
+/* Bounce Animation for Success States */
+.payslip-page .bounce {
+    animation: bounce 0.6s ease;
+}
+
+@keyframes bounce {
+    0%, 20%, 53%, 80%, 100% {
+        transform: translate3d(0, 0, 0);
+    }
+    40%, 43% {
+        transform: translate3d(0, -8px, 0);
+    }
+    70% {
+        transform: translate3d(0, -4px, 0);
+    }
+    90% {
+        transform: translate3d(0, -2px, 0);
+    }
+}
+
+/* Smooth Scrolling */
+.payslip-page {
+    scroll-behavior: smooth;
+}
+
+/* Custom Scrollbar */
+.payslip-page ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.payslip-page ::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+
+.payslip-page ::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, var(--payslip-primary) 0%, #764ba2 100%);
+    border-radius: 4px;
+}
+
+.payslip-page ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, var(--payslip-primary-700) 0%, #6a3f8f 100%);
+}
+
+/* Print Styles */
+@media print {
+    .payslip-page .btn,
+    .payslip-page .filter-section,
+    .payslip-page .pagination,
+    .payslip-page .breadcrumb {
+        display: none !important;
+    }
+
+    .payslip-page .card {
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+    }
+
+    .payslip-page .table {
+        font-size: 12px !important;
+    }
+}/* View
+Toggle for HRM */
+.payslip-page .view-toggle-container {
+    display: flex;
+    align-items: center;
+}
+
+.payslip-page .btn-group .btn-check:checked + .btn {
+    background-color: var(--payslip-primary);
+    border-color: var(--payslip-primary);
+    color: white;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.payslip-page .btn-group .btn-outline-primary {
+    color: var(--payslip-primary);
+    border-color: var(--payslip-primary);
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.payslip-page .btn-group .btn-outline-primary:hover {
+    background-color: rgba(79, 70, 229, 0.1);
+    border-color: var(--payslip-primary);
+    color: var(--payslip-primary);
+    transform: translateY(-1px);
+}
+
+.payslip-page .btn-group .btn:first-child {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    margin-right: -1px;
+}
+
+.payslip-page .btn-group .btn:last-child {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+/* Smooth transitions for view switching */
+.payslip-page .summary-counters,
+.payslip-page .bulk-actions,
+.payslip-page .issues-panel {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.payslip-page .summary-counters[style*="display: none"],
+.payslip-page .bulk-actions[style*="display: none"],
+.payslip-page .issues-panel[style*="display: none"] {
+    opacity: 0;
+    transform: translateY(-10px);
+}
+
+/* Personal view indicator */
+.payslip-page .personal-view-indicator {
+    background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%);
+    border: 1px solid #29b6f6;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #0277bd;
+    font-weight: 500;
+}
+
+.payslip-page .personal-view-indicator i {
+    color: #0288d1;
+}
+
+/* Toggle icon animation */
+.payslip-page .toggle-icon {
+    transition: transform 0.3s ease;
+}
+
+.payslip-page .toggle-icon.rotate-180 {
+    transform: rotate(180deg);
+}
+
+/* Clickable header for collapse */
+.payslip-page .clickable-header {
+    user-select: none;
+}
+
+.payslip-page .clickable-header:hover {
+    opacity: 0.9;
+}
+
+/* Employee card styling */
+.payslip-page .card.border-warning {
+    border-left-width: 4px;
+    transition: all 0.2s ease;
+}
+
+.payslip-page .card.border-warning:hover {
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+    transform: translateY(-2px);
+}
+
+.payslip-page .card.border-info {
+    border-left-width: 4px;
+    transition: all 0.2s ease;
+}
+
+.payslip-page .card.border-info:hover {
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+    transform: translateY(-2px);
+}
+
+/* Responsive adjustments for view toggle */
+@media (max-width: 768px) {
+    .payslip-page .page-head {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+
+    .payslip-page .view-toggle-container {
+        justify-content: center;
+    }
+
+    .payslip-page .btn-group {
+        width: 100%;
+    }
+
+    .payslip-page .btn-group .btn {
+        flex: 1;
+    }
+}
+/*
+=========================================================
+   CUSTOM CONFIRM MODAL - MODERN DESIGN
+   ========================================================= */
+
+#customConfirmModal .modal-content {
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+}
+
+#customConfirmModal .modal-header {
+    background: transparent;
+    border: none;
+    padding: 1rem 1rem 0;
+}
+
+#customConfirmModal .modal-body {
+    padding: 2rem 2.5rem;
+    text-align: center;
+}
+
+#customConfirmModal .modal-body > * {
+    text-align: center;
+}
+
+#customConfirmModal .modal-body i {
+    animation: iconPulse 2s ease-in-out infinite;
+}
+
+@keyframes iconPulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 0.9;
+    }
+}
+
+#customConfirmModal .modal-title {
+    font-weight: 700;
+    color: #111827;
+    font-size: 1.35rem;
+    text-align: center !important;
+    width: 100%;
+    display: block;
+    margin: 0 auto;
+}
+
+#customConfirmModal .modal-body p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    text-align: center !important;
+    margin: 0 auto;
+}
+
+#customConfirmModal .modal-footer {
+    background: #f8fafc;
+    padding: 1.25rem 2.5rem;
+    gap: 0.75rem;
+}
+
+#customConfirmModal .modal-footer .btn {
+    padding: 0.625rem 1.5rem;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    min-width: 100px;
+}
+
+#customConfirmModal .modal-footer .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+#customConfirmModal .modal-footer .btn-secondary {
+    background: #e5e7eb;
+    border-color: #e5e7eb;
+    color: #374151;
+}
+
+#customConfirmModal .modal-footer .btn-secondary:hover {
+    background: #d1d5db;
+    border-color: #d1d5db;
+}
+
+#customConfirmModal .modal-footer .btn-warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    border: none;
+    color: white;
+}
+
+#customConfirmModal .modal-footer .btn-warning:hover {
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+}
+
+#customConfirmModal .modal-footer .btn-primary {
+    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+    border: none;
+}
+
+#customConfirmModal .modal-footer .btn-primary:hover {
+    background: linear-gradient(135deg, #4338ca 0%, #3730a3 100%);
+}
+
+#customConfirmModal .modal-footer .btn-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    border: none;
+}
+
+#customConfirmModal .modal-footer .btn-danger:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+}
+
+/* Icon colors */
+#customConfirmModal .text-warning {
+    color: #f59e0b !important;
+}
+
+#customConfirmModal .text-primary {
+    color: #4f46e5 !important;
+}
+
+#customConfirmModal .text-danger {
+    color: #ef4444 !important;
+}
+
+#customConfirmModal .text-success {
+    color: #10b981 !important;
+}
+
+#customConfirmModal .text-info {
+    color: #3b82f6 !important;
+}
+
+/* Backdrop animation */
+#customConfirmModal.show {
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Modal dialog animation */
+#customConfirmModal .modal-dialog {
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Force center alignment for all modal content */
+#customConfirmModal h5,
+#customConfirmModal .modal-title,
+#customConfirmModal p,
+#customConfirmModal .text-muted,
+#customConfirmModal .modal-body div {
+    text-align: center !important;
+}
+
+#customConfirmModal .modal-body .mb-3 {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

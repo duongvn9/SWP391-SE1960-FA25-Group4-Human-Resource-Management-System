@@ -8,22 +8,22 @@ public enum ContactType {
     /**
      * Contact related to job recruitment and applications
      */
-    RECRUITMENT("Tuyển dụng", "recruitment"),
+    RECRUITMENT("Recruitment", "recruitment"),
 
     /**
      * Contact related to business partnerships
      */
-    PARTNERSHIP("Hợp tác kinh doanh", "partnership"),
+    PARTNERSHIP("Business Partnership", "partnership"),
 
     /**
      * Contact related to complaints or issues
      */
-    COMPLAINT("Khiếu nại", "complaint"),
+    COMPLAINT("Complaint", "complaint"),
 
     /**
      * General inquiries or other types of contact
      */
-    OTHER("Khác", "other");
+    OTHER("Other", "other");
 
     private final String displayName;
     private final String code;

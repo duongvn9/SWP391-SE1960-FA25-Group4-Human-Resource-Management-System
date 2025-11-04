@@ -580,7 +580,7 @@
                             age--;
                         }
 
-                        return age >= 18 && age <= 60;
+                        return age >= 18;
                     }
 
                     // HTML5 validation is enabled by default with 'required' attributes
@@ -590,7 +590,7 @@
                         if (dateOfBirth) {
                             if (!validateAge(dateOfBirth)) {
                                 e.preventDefault();
-                                dateOfBirthInput.setCustomValidity('Employee must be between 18 and 60 years old');
+                                dateOfBirthInput.setCustomValidity('Employee must be at least 18 years old');
                                 dateOfBirthInput.reportValidity();
                                 return false;
                             } else {
@@ -605,7 +605,7 @@
                         if (dateOfBirth) {
                             const isValid = validateAge(dateOfBirth);
                             if (!isValid) {
-                                this.setCustomValidity('Employee must be between 18 and 60 years old');
+                                this.setCustomValidity('Employee must be at least 18 years old');
                                 this.reportValidity();
                             } else {
                                 this.setCustomValidity('');

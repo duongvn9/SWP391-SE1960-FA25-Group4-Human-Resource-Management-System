@@ -3,12 +3,15 @@ package group4.hrms.email.service;
 import group4.hrms.email.dao.EmailQueueDao;
 import group4.hrms.email.model.EmailQueue;
 import group4.hrms.email.model.EmailStatus;
+import group4.hrms.util.DatabaseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import jakarta.mail.*;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.Properties;
@@ -114,11 +117,39 @@ public class EmailSenderService {
 
             // Gửi email
             Transport.send(message);
+            logger.info("✅ Email đã gửi thành công qua SMTP đến: {}", emailQueue.getRecipientEmail());
 
-            // Cập nhật status thành SENT
-            emailQueue.setStatus(EmailStatus.SENT);
-            emailQueue.setSentAt(LocalDateTime.now());
-            queueDao.update(emailQueue);
+            // Cập nhật status thành SENT bằng raw SQL
+            try {
+                logger.info("Chuẩn bị update status SENT cho email ID: {}", emailQueue.getId());
+
+                String updateSql = "UPDATE email_queue SET status = 'SENT', sent_at = NOW() WHERE id = ?";
+
+                try (Connection conn = DatabaseUtil.getConnection();
+                        PreparedStatement stmt = conn.prepareStatement(updateSql)) {
+
+                    stmt.setLong(1, emailQueue.getId());
+                    int rows = stmt.executeUpdate();
+
+                    logger.info("✅ Đã cập nhật status SENT cho email ID: {} - {} rows affected",
+                            emailQueue.getId(), rows);
+
+                    // Update local object
+                    emailQueue.setStatus(EmailStatus.SENT);
+                    emailQueue.setSentAt(LocalDateTime.now());
+                }
+
+            } catch (SQLException ex) {
+                logger.error("❌ Lỗi SQLException khi cập nhật status SENT cho email {}: {}",
+                        emailQueue.getId(), ex.getMessage(), ex);
+                ex.printStackTrace();
+                // Email đã gửi thành công nhưng không update được DB
+                // Vẫn return true vì email đã đến người nhận
+            } catch (Exception ex) {
+                logger.error("❌ Lỗi Exception khi cập nhật status SENT cho email {}: {}",
+                        emailQueue.getId(), ex.getMessage(), ex);
+                ex.printStackTrace();
+            }
 
             logger.info("✅ Email đã gửi thành công đến: {}", emailQueue.getRecipientEmail());
             return true;
@@ -127,14 +158,29 @@ public class EmailSenderService {
             logger.error("❌ Lỗi khi gửi email đến {}: {}",
                     emailQueue.getRecipientEmail(), e.getMessage(), e);
 
-            // Cập nhật status thành FAILED
+            // Cập nhật status thành FAILED bằng raw SQL
             try {
-                emailQueue.setStatus(EmailStatus.FAILED);
-                emailQueue.setAttempts(emailQueue.getAttempts() + 1);
-                emailQueue.setErrorMessage(e.getMessage());
-                queueDao.update(emailQueue);
+                String updateSql = "UPDATE email_queue SET status = 'FAILED', retry_count = retry_count + 1, error_message = ? WHERE id = ?";
+
+                try (Connection conn = DatabaseUtil.getConnection();
+                        PreparedStatement stmt = conn.prepareStatement(updateSql)) {
+
+                    stmt.setString(1, e.getMessage());
+                    stmt.setLong(2, emailQueue.getId());
+                    int rows = stmt.executeUpdate();
+
+                    logger.info("✅ Đã cập nhật status FAILED cho email ID: {} - {} rows affected",
+                            emailQueue.getId(), rows);
+
+                    // Update local object
+                    emailQueue.setStatus(EmailStatus.FAILED);
+                    emailQueue.setAttempts(emailQueue.getAttempts() + 1);
+                    emailQueue.setErrorMessage(e.getMessage());
+                }
+
             } catch (SQLException ex) {
-                logger.error("Lỗi khi cập nhật email queue: {}", ex.getMessage());
+                logger.error("❌ Lỗi khi cập nhật status FAILED cho email {}: {}",
+                        emailQueue.getId(), ex.getMessage(), ex);
             }
 
             return false;

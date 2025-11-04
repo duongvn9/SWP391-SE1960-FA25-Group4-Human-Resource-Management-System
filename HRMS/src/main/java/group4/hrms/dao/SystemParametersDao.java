@@ -1,368 +1,152 @@
 package group4.hrms.dao;
 
-import group4.hrms.model.SystemParameters;
-import group4.hrms.util.DatabaseUtil;
-
-import java.sql.*;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import group4.hrms.util.DatabaseUtil;
+
 /**
- * DAO class để xử lý các thao tác với bảng system_parameters
- * Mapping theo database schema mới
- * 
- * @author Group4
+ * DAO for SystemParameters table
+ * Handles configuration data stored in namespace/key/value JSON structure
  */
-public class SystemParametersDao extends BaseDao<SystemParameters, Long> {
-    
-    @Override
-    protected String getTableName() {
-        return "system_parameters";
-    }
-    
-    @Override
-    protected SystemParameters mapResultSetToEntity(ResultSet rs) throws SQLException {
-        SystemParameters param = new SystemParameters();
-        param.setId(rs.getLong("id"));
-        param.setScopeType(rs.getString("scope_type"));
-        param.setScopeId(rs.getLong("scope_id"));
-        param.setNamespace(rs.getString("namespace"));
-        param.setParamKey(rs.getString("param_key"));
-        param.setValueJson(rs.getString("value_json"));
-        param.setDescription(rs.getString("description"));
-        param.setUpdatedByAccountId(rs.getLong("updated_by_account_id"));
-        param.setUpdatedAt(getLocalDateTime(rs, "updated_at"));
-        
-        return param;
-    }
-    
-    @Override
-    protected void setEntityId(SystemParameters param, Long id) {
-        param.setId(id);
-    }
-    
-    @Override
-    protected Long getEntityId(SystemParameters param) {
-        return param.getId();
-    }
-    
-    @Override
-    protected String createInsertSql() {
-        return "INSERT INTO system_parameters (scope_type, scope_id, namespace, param_key, " +
-               "value_json, description, updated_by_account_id, updated_at) " +
-               "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-    }
-    
-    @Override
-    protected String createUpdateSql() {
-        return "UPDATE system_parameters SET scope_type = ?, scope_id = ?, namespace = ?, " +
-               "param_key = ?, value_json = ?, description = ?, updated_by_account_id = ?, " +
-               "updated_at = ? WHERE id = ?";
-    }
-    
-    @Override
-    protected void setInsertParameters(PreparedStatement stmt, SystemParameters param) throws SQLException {
-        stmt.setString(1, param.getScopeType());
-        stmt.setObject(2, param.getScopeId(), Types.BIGINT);
-        stmt.setString(3, param.getNamespace());
-        stmt.setString(4, param.getParamKey());
-        stmt.setString(5, param.getValueJson());
-        stmt.setString(6, param.getDescription());
-        stmt.setObject(7, param.getUpdatedByAccountId(), Types.BIGINT);
-        setTimestamp(stmt, 8, param.getUpdatedAt() != null ? param.getUpdatedAt() : LocalDateTime.now());
-    }
-    
-    @Override
-    protected void setUpdateParameters(PreparedStatement stmt, SystemParameters param) throws SQLException {
-        stmt.setString(1, param.getScopeType());
-        stmt.setObject(2, param.getScopeId(), Types.BIGINT);
-        stmt.setString(3, param.getNamespace());
-        stmt.setString(4, param.getParamKey());
-        stmt.setString(5, param.getValueJson());
-        stmt.setString(6, param.getDescription());
-        stmt.setObject(7, param.getUpdatedByAccountId(), Types.BIGINT);
-        setTimestamp(stmt, 8, LocalDateTime.now());
-        stmt.setLong(9, param.getId());
-    }
-    
-    // Business methods
-    
+public class SystemParametersDao {
+    private static final Logger logger = LoggerFactory.getLogger(SystemParametersDao.class);
+
+    private static final String SELECT_BY_NAMESPACE_KEY = """
+            SELECT value_json
+            FROM system_parameters
+            WHERE scope_type = 'GLOBAL' AND scope_id IS NULL AND namespace = ? AND param_key = ?
+            """;
+
+    private static final String SELECT_BY_NAMESPACE = """
+            SELECT param_key, value_json
+            FROM system_parameters
+            WHERE scope_type = 'GLOBAL' AND scope_id IS NULL AND namespace = ?
+            """;
+
+    private static final String INSERT_OR_UPDATE = """
+            INSERT INTO system_parameters (scope_type, scope_id, namespace, param_key, value_json, description, updated_at)
+            VALUES ('GLOBAL', NULL, ?, ?, ?, ?, NOW())
+            ON DUPLICATE KEY UPDATE
+                value_json = VALUES(value_json),
+                description = VALUES(description),
+                updated_at = NOW()
+            """;
+
     /**
-     * Tìm parameter theo scope, namespace và key
+     * Get parameter value by namespace and key
+     *
+     * @param namespace Parameter namespace
+     * @param key Parameter key
+     * @return Parameter value as JSON string, or empty if not found
      */
-    public Optional<SystemParameters> findByKey(String scopeType, Long scopeId, String namespace, String paramKey) throws SQLException {
-        if (scopeType == null || namespace == null || paramKey == null) {
+    public Optional<String> getParameter(String namespace, String key) {
+        if (namespace == null || key == null) {
             return Optional.empty();
         }
-        
-        String sql = "SELECT * FROM system_parameters WHERE scope_type = ? AND " +
-                    "(scope_id = ? OR (scope_id IS NULL AND ? IS NULL)) AND " +
-                    "namespace = ? AND param_key = ?";
-        
+
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setString(1, scopeType);
-            stmt.setObject(2, scopeId, Types.BIGINT);
-            stmt.setObject(3, scopeId, Types.BIGINT);
-            stmt.setString(4, namespace);
-            stmt.setString(5, paramKey);
-            
-            try (ResultSet rs = stmt.executeQuery()) {
+             PreparedStatement ps = conn.prepareStatement(SELECT_BY_NAMESPACE_KEY)) {
+
+            ps.setString(1, namespace);
+            ps.setString(2, key);
+
+            try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    return Optional.of(mapResultSetToEntity(rs));
+                    String value = rs.getString("value_json");
+                    logger.debug("Found parameter {}.{}: {}", namespace, key, value);
+                    return Optional.of(value);
                 }
             }
-            
+
+            logger.debug("Parameter not found: {}.{}", namespace, key);
             return Optional.empty();
-            
+
         } catch (SQLException e) {
-            logger.error("Error finding parameter by key {}:{}:{}:{}: {}", scopeType, scopeId, namespace, paramKey, e.getMessage(), e);
-            throw e;
+            logger.error("Error getting parameter {}.{}: {}", namespace, key, e.getMessage(), e);
+            return Optional.empty();
         }
     }
-    
+
     /**
-     * Tìm tất cả parameters theo namespace
+     * Get all parameters for a namespace
+     *
+     * @param namespace Parameter namespace
+     * @return Map of key-value pairs for the namespace
      */
-    public List<SystemParameters> findByNamespace(String namespace) throws SQLException {
-        if (namespace == null || namespace.trim().isEmpty()) {
-            return new ArrayList<>();
+    public Map<String, String> getParametersByNamespace(String namespace) {
+        Map<String, String> parameters = new HashMap<>();
+
+        if (namespace == null) {
+            return parameters;
         }
-        
-        List<SystemParameters> parameters = new ArrayList<>();
-        String sql = "SELECT * FROM system_parameters WHERE namespace = ? ORDER BY scope_type, scope_id, param_key";
-        
+
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setString(1, namespace);
-            
-            try (ResultSet rs = stmt.executeQuery()) {
+             PreparedStatement ps = conn.prepareStatement(SELECT_BY_NAMESPACE)) {
+
+            ps.setString(1, namespace);
+
+            try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    parameters.add(mapResultSetToEntity(rs));
+                    String key = rs.getString("param_key");
+                    String value = rs.getString("value_json");
+                    parameters.put(key, value);
                 }
             }
-            
+
+            logger.debug("Found {} parameters for namespace: {}", parameters.size(), namespace);
             return parameters;
-            
+
         } catch (SQLException e) {
-            logger.error("Error finding parameters by namespace {}: {}", namespace, e.getMessage(), e);
-            throw e;
-        }
-    }
-    
-    /**
-     * Tìm parameters theo scope
-     */
-    public List<SystemParameters> findByScope(String scopeType, Long scopeId) throws SQLException {
-        if (scopeType == null || scopeType.trim().isEmpty()) {
-            return new ArrayList<>();
-        }
-        
-        List<SystemParameters> parameters = new ArrayList<>();
-        String sql = "SELECT * FROM system_parameters WHERE scope_type = ? AND " +
-                    "(scope_id = ? OR (scope_id IS NULL AND ? IS NULL)) " +
-                    "ORDER BY namespace, param_key";
-        
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setString(1, scopeType);
-            stmt.setObject(2, scopeId, Types.BIGINT);
-            stmt.setObject(3, scopeId, Types.BIGINT);
-            
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    parameters.add(mapResultSetToEntity(rs));
-                }
-            }
-            
+            logger.error("Error getting parameters for namespace {}: {}", namespace, e.getMessage(), e);
             return parameters;
-            
-        } catch (SQLException e) {
-            logger.error("Error finding parameters by scope {}:{}: {}", scopeType, scopeId, e.getMessage(), e);
-            throw e;
         }
     }
-    
+
     /**
-     * Tìm global parameters
+     * Set parameter value
+     *
+     * @param namespace Parameter namespace
+     * @param key Parameter key
+     * @param value Parameter value (JSON string)
+     * @param description Optional description
+     * @return true if successful, false otherwise
      */
-    public List<SystemParameters> findGlobalParameters() throws SQLException {
-        return findByScope("GLOBAL", null);
-    }
-    
-    /**
-     * Tìm parameters theo scope type và namespace
-     */
-    public List<SystemParameters> findByScopeAndNamespace(String scopeType, Long scopeId, String namespace) throws SQLException {
-        if (scopeType == null || namespace == null) {
-            return new ArrayList<>();
-        }
-        
-        List<SystemParameters> parameters = new ArrayList<>();
-        String sql = "SELECT * FROM system_parameters WHERE scope_type = ? AND " +
-                    "(scope_id = ? OR (scope_id IS NULL AND ? IS NULL)) AND " +
-                    "namespace = ? ORDER BY param_key";
-        
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setString(1, scopeType);
-            stmt.setObject(2, scopeId, Types.BIGINT);
-            stmt.setObject(3, scopeId, Types.BIGINT);
-            stmt.setString(4, namespace);
-            
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    parameters.add(mapResultSetToEntity(rs));
-                }
-            }
-            
-            return parameters;
-            
-        } catch (SQLException e) {
-            logger.error("Error finding parameters by scope and namespace {}:{}:{}: {}", scopeType, scopeId, namespace, e.getMessage(), e);
-            throw e;
-        }
-    }
-    
-    /**
-     * Cập nhật value của parameter
-     */
-    public boolean updateValue(String scopeType, Long scopeId, String namespace, String paramKey, String valueJson, Long updatedBy) throws SQLException {
-        if (scopeType == null || namespace == null || paramKey == null || valueJson == null) {
+    public boolean setParameter(String namespace, String key, String value, String description) {
+        if (namespace == null || key == null || value == null) {
+            logger.warn("Invalid parameters for setParameter: namespace={}, key={}, value={}",
+                       namespace, key, value);
             return false;
         }
-        
-        String sql = "UPDATE system_parameters SET value_json = ?, updated_by_account_id = ?, updated_at = ? " +
-                    "WHERE scope_type = ? AND " +
-                    "(scope_id = ? OR (scope_id IS NULL AND ? IS NULL)) AND " +
-                    "namespace = ? AND param_key = ?";
-        
+
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setString(1, valueJson);
-            stmt.setObject(2, updatedBy, Types.BIGINT);
-            setTimestamp(stmt, 3, LocalDateTime.now());
-            stmt.setString(4, scopeType);
-            stmt.setObject(5, scopeId, Types.BIGINT);
-            stmt.setObject(6, scopeId, Types.BIGINT);
-            stmt.setString(7, namespace);
-            stmt.setString(8, paramKey);
-            
-            return stmt.executeUpdate() > 0;
-            
-        } catch (SQLException e) {
-            logger.error("Error updating parameter value {}:{}:{}:{}: {}", scopeType, scopeId, namespace, paramKey, e.getMessage(), e);
-            throw e;
-        }
-    }
-    
-    /**
-     * Xóa parameter
-     */
-    public boolean deleteParameter(String scopeType, Long scopeId, String namespace, String paramKey) throws SQLException {
-        if (scopeType == null || namespace == null || paramKey == null) {
+             PreparedStatement ps = conn.prepareStatement(INSERT_OR_UPDATE)) {
+
+            ps.setString(1, namespace);
+            ps.setString(2, key);
+            ps.setString(3, value);
+            ps.setString(4, description);
+
+            int affectedRows = ps.executeUpdate();
+
+            if (affectedRows > 0) {
+                logger.info("Successfully set parameter {}.{}", namespace, key);
+                return true;
+            }
+
+            return false;
+
+        } catch (SQLException e){
+            logger.error("Error setting parameter {}.{}: {}", namespace, key, e.getMessage(), e);
             return false;
         }
-        
-        String sql = "DELETE FROM system_parameters WHERE scope_type = ? AND " +
-                    "(scope_id = ? OR (scope_id IS NULL AND ? IS NULL)) AND " +
-                    "namespace = ? AND param_key = ?";
-        
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setString(1, scopeType);
-            stmt.setObject(2, scopeId, Types.BIGINT);
-            stmt.setObject(3, scopeId, Types.BIGINT);
-            stmt.setString(4, namespace);
-            stmt.setString(5, paramKey);
-            
-            return stmt.executeUpdate() > 0;
-            
-        } catch (SQLException e) {
-            logger.error("Error deleting parameter {}:{}:{}:{}: {}", scopeType, scopeId, namespace, paramKey, e.getMessage(), e);
-            throw e;
-        }
-    }
-    
-    /**
-     * Đếm số parameters theo namespace
-     */
-    public long countByNamespace(String namespace) throws SQLException {
-        if (namespace == null || namespace.trim().isEmpty()) {
-            return 0;
-        }
-        
-        String sql = "SELECT COUNT(*) FROM system_parameters WHERE namespace = ?";
-        
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setString(1, namespace);
-            
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getLong(1);
-                }
-            }
-            
-            return 0;
-            
-        } catch (SQLException e) {
-            logger.error("Error counting parameters by namespace {}: {}", namespace, e.getMessage(), e);
-            throw e;
-        }
-    }
-    
-    /**
-     * Lấy tất cả namespaces
-     */
-    public List<String> getAllNamespaces() throws SQLException {
-        List<String> namespaces = new ArrayList<>();
-        String sql = "SELECT DISTINCT namespace FROM system_parameters ORDER BY namespace";
-        
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            
-            while (rs.next()) {
-                namespaces.add(rs.getString("namespace"));
-            }
-            
-            return namespaces;
-            
-        } catch (SQLException e) {
-            logger.error("Error getting all namespaces: {}", e.getMessage(), e);
-            throw e;
-        }
-    }
-    
-    /**
-     * Lấy giá trị parameter dưới dạng String (convenience method)
-     */
-    public String getParameterValue(String scopeType, Long scopeId, String namespace, String paramKey) throws SQLException {
-        Optional<SystemParameters> param = findByKey(scopeType, scopeId, namespace, paramKey);
-        return param.map(SystemParameters::getValueJson).orElse(null);
-    }
-    
-    /**
-     * Lấy giá trị global parameter (convenience method)
-     */
-    public String getGlobalParameterValue(String namespace, String paramKey) throws SQLException {
-        return getParameterValue("GLOBAL", null, namespace, paramKey);
-    }
-    
-    /**
-     * Kiểm tra parameter có tồn tại không
-     */
-    public boolean existsParameter(String scopeType, Long scopeId, String namespace, String paramKey) throws SQLException {
-        return findByKey(scopeType, scopeId, namespace, paramKey).isPresent();
     }
 }

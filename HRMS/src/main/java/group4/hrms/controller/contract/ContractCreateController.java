@@ -8,6 +8,7 @@ import group4.hrms.model.Department;
 import group4.hrms.model.EmploymentContract;
 import group4.hrms.model.Position;
 import group4.hrms.model.User;
+import group4.hrms.util.SessionUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -27,7 +28,7 @@ public class ContractCreateController extends HttpServlet {
     private UserDao userDao;
     private DepartmentDao departmentDao;
     private PositionDao positionDao;
-    
+
     @Override
     public void init() throws ServletException {
         contractDao = new EmploymentContractDao();
@@ -35,9 +36,9 @@ public class ContractCreateController extends HttpServlet {
         departmentDao = new DepartmentDao();
         positionDao = new PositionDao();
     }
-    
+
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
             // Get current user from session
@@ -46,7 +47,7 @@ public class ContractCreateController extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/login");
                 return;
             }
-            
+
             // Get userId from parameter (if coming from users-without-contract section)
             String userIdParam = request.getParameter("userId");
             Long preSelectedUserId = null;
@@ -57,44 +58,44 @@ public class ContractCreateController extends HttpServlet {
                     // Invalid userId parameter, ignore it
                 }
             }
-            
+
             // Load all users
             List<User> allUsers = userDao.findAll();
-            
+
             // Get user IDs with active contracts
             List<Long> userIdsWithActiveContract = contractDao.findUserIdsWithActiveContract();
-            
+
             // Filter out users who already have active contracts and current user
             List<User> availableUsers = new ArrayList<>();
             for (User user : allUsers) {
-                if (!user.getId().equals(currentUser.getId()) && 
+                if (!user.getId().equals(currentUser.getId()) &&
                     !userIdsWithActiveContract.contains(user.getId())) {
                     availableUsers.add(user);
                 }
             }
-            
+
             // Generate contract number
             String generatedContractNo = contractDao.generateContractNo();
-            
+
             List<Department> departments = departmentDao.findAll();
             List<Position> positions = positionDao.findAll();
-            
+
             request.setAttribute("users", availableUsers);
             request.setAttribute("departments", departments);
             request.setAttribute("positions", positions);
             request.setAttribute("generatedContractNo", generatedContractNo);
             request.setAttribute("preSelectedUserId", preSelectedUserId);
-            
+
             request.getRequestDispatcher("/WEB-INF/views/contracts/contract-form.jsp")
                     .forward(request, response);
-                    
+
         } catch (SQLException e) {
             throw new ServletException("Error loading contract form", e);
         }
     }
-    
+
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) 
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
             // Get current user from session
@@ -103,7 +104,7 @@ public class ContractCreateController extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/login");
                 return;
             }
-            
+
             // Get form data
             String userIdStr = request.getParameter("userId");
             String contractNo = request.getParameter("contractNo");
@@ -113,14 +114,14 @@ public class ContractCreateController extends HttpServlet {
             String baseSalaryStr = request.getParameter("baseSalary");
             String currency = request.getParameter("currency");
             String note = request.getParameter("note");
-            
+
             // Parse data
             Long userId = Long.parseLong(userIdStr);
             LocalDate startDate = LocalDate.parse(startDateStr);
-            LocalDate endDate = (endDateStr != null && !endDateStr.isEmpty()) 
+            LocalDate endDate = (endDateStr != null && !endDateStr.isEmpty())
                     ? LocalDate.parse(endDateStr) : null;
             BigDecimal baseSalary = new BigDecimal(baseSalaryStr);
-            
+
             // Create temporary contract object for form data
             EmploymentContract formData = new EmploymentContract();
             formData.setUserId(userId);
@@ -131,9 +132,9 @@ public class ContractCreateController extends HttpServlet {
             formData.setBaseSalary(baseSalary);
             formData.setCurrency(currency);
             formData.setNote(note);
-            
+
             String errorMessage = null;
-            
+
             // Validation 1: HR không thể tạo hợp đồng cho chính mình
             if (userId.equals(currentUser.getId())) {
                 errorMessage = "You cannot create a contract for yourself";
@@ -154,7 +155,7 @@ public class ContractCreateController extends HttpServlet {
             else if (("fixed_term".equalsIgnoreCase(contractType) || "probation".equalsIgnoreCase(contractType)) && endDate == null) {
                 errorMessage = "Fixed-term and probation contracts must have an end date";
             }
-            
+
             // If validation failed, return to form with data
             if (errorMessage != null) {
                 // Load form data
@@ -162,37 +163,39 @@ public class ContractCreateController extends HttpServlet {
                 List<Long> userIdsWithActiveContract = contractDao.findUserIdsWithActiveContract();
                 List<User> availableUsers = new ArrayList<>();
                 for (User user : allUsers) {
-                    if (!user.getId().equals(currentUser.getId()) && 
+                    if (!user.getId().equals(currentUser.getId()) &&
                         !userIdsWithActiveContract.contains(user.getId())) {
                         availableUsers.add(user);
                     }
                 }
-                
+
                 List<Department> departments = departmentDao.findAll();
                 List<Position> positions = positionDao.findAll();
-                
+
                 request.setAttribute("users", availableUsers);
                 request.setAttribute("departments", departments);
                 request.setAttribute("positions", positions);
                 request.setAttribute("formData", formData);
                 request.setAttribute("errorMessage", errorMessage);
-                
+
                 request.getRequestDispatcher("/WEB-INF/views/contracts/contract-form.jsp")
                         .forward(request, response);
                 return;
             }
-            
+
             // Create contract with draft status and pending approval
             formData.setStatus("draft"); // Status is draft until approved
             formData.setApprovalStatus("pending"); // Waiting for HRM approval
-            formData.setCreatedByAccountId(currentUser.getId());
-            
+            // Get account ID from session (created_by_account_id references accounts.id)
+            Long accountId = SessionUtil.getCurrentAccountId(request);
+            formData.setCreatedByAccountId(accountId);
+
             // Save to database
             contractDao.save(formData);
-            
-            response.sendRedirect(request.getContextPath() + 
+
+            response.sendRedirect(request.getContextPath() +
                 "/contracts?success=" + java.net.URLEncoder.encode("Contract created and submitted for approval", "UTF-8"));
-            
+
         } catch (Exception e) {
             e.printStackTrace();
             response.sendRedirect(request.getContextPath() + "/contracts/create?error=" + e.getMessage());

@@ -240,4 +240,61 @@ public class PermissionUtil {
 
         return false;
     }
+
+    /**
+     * Lấy role của user dựa trên position code (tái sử dụng logic có sẵn)
+     */
+    public static String getUserRole(User user) {
+        if (user == null) {
+            return "USER";
+        }
+
+        // Tái sử dụng logic từ getCurrentUserPositionCode
+        // Kiểm tra admin trước
+        if (user.getPositionId() == null) {
+            return "USER";
+        }
+
+        // Map position ID to role dựa trên pattern có sẵn
+        Long positionId = user.getPositionId();
+
+        // Based on existing position mapping in the system
+        switch (positionId.intValue()) {
+            case 7: // HR position
+                return "HR";
+            case 8: // HRM position
+                return "HRM";
+            case 1: // Admin position
+                return "ADMIN";
+            case 2: // Manager position
+                return "MANAGER";
+            default:
+                return "USER";
+        }
+    }
+
+    /**
+     * Lấy role của user hiện tại từ request (tái sử dụng getCurrentUserPositionCode)
+     */
+    public static String getCurrentUserRole(HttpServletRequest request) {
+        String positionCode = getCurrentUserPositionCode(request);
+
+        if (positionCode == null) {
+            return "USER";
+        }
+
+        // Convert position code to role
+        switch (positionCode) {
+            case POSITION_ADMIN:
+                return "ADMIN";
+            case POSITION_HR:
+                return "HR";
+            case POSITION_HRM:
+                return "HRM";
+            case POSITION_DEPT_MANAGER:
+                return "MANAGER";
+            default:
+                return "USER";
+        }
+    }
 }
