@@ -49,6 +49,11 @@ public class DashboardKpiDto {
     private Map<String, Integer> requestsByType;
     private Map<String, Integer> otRequestsByStatus;
     private Map<String, Integer> leaveRequestsByStatus;
+    private Map<String, Integer> recruitmentRequestsByStatus;
+    
+    // Recruitment metrics
+    private int pendingRecruitmentRequests;
+    private int totalRecruitmentRequestsThisMonth;
     
     // Monthly trends (last 6 months)
     private Map<String, Integer> employeeTrend;
@@ -298,5 +303,29 @@ public class DashboardKpiDto {
 
     public void setLeaveRequestsByStatus(Map<String, Integer> leaveRequestsByStatus) {
         this.leaveRequestsByStatus = leaveRequestsByStatus;
+    }
+
+    public Map<String, Integer> getRecruitmentRequestsByStatus() {
+        return recruitmentRequestsByStatus;
+    }
+
+    public void setRecruitmentRequestsByStatus(Map<String, Integer> recruitmentRequestsByStatus) {
+        this.recruitmentRequestsByStatus = recruitmentRequestsByStatus;
+    }
+
+    public int getPendingRecruitmentRequests() {
+        return pendingRecruitmentRequests;
+    }
+
+    public void setPendingRecruitmentRequests(int pendingRecruitmentRequests) {
+        this.pendingRecruitmentRequests = pendingRecruitmentRequests;
+    }
+
+    public int getTotalRecruitmentRequestsThisMonth() {
+        return totalRecruitmentRequestsThisMonth;
+    }
+
+    public void setTotalRecruitmentRequestsThisMonth(int totalRecruitmentRequestsThisMonth) {
+        this.totalRecruitmentRequestsThisMonth = totalRecruitmentRequestsThisMonth;
     }
 }
