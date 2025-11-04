@@ -1,4 +1,4 @@
-package group4.hrms.controller.contract;
+ package group4.hrms.controller.contract;
 
 import group4.hrms.dao.DepartmentDao;
 import group4.hrms.dao.EmploymentContractDao;
@@ -47,6 +47,17 @@ public class ContractCreateController extends HttpServlet {
                 return;
             }
             
+            // Get userId from parameter (if coming from users-without-contract section)
+            String userIdParam = request.getParameter("userId");
+            Long preSelectedUserId = null;
+            if (userIdParam != null && !userIdParam.isEmpty()) {
+                try {
+                    preSelectedUserId = Long.parseLong(userIdParam);
+                } catch (NumberFormatException e) {
+                    // Invalid userId parameter, ignore it
+                }
+            }
+            
             // Load all users
             List<User> allUsers = userDao.findAll();
             
@@ -72,6 +83,7 @@ public class ContractCreateController extends HttpServlet {
             request.setAttribute("departments", departments);
             request.setAttribute("positions", positions);
             request.setAttribute("generatedContractNo", generatedContractNo);
+            request.setAttribute("preSelectedUserId", preSelectedUserId);
             
             request.getRequestDispatcher("/WEB-INF/views/contracts/contract-form.jsp")
                     .forward(request, response);
@@ -170,14 +182,16 @@ public class ContractCreateController extends HttpServlet {
                 return;
             }
             
-            // Create contract
-            formData.setStatus("active"); // Mặc định là active
+            // Create contract with draft status and pending approval
+            formData.setStatus("draft"); // Status is draft until approved
+            formData.setApprovalStatus("pending"); // Waiting for HRM approval
             formData.setCreatedByAccountId(currentUser.getId());
             
             // Save to database
             contractDao.save(formData);
             
-            response.sendRedirect(request.getContextPath() + "/contracts?success=Contract created successfully");
+            response.sendRedirect(request.getContextPath() + 
+                "/contracts?success=" + java.net.URLEncoder.encode("Contract created and submitted for approval", "UTF-8"));
             
         } catch (Exception e) {
             e.printStackTrace();

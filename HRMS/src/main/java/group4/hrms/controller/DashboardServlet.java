@@ -31,20 +31,23 @@ public class DashboardServlet extends HttpServlet {
             return;
         }
 
-        // Kiểm tra quyền xem dashboard - chỉ HR (8) và HRM (7) mới thấy KPI và charts
+        // Kiểm tra quyền xem dashboard - HR (8), HRM (7) và Admin (6)
         group4.hrms.model.User user = (group4.hrms.model.User) session.getAttribute("user");
         boolean canViewDashboardData = false;
+        boolean isAdmin = false;
         
         if (user != null && user.getPositionId() != null) {
             canViewDashboardData = (user.getPositionId() == 7 || user.getPositionId() == 8);
+            isAdmin = (user.getPositionId() == 6);
         }
         
         request.setAttribute("canViewDashboardData", canViewDashboardData);
-        logger.info("User position: {}, canViewDashboardData: {}", 
-                user != null ? user.getPositionId() : "null", canViewDashboardData);
+        request.setAttribute("isAdmin", isAdmin);
+        logger.info("User position: {}, canViewDashboardData: {}, isAdmin: {}", 
+                user != null ? user.getPositionId() : "null", canViewDashboardData, isAdmin);
 
-        // Chỉ load KPI data nếu user có quyền xem
-        if (canViewDashboardData) {
+        // Load KPI data nếu user có quyền xem hoặc là Admin
+        if (canViewDashboardData || isAdmin) {
             try {
                 // Get all dashboard KPIs
                 DashboardKpiDto kpis = dashboardService.getDashboardKpis();

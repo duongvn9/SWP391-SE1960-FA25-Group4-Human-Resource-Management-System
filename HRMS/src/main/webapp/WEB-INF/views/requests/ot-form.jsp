@@ -342,6 +342,22 @@
                             <input type="hidden" id="serverSuccess" value="<c:out value='${success}'/>" />
                         </c:if>
 
+                        <!-- Holiday Data for JavaScript -->
+                        <script type="application/json" id="holidaysData">
+                            {
+                                "holidays": [
+                                    <c:forEach var="holiday" items="${holidays}" varStatus="status">
+                                        "${holiday}"<c:if test="${!status.last}">,</c:if>
+                                    </c:forEach>
+                                ],
+                                "compensatoryDays": [
+                                    <c:forEach var="compensatoryDay" items="${compensatoryDays}" varStatus="status">
+                                        "${compensatoryDay}"<c:if test="${!status.last}">,</c:if>
+                                    </c:forEach>
+                                ]
+                            }
+                        </script>
+
                         <!-- Form -->
                         <form method="post" action="${pageContext.request.contextPath}/requests/ot/create"
                               id="otRequestForm" enctype="multipart/form-data" novalidate>
@@ -979,3 +995,28 @@
 
 <!-- Attachment Toggle Script -->
 <script src="${pageContext.request.contextPath}/assets/js/attachment-toggle.js"></script>
+
+    <!-- Make data available globally for validation -->
+    <script>
+        // Global variables for validation
+        window.holidays = [];
+        window.compensatoryDays = [];
+
+        try {
+            const holidaysData = JSON.parse(document.getElementById('holidaysData').textContent);
+            window.holidays = holidaysData.holidays || [];
+            window.compensatoryDays = holidaysData.compensatoryDays || [];
+        } catch (e) {
+            console.warn('Could not load holidays data:', e);
+        }
+    </script>
+
+    <!-- OT Form Logic -->
+    <script src="${pageContext.request.contextPath}/assets/js/ot-form.js"></script>
+
+    <!-- Enhanced Form Validation -->
+    <script src="${pageContext.request.contextPath}/assets/js/ot-form-validation.js"></script>
+
+    </body>
+
+</html>
