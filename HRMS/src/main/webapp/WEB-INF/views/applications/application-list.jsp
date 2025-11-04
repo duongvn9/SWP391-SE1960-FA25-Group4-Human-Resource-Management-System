@@ -112,7 +112,8 @@
                                                 <div class="text-center py-5">
                                                     <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
                                                     <h5 class="text-muted">No Applications Found</h5>
-                                                    <p class="text-muted">No candidates have submitted applications yet.</p>
+                                                    <p class="text-muted">No candidates have submitted applications yet.
+                                                    </p>
                                                 </div>
                                             </c:when>
                                             <c:otherwise>
@@ -187,19 +188,23 @@
                                                                             </c:when>
                                                                             <c:when
                                                                                 test="${application.status == 'reviewing'}">
-                                                                                <span class="badge bg-warning">Reviewing</span>
+                                                                                <span
+                                                                                    class="badge bg-warning">Reviewing</span>
                                                                             </c:when>
                                                                             <c:when
                                                                                 test="${application.status == 'interviewed'}">
-                                                                                <span class="badge bg-primary">Interviewed</span>
+                                                                                <span
+                                                                                    class="badge bg-primary">Interviewed</span>
                                                                             </c:when>
                                                                             <c:when
                                                                                 test="${application.status == 'approved'}">
-                                                                                <span class="badge bg-success">Approved</span>
+                                                                                <span
+                                                                                    class="badge bg-success">Approved</span>
                                                                             </c:when>
                                                                             <c:when
                                                                                 test="${application.status == 'rejected'}">
-                                                                                <span class="badge bg-danger">Rejected</span>
+                                                                                <span
+                                                                                    class="badge bg-danger">Rejected</span>
                                                                             </c:when>
                                                                             <c:otherwise>
                                                                                 <span
@@ -241,27 +246,92 @@
                                                                                 canReject);
                                                                                 pageContext.setAttribute("approverRole",
                                                                                 approverRole); %>
-                                                                            <!-- Debug: UserPos=${userPositionId}, AppStatus=${appStatus}, CanApprove=${canApprove}, CanReject=${canReject}, Role=${approverRole} -->
+                                                                                <!-- Debug: UserPos=${userPositionId}, AppStatus=${appStatus}, CanApprove=${canApprove}, CanReject=${canReject}, Role=${approverRole} -->
 
                                                                                 <c:if test="${canApprove}">
+                                                                                    <c:choose>
+                                                                                        <c:when
+                                                                                            test="${empty approverRole}">
+                                                                                            <c:set var="approvalTitle"
+                                                                                                value="Approval" />
+                                                                                            <c:set
+                                                                                                var="approvalButtonTitle"
+                                                                                                value="Final Approval" />
+                                                                                            <c:set var="approvalIcon"
+                                                                                                value="fa-check-double" />
+                                                                                        </c:when>
+                                                                                        <c:otherwise>
+                                                                                            <c:set var="approvalTitle"
+                                                                                                value="${approverRole} Approval" />
+                                                                                            <c:choose>
+                                                                                                <c:when
+                                                                                                    test="${approverRole == 'HR'}">
+                                                                                                    <c:set
+                                                                                                        var="approvalButtonTitle"
+                                                                                                        value="Move to Review" />
+                                                                                                    <c:set
+                                                                                                        var="approvalIcon"
+                                                                                                        value="fa-check" />
+                                                                                                </c:when>
+                                                                                                <c:otherwise>
+                                                                                                    <c:set
+                                                                                                        var="approvalButtonTitle"
+                                                                                                        value="Final Approval" />
+                                                                                                    <c:set
+                                                                                                        var="approvalIcon"
+                                                                                                        value="fa-check-double" />
+                                                                                                </c:otherwise>
+                                                                                            </c:choose>
+                                                                                        </c:otherwise>
+                                                                                    </c:choose>
                                                                                     <button type="button"
-                                                                                        class="btn btn-sm btn-success"
-                                                                                        onclick="showApprovalModal(${application.id}, 'approved', '${approverRole} Approval')"
-                                                                                        title="${approverRole == 'HR' ? 'Move to Review' : 'Final Approval'}">
+                                                                                        class="btn btn-sm btn-success approval-btn"
+                                                                                        data-app-id="${application.id}"
+                                                                                        data-action="approved"
+                                                                                        data-title="${approvalTitle}"
+                                                                                        title="${approvalButtonTitle}">
                                                                                         <i
-                                                                                            class="fas ${approverRole == 'HR' ? 'fa-check' : 'fa-check-double'}"></i>
+                                                                                            class="fas ${approvalIcon}"></i>
                                                                                     </button>
                                                                                 </c:if>
 
                                                                                 <c:if test="${canReject}">
+                                                                                    <c:choose>
+                                                                                        <c:when
+                                                                                            test="${empty approverRole}">
+                                                                                            <c:set var="rejectTitle"
+                                                                                                value="Reject" />
+                                                                                            <c:set var="rejectIcon"
+                                                                                                value="fa-ban" />
+                                                                                        </c:when>
+                                                                                        <c:otherwise>
+                                                                                            <c:set var="rejectTitle"
+                                                                                                value="${approverRole} Reject" />
+                                                                                            <c:choose>
+                                                                                                <c:when
+                                                                                                    test="${approverRole == 'HR'}">
+                                                                                                    <c:set
+                                                                                                        var="rejectIcon"
+                                                                                                        value="fa-times" />
+                                                                                                </c:when>
+                                                                                                <c:otherwise>
+                                                                                                    <c:set
+                                                                                                        var="rejectIcon"
+                                                                                                        value="fa-ban" />
+                                                                                                </c:otherwise>
+                                                                                            </c:choose>
+                                                                                        </c:otherwise>
+                                                                                    </c:choose>
                                                                                     <button type="button"
-                                                                                        class="btn btn-sm btn-danger"
-                                                                                        onclick="showApprovalModal(${application.id}, 'rejected', '${approverRole} Reject')"
+                                                                                        class="btn btn-sm btn-danger rejection-btn"
+                                                                                        data-app-id="${application.id}"
+                                                                                        data-action="rejected"
+                                                                                        data-title="${rejectTitle}"
                                                                                         title="Reject">
                                                                                         <i
-                                                                                            class="fas ${approverRole == 'HR' ? 'fa-times' : 'fa-ban'}"></i>
+                                                                                            class="fas ${rejectIcon}"></i>
                                                                                     </button>
-                                                                                </c:if>
+                                                                                </c:if>""
                                                                         </div>
                                                                     </td>
                                                                 </tr>
@@ -365,9 +435,32 @@
                     </div>
 
                     <script>
+                        // Event listeners for approval/rejection buttons
+                        document.addEventListener('DOMContentLoaded', function () {
+                            // Handle approval buttons
+                            document.querySelectorAll('.approval-btn').forEach(function (btn) {
+                                btn.addEventListener('click', function () {
+                                    const appId = this.getAttribute('data-app-id');
+                                    const action = this.getAttribute('data-action');
+                                    const title = this.getAttribute('data-title');
+                                    showApprovalModal(appId, action, title);
+                                });
+                            });
+
+                            // Handle rejection buttons
+                            document.querySelectorAll('.rejection-btn').forEach(function (btn) {
+                                btn.addEventListener('click', function () {
+                                    const appId = this.getAttribute('data-app-id');
+                                    const action = this.getAttribute('data-action');
+                                    const title = this.getAttribute('data-title');
+                                    showApprovalModal(appId, action, title);
+                                });
+                            });
+                        });
+
                         function showApprovalModal(applicationId, status, actionType) {
                             console.log('showApprovalModal called:', applicationId, status, actionType);
-                            
+
                             document.getElementById('modalApplicationId').value = applicationId;
                             document.getElementById('modalStatus').value = status;
 
@@ -378,7 +471,7 @@
                             if (status === 'approved') {
                                 submitBtn.className = 'btn btn-success';
                                 submitBtn.innerHTML = '<i class="fas fa-check me-2"></i>Approve';
-                                if (actionType === 'HR Approval') {
+                                if (actionType && actionType.includes('HR')) {
                                     message.textContent = 'Application will be moved to "Reviewing" status and await HRM final approval.';
                                 } else {
                                     message.textContent = 'Application will be approved and candidate may be contacted for interview.';
