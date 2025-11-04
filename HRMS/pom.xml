@@ -146,18 +146,6 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Jakarta Mail API for sending emails (Jakarta EE 10 compatible) -->
-        <dependency>
-            <groupId>org.eclipse.angus</groupId>
-            <artifactId>angus-mail</artifactId>
-            <version>2.0.2</version>
-        </dependency>
-        <dependency>
-            <groupId>jakarta.mail</groupId>
-            <artifactId>jakarta.mail-api</artifactId>
-            <version>2.1.2</version>
-        </dependency>
-
         <!-- H2 Database for testing -->
         <dependency>
             <groupId>com.h2database</groupId>
