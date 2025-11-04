@@ -150,6 +150,31 @@ public class SessionUtil {
     }
 
     /**
+     * Lấy User object từ session (tạo từ session attributes)
+     */
+    public static User getCurrentUser(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            Long userId = (Long) session.getAttribute(USER_ID_KEY);
+            String fullName = (String) session.getAttribute(USER_FULL_NAME_KEY);
+            String email = (String) session.getAttribute(USER_EMAIL_KEY);
+            Long positionId = (Long) session.getAttribute(USER_POSITION_ID_KEY);
+            Long departmentId = (Long) session.getAttribute(USER_DEPARTMENT_ID_KEY);
+
+            if (userId != null) {
+                User user = new User();
+                user.setId(userId);
+                user.setFullName(fullName);
+                user.setEmailCompany(email);
+                user.setPositionId(positionId);
+                user.setDepartmentId(departmentId);
+                return user;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Kiểm tra user có phải admin không
      */
     public static boolean isAdmin(HttpServletRequest request) {
@@ -235,7 +260,7 @@ public class SessionUtil {
 
     /**
      * Kiểm tra user có role cụ thể không
-     * 
+     *
      * @param request HttpServletRequest
      * @param role    Role cần kiểm tra (ADMIN, HRM, HR, MANAGER, EMPLOYEE)
      * @return true nếu user có role đó
@@ -269,7 +294,7 @@ public class SessionUtil {
 
     /**
      * Kiểm tra user có bất kỳ role nào trong danh sách không
-     * 
+     *
      * @param request HttpServletRequest
      * @param roles   Danh sách roles cần kiểm tra
      * @return true nếu user có ít nhất một role trong danh sách

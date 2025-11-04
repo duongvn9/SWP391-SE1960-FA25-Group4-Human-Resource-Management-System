@@ -298,17 +298,35 @@
                             </li>
                         </c:if>
 
-                        <!-- Payroll (Hidden for Admin) -->
-                        <% if (!"ADMIN".equals(group4.hrms.util.PermissionUtil.getCurrentUserPositionCode(request))) {
-                            %>
+                        <!-- Dropdown: Payroll (Hidden for Admin) -->
+                        <c:if test="${sessionScope.user != null && sessionScope.user.positionId != 6}">
                             <li class="nav-item">
-                                <a href="${pageContext.request.contextPath}/payroll"
-                                    class="nav-link ${param.currentPage == 'payroll' ? 'active' : ''}"
-                                    data-tooltip="Payroll">
+                                <a href="#" class="nav-link sidebar-dropdown-toggle" data-target="payroll-submenu"
+                                    aria-expanded="false" data-tooltip="Payroll">
                                     <i class="fas fa-money-bill-wave"></i><span>Payroll</span>
+                                    <i class="fas fa-chevron-right dropdown-arrow"></i>
                                 </a>
+                                <ul class="sidebar-submenu" id="payroll-submenu">
+                                    <!-- My Payslip - For all users except Admin -->
+                                    <li>
+                                        <a href="${pageContext.request.contextPath}/payslips?viewMode=personal"
+                                            class="nav-link ${param.currentPage == 'my-payslip' ? 'active' : ''}">
+                                            <i class="fas fa-file-invoice"></i><span>My Payslip</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <!-- Payslip List - HRM Only (position_id = 7 or 8) -->
+                                    <c:if test="${sessionScope.user.positionId == 7 || sessionScope.user.positionId == 8}">
+                                        <li>
+                                            <a href="${pageContext.request.contextPath}/payslips"
+                                                class="nav-link ${param.currentPage == 'payslip-list' ? 'active' : ''}">
+                                                <i class="fas fa-list"></i><span>Payslip List</span>
+                                            </a>
+                                        </li>
+                                    </c:if>
+                                </ul>
                             </li>
-                            <% } %>
+                        </c:if>
 
                                 <!-- Dropdown: Requests -->
                                 <c:if test="${sessionScope.user != null && sessionScope.user.positionId != 6}">
