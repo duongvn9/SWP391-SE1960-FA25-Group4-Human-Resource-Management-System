@@ -383,7 +383,7 @@
                                             console.log('Clicked department:', departmentName);
                                             showChartModal(
                                                 'View Employee List',
-                                                `Do you want to view <strong>${departmentName}</strong> employee list?`,
+                                                'Do you want to view <strong>' + departmentName + '</strong> employee list?',
                                                 '${pageContext.request.contextPath}/employees/users?department=' + encodeURIComponent(departmentName)
                                             );
                                         }
@@ -434,12 +434,12 @@
                                     onClick: (event, elements) => {
                                         if (elements.length > 0) {
                                             const index = elements[0].index;
-                                            const statusName = accData.labels[index].toLowerCase();
+                                            const statusName = accData.labels[index];
                                             console.log('Clicked account status:', statusName);
                                             showChartModal(
                                                 'View Account List',
-                                                `Do you want to view <strong>${accData.labels[index]}</strong> accounts?`,
-                                                '${pageContext.request.contextPath}/employees/accounts?status=' + statusName
+                                                'Do you want to view <strong>' + statusName + '</strong> accounts?',
+                                                '${pageContext.request.contextPath}/employees/accounts?status=' + encodeURIComponent(statusName.toLowerCase())
                                             );
                                         }
                                     }
@@ -500,7 +500,7 @@
                                             console.log('Clicked OT request status:', statusName);
                                             showChartModal(
                                                 'View OT Request List',
-                                                `Do you want to view all <strong>${statusName}</strong> OT requests?`,
+                                                'Do you want to view all <strong>' + statusName + '</strong> OT requests?',
                                                 '${pageContext.request.contextPath}/requests/ot?status=' + encodeURIComponent(statusName)
                                             );
                                         }
@@ -554,7 +554,7 @@
                                             console.log('Clicked leave request status:', statusName);
                                             showChartModal(
                                                 'View Leave Request List',
-                                                `Do you want to view all <strong>${statusName}</strong> leave requests?`,
+                                                'Do you want to view all <strong>' + statusName + '</strong> leave requests?',
                                                 '${pageContext.request.contextPath}/requests/leave?status=' + encodeURIComponent(statusName)
                                             );
                                         }
@@ -608,7 +608,7 @@
                                             console.log('Clicked recruitment request status:', statusName);
                                             showChartModal(
                                                 'View Recruitment Request List',
-                                                `Do you want to view all <strong>${statusName}</strong> recruitment requests?`,
+                                                'Do you want to view all <strong>' + statusName + '</strong> recruitment requests?',
                                                 '${pageContext.request.contextPath}/requests?status=' + encodeURIComponent(statusName) + '&type=RECRUITMENT_REQUEST'
                                             );
                                         }
