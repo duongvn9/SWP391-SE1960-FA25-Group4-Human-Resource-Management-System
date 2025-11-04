@@ -338,6 +338,25 @@
                         Chart.defaults.font.family = "'Inter', sans-serif";
                         Chart.defaults.color = '#6c757d';
 
+                        // Global variable to store the target URL
+                        let chartModalTargetUrl = '';
+
+                        // Function to show chart modal with confirmation
+                        function showChartModal(title, message, targetUrl) {
+                            document.getElementById('chartClickModalLabel').textContent = title;
+                            document.getElementById('modalMessage').innerHTML = message;
+                            chartModalTargetUrl = targetUrl;
+                            const modal = new bootstrap.Modal(document.getElementById('chartClickModal'));
+                            modal.show();
+                        }
+
+                        // Handle View List button click
+                        document.getElementById('confirmViewBtn').addEventListener('click', function () {
+                            if (chartModalTargetUrl) {
+                                window.location.href = chartModalTargetUrl;
+                            }
+                        });
+
                         // Department Distribution Chart
                         const deptCtx = document.getElementById('departmentChart');
                         let deptChart;
@@ -501,7 +520,7 @@
                                             showChartModal(
                                                 'View OT Request List',
                                                 'Do you want to view all <strong>' + statusName + '</strong> OT requests?',
-                                                '${pageContext.request.contextPath}/requests/ot?status=' + encodeURIComponent(statusName)
+                                                '${pageContext.request.contextPath}/requests?scope=all&type=7&status=' + encodeURIComponent(statusName)
                                             );
                                         }
                                     }
@@ -555,7 +574,7 @@
                                             showChartModal(
                                                 'View Leave Request List',
                                                 'Do you want to view all <strong>' + statusName + '</strong> leave requests?',
-                                                '${pageContext.request.contextPath}/requests/leave?status=' + encodeURIComponent(statusName)
+                                                '${pageContext.request.contextPath}/requests?scope=all&type=6&status=' + encodeURIComponent(statusName)
                                             );
                                         }
                                     }
@@ -609,7 +628,7 @@
                                             showChartModal(
                                                 'View Recruitment Request List',
                                                 'Do you want to view all <strong>' + statusName + '</strong> recruitment requests?',
-                                                '${pageContext.request.contextPath}/requests?status=' + encodeURIComponent(statusName) + '&type=RECRUITMENT_REQUEST'
+                                                '${pageContext.request.contextPath}/requests?scope=all&type=9&status=' + encodeURIComponent(statusName)
                                             );
                                         }
                                     }
