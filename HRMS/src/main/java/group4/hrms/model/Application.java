@@ -42,6 +42,19 @@ public class Application {
     
     private LocalDateTime createdAt;
     
+    // Approval tracking fields
+    private Long hrApproverId;           // ID của HR đã duyệt
+    private String hrApproverName;       // Tên HR đã duyệt  
+    private String hrApprovalStatus;     // approved, rejected
+    private String hrApprovalNote;       // Ghi chú của HR
+    private LocalDateTime hrApprovalDate; // Ngày HR duyệt
+    
+    private Long hrmApproverId;          // ID của HRM đã duyệt cuối cùng
+    private String hrmApproverName;      // Tên HRM đã duyệt
+    private String hrmApprovalStatus;    // approved, rejected  
+    private String hrmApprovalNote;      // Ghi chú của HRM
+    private LocalDateTime hrmApprovalDate; // Ngày HRM duyệt
+    
     // Constructors
     public Application() {
         this.status = "new";
@@ -240,6 +253,88 @@ public class Application {
         this.createdAt = createdAt;
     }
     
+    // HR Approval getters and setters
+    public Long getHrApproverId() {
+        return hrApproverId;
+    }
+    
+    public void setHrApproverId(Long hrApproverId) {
+        this.hrApproverId = hrApproverId;
+    }
+    
+    public String getHrApproverName() {
+        return hrApproverName;
+    }
+    
+    public void setHrApproverName(String hrApproverName) {
+        this.hrApproverName = hrApproverName;
+    }
+    
+    public String getHrApprovalStatus() {
+        return hrApprovalStatus;
+    }
+    
+    public void setHrApprovalStatus(String hrApprovalStatus) {
+        this.hrApprovalStatus = hrApprovalStatus;
+    }
+    
+    public String getHrApprovalNote() {
+        return hrApprovalNote;
+    }
+    
+    public void setHrApprovalNote(String hrApprovalNote) {
+        this.hrApprovalNote = hrApprovalNote;
+    }
+    
+    public LocalDateTime getHrApprovalDate() {
+        return hrApprovalDate;
+    }
+    
+    public void setHrApprovalDate(LocalDateTime hrApprovalDate) {
+        this.hrApprovalDate = hrApprovalDate;
+    }
+    
+    // HRM Approval getters and setters
+    public Long getHrmApproverId() {
+        return hrmApproverId;
+    }
+    
+    public void setHrmApproverId(Long hrmApproverId) {
+        this.hrmApproverId = hrmApproverId;
+    }
+    
+    public String getHrmApproverName() {
+        return hrmApproverName;
+    }
+    
+    public void setHrmApproverName(String hrmApproverName) {
+        this.hrmApproverName = hrmApproverName;
+    }
+    
+    public String getHrmApprovalStatus() {
+        return hrmApprovalStatus;
+    }
+    
+    public void setHrmApprovalStatus(String hrmApprovalStatus) {
+        this.hrmApprovalStatus = hrmApprovalStatus;
+    }
+    
+    public String getHrmApprovalNote() {
+        return hrmApprovalNote;
+    }
+    
+    public void setHrmApprovalNote(String hrmApprovalNote) {
+        this.hrmApprovalNote = hrmApprovalNote;
+    }
+    
+    public LocalDateTime getHrmApprovalDate() {
+        return hrmApprovalDate;
+    }
+    
+    public void setHrmApprovalDate(LocalDateTime hrmApprovalDate) {
+        this.hrmApprovalDate = hrmApprovalDate;
+    }
+    
     // Business methods
     public boolean isNew() {
         return "new".equalsIgnoreCase(this.status);
@@ -251,6 +346,38 @@ public class Application {
     
     public boolean isRejected() {
         return "rejected".equalsIgnoreCase(this.status);
+    }
+    
+    public boolean isReviewing() {
+        return "reviewing".equalsIgnoreCase(this.status);
+    }
+    
+    public boolean isApproved() {
+        return "approved".equalsIgnoreCase(this.status);
+    }
+    
+    public boolean hasHrApproval() {
+        return hrApprovalStatus != null && !hrApprovalStatus.trim().isEmpty();
+    }
+    
+    public boolean hasHrmApproval() {
+        return hrmApprovalStatus != null && !hrmApprovalStatus.trim().isEmpty();
+    }
+    
+    public boolean isHrApproved() {
+        return "approved".equalsIgnoreCase(hrApprovalStatus);
+    }
+    
+    public boolean isHrRejected() {
+        return "rejected".equalsIgnoreCase(hrApprovalStatus);
+    }
+    
+    public boolean isHrmApproved() {
+        return "approved".equalsIgnoreCase(hrmApprovalStatus);
+    }
+    
+    public boolean isHrmRejected() {
+        return "rejected".equalsIgnoreCase(hrmApprovalStatus);
     }
     
     public boolean hasResume() {
