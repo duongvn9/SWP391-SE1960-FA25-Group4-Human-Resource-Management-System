@@ -85,6 +85,15 @@ public class EmailQueue {
         this.retryCount = retryCount;
     }
 
+    // Alias methods for compatibility
+    public int getAttempts() {
+        return retryCount;
+    }
+
+    public void setAttempts(int attempts) {
+        this.retryCount = attempts;
+    }
+
     public LocalDateTime getScheduledAt() {
         return scheduledAt;
     }
@@ -144,15 +153,6 @@ public class EmailQueue {
 
     public void incrementRetryCount() {
         this.retryCount++;
-    }
-
-    // Alias methods for compatibility with EmailScheduler
-    public int getAttempts() {
-        return retryCount;
-    }
-
-    public void setAttempts(int attempts) {
-        this.retryCount = attempts;
     }
 
     public boolean isReadyToSend() {
