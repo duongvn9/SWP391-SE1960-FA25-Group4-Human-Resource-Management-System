@@ -163,8 +163,8 @@
                     <form id="exportForm" class="export-form"
                           action="${pageContext.request.contextPath}/attendance/record/HR" method="post">
                         <input type="hidden" name="exportType" id="exportType">
-                        <input type="hidden" name="employeeKeyword" id="exportEmployeeKeyword"
-                               value="${employeeKeyword}">
+                        <input type="hidden" name="employeeId" id="exportEmployeeId"
+                               value="${employeeId != null ? employeeId : ''}">
                         <input type="hidden" name="department" id="exportDepartment" value="${department}">
                         <input type="hidden" name="startDate" id="exportStartDate" value="${startDate}">
                         <input type="hidden" name="endDate" id="exportEndDate" value="${endDate}">
@@ -247,8 +247,8 @@
                                                     <input type="hidden" name="periodEdit"
                                                            value="${att.period}">
 
-                                                    <input type="hidden" name="employeeKeyword"
-                                                           value="${employeeKeyword}">
+                                                    <input type="hidden" name="employeeId"
+                                                           value="${employeeId != null ? employeeId : ''}">
                                                     <input type="hidden" name="department"
                                                            value="${department}">
                                                     <input type="hidden" name="startDate" value="${startDate}">
@@ -278,7 +278,7 @@
                         <form id="paginationForm" method="get"
                               action="${pageContext.request.contextPath}/attendance/record/HR">
                             <!-- Giữ tất cả filter hiện tại -->
-                            <input type="hidden" name="employeeKeyword" value="${employeeKeyword}" />
+                            <input type="hidden" name="employeeId" value="${employeeId != null ? employeeId : ''}" />
                             <input type="hidden" name="department" value="${department}" />
                             <input type="hidden" name="status" value="${status}" />
                             <input type="hidden" name="source" value="${source}" />
@@ -370,7 +370,7 @@
                                 <input type="hidden" name="checkOutOld" id="checkOutOld">
 
                                 <!-- Thêm filter -->
-                                <input type="hidden" name="employeeKeyword" value="${employeeKeyword}">
+                                <input type="hidden" name="employeeId" value="${employeeId != null ? employeeId : ''}">
                                 <input type="hidden" name="department" value="${department}">
                                 <input type="hidden" name="startDate" value="${startDate}">
                                 <input type="hidden" name="endDate" value="${endDate}">

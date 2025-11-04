@@ -158,19 +158,35 @@
                             </form>
                         </c:if>
 
+                        <!-- Tính toán pagination logic -->
+                        <c:set var="maxVisiblePages" value="5" />
+                        <c:set var="halfVisible" value="2" />
+
                         <!-- Tính startPage và endPage -->
-                        <c:set var="startPage" value="${currentPage - 1}" />
-                        <c:set var="endPage" value="${currentPage + 1}" />
+                        <c:choose>
+                            <c:when test="${totalPages <= maxVisiblePages}">
+                                <!-- Nếu tổng số trang <= 5, hiển thị tất cả -->
+                                <c:set var="startPage" value="1" />
+                                <c:set var="endPage" value="${totalPages}" />
+                            </c:when>
+                            <c:when test="${currentPage <= halfVisible + 1}">
+                                <!-- Nếu ở đầu, hiển thị từ 1 đến maxVisiblePages -->
+                                <c:set var="startPage" value="1" />
+                                <c:set var="endPage" value="${maxVisiblePages}" />
+                            </c:when>
+                            <c:when test="${currentPage >= totalPages - halfVisible}">
+                                <!-- Nếu ở cuối, hiển thị maxVisiblePages trang cuối -->
+                                <c:set var="startPage" value="${totalPages - maxVisiblePages + 1}" />
+                                <c:set var="endPage" value="${totalPages}" />
+                            </c:when>
+                            <c:otherwise>
+                                <!-- Ở giữa, hiển thị currentPage ± halfVisible -->
+                                <c:set var="startPage" value="${currentPage - halfVisible}" />
+                                <c:set var="endPage" value="${currentPage + halfVisible}" />
+                            </c:otherwise>
+                        </c:choose>
 
-                        <c:if test="${startPage < 1}">
-                            <c:set var="startPage" value="1" />
-                        </c:if>
-
-                        <c:if test="${endPage > totalPages}">
-                            <c:set var="endPage" value="${totalPages}" />
-                        </c:if>
-
-                        <!-- Hiển thị trang đầu tiên nếu không nằm trong khoảng -->
+                        <!-- Hiển thị trang đầu và dấu ... nếu cần -->
                         <c:if test="${startPage > 1}">
                             <form method="post" style="display:inline;">
                                 <input type="hidden" name="startDate" value="${startDate}">
@@ -181,16 +197,18 @@
                                 <input type="hidden" name="page" value="1">
                                 <button type="submit" class="page-link">1</button>
                             </form>
-                            <span>...</span>
+                            <c:if test="${startPage > 2}">
+                                <span class="pagination-dots">...</span>
+                            </c:if>
                         </c:if>
 
-                        <!-- Vòng lặp hiển thị các trang xung quanh currentPage -->
+                        <!-- Hiển thị các trang trong khoảng startPage đến endPage -->
                         <c:forEach var="i" begin="${startPage}" end="${endPage}">
                             <c:choose>
                                 <c:when test="${i == currentPage}">
                                     <span class="page-current"><b>${i}</b></span>
-                                        </c:when>
-                                        <c:otherwise>
+                                </c:when>
+                                <c:otherwise>
                                     <form method="post" style="display:inline;">
                                         <input type="hidden" name="startDate" value="${startDate}">
                                         <input type="hidden" name="endDate" value="${endDate}">
@@ -204,9 +222,11 @@
                             </c:choose>
                         </c:forEach>
 
-                        <!-- Hiển thị trang cuối nếu không nằm trong khoảng -->
+                        <!-- Hiển thị dấu ... và trang cuối nếu cần -->
                         <c:if test="${endPage < totalPages}">
-                            <span>...</span>
+                            <c:if test="${endPage < totalPages - 1}">
+                                <span class="pagination-dots">...</span>
+                            </c:if>
                             <form method="post" style="display:inline;">
                                 <input type="hidden" name="startDate" value="${startDate}">
                                 <input type="hidden" name="endDate" value="${endDate}">

@@ -44,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const filterForm = document.getElementById("filterForm");
             if (filterForm) {
-                const filterNames = ["employeeKeyword", "department", "startDate", "endDate", "status", "source", "periodSelect"];
+                const filterNames = ["employeeId", "department", "startDate", "endDate", "status", "source", "periodSelect"];
                 filterNames.forEach(name => {
                     const orig = filterForm.querySelector(`[name="${name}"]`);
                     const clone = document.createElement("input");

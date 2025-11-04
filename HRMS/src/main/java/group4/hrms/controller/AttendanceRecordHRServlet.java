@@ -51,45 +51,56 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             int currentPage = PaginationUtil.getCurrentPage(req);
             int offset = (currentPage - 1) * recordsPerPage;
 
-            String status = req.getParameter("status");
-            String source = req.getParameter("source");
-            String periodIdStr = req.getParameter("periodSelect");
-            String department = req.getParameter("department");
+            // Đọc tất cả filter parameters từ request (để hỗ trợ pagination)
+            String employeeIdStr = req.getParameter("employeeId");
+            Long employeeId = parseLongSafe(employeeIdStr);
+            String department = getParam(req, "department");
+            String startDateStr = getParam(req, "startDate");
+            String endDateStr = getParam(req, "endDate");
+            String status = getParam(req, "status");
+            String source = getParam(req, "source");
+            String periodIdStr = getParam(req, "periodSelect");
 
-            LocalDate startDate;
-            LocalDate endDate;
-            Long periodId = null;
+            LocalDate startDate = parseDate(startDateStr);
+            LocalDate endDate = parseDate(endDateStr);
+            Long periodId = parseLongSafe(periodIdStr);
 
             TimesheetPeriod selectedPeriod = null;
 
-            if (periodIdStr != null && !periodIdStr.isEmpty()) {
-                try {
-                    periodId = Long.valueOf(periodIdStr);
-                    selectedPeriod = tDAO.findById(periodId).orElse(null);
-                } catch (NumberFormatException e) {
-                    periodId = null;
-                }
-            }
-
-            if (selectedPeriod == null) {
+            // Kiểm tra xem có filter nào từ request không
+            boolean hasAnyFilter = employeeId != null || 
+                                 (department != null && !department.isEmpty()) ||
+                                 (status != null && !status.isEmpty()) ||
+                                 (source != null && !source.isEmpty()) ||
+                                 startDate != null || endDate != null || periodId != null;
+            
+            // Xử lý period
+            if (periodId != null) {
+                selectedPeriod = tDAO.findById(periodId).orElse(null);
+            } else if (!hasAnyFilter) {
+                // Chỉ khi không có filter nào thì mới dùng current period làm mặc định
                 selectedPeriod = tDAO.findCurrentPeriod();
                 if (selectedPeriod != null) {
                     periodId = selectedPeriod.getId();
                 }
             }
-
+            
+            // Set startDate và endDate từ period nếu chưa có
             if (selectedPeriod != null) {
-                startDate = selectedPeriod.getStartDate();
-                endDate = selectedPeriod.getEndDate();
-            } else {
+                if (startDate == null) startDate = selectedPeriod.getStartDate();
+                if (endDate == null) endDate = selectedPeriod.getEndDate();
+            }
+
+            // Fallback nếu vẫn không có date
+            if (startDate == null || endDate == null) {
                 LocalDate now = LocalDate.now();
-                startDate = now.withDayOfMonth(1);
-                endDate = now.withDayOfMonth(now.lengthOfMonth());
+                if (startDate == null) startDate = now.withDayOfMonth(1);
+                if (endDate == null) endDate = now.withDayOfMonth(now.lengthOfMonth());
             }
 
             List<AttendanceLogDto> attendanceList = attendanceLogDao.findByFilter(
-                    null,
-                    null,
+                    employeeId,
+                    null, // employeeKeyword - không sử dụng trong HR screen
                     department,
                     startDate,
                     endDate,
@@ -102,8 +113,8 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             );
 
             int totalRecords = attendanceLogDao.countByFilter(
-                    null,
-                    null,
+                    employeeId,
+                    null, // employeeKeyword - không sử dụng trong HR screen
                     department,
                     startDate,
                     endDate,
@@ -113,19 +124,20 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             );
 
             int totalPages = PaginationUtil.calculateTotalPages(totalRecords, recordsPerPage);
-
+          
             UserDao uDao = new UserDao();
             List<User> uList = uDao.findAll();
             req.setAttribute("uList", uList);
             req.setAttribute("attendanceList", attendanceList);
             req.setAttribute("periodList", tDAO.findAll());
             req.setAttribute("departmentList", dDAO.findAll());
+            req.setAttribute("employeeId", employeeId);
             req.setAttribute("startDate", startDate.toString());
             req.setAttribute("endDate", endDate.toString());
-            req.setAttribute("status", status != null ? status : "");
-            req.setAttribute("source", source != null ? source : "");
+            req.setAttribute("status", status);
+            req.setAttribute("source", source);
             req.setAttribute("selectedPeriod", selectedPeriod);
-            req.setAttribute("department", department != null ? department : "");
+            req.setAttribute("department", department);
             req.setAttribute("currentPage", currentPage);
             req.setAttribute("totalPages", totalPages);
             
@@ -158,7 +170,6 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             String exportType = req.getParameter("exportType");
             String employeeIdStr = req.getParameter("employeeId");
             Long employeeId = parseLongSafe(employeeIdStr);
-            String employeeKeyword = getParam(req, "employeeKeyword");
             String department = getParam(req, "department");
             String startDateStr = getParam(req, "startDate");
             String endDateStr = getParam(req, "endDate");
@@ -172,7 +183,6 @@ public class AttendanceRecordHRServlet extends HttpServlet {
 
             if ("reset".equalsIgnoreCase(action)) {
                 employeeId = null;
-                employeeKeyword = "";
                 department = "";
                 status = "";
                 source = "";
@@ -198,8 +208,9 @@ public class AttendanceRecordHRServlet extends HttpServlet {
                 handleUpdate(req);
             } else if ("toggleLock".equalsIgnoreCase(action)) {
                 handleLockPeriod(req);
-
-                employeeKeyword = getParam(req, "employeeId");
+                // Đọc lại filter parameters sau khi toggle lock
+                employeeIdStr = req.getParameter("employeeId");
+                employeeId = parseLongSafe(employeeIdStr);
                 department = getParam(req, "department");
                 startDateStr = getParam(req, "startDate");
                 endDateStr = getParam(req, "endDate");
@@ -215,7 +226,7 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             if (exportType != null && !exportType.isEmpty()) {
                 List<AttendanceLogDto> filteredRecords = attendanceLogDao.findByFilter(
                         employeeId,
-                        employeeKeyword,
+                        null, // employeeKeyword - không sử dụng trong HR screen
                         department,
                         startDate,
                         endDate,
@@ -232,7 +243,7 @@ public class AttendanceRecordHRServlet extends HttpServlet {
 
             int totalRecords = attendanceLogDao.countByFilter(
                     employeeId,
-                    employeeKeyword,
+                    null, // employeeKeyword - không sử dụng trong HR screen
                     department,
                     startDate,
                     endDate,
@@ -249,7 +260,7 @@ public class AttendanceRecordHRServlet extends HttpServlet {
 
             List<AttendanceLogDto> attendanceList = attendanceLogDao.findByFilter(
                     employeeId,
-                    employeeKeyword,
+                    null, // employeeKeyword - không sử dụng trong HR screen
                     department,
                     startDate,
                     endDate,
