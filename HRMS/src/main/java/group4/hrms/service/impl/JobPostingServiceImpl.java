@@ -236,7 +236,9 @@ public class JobPostingServiceImpl implements JobPostingService {
                 String status = ((String) statusObj).trim();
                 if (status.equalsIgnoreCase("PUBLISHED")) {
                     List<JobPosting> jobs = jobPostingDao.findPublishedJobs();
-                    return paginate(jobs, page, pageSize);
+                    // Filter out expired jobs for PUBLISHED status
+                    List<JobPosting> activeJobs = filterActiveJobs(jobs);
+                    return paginate(activeJobs, page, pageSize);
                 } else {
                     // Không chuyển status về lowercase vì trong DB lưu uppercase
                     List<JobPosting> jobs = jobPostingDao.findByStatus(status.toUpperCase());
@@ -244,11 +246,22 @@ public class JobPostingServiceImpl implements JobPostingService {
                 }
             }
 
+            // Check if we need to handle PUBLISHED status with other criteria
+            String statusFilter = criteria.get("status") instanceof String ? ((String) criteria.get("status")).trim() : null;
+            if (statusFilter != null && statusFilter.equalsIgnoreCase("PUBLISHED")) {
+                // For PUBLISHED status with additional criteria, start with published jobs and filter
+                List<JobPosting> publishedJobs = jobPostingDao.findPublishedJobs();
+                // First filter out expired jobs
+                List<JobPosting> activeJobs = filterActiveJobs(publishedJobs);
+                // Then apply other criteria filters
+                return applyAdditionalFilters(activeJobs, criteria, page, pageSize);
+            }
+
             // Fallback: load all and filter in-memory by available criteria
             List<JobPosting> all = jobPostingDao.findAll();
 
             // Apply simple filters: status, departmentId, jobType, jobLevel, priority, searchQuery
-            String status = criteria.get("status") instanceof String ? ((String) criteria.get("status")).trim() : null;
+            String statusCriteria = criteria.get("status") instanceof String ? ((String) criteria.get("status")).trim() : null;
             Long departmentId = criteria.get("departmentId") instanceof Long ? (Long) criteria.get("departmentId") : null;
             String jobType = criteria.get("jobType") instanceof String ? ((String) criteria.get("jobType")).trim() : null;
             String jobLevel = criteria.get("jobLevel") instanceof String ? ((String) criteria.get("jobLevel")).trim() : null;
@@ -257,8 +270,10 @@ public class JobPostingServiceImpl implements JobPostingService {
 
             List<JobPosting> filtered = new java.util.ArrayList<>();
             for (JobPosting jp : all) {
-                if (status != null && !status.isEmpty()) {
-                    if (!status.equalsIgnoreCase(jp.getStatus())) continue;
+                if (statusCriteria != null && !statusCriteria.isEmpty()) {
+                    if (!statusCriteria.equalsIgnoreCase(jp.getStatus())) continue;
+                    // If filtering by PUBLISHED status, also check if job is not expired
+                    if (statusCriteria.equalsIgnoreCase("PUBLISHED") && jp.isExpired()) continue;
                 }
                 if (departmentId != null) {
                     if (jp.getDepartmentId() == null || !departmentId.equals(jp.getDepartmentId())) continue;
@@ -301,9 +316,24 @@ public class JobPostingServiceImpl implements JobPostingService {
             if (criteria.get("status") instanceof String && criteria.size() == 1) {
                 String status = ((String) criteria.get("status")).trim();
                 if (status.equalsIgnoreCase("PUBLISHED")) {
-                    return jobPostingDao.findPublishedJobs().size();
+                    List<JobPosting> jobs = jobPostingDao.findPublishedJobs();
+                    // Filter out expired jobs for PUBLISHED status count
+                    List<JobPosting> activeJobs = filterActiveJobs(jobs);
+                    return activeJobs.size();
                 }
                 return jobPostingDao.findByStatus(status.toUpperCase()).size();
+            }
+
+            // Check if we need to handle PUBLISHED status with other criteria
+            String statusFilter = criteria.get("status") instanceof String ? ((String) criteria.get("status")).trim() : null;
+            if (statusFilter != null && statusFilter.equalsIgnoreCase("PUBLISHED")) {
+                // For PUBLISHED status with additional criteria, start with published jobs and filter
+                List<JobPosting> publishedJobs = jobPostingDao.findPublishedJobs();
+                // First filter out expired jobs
+                List<JobPosting> activeJobs = filterActiveJobs(publishedJobs);
+                // Then apply other criteria filters
+                List<JobPosting> filtered = applyAdditionalFilters(activeJobs, criteria, 1, Integer.MAX_VALUE);
+                return filtered.size();
             }
 
             // Fallback: reuse in-memory filtering from findJobPostings
@@ -326,6 +356,84 @@ public class JobPostingServiceImpl implements JobPostingService {
         if (from >= list.size()) return List.of();
         int to = Math.min(from + pageSize, list.size());
         return list.subList(from, to);
+    }
+    
+    /**
+     * Filter out expired job postings (where application deadline has passed)
+     * @param jobs List of job postings to filter
+     * @return List of active (non-expired) job postings
+     */
+    private List<JobPosting> filterActiveJobs(List<JobPosting> jobs) {
+        if (jobs == null || jobs.isEmpty()) {
+            return List.of();
+        }
+        
+        LocalDate today = LocalDate.now();
+        logger.debug("Filtering active jobs. Today: {}, Total jobs: {}", today, jobs.size());
+        
+        List<JobPosting> activeJobs = jobs.stream()
+                .filter(job -> {
+                    if (job.getApplicationDeadline() == null) {
+                        logger.debug("Job {} has no deadline - keeping", job.getId());
+                        return true;
+                    }
+                    // Use the isExpired() method from JobPosting for consistency
+                    boolean isActive = !job.isExpired();
+                    logger.debug("Job {} deadline: {}, expired: {}, active: {}", 
+                               job.getId(), job.getApplicationDeadline(), job.isExpired(), isActive);
+                    return isActive;
+                })
+                .collect(java.util.stream.Collectors.toList());
+                
+        logger.info("Filtered {} active jobs from {} total jobs", activeJobs.size(), jobs.size());
+        return activeJobs;
+    }
+    
+    /**
+     * Apply additional filters (departmentId, jobType, searchQuery, etc.) to a list of jobs
+     * @param jobs List of jobs to filter
+     * @param criteria Filter criteria
+     * @param page Page number
+     * @param pageSize Page size
+     * @return Filtered and paginated list
+     */
+    private List<JobPosting> applyAdditionalFilters(List<JobPosting> jobs, Map<String, Object> criteria, int page, int pageSize) {
+        if (jobs == null || jobs.isEmpty()) {
+            return List.of();
+        }
+        
+        // Extract filter criteria (excluding status since it's already handled)
+        Long departmentId = criteria.get("departmentId") instanceof Long ? (Long) criteria.get("departmentId") : null;
+        String jobType = criteria.get("jobType") instanceof String ? ((String) criteria.get("jobType")).trim() : null;
+        String jobLevel = criteria.get("jobLevel") instanceof String ? ((String) criteria.get("jobLevel")).trim() : null;
+        String priority = criteria.get("priority") instanceof String ? ((String) criteria.get("priority")).trim() : null;
+        String searchQuery = criteria.get("searchQuery") instanceof String ? ((String) criteria.get("searchQuery")).trim().toLowerCase() : null;
+        
+        List<JobPosting> filtered = new java.util.ArrayList<>();
+        for (JobPosting jp : jobs) {
+            // Apply filters (status and expired are already handled)
+            if (departmentId != null) {
+                if (jp.getDepartmentId() == null || !departmentId.equals(jp.getDepartmentId())) continue;
+            }
+            if (jobType != null && !jobType.isEmpty()) {
+                if (jp.getJobType() == null || !jobType.equalsIgnoreCase(jp.getJobType())) continue;
+            }
+            if (jobLevel != null && !jobLevel.isEmpty()) {
+                if (jp.getLevel() == null || !jobLevel.equalsIgnoreCase(jp.getLevel())) continue;
+            }
+            if (priority != null && !priority.isEmpty()) {
+                if (jp.getPriority() == null || !priority.equalsIgnoreCase(jp.getPriority())) continue;
+            }
+            if (searchQuery != null && !searchQuery.isEmpty()) {
+                String title = jp.getTitle() != null ? jp.getTitle().toLowerCase() : "";
+                String desc = jp.getDescription() != null ? jp.getDescription().toLowerCase() : "";
+                if (!title.contains(searchQuery) && !desc.contains(searchQuery)) continue;
+            }
+            filtered.add(jp);
+        }
+        
+        logger.info("Applied additional filters: {} jobs remaining from {} jobs", filtered.size(), jobs.size());
+        return paginate(filtered, page, pageSize);
     }
     
     @Override
