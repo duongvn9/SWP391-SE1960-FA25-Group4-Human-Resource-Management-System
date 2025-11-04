@@ -44,6 +44,9 @@ public class AttendanceRecordHRServlet extends HttpServlet {
         }
 
         try {
+            // Tự động khóa các kì công đã quá hạn
+            tDAO.autoLockExpiredPeriods();
+            
             int recordsPerPage = 10;
             int currentPage = PaginationUtil.getCurrentPage(req);
             int offset = (currentPage - 1) * recordsPerPage;
@@ -125,6 +128,14 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             req.setAttribute("department", department != null ? department : "");
             req.setAttribute("currentPage", currentPage);
             req.setAttribute("totalPages", totalPages);
+            
+            // Thêm thông tin về khả năng toggle lock và trạng thái khóa vĩnh viễn
+            if (selectedPeriod != null) {
+                boolean canToggle = tDAO.canToggleLockStatus(selectedPeriod.getId());
+                boolean isPermanentlyLocked = tDAO.isPermanentlyLocked(selectedPeriod.getId());
+                req.setAttribute("canToggleLock", canToggle);
+                req.setAttribute("isPermanentlyLocked", isPermanentlyLocked);
+            }
 
             req.getRequestDispatcher("/WEB-INF/views/attendance/attendance-record-HR.jsp").forward(req, resp);
 
@@ -137,6 +148,9 @@ public class AttendanceRecordHRServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
+            // Tự động khóa các kì công đã quá hạn
+            tDAO.autoLockExpiredPeriods();
+            
             int recordsPerPage = 10;
             int currentPage = PaginationUtil.getCurrentPage(req);
 
@@ -264,6 +278,14 @@ public class AttendanceRecordHRServlet extends HttpServlet {
                     ? tDAO.findById(periodId).orElse(null)
                     : null;
             req.setAttribute("selectedPeriod", selectedPeriod);
+            
+            // Thêm thông tin về khả năng toggle lock và trạng thái khóa vĩnh viễn
+            if (selectedPeriod != null) {
+                boolean canToggle = tDAO.canToggleLockStatus(selectedPeriod.getId());
+                boolean isPermanentlyLocked = tDAO.isPermanentlyLocked(selectedPeriod.getId());
+                req.setAttribute("canToggleLock", canToggle);
+                req.setAttribute("isPermanentlyLocked", isPermanentlyLocked);
+            }
 
             req.setAttribute("currentPage", currentPage);
             req.setAttribute("totalPages", totalPages);
@@ -287,7 +309,21 @@ public class AttendanceRecordHRServlet extends HttpServlet {
         Long userId = (Long) req.getSession().getAttribute("accountId");
 
         if (periodIdLock != null && userId != null) {
-            tDAO.updateLockStatus(periodIdLock, isLocked, userId);
+            try {
+                // Kiểm tra xem có thể toggle không
+                if (!tDAO.canToggleLockStatus(periodIdLock)) {
+                    req.setAttribute("error", "Cannot change lock status: This period has been permanently locked. Periods are automatically locked after 7 days of the following month.");
+                    return;
+                }
+                
+                tDAO.updateLockStatus(periodIdLock, isLocked, userId);
+                
+                String action = isLocked ? "locked" : "unlocked";
+                req.setAttribute("message", "Period has been " + action + " successfully.");
+                
+            } catch (IllegalStateException e) {
+                req.setAttribute("error", e.getMessage());
+            }
         }
     }
 

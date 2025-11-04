@@ -2,6 +2,7 @@ package group4.hrms.dao;
 
 import group4.hrms.dto.AttendanceLogDto;
 import group4.hrms.model.AttendanceLog;
+import group4.hrms.service.AttendanceService;
 import group4.hrms.util.DatabaseUtil;
 
 import java.sql.*;
@@ -784,12 +785,16 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
             return result;
         }
 
+        // Bước 1: Lọc spam và làm sạch dữ liệu
+        List<AttendanceLogDto> cleanLogs = AttendanceService.filterSpamAndCleanLogs(manualLogs);
+
         // Allowed working time range
         LocalTime MIN_TIME = LocalTime.of(6, 0);
         LocalTime MAX_TIME = LocalTime.of(23, 59);
 
         try (Connection conn = DatabaseUtil.getConnection()) {
-            for (AttendanceLogDto log : manualLogs) {
+            // Bước 2: Validate các logs đã được làm sạch
+            for (AttendanceLogDto log : cleanLogs) {
                 boolean hasConflict = false;
                 String errorMessage = null;
 
@@ -810,13 +815,6 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
 
                 if (log.getCheckIn() == null && log.getCheckOut() == null) {
                     errorMessage = "At least one of check-in or check-out time is required";
-                    log.setError(errorMessage);
-                    invalidLogs.add(log);
-                    continue;
-                }
-
-                if (log.getStatus() == null || log.getStatus().trim().isEmpty()) {
-                    errorMessage = "Status is required";
                     log.setError(errorMessage);
                     invalidLogs.add(log);
                     continue;
@@ -1135,13 +1133,6 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                     continue;
                 }
 
-                if (log.getStatus() == null || log.getStatus().trim().isEmpty()) {
-                    errorMessage = "Status is required";
-                    log.setError(errorMessage);
-                    invalidLogs.add(log);
-                    continue;
-                }
-
                 // Check future date
                 if (log.getDate().isAfter(LocalDate.now())) {
                     errorMessage = "Date cannot be in the future";
@@ -1360,8 +1351,12 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
             return result;
         }
 
+        // Bước 1: Lọc spam và làm sạch dữ liệu
+        List<AttendanceLogDto> cleanLogs = AttendanceService.filterSpamAndCleanLogs(excelLogs);
+
         try (Connection conn = DatabaseUtil.getConnection()) {
-            for (AttendanceLogDto log : excelLogs) {
+            // Bước 2: Validate các logs đã được làm sạch với DB
+            for (AttendanceLogDto log : cleanLogs) {
                 boolean hasConflict = false;
 
                 // -----------------------------
@@ -1584,6 +1579,9 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
             return result;
         }
 
+        // Bước 1: Lọc spam và làm sạch dữ liệu
+        List<AttendanceLogDto> cleanLogs = AttendanceService.filterSpamAndCleanLogs(excelLogs);
+
         // Allowed working time range
         LocalTime MIN_TIME = LocalTime.of(6, 0);
         LocalTime MAX_TIME = LocalTime.of(23, 59);
@@ -1591,7 +1589,8 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
         // Map để nhóm log theo user + date
         Map<String, List<AttendanceLogDto>> logsByUserDate = new HashMap<>();
 
-        for (AttendanceLogDto log : excelLogs) {
+        // Bước 2: Validate các logs đã được làm sạch
+        for (AttendanceLogDto log : cleanLogs) {
 
             // === Basic validation ===
             if (log.getUserId() == null) {

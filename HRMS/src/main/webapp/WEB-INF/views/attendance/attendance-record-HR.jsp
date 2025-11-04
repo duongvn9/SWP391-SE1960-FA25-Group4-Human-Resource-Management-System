@@ -138,11 +138,22 @@
                                     <div class="toggle-switch">
                                         <input type="checkbox" id="switchInput"
                                                data-period-id="${selectedPeriod.id}" ${selectedPeriod.isLocked
-                                                                 ? "checked" : "" } />
-                                        <label for="switchInput" class="slider"></label>
+                                                                 ? "checked" : "" } ${!canToggleLock ? "disabled" : "" } />
+                                        <label for="switchInput"
+                                               class="slider ${!canToggleLock ? 'disabled' : ''}"></label>
                                     </div>
                                     <span id="sliderStatus">
-                                        ${selectedPeriod.isLocked ? "Locked" : "Unlocked"}
+                                        <c:choose>
+                                            <c:when test="${isPermanentlyLocked}">
+                                                Permanently Locked
+                                            </c:when>
+                                            <c:when test="${selectedPeriod.isLocked}">
+                                                Locked
+                                            </c:when>
+                                            <c:otherwise>
+                                                Unlocked
+                                            </c:otherwise>
+                                        </c:choose>
                                     </span>
                                 </div>
                             </c:if>
