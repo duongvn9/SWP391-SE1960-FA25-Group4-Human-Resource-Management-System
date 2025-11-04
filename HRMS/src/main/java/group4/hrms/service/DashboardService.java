@@ -67,6 +67,11 @@ public class DashboardService {
             kpis.setPayslipsGenerated(dashboardDao.getPayslipsGeneratedThisMonth());
             kpis.setAverageSalary(dashboardDao.getAverageSalary());
 
+            // Recruitment metrics
+            kpis.setPendingRecruitmentRequests(dashboardDao.getPendingRecruitmentRequests());
+            kpis.setTotalRecruitmentRequestsThisMonth(dashboardDao.getTotalRecruitmentRequestsThisMonth());
+            kpis.setRecruitmentRequestsByStatus(dashboardDao.getRecruitmentRequestsByStatus());
+
             // Breakdowns
             kpis.setEmployeesByDepartment(dashboardDao.getEmployeesByDepartment());
             kpis.setEmployeesByPosition(dashboardDao.getEmployeesByPosition());

@@ -22,8 +22,12 @@
             flex-direction: column;
         }
         
-        .container-fluid {
+        .contract-wrapper {
             flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 0;
         }
         
         .dashboard-footer {
@@ -33,7 +37,8 @@
         }
         
         .profile-container {
-            max-width: 100%;
+            max-width: 95%;
+            width: 100%;
             background: white;
             padding: 30px 50px;
             border-radius: 8px;
@@ -161,7 +166,7 @@
     <jsp:include page="../layout/sidebar.jsp" />
     
     <div class="main-content">
-        <div class="container-fluid">
+        <div class="contract-wrapper">
             <c:choose>
                 <c:when test="${not empty contract}">
                     <div class="profile-container">
@@ -206,25 +211,6 @@
                             <div class="form-row">
                                 <label class="form-label">Note:</label>
                                 <div class="form-value"><c:out value="${contract.note}"/></div>
-                            </div>
-                            
-                            <!-- Row 6: File Path (Link) -->
-                            <div class="form-row">
-                                <label class="form-label">Contract File:</label>
-                                <div class="form-value">
-                                    <c:choose>
-                                        <c:when test="${not empty contract.filePath}">
-                                            <a href="${pageContext.request.contextPath}/<c:out value='${contract.filePath}'/>" 
-                                               target="_blank" 
-                                               class="btn btn-sm btn-outline-primary">
-                                                <i class="fas fa-file-pdf me-1"></i>
-                                            </a>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <span class="text-muted">No file available</span>
-                                        </c:otherwise>
-                                    </c:choose>
-                                </div>
                             </div>
                         </div>
                     </div>
