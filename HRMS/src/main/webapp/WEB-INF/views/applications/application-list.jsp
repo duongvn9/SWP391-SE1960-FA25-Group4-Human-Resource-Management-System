@@ -331,7 +331,7 @@
                                                                                         <i
                                                                                             class="fas ${rejectIcon}"></i>
                                                                                     </button>
-                                                                                </c:if>""
+                                                                                </c:if>
                                                                         </div>
                                                                     </td>
                                                                 </tr>
