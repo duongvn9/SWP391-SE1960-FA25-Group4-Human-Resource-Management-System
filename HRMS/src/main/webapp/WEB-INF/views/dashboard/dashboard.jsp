@@ -69,18 +69,16 @@
                             </c:if>
 
                             <c:if test="${!isAdmin}">
+                            <!-- Recruitment Card with success color -->
                             <div class="col-lg-3 col-md-6 mb-3">
                                 <div class="dashboard-card">
                                     <div class="stat-card success">
                                         <div class="icon">
-                                            <i class="fas fa-user-check"></i>
+                                            <i class="fas fa-user-plus"></i>
                                         </div>
-                                        <span class="stat-number">${kpis.presentToday}</span>
-                                        <div class="stat-label">Present Today</div>
-                                        <small class="text-muted">
-                                            <fmt:formatNumber value="${kpis.attendanceRate}" maxFractionDigits="1" />%
-                                            attendance rate
-                                        </small>
+                                        <span class="stat-number">${kpis.pendingRecruitmentRequests}</span>
+                                        <div class="stat-label">Pending Recruitment Requests</div>
+                                        <small class="text-muted">All pending requests</small>
                                     </div>
                                 </div>
                             </div>
@@ -116,7 +114,7 @@
                         <!-- Charts Row 1 -->
                         <div class="row mb-4">
                             <!-- Department Distribution -->
-                            <div class="${isAdmin ? 'col-lg-6' : 'col-lg-4'} mb-3">
+                            <div class="${isAdmin ? 'col-lg-6' : 'col-lg-3'} mb-3">
                                 <div class="dashboard-card">
                                     <h5 class="mb-3">
                                         <i class="fas fa-building me-2"></i>Employees by Department
@@ -141,9 +139,21 @@
                             </div>
                             </c:if>
 
-                            <!-- OT Request Status - Only for HR/HRM -->
+                            <!-- Recruitment Request Status - Only for HR/HRM -->
                             <c:if test="${!isAdmin}">
-                            <div class="col-lg-4 mb-3">
+                            <div class="col-lg-3 mb-3">
+                                <div class="dashboard-card">
+                                    <h5 class="mb-3">
+                                        <i class="fas fa-user-plus me-2"></i>Recruitment Request Status
+                                    </h5>
+                                    <div class="chart-container">
+                                        <canvas id="recruitmentRequestStatusChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- OT Request Status - Only for HR/HRM -->
+                            <div class="col-lg-3 mb-3">
                                 <div class="dashboard-card">
                                     <h5 class="mb-3">
                                         <i class="fas fa-clock me-2"></i>OT Request Status
@@ -155,7 +165,7 @@
                             </div>
                             
                             <!-- Leave Request Status - Only for HR/HRM -->
-                            <div class="col-lg-4 mb-3">
+                            <div class="col-lg-3 mb-3">
                                 <div class="dashboard-card">
                                     <h5 class="mb-3">
                                         <i class="fas fa-calendar-alt me-2"></i>Leave Request Status
@@ -358,8 +368,8 @@
                                         position: 'right',
                                         labels: {
                                             boxWidth: 15,
-                                            padding: 8,
-                                            font: { size: 11 }
+                                            padding: 10,
+                                            font: { size: 13 }
                                         }
                                     }
                                 },
@@ -379,18 +389,17 @@
                         });
                     }
 
-                    // Account Status Chart (Admin only)
+                    // Account Status Chart (Admin only) - Bỏ Locked
                     const accCtx = document.getElementById('accountStatusChart');
                     if (accCtx) {
                         const accData = {
-                            labels: ['Active', 'Inactive', 'Locked'],
+                            labels: ['Active', 'Inactive'],
                             datasets: [{
                                 data: [
                                     ${kpis.activeAccounts != null ? kpis.activeAccounts : 0},
-                                    ${kpis.inactiveAccounts != null ? kpis.inactiveAccounts : 0},
-                                    ${kpis.lockedAccounts != null ? kpis.lockedAccounts : 0}
+                                    ${kpis.inactiveAccounts != null ? kpis.inactiveAccounts : 0}
                                 ],
-                                backgroundColor: ['#198754', '#6c757d', '#dc3545']
+                                backgroundColor: ['#198754', '#6c757d']
                             }]
                         };
                         new Chart(accCtx, {
@@ -405,7 +414,7 @@
                                         labels: {
                                             boxWidth: 15,
                                             padding: 10,
-                                            font: { size: 12 }
+                                            font: { size: 13 }
                                         }
                                     },
                                     tooltip: {
@@ -477,8 +486,8 @@
                                         position: 'right',
                                         labels: {
                                             boxWidth: 15,
-                                            padding: 8,
-                                            font: { size: 11 }
+                                            padding: 10,
+                                            font: { size: 13 }
                                         }
                                     }
                                 },
@@ -531,8 +540,8 @@
                                         position: 'right',
                                         labels: {
                                             boxWidth: 15,
-                                            padding: 8,
-                                            font: { size: 11 }
+                                            padding: 10,
+                                            font: { size: 13 }
                                         }
                                     }
                                 },
@@ -545,6 +554,60 @@
                                             'View Leave Request List',
                                             `Do you want to view all <strong>${statusName}</strong> leave requests?`,
                                             '${pageContext.request.contextPath}/requests/leave?status=' + encodeURIComponent(statusName)
+                                        );
+                                    }
+                                }
+                            }
+                        });
+                    }
+
+                    // Recruitment Request Status Chart
+                    const recruitReqCtx = document.getElementById('recruitmentRequestStatusChart');
+                    if (recruitReqCtx) {
+                        const recruitReqLabels = [
+                            <c:forEach items="${kpis.recruitmentRequestsByStatus}" var="entry" varStatus="status">
+                                '${entry.key}'${!status.last ? ',' : ''}
+                            </c:forEach>
+                        ];
+                        
+                        const recruitReqColors = recruitReqLabels.map(label => statusColors[label] || '#6c757d');
+                        
+                        const recruitReqData = {
+                            labels: recruitReqLabels,
+                            datasets: [{
+                                data: [
+                                    <c:forEach items="${kpis.recruitmentRequestsByStatus}" var="entry" varStatus="status">
+                                        ${entry.value}${!status.last ? ',' : ''}
+                                    </c:forEach>
+                                ],
+                                backgroundColor: recruitReqColors
+                            }]
+                        };
+                        new Chart(recruitReqCtx, {
+                            type: 'pie',
+                            data: recruitReqData,
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: { 
+                                        position: 'right',
+                                        labels: {
+                                            boxWidth: 15,
+                                            padding: 10,
+                                            font: { size: 13 }
+                                        }
+                                    }
+                                },
+                                onClick: (event, elements) => {
+                                    if (elements.length > 0) {
+                                        const index = elements[0].index;
+                                        const statusName = recruitReqData.labels[index];
+                                        console.log('Clicked recruitment request status:', statusName);
+                                        showChartModal(
+                                            'View Recruitment Request List',
+                                            `Do you want to view all <strong>${statusName}</strong> recruitment requests?`,
+                                            '${pageContext.request.contextPath}/requests?status=' + encodeURIComponent(statusName) + '&type=RECRUITMENT_REQUEST'
                                         );
                                     }
                                 }

@@ -433,6 +433,49 @@ public class DashboardDao {
         return result;
     }
 
+    // Recruitment Request metrics
+    public int getPendingRecruitmentRequests() {
+        String sql = """
+            SELECT COUNT(*) FROM requests r
+            JOIN request_types rt ON r.request_type_id = rt.id
+            WHERE rt.code = 'RECRUITMENT_REQUEST' AND r.status = 'PENDING'
+            """;
+        return executeCountQuery(sql);
+    }
+
+    public int getTotalRecruitmentRequestsThisMonth() {
+        String sql = """
+            SELECT COUNT(*) FROM requests r
+            JOIN request_types rt ON r.request_type_id = rt.id
+            WHERE rt.code = 'RECRUITMENT_REQUEST'
+            AND YEAR(r.created_at) = YEAR(CURDATE())
+            AND MONTH(r.created_at) = MONTH(CURDATE())
+            """;
+        return executeCountQuery(sql);
+    }
+
+    public Map<String, Integer> getRecruitmentRequestsByStatus() {
+        Map<String, Integer> result = new LinkedHashMap<>();
+        String sql = """
+            SELECT r.status, COUNT(*) as count
+            FROM requests r
+            JOIN request_types rt ON r.request_type_id = rt.id
+            WHERE rt.code = 'RECRUITMENT_REQUEST'
+            GROUP BY r.status
+            ORDER BY FIELD(r.status, 'PENDING', 'APPROVED', 'REJECTED', 'CANCELLED')
+            """;
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                result.put(rs.getString("status"), rs.getInt("count"));
+            }
+        } catch (SQLException e) {
+            logger.error("Error getting recruitment requests by status", e);
+        }
+        return result;
+    }
+
     // Helper method
     private int executeCountQuery(String sql) {
         try (Connection conn = DatabaseUtil.getConnection();
