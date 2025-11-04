@@ -622,6 +622,31 @@
             background-color: #f8f9fa;
         }
 
+        /* Image Preview Styles */
+        #imagePreviewContainer .card {
+            border: 2px dashed #667eea;
+            background: rgba(102, 126, 234, 0.02);
+        }
+
+        #imagePreviewContainer .card-header {
+            background: rgba(102, 126, 234, 0.1);
+            border-bottom: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        #imagePreview {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        #imagePreview:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;
+        }
+
+        .btn-outline-danger:hover {
+            transform: translateY(-1px);
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .job-hero-title {
@@ -1024,6 +1049,28 @@
                                     <strong>Please upload the front side of your Vietnamese Citizen ID Card (CCCD) first, then click "Extract Information" to automatically fill the form fields below.</strong><br>
                                     Supported formats: JPG, PNG (Max size: 10MB)
                                 </div>
+                                
+                                <!-- Image Preview Section -->
+                                <div id="imagePreviewContainer" class="mt-3" style="display: none;">
+                                    <div class="card">
+                                        <div class="card-header d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0"><i class="fas fa-eye me-2"></i>Image Preview</h6>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearImagePreview()">
+                                                <i class="fas fa-times"></i> Remove
+                                            </button>
+                                        </div>
+                                        <div class="card-body text-center">
+                                            <img id="imagePreview" src="" alt="CCCD Preview" class="img-fluid" style="max-height: 300px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onclick="openImageFullscreen()" title="Click to view full size">
+                                            <div class="mt-2">
+                                                <small class="text-muted" id="imageInfo"></small>
+                                            </div>
+                                            <div class="mt-2">
+                                                <small class="text-info"><i class="fas fa-info-circle me-1"></i>Click image to view full size</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
                                 <button type="button" class="btn btn-primary btn-sm mt-2" id="processOCRBtn" disabled>
                                     <i class="fas fa-magic me-1"></i>Extract Information
                                 </button>
@@ -1164,6 +1211,28 @@
         </div>
     </div>
 
+    <!-- Image Fullscreen Modal -->
+    <div class="modal fade" id="imageFullscreenModal" tabindex="-1" aria-labelledby="imageFullscreenModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content bg-dark">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title text-white" id="imageFullscreenModalLabel">
+                        <i class="fas fa-id-card me-2"></i>CCCD Preview - Full Size
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center p-2">
+                    <img id="fullscreenImage" src="" alt="CCCD Full Size" class="img-fluid" style="max-height: 80vh; border-radius: 8px;">
+                </div>
+                <div class="modal-footer border-0 justify-content-center">
+                    <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         function showApplicationModal(jobId, jobTitle) {
             // Set job information
@@ -1177,6 +1246,56 @@
             // Show modal
             var modal = new bootstrap.Modal(document.getElementById('applicationModal'));
             modal.show();
+        }
+
+        // Image Preview Functions
+        function showImagePreview(file) {
+            if (!file) return;
+            
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var preview = document.getElementById('imagePreview');
+                var container = document.getElementById('imagePreviewContainer');
+                var info = document.getElementById('imageInfo');
+                
+                preview.src = e.target.result;
+                container.style.display = 'block';
+                
+                // Show file info
+                var fileSize = (file.size / 1024 / 1024).toFixed(2);
+                info.textContent = `File: ${file.name} | Size: ${fileSize} MB | Type: ${file.type}`;
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        function openImageFullscreen() {
+            var preview = document.getElementById('imagePreview');
+            var fullscreenImage = document.getElementById('fullscreenImage');
+            
+            if (preview.src) {
+                fullscreenImage.src = preview.src;
+                var modal = new bootstrap.Modal(document.getElementById('imageFullscreenModal'));
+                modal.show();
+            }
+        }
+        
+        function clearImagePreview() {
+            var preview = document.getElementById('imagePreview');
+            var container = document.getElementById('imagePreviewContainer');
+            var fileInput = document.getElementById('cccdFrontUpload');
+            var processBtn = document.getElementById('processOCRBtn');
+            
+            preview.src = '';
+            container.style.display = 'none';
+            fileInput.value = '';
+            processBtn.disabled = true;
+            
+            // Clear form fields
+            document.getElementById('cccd').value = '';
+            document.getElementById('cccdName').value = '';
+            document.getElementById('cccdDob').value = '';
+            document.getElementById('cccdGender').value = '';
+            document.getElementById('cccdHometown').value = '';
         }
 
         function submitApplication() {
@@ -1294,26 +1413,28 @@
         // File input validation (only for images now)
         function validateFile(input, type) {
             var file = input.files[0];
-            if (!file) return;
+            if (!file) return false;
 
-            var maxSize = 5 * 1024 * 1024; // 5MB
+            var maxSize = 10 * 1024 * 1024; // 10MB (updated to match form text)
             var allowedTypes;
 
             if (type === 'image') {
-                allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
             }
 
             if (!allowedTypes.includes(file.type)) {
-                alert('Please select a valid image format (JPG, PNG, GIF)');
-                input.value = '';
-                return;
+                alert('Please select a valid image format (JPG, PNG)');
+                clearImagePreview();
+                return false;
             }
 
             if (file.size > maxSize) {
-                alert('File size must be less than 5MB');
-                input.value = '';
-                return;
+                alert('File size must be less than 10MB');
+                clearImagePreview();
+                return false;
             }
+            
+            return true;
         }
 
         // OCR Processing Function
@@ -1402,13 +1523,17 @@
         document.addEventListener('DOMContentLoaded', function () {
             // CCCD Front Upload handler
             document.getElementById('cccdFrontUpload').addEventListener('change', function (e) {
-                validateFile(e.target, 'image');
-                // Enable OCR button when file is selected
-                var processBtn = document.getElementById('processOCRBtn');
-                if (e.target.files[0]) {
-                    processBtn.disabled = false;
+                var file = e.target.files[0];
+                if (file) {
+                    var isValid = validateFile(e.target, 'image');
+                    if (isValid) { // File passed validation
+                        showImagePreview(file);
+                        // Enable OCR button when file is selected
+                        var processBtn = document.getElementById('processOCRBtn');
+                        processBtn.disabled = false;
+                    }
                 } else {
-                    processBtn.disabled = true;
+                    clearImagePreview();
                 }
             });
 
