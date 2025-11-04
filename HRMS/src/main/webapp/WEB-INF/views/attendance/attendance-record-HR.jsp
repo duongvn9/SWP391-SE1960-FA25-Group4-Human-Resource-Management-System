@@ -26,7 +26,6 @@
                     <!-- ========== FILTER SECTION ========== -->
                     <form id="filterForm" class="filter-form" method="post"
                           action="${pageContext.request.contextPath}/attendance/record/HR">
-                        <input type="hidden" name="page" id="pageInput" value="${currentPage}" />
 
                         <!-- From / To Date -->
                         <div class="filter-group">

@@ -67,35 +67,59 @@ public class AttendanceRecordHRServlet extends HttpServlet {
 
             TimesheetPeriod selectedPeriod = null;
 
-            // Kiểm tra xem có filter nào từ request không
+            // Kiểm tra xem có filter nào từ request không (chỉ tính filter có giá trị thực)
             boolean hasAnyFilter = employeeId != null || 
                                  (department != null && !department.isEmpty()) ||
                                  (status != null && !status.isEmpty()) ||
                                  (source != null && !source.isEmpty()) ||
                                  startDate != null || endDate != null || periodId != null;
             
+            // Debug log để kiểm tra
+            System.out.println("DEBUG doGet - hasAnyFilter: " + hasAnyFilter + 
+                ", employeeId: " + employeeId + ", department: '" + department + 
+                "', status: '" + status + "', source: '" + source + 
+                "', startDate: " + startDate + ", endDate: " + endDate + ", periodId: " + periodId);
+            
             // Xử lý period
             if (periodId != null) {
                 selectedPeriod = tDAO.findById(periodId).orElse(null);
-            } else if (!hasAnyFilter) {
-                // Chỉ khi không có filter nào thì mới dùng current period làm mặc định
+            }
+            
+            // Nếu không có period được chọn và không có filter nào, dùng current period làm mặc định
+            if (selectedPeriod == null && !hasAnyFilter) {
                 selectedPeriod = tDAO.findCurrentPeriod();
                 if (selectedPeriod != null) {
                     periodId = selectedPeriod.getId();
                 }
             }
             
-            // Set startDate và endDate từ period nếu chưa có
-            if (selectedPeriod != null) {
+            // Xử lý startDate và endDate
+            if (startDate == null && endDate == null) {
+                // Nếu không có date filter nào, sử dụng period hoặc current month
+                if (selectedPeriod != null) {
+                    startDate = selectedPeriod.getStartDate();
+                    endDate = selectedPeriod.getEndDate();
+                } else {
+                    // Fallback to current month
+                    LocalDate now = LocalDate.now();
+                    startDate = now.withDayOfMonth(1);
+                    endDate = now.withDayOfMonth(now.lengthOfMonth());
+                }
+            } else if (selectedPeriod != null && (startDate == null || endDate == null)) {
+                // Nếu có period được chọn nhưng thiếu startDate hoặc endDate, 
+                // có thể là do pagination với period filter
                 if (startDate == null) startDate = selectedPeriod.getStartDate();
                 if (endDate == null) endDate = selectedPeriod.getEndDate();
-            }
-
-            // Fallback nếu vẫn không có date
-            if (startDate == null || endDate == null) {
-                LocalDate now = LocalDate.now();
-                if (startDate == null) startDate = now.withDayOfMonth(1);
-                if (endDate == null) endDate = now.withDayOfMonth(now.lengthOfMonth());
+            } else {
+                // Fallback cho các trường hợp còn lại
+                if (startDate == null) {
+                    LocalDate now = LocalDate.now();
+                    startDate = now.withDayOfMonth(1);
+                }
+                if (endDate == null) {
+                    LocalDate now = LocalDate.now();
+                    endDate = now.withDayOfMonth(now.lengthOfMonth());
+                }
             }
 
             List<AttendanceLogDto> attendanceList = attendanceLogDao.findByFilter(
@@ -124,7 +148,13 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             );
 
             int totalPages = PaginationUtil.calculateTotalPages(totalRecords, recordsPerPage);
-          
+            
+            System.out.println("------------------------------");
+            System.out.println(startDate);
+            System.out.println(startDate.toString());
+            System.out.println(endDate);
+            System.out.println(endDate.toString());
+
             UserDao uDao = new UserDao();
             List<User> uList = uDao.findAll();
             req.setAttribute("uList", uList);
