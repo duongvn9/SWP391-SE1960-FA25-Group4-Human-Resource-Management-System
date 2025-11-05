@@ -62,10 +62,12 @@ public class DashboardService {
             kpis.setLateCheckinsThisWeek(dashboardDao.getLateCheckinsThisWeek());
             kpis.setAttendanceRate(dashboardDao.getAttendanceRate());
 
-            // Payroll metrics
-            kpis.setTotalPayrollThisMonth(dashboardDao.getTotalPayrollThisMonth());
+            // Payroll metrics - separated by currency
+            kpis.setTotalPayrollThisMonthVND(dashboardDao.getTotalPayrollThisMonth("VND"));
+            kpis.setTotalPayrollThisMonthUSD(dashboardDao.getTotalPayrollThisMonth("USD"));
             kpis.setPayslipsGenerated(dashboardDao.getPayslipsGeneratedThisMonth());
-            kpis.setAverageSalary(dashboardDao.getAverageSalary());
+            kpis.setAverageSalaryVND(dashboardDao.getAverageSalary("VND"));
+            kpis.setAverageSalaryUSD(dashboardDao.getAverageSalary("USD"));
 
             // Recruitment metrics
             kpis.setPendingRecruitmentRequests(dashboardDao.getPendingRecruitmentRequests());
