@@ -183,21 +183,25 @@ public class DashboardDao {
         return 0.0;
     }
 
-    // Payroll metrics
-    public BigDecimal getTotalPayrollThisMonth() {
+    // Payroll metrics - Get latest month with payslips, separated by currency
+    public BigDecimal getTotalPayrollThisMonth(String currency) {
         String sql = """
             SELECT COALESCE(SUM(net_amount), 0) FROM payslips
-            WHERE YEAR(period_start) = YEAR(CURDATE())
-            AND MONTH(period_start) = MONTH(CURDATE())
+            WHERE DATE_FORMAT(period_start, '%Y-%m') = (
+                SELECT DATE_FORMAT(MAX(period_start), '%Y-%m') FROM payslips
+            )
+            AND currency = ?
             """;
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) {
-                return rs.getBigDecimal(1);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, currency);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getBigDecimal(1);
+                }
             }
         } catch (SQLException e) {
-            logger.error("Error getting total payroll", e);
+            logger.error("Error getting total payroll for currency: " + currency, e);
         }
         return BigDecimal.ZERO;
     }
@@ -205,26 +209,31 @@ public class DashboardDao {
     public int getPayslipsGeneratedThisMonth() {
         String sql = """
             SELECT COUNT(*) FROM payslips
-            WHERE YEAR(period_start) = YEAR(CURDATE())
-            AND MONTH(period_start) = MONTH(CURDATE())
+            WHERE DATE_FORMAT(period_start, '%Y-%m') = (
+                SELECT DATE_FORMAT(MAX(period_start), '%Y-%m') FROM payslips
+            )
             """;
         return executeCountQuery(sql);
     }
 
-    public BigDecimal getAverageSalary() {
+    public BigDecimal getAverageSalary(String currency) {
         String sql = """
             SELECT COALESCE(AVG(net_amount), 0) FROM payslips
-            WHERE YEAR(period_start) = YEAR(CURDATE())
-            AND MONTH(period_start) = MONTH(CURDATE())
+            WHERE DATE_FORMAT(period_start, '%Y-%m') = (
+                SELECT DATE_FORMAT(MAX(period_start), '%Y-%m') FROM payslips
+            )
+            AND currency = ?
             """;
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) {
-                return rs.getBigDecimal(1);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, currency);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getBigDecimal(1);
+                }
             }
         } catch (SQLException e) {
-            logger.error("Error getting average salary", e);
+            logger.error("Error getting average salary for currency: " + currency, e);
         }
         return BigDecimal.ZERO;
     }

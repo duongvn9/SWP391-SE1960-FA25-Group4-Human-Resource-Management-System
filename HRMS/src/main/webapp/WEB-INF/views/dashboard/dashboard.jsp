@@ -212,48 +212,87 @@
                         <!-- Payroll Summary - Only for HR/HRM -->
                         <c:if test="${!isAdmin}">
                             <div class="row mb-4">
-                                <div class="col-lg-4 col-md-6 mb-3">
+                                <div class="col-12">
                                     <div class="dashboard-card">
-                                        <div class="stat-card-horizontal">
-                                            <div class="icon-wrapper bg-success">
-                                                <i class="fas fa-money-bill-wave"></i>
-                                            </div>
-                                            <div class="stat-info">
-                                                <div class="stat-label">Total Payroll (This Month)</div>
-                                                <div class="stat-number">
-                                                    <fmt:formatNumber value="${kpis.totalPayrollThisMonth}"
-                                                        type="currency" currencySymbol="$" />
+                                        <h5 class="mb-3">
+                                            <i class="fas fa-money-check-alt me-2"></i>Payroll Summary
+                                            <span class="badge bg-secondary ms-2">${kpis.payslipsGenerated}
+                                                Payslips</span>
+                                        </h5>
+                                        <div class="row">
+                                            <!-- VND Section -->
+                                            <div class="col-lg-6 mb-3">
+                                                <div class="border-end pe-3">
+                                                    <h6 class="text-muted mb-3" style="font-size: 1.1rem;">
+                                                        <i class="fas fa-coins me-1"></i>Vietnamese Dong (VND)
+                                                    </h6>
+                                                    <div class="row">
+                                                        <div class="col-6 mb-2">
+                                                            <div class="d-flex align-items-center">
+                                                                <i class="fas fa-wallet text-success me-2" style="font-size: 1.5rem;"></i>
+                                                                <div>
+                                                                    <small class="text-muted d-block" style="font-size: 0.9rem;">Total
+                                                                        Payroll</small>
+                                                                    <strong class="text-success" style="font-size: 1.5rem;">
+                                                                        <fmt:formatNumber
+                                                                            value="${kpis.totalPayrollThisMonthVND}"
+                                                                            type="number" groupingUsed="true" maxFractionDigits="0" /> ₫
+                                                                    </strong>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-6 mb-2">
+                                                            <div class="d-flex align-items-center">
+                                                                <i class="fas fa-chart-line text-primary me-2" style="font-size: 1.5rem;"></i>
+                                                                <div>
+                                                                    <small class="text-muted d-block" style="font-size: 0.9rem;">Average Salary</small>
+                                                                    <strong class="text-primary" style="font-size: 1.5rem;">
+                                                                        <fmt:formatNumber
+                                                                            value="${kpis.averageSalaryVND}"
+                                                                            type="number" groupingUsed="true" maxFractionDigits="0" /> ₫
+                                                                    </strong>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                </div>
 
-                                <div class="col-lg-4 col-md-6 mb-3">
-                                    <div class="dashboard-card">
-                                        <div class="stat-card-horizontal">
-                                            <div class="icon-wrapper bg-info">
-                                                <i class="fas fa-file-invoice-dollar"></i>
-                                            </div>
-                                            <div class="stat-info">
-                                                <div class="stat-label">Payslips Generated</div>
-                                                <div class="stat-number">${kpis.payslipsGenerated}</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="col-lg-4 col-md-6 mb-3">
-                                    <div class="dashboard-card">
-                                        <div class="stat-card-horizontal">
-                                            <div class="icon-wrapper bg-primary">
-                                                <i class="fas fa-calculator"></i>
-                                            </div>
-                                            <div class="stat-info">
-                                                <div class="stat-label">Average Salary</div>
-                                                <div class="stat-number">
-                                                    <fmt:formatNumber value="${kpis.averageSalary}" type="currency"
-                                                        currencySymbol="$" />
+                                            <!-- USD Section -->
+                                            <div class="col-lg-6 mb-3">
+                                                <div class="ps-3">
+                                                    <h6 class="text-muted mb-3" style="font-size: 1.1rem;">
+                                                        <i class="fas fa-dollar-sign me-1"></i>US Dollar (USD)
+                                                    </h6>
+                                                    <div class="row">
+                                                        <div class="col-6 mb-2">
+                                                            <div class="d-flex align-items-center">
+                                                                <i class="fas fa-dollar-sign text-success me-2" style="font-size: 1.5rem;"></i>
+                                                                <div>
+                                                                    <small class="text-muted d-block" style="font-size: 0.9rem;">Total
+                                                                        Payroll</small>
+                                                                    <strong class="text-success" style="font-size: 1.5rem;">
+                                                                        <fmt:formatNumber
+                                                                            value="${kpis.totalPayrollThisMonthUSD}"
+                                                                            type="currency" currencySymbol="$" />
+                                                                    </strong>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-6 mb-2">
+                                                            <div class="d-flex align-items-center">
+                                                                <i class="fas fa-chart-line text-primary me-2" style="font-size: 1.5rem;"></i>
+                                                                <div>
+                                                                    <small class="text-muted d-block" style="font-size: 0.9rem;">Average Salary</small>
+                                                                    <strong class="text-primary" style="font-size: 1.5rem;">
+                                                                        <fmt:formatNumber
+                                                                            value="${kpis.averageSalaryUSD}"
+                                                                            type="currency" currencySymbol="$" />
+                                                                    </strong>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -413,7 +452,7 @@
                             });
                         }
 
-                        // Account Status Chart (Admin only) - Bỏ Locked
+                        
                         const accCtx = document.getElementById('accountStatusChart');
                         if (accCtx) {
                             const activeAccounts = <c:out value="${kpis.activeAccounts}" default="0" />;
