@@ -84,16 +84,15 @@ public class ContractListController extends HttpServlet {
                     dto.setUsername(user.getEmployeeCode());
                 }
 
-                // Get created by full name (createdByAccountId references accounts.id)
+                // Get created by full name (treat createdByAccountId as user_id, same as approvedByAccountId)
                 if (contract.getCreatedByAccountId() != null) {
-                    // Need to find user by account_id, not user_id directly
-                    Optional<User> createdByOpt = userDao.findByAccountId(contract.getCreatedByAccountId());
+                    Optional<User> createdByOpt = userDao.findById(contract.getCreatedByAccountId());
                     if (createdByOpt.isPresent()) {
                         dto.setCreatedByName(createdByOpt.get().getFullName());
                     }
                 }
 
-                // Get approved by full name (approvedByAccountId references users.id according to schema)
+                // Get approved by full name (approvedByAccountId references users.id)
                 if (contract.getApprovedByAccountId() != null) {
                     Optional<User> approvedByOpt = userDao.findById(contract.getApprovedByAccountId());
                     if (approvedByOpt.isPresent()) {
