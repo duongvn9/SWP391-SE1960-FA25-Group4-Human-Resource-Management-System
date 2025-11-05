@@ -65,9 +65,15 @@ public class PayslipGenerationService {
         String lockKey = createLockKey(request.getPeriodStart(), request.getPeriodEnd());
         ReentrantLock lock = periodLocks.computeIfAbsent(lockKey, k -> new ReentrantLock());
 
+        // Try to acquire lock - if already locked, reject immediately
+        if (!lock.tryLock()) {
+            logger.warning("Generation already in progress for period: " + lockKey);
+            result.setSuccess(false);
+            result.setMessage("A payslip generation is already in progress for this period. Please wait and try again later.");
+            return result;
+        }
+
         try {
-            // Acquire lock for this period to prevent concurrent modifications
-            lock.lock();
             logger.info("Acquired lock for period: " + lockKey);
 
             // Check cutoff days for initial generation (not for regeneration)
