@@ -61,7 +61,7 @@
                                     <select id="source" name="source" class="filter-select">
                                         <option value="">All</option>
                                         <option value="Manual" ${source=='Manual' ? 'selected' : '' }>Manual</option>
-                                        <option value="excel" ${source=='Import' ? 'selected' : '' }>Excel</option>
+                                        <option value="excel" ${source=='excel' ? 'selected' : '' }>Excel</option>
                                     </select>
                                 </div>
 
@@ -151,11 +151,13 @@
                                 <!-- Previous -->
                                 <c:if test="${currentPage > 1}">
                                     <form method="post" style="display:inline;">
+                                        <input type="hidden" name="employeeKeyword" value="${employeeKeyword}">
+                                        <input type="hidden" name="department" value="${department}">
                                         <input type="hidden" name="startDate" value="${startDate}">
                                         <input type="hidden" name="endDate" value="${endDate}">
                                         <input type="hidden" name="status" value="${status}">
                                         <input type="hidden" name="source" value="${source}">
-                                        <input type="hidden" name="periodSelect" value="${selectedPeriod}">
+                                        <input type="hidden" name="periodSelect" value="${selectedPeriodId}">
                                         <input type="hidden" name="page" value="${currentPage - 1}">
                                         <button type="submit" class="page-link">Previous</button>
                                     </form>
@@ -192,11 +194,13 @@
                                 <!-- Hiển thị trang đầu và dấu ... nếu cần -->
                                 <c:if test="${startPage > 1}">
                                     <form method="post" style="display:inline;">
+                                        <input type="hidden" name="employeeKeyword" value="${employeeKeyword}">
+                                        <input type="hidden" name="department" value="${department}">
                                         <input type="hidden" name="startDate" value="${startDate}">
                                         <input type="hidden" name="endDate" value="${endDate}">
                                         <input type="hidden" name="status" value="${status}">
                                         <input type="hidden" name="source" value="${source}">
-                                        <input type="hidden" name="periodSelect" value="${selectedPeriod}">
+                                        <input type="hidden" name="periodSelect" value="${selectedPeriodId}">
                                         <input type="hidden" name="page" value="1">
                                         <button type="submit" class="page-link">1</button>
                                     </form>
@@ -213,11 +217,13 @@
                                         </c:when>
                                         <c:otherwise>
                                             <form method="post" style="display:inline;">
+                                                <input type="hidden" name="employeeKeyword" value="${employeeKeyword}">
+                                                <input type="hidden" name="department" value="${department}">
                                                 <input type="hidden" name="startDate" value="${startDate}">
                                                 <input type="hidden" name="endDate" value="${endDate}">
                                                 <input type="hidden" name="status" value="${status}">
                                                 <input type="hidden" name="source" value="${source}">
-                                                <input type="hidden" name="periodSelect" value="${selectedPeriod}">
+                                                <input type="hidden" name="periodSelect" value="${selectedPeriodId}">
                                                 <input type="hidden" name="page" value="${i}">
                                                 <button type="submit" class="page-link">${i}</button>
                                             </form>
@@ -231,11 +237,13 @@
                                         <span class="pagination-dots">...</span>
                                     </c:if>
                                     <form method="post" style="display:inline;">
+                                        <input type="hidden" name="employeeKeyword" value="${employeeKeyword}">
+                                        <input type="hidden" name="department" value="${department}">
                                         <input type="hidden" name="startDate" value="${startDate}">
                                         <input type="hidden" name="endDate" value="${endDate}">
                                         <input type="hidden" name="status" value="${status}">
                                         <input type="hidden" name="source" value="${source}">
-                                        <input type="hidden" name="periodSelect" value="${selectedPeriod}">
+                                        <input type="hidden" name="periodSelect" value="${selectedPeriodId}">
                                         <input type="hidden" name="page" value="${totalPages}">
                                         <button type="submit" class="page-link">${totalPages}</button>
                                     </form>
@@ -244,11 +252,13 @@
                                 <!-- Next -->
                                 <c:if test="${currentPage < totalPages}">
                                     <form method="post" style="display:inline;">
+                                        <input type="hidden" name="employeeKeyword" value="${employeeKeyword}">
+                                        <input type="hidden" name="department" value="${department}">
                                         <input type="hidden" name="startDate" value="${startDate}">
                                         <input type="hidden" name="endDate" value="${endDate}">
                                         <input type="hidden" name="status" value="${status}">
                                         <input type="hidden" name="source" value="${source}">
-                                        <input type="hidden" name="periodSelect" value="${selectedPeriod}">
+                                        <input type="hidden" name="periodSelect" value="${selectedPeriodId}">
                                         <input type="hidden" name="page" value="${currentPage + 1}">
                                         <button type="submit" class="page-link">Next</button>
                                     </form>

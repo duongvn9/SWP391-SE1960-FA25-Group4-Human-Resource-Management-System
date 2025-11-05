@@ -200,6 +200,8 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
             int currentPage = PaginationUtil.getCurrentPage(req);
             int offset = (currentPage - 1) * recordsPerPage;
 
+            String employeeKeyword = req.getParameter("employeeKeyword");
+            String department = req.getParameter("department");
             String startDateStr = req.getParameter("startDate");
             String endDateStr = req.getParameter("endDate");
             String status = req.getParameter("status");
@@ -255,17 +257,19 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
 
 
             List<AttendanceLogDto> attendanceList = dao.findByFilter(
-                    userId, null, null, startDate, endDate, status, source, selectedPeriodId,
+                    userId, employeeKeyword, department, startDate, endDate, status, source, selectedPeriodId,
                     recordsPerPage, offset, true
             );
 
             int totalRecords = dao.countByFilter(
-                    userId, null, null, startDate, endDate, status, source, selectedPeriodId
+                    userId, employeeKeyword, department, startDate, endDate, status, source, selectedPeriodId
             );
             int totalPages = PaginationUtil.calculateTotalPages(totalRecords, recordsPerPage);
 
             req.setAttribute("attendanceList", attendanceList);
             req.setAttribute("periodList", tDAO.findAll());
+            req.setAttribute("employeeKeyword", employeeKeyword != null ? employeeKeyword : "");
+            req.setAttribute("department", department != null ? department : "");
             req.setAttribute("startDate", startDate.toString());
             req.setAttribute("endDate", endDate.toString());
             req.setAttribute("status", status != null ? status : "");
@@ -278,7 +282,8 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
             // Debug logging (temporary - can be removed later)
             System.out.println("DEBUG doGet - selectedPeriodId: " + selectedPeriodId + 
                 ", selectedPeriod: " + (selectedPeriod != null ? selectedPeriod.getName() : "null") + 
-                ", startDate: " + startDate + ", endDate: " + endDate);
+                ", startDate: " + startDate + ", endDate: " + endDate + 
+                ", status: '" + status + "', source: '" + source + "'");
             
             // Tính toán attendance summary chỉ khi có period cụ thể
             if (selectedPeriodId != null && selectedPeriod != null) {

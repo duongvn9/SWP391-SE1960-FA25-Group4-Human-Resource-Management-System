@@ -44,14 +44,12 @@ public class AttendanceRecordHRServlet extends HttpServlet {
         }
 
         try {
-            // Tự động khóa các kì công đã quá hạn
             tDAO.autoLockExpiredPeriods();
             
             int recordsPerPage = 10;
             int currentPage = PaginationUtil.getCurrentPage(req);
             int offset = (currentPage - 1) * recordsPerPage;
 
-            // Đọc tất cả filter parameters từ request (để hỗ trợ pagination)
             String employeeIdStr = req.getParameter("employeeId");
             Long employeeId = parseLongSafe(employeeIdStr);
             String department = getParam(req, "department");
@@ -67,64 +65,39 @@ public class AttendanceRecordHRServlet extends HttpServlet {
 
             TimesheetPeriod selectedPeriod = null;
 
-            // Kiểm tra xem có filter nào từ request không (chỉ tính filter có giá trị thực)
-            boolean hasAnyFilter = employeeId != null || 
-                                 (department != null && !department.isEmpty()) ||
-                                 (status != null && !status.isEmpty()) ||
-                                 (source != null && !source.isEmpty()) ||
-                                 startDate != null || endDate != null || periodId != null;
+            boolean hasAnyParameter = req.getParameter("employeeId") != null ||
+                                    req.getParameter("department") != null ||
+                                    req.getParameter("startDate") != null ||
+                                    req.getParameter("endDate") != null ||
+                                    req.getParameter("status") != null ||
+                                    req.getParameter("source") != null ||
+                                    req.getParameter("periodSelect") != null;
             
-            // Debug log để kiểm tra
-            System.out.println("DEBUG doGet - hasAnyFilter: " + hasAnyFilter + 
-                ", employeeId: " + employeeId + ", department: '" + department + 
-                "', status: '" + status + "', source: '" + source + 
-                "', startDate: " + startDate + ", endDate: " + endDate + ", periodId: " + periodId);
-            
-            // Xử lý period
-            if (periodId != null) {
-                selectedPeriod = tDAO.findById(periodId).orElse(null);
-            }
-            
-            // Nếu không có period được chọn và không có filter nào, dùng current period làm mặc định
-            if (selectedPeriod == null && !hasAnyFilter) {
+            if (!hasAnyParameter) {
                 selectedPeriod = tDAO.findCurrentPeriod();
                 if (selectedPeriod != null) {
                     periodId = selectedPeriod.getId();
-                }
-            }
-            
-            // Xử lý startDate và endDate
-            if (startDate == null && endDate == null) {
-                // Nếu không có date filter nào, sử dụng period hoặc current month
-                if (selectedPeriod != null) {
                     startDate = selectedPeriod.getStartDate();
                     endDate = selectedPeriod.getEndDate();
                 } else {
-                    // Fallback to current month
                     LocalDate now = LocalDate.now();
                     startDate = now.withDayOfMonth(1);
                     endDate = now.withDayOfMonth(now.lengthOfMonth());
                 }
-            } else if (selectedPeriod != null && (startDate == null || endDate == null)) {
-                // Nếu có period được chọn nhưng thiếu startDate hoặc endDate, 
-                // có thể là do pagination với period filter
-                if (startDate == null) startDate = selectedPeriod.getStartDate();
-                if (endDate == null) endDate = selectedPeriod.getEndDate();
             } else {
-                // Fallback cho các trường hợp còn lại
-                if (startDate == null) {
-                    LocalDate now = LocalDate.now();
-                    startDate = now.withDayOfMonth(1);
+                if (periodId != null) {
+                    selectedPeriod = tDAO.findById(periodId).orElse(null);
                 }
-                if (endDate == null) {
-                    LocalDate now = LocalDate.now();
-                    endDate = now.withDayOfMonth(now.lengthOfMonth());
-                }
+                
+                if (startDate == null && endDate == null && selectedPeriod != null) {
+                    startDate = selectedPeriod.getStartDate();
+                    endDate = selectedPeriod.getEndDate();
+                }              
             }
 
             List<AttendanceLogDto> attendanceList = attendanceLogDao.findByFilter(
                     employeeId,
-                    null, // employeeKeyword - không sử dụng trong HR screen
+                    null,
                     department,
                     startDate,
                     endDate,
@@ -138,7 +111,7 @@ public class AttendanceRecordHRServlet extends HttpServlet {
 
             int totalRecords = attendanceLogDao.countByFilter(
                     employeeId,
-                    null, // employeeKeyword - không sử dụng trong HR screen
+                    null, 
                     department,
                     startDate,
                     endDate,
@@ -149,12 +122,6 @@ public class AttendanceRecordHRServlet extends HttpServlet {
 
             int totalPages = PaginationUtil.calculateTotalPages(totalRecords, recordsPerPage);
             
-            System.out.println("------------------------------");
-            System.out.println(startDate);
-            System.out.println(startDate.toString());
-            System.out.println(endDate);
-            System.out.println(endDate.toString());
-
             UserDao uDao = new UserDao();
             List<User> uList = uDao.findAll();
             req.setAttribute("uList", uList);
@@ -162,8 +129,8 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             req.setAttribute("periodList", tDAO.findAll());
             req.setAttribute("departmentList", dDAO.findAll());
             req.setAttribute("employeeId", employeeId);
-            req.setAttribute("startDate", startDate.toString());
-            req.setAttribute("endDate", endDate.toString());
+            req.setAttribute("startDate", (startDate != null) ? startDate.toString() : "");
+            req.setAttribute("endDate", (endDate != null) ? endDate.toString() : "");
             req.setAttribute("status", status);
             req.setAttribute("source", source);
             req.setAttribute("selectedPeriod", selectedPeriod);
@@ -171,7 +138,6 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             req.setAttribute("currentPage", currentPage);
             req.setAttribute("totalPages", totalPages);
             
-            // Thêm thông tin về khả năng toggle lock và trạng thái khóa vĩnh viễn
             if (selectedPeriod != null) {
                 boolean canToggle = tDAO.canToggleLockStatus(selectedPeriod.getId());
                 boolean isPermanentlyLocked = tDAO.isPermanentlyLocked(selectedPeriod.getId());
@@ -190,7 +156,6 @@ public class AttendanceRecordHRServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
-            // Tự động khóa các kì công đã quá hạn
             tDAO.autoLockExpiredPeriods();
             
             int recordsPerPage = 10;
@@ -238,7 +203,6 @@ public class AttendanceRecordHRServlet extends HttpServlet {
                 handleUpdate(req);
             } else if ("toggleLock".equalsIgnoreCase(action)) {
                 handleLockPeriod(req);
-                // Đọc lại filter parameters sau khi toggle lock
                 employeeIdStr = req.getParameter("employeeId");
                 employeeId = parseLongSafe(employeeIdStr);
                 department = getParam(req, "department");
@@ -256,7 +220,7 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             if (exportType != null && !exportType.isEmpty()) {
                 List<AttendanceLogDto> filteredRecords = attendanceLogDao.findByFilter(
                         employeeId,
-                        null, // employeeKeyword - không sử dụng trong HR screen
+                        null, 
                         department,
                         startDate,
                         endDate,
@@ -273,7 +237,7 @@ public class AttendanceRecordHRServlet extends HttpServlet {
 
             int totalRecords = attendanceLogDao.countByFilter(
                     employeeId,
-                    null, // employeeKeyword - không sử dụng trong HR screen
+                    null, 
                     department,
                     startDate,
                     endDate,
@@ -290,7 +254,7 @@ public class AttendanceRecordHRServlet extends HttpServlet {
 
             List<AttendanceLogDto> attendanceList = attendanceLogDao.findByFilter(
                     employeeId,
-                    null, // employeeKeyword - không sử dụng trong HR screen
+                    null,
                     department,
                     startDate,
                     endDate,
@@ -320,7 +284,6 @@ public class AttendanceRecordHRServlet extends HttpServlet {
                     : null;
             req.setAttribute("selectedPeriod", selectedPeriod);
             
-            // Thêm thông tin về khả năng toggle lock và trạng thái khóa vĩnh viễn
             if (selectedPeriod != null) {
                 boolean canToggle = tDAO.canToggleLockStatus(selectedPeriod.getId());
                 boolean isPermanentlyLocked = tDAO.isPermanentlyLocked(selectedPeriod.getId());
@@ -351,7 +314,6 @@ public class AttendanceRecordHRServlet extends HttpServlet {
 
         if (periodIdLock != null && userId != null) {
             try {
-                // Kiểm tra xem có thể toggle không
                 if (!tDAO.canToggleLockStatus(periodIdLock)) {
                     req.setAttribute("error", "Cannot change lock status: This period has been permanently locked. Periods are automatically locked after 7 days of the following month.");
                     return;
@@ -406,7 +368,6 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             String dateStr = req.getParameter("dateUpdate");
             String checkInStr = req.getParameter("checkInUpdate");
             String checkOutStr = req.getParameter("checkOutUpdate");
-            String status = req.getParameter("statusUpdate");
             String source = req.getParameter("sourceUpdate");
             String period = req.getParameter("periodUpdate");
 
@@ -420,7 +381,6 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             record.setDate(LocalDate.parse(dateStr));
             record.setCheckIn(LocalTime.parse(checkInStr));
             record.setCheckOut(LocalTime.parse(checkOutStr));
-            // Tự động tính status thay vì dùng input từ form
             String calculatedStatus = AttendanceService.calculateAttendanceStatus(record);
             record.setStatus(calculatedStatus);
             record.setSource(source);
