@@ -4,8 +4,8 @@
 
 <!-- Appeal Request Detail Section -->
 <div class="card mb-4 shadow-sm border-0">
-    <div class="card-header bg-gradient-warning text-white">
-        <h5 class="mb-0">
+    <div class="card-header bg-gradient-warning" style="color: #000 !important; font-weight: bold;">
+        <h5 class="mb-0" style="color: #000 !important;"></h5>
             <i class="fas fa-exclamation-triangle me-2"></i>Attendance Appeal Details
         </h5>
     </div>
