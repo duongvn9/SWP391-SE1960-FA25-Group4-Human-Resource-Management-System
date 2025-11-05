@@ -1846,22 +1846,3 @@ Toggle for HRM */
     justify-content: center;
     align-items: center;
 }
-
-
-/* Fix modal z-index to prevent header overlay */
-.modal {
-    z-index: 1060 !important;
-}
-
-.modal-backdrop {
-    z-index: 1055 !important;
-}
-
-/* Ensure generate payslip modal is above everything */
-#generatePayslipModal {
-    z-index: 1060 !important;
-}
-
-#generatePayslipModal .modal-dialog {
-    z-index: 1061 !important;
-}

@@ -62,11 +62,6 @@
                                                     <p class="page-subtitle">View your monthly payslips and compensation
                                                         details</p>
                                                 </div>
-                                                <div>
-                                                    <button type="button" class="btn btn-success" onclick="exportMyPayslips()">
-                                                        <i class="fas fa-file-excel me-2"></i>Export to Excel
-                                                    </button>
-                                                </div>
                                             </div>
 
                                             <!-- Employee Filters Section -->
@@ -88,30 +83,45 @@
                                                                 <label for="payslipMonth" class="form-label">
                                                                     Month <span class="text-danger">*</span>
                                                                 </label>
-                                                                <select class="form-select" id="payslipMonth" name="month" required>
+                                                                <select class="form-select" id="payslipMonth"
+                                                                    name="month" required>
                                                                     <option value="">Select Month</option>
-                                                                    <option value="1" ${param.month == '1' ? 'selected' : ''}>January</option>
-                                                                    <option value="2" ${param.month == '2' ? 'selected' : ''}>February</option>
-                                                                    <option value="3" ${param.month == '3' ? 'selected' : ''}>March</option>
-                                                                    <option value="4" ${param.month == '4' ? 'selected' : ''}>April</option>
-                                                                    <option value="5" ${param.month == '5' ? 'selected' : ''}>May</option>
-                                                                    <option value="6" ${param.month == '6' ? 'selected' : ''}>June</option>
-                                                                    <option value="7" ${param.month == '7' ? 'selected' : ''}>July</option>
-                                                                    <option value="8" ${param.month == '8' ? 'selected' : ''}>August</option>
-                                                                    <option value="9" ${param.month == '9' ? 'selected' : ''}>September</option>
-                                                                    <option value="10" ${param.month == '10' ? 'selected' : ''}>October</option>
-                                                                    <option value="11" ${param.month == '11' ? 'selected' : ''}>November</option>
-                                                                    <option value="12" ${param.month == '12' ? 'selected' : ''}>December</option>
+                                                                    <option value="1" ${param.month=='1' ? 'selected'
+                                                                        : '' }>January</option>
+                                                                    <option value="2" ${param.month=='2' ? 'selected'
+                                                                        : '' }>February</option>
+                                                                    <option value="3" ${param.month=='3' ? 'selected'
+                                                                        : '' }>March</option>
+                                                                    <option value="4" ${param.month=='4' ? 'selected'
+                                                                        : '' }>April</option>
+                                                                    <option value="5" ${param.month=='5' ? 'selected'
+                                                                        : '' }>May</option>
+                                                                    <option value="6" ${param.month=='6' ? 'selected'
+                                                                        : '' }>June</option>
+                                                                    <option value="7" ${param.month=='7' ? 'selected'
+                                                                        : '' }>July</option>
+                                                                    <option value="8" ${param.month=='8' ? 'selected'
+                                                                        : '' }>August</option>
+                                                                    <option value="9" ${param.month=='9' ? 'selected'
+                                                                        : '' }>September</option>
+                                                                    <option value="10" ${param.month=='10' ? 'selected'
+                                                                        : '' }>October</option>
+                                                                    <option value="11" ${param.month=='11' ? 'selected'
+                                                                        : '' }>November</option>
+                                                                    <option value="12" ${param.month=='12' ? 'selected'
+                                                                        : '' }>December</option>
                                                                 </select>
                                                             </div>
                                                             <div class="col-md-6">
                                                                 <label for="payslipYear" class="form-label">
                                                                     Year <span class="text-danger">*</span>
                                                                 </label>
-                                                                <select class="form-select" id="payslipYear" name="year" required>
+                                                                <select class="form-select" id="payslipYear" name="year"
+                                                                    required>
                                                                     <option value="">Select Year</option>
                                                                     <c:forEach begin="2020" end="2030" var="y">
-                                                                        <option value="${y}" ${param.year == y ? 'selected' : ''}>${y}</option>
+                                                                        <option value="${y}" ${param.year==y
+                                                                            ? 'selected' : '' }>${y}</option>
                                                                     </c:forEach>
                                                                 </select>
                                                             </div>
@@ -187,21 +197,24 @@
                                                                         <c:forEach var="payslip" items="${payslips}">
                                                                             <tr>
                                                                                 <td>
-                                                                                    ${payslip.periodStart} - ${payslip.periodEnd}
+                                                                                    ${payslip.periodStart} -
+                                                                                    ${payslip.periodEnd}
                                                                                 </td>
                                                                                 <td class="text-end">
                                                                                     <fmt:formatNumber
                                                                                         value="${payslip.grossAmount}"
                                                                                         type="number"
                                                                                         groupingUsed="true"
-                                                                                        maxFractionDigits="2" /> ${payslip.currency}
+                                                                                        maxFractionDigits="2" />
+                                                                                    ${payslip.currency}
                                                                                 </td>
                                                                                 <td class="text-end">
                                                                                     <fmt:formatNumber
                                                                                         value="${payslip.netAmount}"
                                                                                         type="number"
                                                                                         groupingUsed="true"
-                                                                                        maxFractionDigits="2" /> ${payslip.currency}
+                                                                                        maxFractionDigits="2" />
+                                                                                    ${payslip.currency}
                                                                                     </span>
                                                                                 </td>
                                                                                 <td class="text-center">
@@ -241,7 +254,7 @@
                                                                                 </td>
                                                                                 <td class="text-center">
                                                                                     <div class="btn-group" role="group">
-                                                                                        <a href="${pageContext.request.contextPath}/payslips/${payslip.id}"
+                                                                                        <a href="${pageContext.request.contextPath}/payslips/detail?userId=${payslip.userId}&periodStart=${payslip.periodStart}&periodEnd=${payslip.periodEnd}"
                                                                                             class="btn btn-sm btn-outline-primary"
                                                                                             title="View Details">
                                                                                             <i class="fas fa-eye"></i>
@@ -705,9 +718,21 @@
                                                                                 <td>${payslip.periodStart} -
                                                                                     ${payslip.periodEnd}</td>
                                                                                 <td class="text-end">
-                                                                                    <fmt:formatNumber value="${payslip.grossAmount}" type="number" groupingUsed="true" maxFractionDigits="2" /> ${payslip.currency}</td>
+                                                                                    <fmt:formatNumber
+                                                                                        value="${payslip.grossAmount}"
+                                                                                        type="number"
+                                                                                        groupingUsed="true"
+                                                                                        maxFractionDigits="2" />
+                                                                                    ${payslip.currency}
+                                                                                </td>
                                                                                 <td class="text-end">
-                                                                                    <fmt:formatNumber value="${payslip.netAmount}" type="number" groupingUsed="true" maxFractionDigits="2" /> ${payslip.currency}</td>
+                                                                                    <fmt:formatNumber
+                                                                                        value="${payslip.netAmount}"
+                                                                                        type="number"
+                                                                                        groupingUsed="true"
+                                                                                        maxFractionDigits="2" />
+                                                                                    ${payslip.currency}
+                                                                                </td>
                                                                                 <td class="text-center">
                                                                                     <span
                                                                                         class="status-badge ${payslip.status.toLowerCase()}">
@@ -718,7 +743,7 @@
                                                                                     ${payslip.generatedAt}</td>
                                                                                 <td class="text-center">
                                                                                     <div class="btn-group" role="group">
-                                                                                        <a href="/HRMS/payslips/${payslip.id}"
+                                                                                        <a href="${pageContext.request.contextPath}/payslips/detail?userId=${payslip.userId}&periodStart=${payslip.periodStart}&periodEnd=${payslip.periodEnd}"
                                                                                             class="btn btn-sm btn-outline-primary"
                                                                                             title="View Details">
                                                                                             <i class="fas fa-eye"></i>
@@ -1087,16 +1112,6 @@
 
                         // Generate payslip for specific employee via AJAX
                         function generatePayslipForEmployee(userId, userName, month, year, forceRegenerate) {
-                            // Check rate limit (prevent spam)
-                            if (typeof canGenerate === 'function' && !canGenerate()) {
-                                return; // Blocked by rate limit
-                            }
-
-                            // Enable generation guard
-                            if (typeof setGeneratingState === 'function') {
-                                setGeneratingState(true);
-                            }
-
                             // Show loading toast
                             if (typeof showToast === 'function') {
                                 showToast('Generating payslip for ' + userName + '...', 'info', 'Processing');
@@ -1155,12 +1170,6 @@
                                     console.error('Generation error:', error);
                                     if (typeof showToast === 'function') {
                                         showToast('Network error: ' + error.message, 'error', 'Error');
-                                    }
-                                })
-                                .finally(() => {
-                                    // Disable generation guard
-                                    if (typeof setGeneratingState === 'function') {
-                                        setGeneratingState(false);
                                     }
                                 });
                         }
@@ -1307,6 +1316,7 @@
 
                         // Auto-show toast on page load if there's a server message
                         document.addEventListener('DOMContentLoaded', function () {
+                            // Initialize event listeners from payslip-actions.js
                             if (typeof initializeEventListeners === 'function') {
                                 initializeEventListeners();
                             }

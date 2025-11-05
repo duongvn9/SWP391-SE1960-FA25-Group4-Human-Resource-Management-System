@@ -597,66 +597,6 @@ public class PayslipDao extends BaseDao<Payslip, Long> {
     }
 
     /**
-     * Bulk mark payslips as dirty by user IDs (alias for bulkMarkDirty)
-     * Requirements: 8.1, 8.2, 8.3
-     */
-    public int bulkMarkDirtyByUserIds(List<Long> userIds, LocalDate periodStart, LocalDate periodEnd, String reason) throws SQLException {
-        return bulkMarkDirty(userIds, periodStart, periodEnd, reason);
-    }
-
-    /**
-     * Bulk update generated timestamp for multiple payslips
-     * Requirements: 8.6, 8.7
-     */
-    public int bulkUpdateGeneratedTimestamp(List<Long> payslipIds, LocalDateTime generatedAt) throws SQLException {
-        if (payslipIds == null || payslipIds.isEmpty() || generatedAt == null) {
-            return 0;
-        }
-
-        // Process in batches for better performance
-        final int BATCH_SIZE = 1000;
-        int totalUpdated = 0;
-
-        try (Connection conn = DatabaseUtil.getConnection()) {
-            conn.setAutoCommit(false); // Start transaction
-
-            try {
-                for (int i = 0; i < payslipIds.size(); i += BATCH_SIZE) {
-                    int endIndex = Math.min(i + BATCH_SIZE, payslipIds.size());
-                    List<Long> batch = payslipIds.subList(i, endIndex);
-
-                    String placeholders = String.join(",", batch.stream().map(id -> "?").toArray(String[]::new));
-                    String sql = "UPDATE payslips SET generated_at = ?, is_dirty = 0, dirty_reason = NULL, updated_at = ? " +
-                                "WHERE id IN (" + placeholders + ")";
-
-                    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                        setTimestamp(stmt, 1, generatedAt);
-                        setTimestamp(stmt, 2, LocalDateTime.now());
-
-                        for (int j = 0; j < batch.size(); j++) {
-                            stmt.setLong(3 + j, batch.get(j));
-                        }
-
-                        int batchUpdated = stmt.executeUpdate();
-                        totalUpdated += batchUpdated;
-                    }
-                }
-
-                conn.commit(); // Commit transaction
-                logger.info("Successfully updated generated timestamp for {} payslips", totalUpdated);
-                return totalUpdated;
-
-            } catch (SQLException e) {
-                conn.rollback(); // Rollback on error
-                logger.error("Failed to update generated timestamp, transaction rolled back", e);
-                throw e;
-            } finally {
-                conn.setAutoCommit(true); // Restore auto-commit
-            }
-        }
-    }
-
-    /**
      * Reset dirty flags for multiple payslips with optimized batching
      * Requirements: 8.6, 9.1, 9.4, 9.7, 9.8
      */
@@ -1308,6 +1248,62 @@ public class PayslipDao extends BaseDao<Payslip, Long> {
     }
 
     /**
+     * Bulk mark multiple payslips as dirty by user IDs
+     * Requirements: 9.1, 9.4, 9.7, 9.8
+     */
+    public int bulkMarkDirtyByUserIds(List<Long> userIds, LocalDate periodStart, LocalDate periodEnd, String reason) throws SQLException {
+        if (userIds == null || userIds.isEmpty() || periodStart == null || periodEnd == null) {
+            return 0;
+        }
+
+        // Process in batches to optimize connection pooling
+        final int BATCH_SIZE = 1000;
+        int totalUpdated = 0;
+
+        try (Connection conn = DatabaseUtil.getConnection()) {
+            conn.setAutoCommit(false); // Start transaction
+
+            try {
+                for (int i = 0; i < userIds.size(); i += BATCH_SIZE) {
+                    int endIndex = Math.min(i + BATCH_SIZE, userIds.size());
+                    List<Long> batch = userIds.subList(i, endIndex);
+
+                    String placeholders = String.join(",", batch.stream().map(id -> "?").toArray(String[]::new));
+                    String sql = "UPDATE payslips SET is_dirty = 1, dirty_reason = ?, updated_at = ? " +
+                                "WHERE user_id IN (" + placeholders + ") AND period_start = ? AND period_end = ?";
+
+                    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                        stmt.setString(1, reason);
+                        setTimestamp(stmt, 2, LocalDateTime.now());
+
+                        int paramIndex = 3;
+                        for (Long userId : batch) {
+                            stmt.setLong(paramIndex++, userId);
+                        }
+                        stmt.setDate(paramIndex++, Date.valueOf(periodStart));
+                        stmt.setDate(paramIndex++, Date.valueOf(periodEnd));
+
+                        int batchUpdated = stmt.executeUpdate();
+                        totalUpdated += batchUpdated;
+                    }
+                }
+
+                conn.commit(); // Commit transaction
+                logger.info("Successfully bulk marked {} payslips as dirty for period {}-{}: {}",
+                           totalUpdated, periodStart, periodEnd, reason);
+                return totalUpdated;
+
+            } catch (SQLException e) {
+                conn.rollback(); // Rollback on error
+                logger.error("Failed to bulk mark payslips dirty, transaction rolled back", e);
+                throw e;
+            } finally {
+                conn.setAutoCommit(true); // Restore auto-commit
+            }
+        }
+    }
+
+    /**
      * Enhanced findDirtyPayslips method with filtering support
      * Requirements: 9.1, 9.4, 9.7, 9.8
      */
@@ -1406,6 +1402,60 @@ public class PayslipDao extends BaseDao<Payslip, Long> {
 
         return payslips;
     }
+
+    /**
+     * Bulk update generated timestamp for successful payslip generation
+     * Requirements: 9.1, 9.4, 9.7, 9.8
+     */
+    public int bulkUpdateGeneratedTimestamp(List<Long> payslipIds, LocalDateTime generatedAt) throws SQLException {
+        if (payslipIds == null || payslipIds.isEmpty()) {
+            return 0;
+        }
+
+        // Process in batches for better performance
+        final int BATCH_SIZE = 1000;
+        int totalUpdated = 0;
+
+        try (Connection conn = DatabaseUtil.getConnection()) {
+            conn.setAutoCommit(false); // Start transaction
+
+            try {
+                for (int i = 0; i < payslipIds.size(); i += BATCH_SIZE) {
+                    int endIndex = Math.min(i + BATCH_SIZE, payslipIds.size());
+                    List<Long> batch = payslipIds.subList(i, endIndex);
+
+                    String placeholders = String.join(",", batch.stream().map(id -> "?").toArray(String[]::new));
+                    String sql = "UPDATE payslips SET generated_at = ?, is_dirty = 0, dirty_reason = NULL, updated_at = ? " +
+                                "WHERE id IN (" + placeholders + ")";
+
+                    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                        setTimestamp(stmt, 1, generatedAt != null ? generatedAt : LocalDateTime.now());
+                        setTimestamp(stmt, 2, LocalDateTime.now());
+
+                        for (int j = 0; j < batch.size(); j++) {
+                            stmt.setLong(3 + j, batch.get(j));
+                        }
+
+                        int batchUpdated = stmt.executeUpdate();
+                        totalUpdated += batchUpdated;
+                    }
+                }
+
+                conn.commit(); // Commit transaction
+                logger.info("Successfully updated generated timestamp for {} payslips", totalUpdated);
+                return totalUpdated;
+
+            } catch (SQLException e) {
+                conn.rollback(); // Rollback on error
+                logger.error("Failed to update generated timestamps, transaction rolled back", e);
+                throw e;
+            } finally {
+                conn.setAutoCommit(true); // Restore auto-commit
+            }
+        }
+    }
+
+
 
     /**
      * Bulk delete payslips by IDs with transaction support

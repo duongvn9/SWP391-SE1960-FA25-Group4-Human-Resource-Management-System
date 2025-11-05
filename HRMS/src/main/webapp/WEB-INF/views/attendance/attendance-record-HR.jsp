@@ -26,7 +26,6 @@
                     <!-- ========== FILTER SECTION ========== -->
                     <form id="filterForm" class="filter-form" method="post"
                           action="${pageContext.request.contextPath}/attendance/record/HR">
-                        <input type="hidden" name="page" id="pageInput" value="${currentPage}" />
 
                         <!-- From / To Date -->
                         <div class="filter-group">
@@ -138,11 +137,22 @@
                                     <div class="toggle-switch">
                                         <input type="checkbox" id="switchInput"
                                                data-period-id="${selectedPeriod.id}" ${selectedPeriod.isLocked
-                                                                 ? "checked" : "" } />
-                                        <label for="switchInput" class="slider"></label>
+                                                                 ? "checked" : "" } ${!canToggleLock ? "disabled" : "" } />
+                                        <label for="switchInput"
+                                               class="slider ${!canToggleLock ? 'disabled' : ''}"></label>
                                     </div>
                                     <span id="sliderStatus">
-                                        ${selectedPeriod.isLocked ? "Locked" : "Unlocked"}
+                                        <c:choose>
+                                            <c:when test="${isPermanentlyLocked}">
+                                                Permanently Locked
+                                            </c:when>
+                                            <c:when test="${selectedPeriod.isLocked}">
+                                                Locked
+                                            </c:when>
+                                            <c:otherwise>
+                                                Unlocked
+                                            </c:otherwise>
+                                        </c:choose>
                                     </span>
                                 </div>
                             </c:if>
@@ -152,8 +162,8 @@
                     <form id="exportForm" class="export-form"
                           action="${pageContext.request.contextPath}/attendance/record/HR" method="post">
                         <input type="hidden" name="exportType" id="exportType">
-                        <input type="hidden" name="employeeKeyword" id="exportEmployeeKeyword"
-                               value="${employeeKeyword}">
+                        <input type="hidden" name="employeeId" id="exportEmployeeId"
+                               value="${employeeId != null ? employeeId : ''}">
                         <input type="hidden" name="department" id="exportDepartment" value="${department}">
                         <input type="hidden" name="startDate" id="exportStartDate" value="${startDate}">
                         <input type="hidden" name="endDate" id="exportEndDate" value="${endDate}">
@@ -236,8 +246,8 @@
                                                     <input type="hidden" name="periodEdit"
                                                            value="${att.period}">
 
-                                                    <input type="hidden" name="employeeKeyword"
-                                                           value="${employeeKeyword}">
+                                                    <input type="hidden" name="employeeId"
+                                                           value="${employeeId != null ? employeeId : ''}">
                                                     <input type="hidden" name="department"
                                                            value="${department}">
                                                     <input type="hidden" name="startDate" value="${startDate}">
@@ -267,7 +277,7 @@
                         <form id="paginationForm" method="get"
                               action="${pageContext.request.contextPath}/attendance/record/HR">
                             <!-- Giữ tất cả filter hiện tại -->
-                            <input type="hidden" name="employeeKeyword" value="${employeeKeyword}" />
+                            <input type="hidden" name="employeeId" value="${employeeId != null ? employeeId : ''}" />
                             <input type="hidden" name="department" value="${department}" />
                             <input type="hidden" name="status" value="${status}" />
                             <input type="hidden" name="source" value="${source}" />
@@ -359,7 +369,7 @@
                                 <input type="hidden" name="checkOutOld" id="checkOutOld">
 
                                 <!-- Thêm filter -->
-                                <input type="hidden" name="employeeKeyword" value="${employeeKeyword}">
+                                <input type="hidden" name="employeeId" value="${employeeId != null ? employeeId : ''}">
                                 <input type="hidden" name="department" value="${department}">
                                 <input type="hidden" name="startDate" value="${startDate}">
                                 <input type="hidden" name="endDate" value="${endDate}">

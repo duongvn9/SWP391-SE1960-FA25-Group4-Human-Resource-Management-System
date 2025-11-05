@@ -298,8 +298,8 @@
                             </li>
                         </c:if>
 
-                        <!-- Dropdown: Payroll -->
-                        <c:if test="${sessionScope.user != null}">
+                        <!-- Dropdown: Payroll (Hidden for Admin) -->
+                        <c:if test="${sessionScope.user != null && sessionScope.user.positionId != 6}">
                             <li class="nav-item">
                                 <a href="#" class="nav-link sidebar-dropdown-toggle" data-target="payroll-submenu"
                                     aria-expanded="false" data-tooltip="Payroll">
@@ -307,15 +307,16 @@
                                     <i class="fas fa-chevron-right dropdown-arrow"></i>
                                 </a>
                                 <ul class="sidebar-submenu" id="payroll-submenu">
-                                    <!-- My Payslip - For all users (including Admin) -->
+                                    <!-- My Payslip - For all users except Admin -->
                                     <li>
                                         <a href="${pageContext.request.contextPath}/payslips?viewMode=personal"
                                             class="nav-link ${param.currentPage == 'my-payslip' ? 'active' : ''}">
                                             <i class="fas fa-file-invoice"></i><span>My Payslip</span>
                                         </a>
                                     </li>
-
-                                    <c:if test="${sessionScope.user.positionId == 7}">
+                                    
+                                    <!-- Payslip List - HRM Only (position_id = 7 or 8) -->
+                                    <c:if test="${sessionScope.user.positionId == 7 || sessionScope.user.positionId == 8}">
                                         <li>
                                             <a href="${pageContext.request.contextPath}/payslips"
                                                 class="nav-link ${param.currentPage == 'payslip-list' ? 'active' : ''}">

@@ -24,7 +24,6 @@ public class PayslipCalculationResult {
     private int workedDays;
     private int paidLeaveDays;
     private int totalPaidDays;
-    private int workingDaysInPeriod; // Total working days in the period (for base prorated calculation)
     private double workedHours;
     private double paidLeaveHours;
     private double totalActualHours;
@@ -149,14 +148,6 @@ public class PayslipCalculationResult {
 
     public void setTotalPaidDays(int totalPaidDays) {
         this.totalPaidDays = totalPaidDays;
-    }
-
-    public int getWorkingDaysInPeriod() {
-        return workingDaysInPeriod;
-    }
-
-    public void setWorkingDaysInPeriod(int workingDaysInPeriod) {
-        this.workingDaysInPeriod = workingDaysInPeriod;
     }
 
     public double getWorkedHours() {
