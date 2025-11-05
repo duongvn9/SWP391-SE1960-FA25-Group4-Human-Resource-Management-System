@@ -1,0 +1,501 @@
+/* =========================================================
+   DETAIL PAYSLIP PAGE - MODERN DESIGN
+   Tham khảo từ payslip-list.css
+   ========================================================= */
+
+:root {
+    --payslip-primary: #4f46e5;
+    --payslip-primary-700: #4338ca;
+    --payslip-muted: #6c757d;
+    --payslip-danger: #ef4444;
+    --payslip-warning: #f59e0b;
+    --payslip-success: #10b981;
+    --payslip-info: #3b82f6;
+    --payslip-radius: 14px;
+    --payslip-shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.06);
+    --payslip-shadow-md: 0 10px 28px rgba(17, 24, 39, 0.1);
+    --payslip-shadow-lg: 0 20px 40px rgba(17, 24, 39, 0.15);
+    --sidebar-width: 260px;
+    --sidebar-collapsed-width: 70px;
+}
+
+/* =========================================================
+   SIDEBAR INTEGRATION - Tương thích với sidebar.jsp
+   ========================================================= */
+
+/* Main content layout - sử dụng margin + width để co dãn */
+.main-content {
+    margin-left: var(--sidebar-width) !important;
+    width: calc(100vw - var(--sidebar-width)) !important;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease !important;
+    box-sizing: border-box;
+}
+
+/* Khi sidebar collapsed - main content dãn ra */
+body.sidebar-collapsed .main-content {
+    margin-left: var(--sidebar-collapsed-width) !important;
+    width: calc(100vw - var(--sidebar-collapsed-width)) !important;
+}
+
+/* Đảm bảo CSS được áp dụng cho payslip page */
+.payslip-page .main-content {
+    margin-left: var(--sidebar-width) !important;
+    width: calc(100vw - var(--sidebar-width)) !important;
+    transition: all 0.3s ease !important;
+}
+
+body.sidebar-collapsed .payslip-page .main-content {
+    margin-left: var(--sidebar-collapsed-width) !important;
+    width: calc(100vw - var(--sidebar-collapsed-width)) !important;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0 !important;
+        width: 100vw !important;
+    }
+
+    .payslip-page .main-content {
+        margin-left: 0 !important;
+        width: 100vw !important;
+    }
+}
+
+/* Smooth transitions for sidebar toggle */
+.main-content,
+.content-area {
+    transition: all 0.3s ease;
+}
+
+/* Ensure proper z-index layering */
+.main-content {
+    position: relative;
+    z-index: 1;
+}
+
+/* Content Area Background */
+.payslip-page .content-area {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    min-height: calc(100vh - 70px);
+    padding: 1.5rem;
+}
+
+/* Breadcrumb Enhancement */
+.payslip-page .breadcrumb {
+    background: transparent;
+    padding: 0;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+}
+
+.payslip-page .breadcrumb-item+.breadcrumb-item::before {
+    content: "›";
+    color: #9ca3af;
+    font-weight: 600;
+}
+
+.payslip-page .breadcrumb-item a {
+    color: var(--payslip-primary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.payslip-page .breadcrumb-item a:hover {
+    color: var(--payslip-primary-700);
+}
+
+.payslip-page .breadcrumb-item.active {
+    color: #6b7280;
+    font-weight: 500;
+}
+
+/* Payslip Header */
+.payslip-page .payslip-header {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+    border-radius: var(--payslip-radius);
+    border-left: 4px solid var(--payslip-primary);
+    box-shadow: var(--payslip-shadow-sm);
+}
+
+.payslip-page .payslip-header h2 {
+    font-weight: 800;
+    margin: 0;
+    color: #111827;
+    font-size: 1.75rem;
+    display: flex;
+    align-items: center;
+}
+
+.payslip-page .payslip-header h2 i {
+    color: var(--payslip-primary);
+    margin-right: 0.75rem;
+}
+
+.payslip-page .payslip-header p {
+    color: var(--payslip-muted);
+    margin: 0.5rem 0 0;
+    font-size: 0.95rem;
+}
+
+/* Info Cards - Modern Design */
+.payslip-page .info-card {
+    border: 0;
+    border-radius: var(--payslip-radius);
+    background: #fff;
+    box-shadow: var(--payslip-shadow-md);
+    overflow: hidden;
+    margin-bottom: 2rem;
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+    padding: 1.5rem;
+}
+
+.payslip-page .info-card:hover {
+    box-shadow: var(--payslip-shadow-lg);
+    transform: translateY(-3px);
+}
+
+.payslip-page .info-card .card-title {
+    color: var(--payslip-primary);
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    border-bottom: 2px solid #eef2ff;
+    padding-bottom: 0.75rem;
+}
+
+.payslip-page .info-card .card-title i {
+    color: var(--payslip-primary);
+    margin-right: 0.5rem;
+}
+
+/* Section Headers */
+.payslip-page .section-header {
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(139, 92, 246, 0.05) 100%);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid var(--payslip-primary);
+}
+
+.payslip-page .section-header h5 {
+    color: var(--payslip-primary);
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+.payslip-page .section-header h5 i {
+    color: var(--payslip-primary);
+    margin-right: 0.5rem;
+}
+
+.payslip-page .section-header h6 {
+    color: var(--payslip-primary);
+    font-weight: 600;
+    margin: 0;
+    font-size: 1rem;
+}
+
+/* Calculation Rows */
+.payslip-page .calculation-row {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f3f4f6;
+    transition: background-color 0.2s ease;
+}
+
+.payslip-page .calculation-row:hover {
+    background-color: #f9fafb;
+    border-radius: 6px;
+    margin: 0 -0.5rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+.payslip-page .calculation-row:last-child {
+    border-bottom: none;
+}
+
+.payslip-page .calculation-row.total-row {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 0.5rem 0;
+    border: 2px solid #e5e7eb;
+    font-weight: 600;
+}
+
+.payslip-page .calculation-row.sub-item {
+    padding-left: 1rem;
+    font-size: 0.9rem;
+    color: #6b7280;
+    border-bottom: 1px solid #f9fafb;
+}
+
+/* Status Badges */
+.payslip-page .badge-status {
+    padding: 0.4rem 0.875rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.payslip-page .bg-success {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%) !important;
+    color: #065f46 !important;
+    border: 1px solid #10b981;
+}
+
+.payslip-page .bg-warning {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
+    color: #92400e !important;
+    border: 1px solid #f59e0b;
+}
+
+.payslip-page .bg-primary {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%) !important;
+    color: #1e40af !important;
+    border: 1px solid #3b82f6;
+}
+
+.payslip-page .bg-danger {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%) !important;
+    color: #dc2626 !important;
+    border: 1px solid #ef4444;
+}
+
+.payslip-page .bg-info {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%) !important;
+    color: #1e40af !important;
+    border: 1px solid #3b82f6;
+}
+
+.payslip-page .bg-secondary {
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%) !important;
+    color: #475569 !important;
+    border: 1px solid #94a3b8;
+}
+
+/* Deduction Highlight */
+.payslip-page .deduction-highlight {
+    color: var(--payslip-danger) !important;
+    font-weight: 600;
+}
+
+/* Text Colors */
+.payslip-page .text-success {
+    color: var(--payslip-success) !important;
+}
+
+.payslip-page .text-primary {
+    color: var(--payslip-primary) !important;
+}
+
+.payslip-page .text-muted {
+    color: var(--payslip-muted) !important;
+}
+
+/* Buttons - Modern Style */
+.payslip-page .btn {
+    border-radius: 12px;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.payslip-page .btn-light {
+    background: #f8fafc;
+    color: #374151;
+    border-color: #e5e7eb;
+}
+
+.payslip-page .btn-light:hover {
+    background: #f1f5f9;
+    border-color: #d1d5db;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* No Payslip Found */
+.payslip-page .no-payslip {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--payslip-muted);
+}
+
+.payslip-page .no-payslip i {
+    color: #d1d5db;
+    margin-bottom: 1rem;
+}
+
+.payslip-page .no-payslip h4 {
+    color: #374151;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+/* Final Amount Card */
+.payslip-page .card.bg-success {
+    background: linear-gradient(135deg, var(--payslip-success) 0%, #059669 100%) !important;
+    border: none;
+    color: white;
+    box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+}
+
+.payslip-page .card.bg-success .card-title {
+    color: white !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.payslip-page .card.bg-success h3 {
+    color: white;
+    font-weight: 700;
+}
+
+/* Animations */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Add fade-in animation to main sections */
+.payslip-page .payslip-header {
+    animation: fadeIn 0.6s ease;
+}
+
+.payslip-page .info-card {
+    animation: fadeIn 0.7s ease;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+
+    /* Tablet: sidebar luôn collapsed */
+    .main-content {
+        margin-left: var(--sidebar-collapsed-width) !important;
+        width: calc(100vw - var(--sidebar-collapsed-width)) !important;
+    }
+}
+
+@media (max-width: 768px) {
+
+    /* Mobile: không có sidebar */
+    .main-content {
+        margin-left: 0 !important;
+        width: 100vw !important;
+    }
+
+    .payslip-page .content-area {
+        padding: 1rem;
+    }
+
+    .payslip-page .payslip-header {
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .payslip-page .payslip-header h2 {
+        font-size: 1.5rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .payslip-page .info-card {
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .payslip-page .calculation-row {
+        padding: 0.5rem 0;
+    }
+
+    .payslip-page .calculation-row.total-row {
+        padding: 0.75rem;
+    }
+
+    .payslip-page .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .payslip-page .section-header {
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .payslip-page .content-area {
+        padding: 0.75rem;
+    }
+
+    .payslip-page .payslip-header {
+        padding: 0.75rem;
+        text-align: center;
+    }
+
+    .payslip-page .payslip-header h2 {
+        font-size: 1.25rem;
+    }
+
+    .payslip-page .info-card {
+        padding: 0.75rem;
+    }
+
+    .payslip-page .info-card .card-title {
+        font-size: 1rem;
+    }
+
+    .payslip-page .calculation-row .row .col-8,
+    .payslip-page .calculation-row .row .col-4 {
+        font-size: 0.875rem;
+    }
+
+    .payslip-page .section-header h5 {
+        font-size: 1rem;
+    }
+
+    .payslip-page .btn {
+        padding: 0.625rem 1rem;
+        font-size: 0.875rem;
+    }
+}

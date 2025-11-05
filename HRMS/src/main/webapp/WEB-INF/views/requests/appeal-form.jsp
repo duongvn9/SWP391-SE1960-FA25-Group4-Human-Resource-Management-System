@@ -301,6 +301,40 @@
                                 <!-- Container for multiple new records -->
                                 <div id="newRecordsContainer">
                                     <!-- Records will be added here dynamically -->
+                                    <c:if test="${not empty preservedNewRecords}">
+                                        <c:forEach var="newRec" items="${preservedNewRecords}" varStatus="status">
+                                            <div class="card border-primary mb-3 new-record-item" data-record-id="${status.index + 1}">
+                                                <div class="card-header d-flex justify-content-between align-items-center py-2">
+                                                    <small class="text-muted">Record #${status.index + 1}</small>
+                                                    <button type="button" class="btn btn-sm btn-danger remove-record-btn">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="row g-3">
+                                                        <div class="col-md-4">
+                                                            <label class="form-label">Date <span class="text-danger">*</span></label>
+                                                            <input type="date" name="newRecordDate_${status.index + 1}" 
+                                                                   class="form-control new-record-date" required value="${newRec.date}" />
+                                                            <div class="error-message"></div>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label class="form-label">Check-in Time <span class="text-danger">*</span></label>
+                                                            <input type="time" name="newRecordCheckIn_${status.index + 1}" 
+                                                                   class="form-control new-record-checkin" required value="${newRec.checkIn}" />
+                                                            <div class="error-message"></div>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label class="form-label">Check-out Time <span class="text-danger">*</span></label>
+                                                            <input type="time" name="newRecordCheckOut_${status.index + 1}" 
+                                                                   class="form-control new-record-checkout" required value="${newRec.checkOut}" />
+                                                            <div class="error-message"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </c:forEach>
+                                    </c:if>
                                 </div>
 
                                 <div class="form-text mt-2">

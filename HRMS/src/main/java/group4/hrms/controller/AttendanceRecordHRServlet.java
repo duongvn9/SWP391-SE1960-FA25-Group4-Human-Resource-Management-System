@@ -44,48 +44,59 @@ public class AttendanceRecordHRServlet extends HttpServlet {
         }
 
         try {
+            tDAO.autoLockExpiredPeriods();
+            
             int recordsPerPage = 10;
             int currentPage = PaginationUtil.getCurrentPage(req);
             int offset = (currentPage - 1) * recordsPerPage;
 
-            String status = req.getParameter("status");
-            String source = req.getParameter("source");
-            String periodIdStr = req.getParameter("periodSelect");
-            String department = req.getParameter("department");
+            String employeeIdStr = req.getParameter("employeeId");
+            Long employeeId = parseLongSafe(employeeIdStr);
+            String department = getParam(req, "department");
+            String startDateStr = getParam(req, "startDate");
+            String endDateStr = getParam(req, "endDate");
+            String status = getParam(req, "status");
+            String source = getParam(req, "source");
+            String periodIdStr = getParam(req, "periodSelect");
 
-            LocalDate startDate;
-            LocalDate endDate;
-            Long periodId = null;
+            LocalDate startDate = parseDate(startDateStr);
+            LocalDate endDate = parseDate(endDateStr);
+            Long periodId = parseLongSafe(periodIdStr);
 
             TimesheetPeriod selectedPeriod = null;
 
-            if (periodIdStr != null && !periodIdStr.isEmpty()) {
-                try {
-                    periodId = Long.valueOf(periodIdStr);
-                    selectedPeriod = tDAO.findById(periodId).orElse(null);
-                } catch (NumberFormatException e) {
-                    periodId = null;
-                }
-            }
-
-            if (selectedPeriod == null) {
+            boolean hasAnyParameter = req.getParameter("employeeId") != null ||
+                                    req.getParameter("department") != null ||
+                                    req.getParameter("startDate") != null ||
+                                    req.getParameter("endDate") != null ||
+                                    req.getParameter("status") != null ||
+                                    req.getParameter("source") != null ||
+                                    req.getParameter("periodSelect") != null;
+            
+            if (!hasAnyParameter) {
                 selectedPeriod = tDAO.findCurrentPeriod();
                 if (selectedPeriod != null) {
                     periodId = selectedPeriod.getId();
+                    startDate = selectedPeriod.getStartDate();
+                    endDate = selectedPeriod.getEndDate();
+                } else {
+                    LocalDate now = LocalDate.now();
+                    startDate = now.withDayOfMonth(1);
+                    endDate = now.withDayOfMonth(now.lengthOfMonth());
                 }
-            }
-
-            if (selectedPeriod != null) {
-                startDate = selectedPeriod.getStartDate();
-                endDate = selectedPeriod.getEndDate();
             } else {
-                LocalDate now = LocalDate.now();
-                startDate = now.withDayOfMonth(1);
-                endDate = now.withDayOfMonth(now.lengthOfMonth());
+                if (periodId != null) {
+                    selectedPeriod = tDAO.findById(periodId).orElse(null);
+                }
+                
+                if (startDate == null && endDate == null && selectedPeriod != null) {
+                    startDate = selectedPeriod.getStartDate();
+                    endDate = selectedPeriod.getEndDate();
+                }              
             }
 
             List<AttendanceLogDto> attendanceList = attendanceLogDao.findByFilter(
-                    null,
+                    employeeId,
                     null,
                     department,
                     startDate,
@@ -99,8 +110,8 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             );
 
             int totalRecords = attendanceLogDao.countByFilter(
-                    null,
-                    null,
+                    employeeId,
+                    null, 
                     department,
                     startDate,
                     endDate,
@@ -110,21 +121,29 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             );
 
             int totalPages = PaginationUtil.calculateTotalPages(totalRecords, recordsPerPage);
-
+            
             UserDao uDao = new UserDao();
             List<User> uList = uDao.findAll();
             req.setAttribute("uList", uList);
             req.setAttribute("attendanceList", attendanceList);
             req.setAttribute("periodList", tDAO.findAll());
             req.setAttribute("departmentList", dDAO.findAll());
-            req.setAttribute("startDate", startDate.toString());
-            req.setAttribute("endDate", endDate.toString());
-            req.setAttribute("status", status != null ? status : "");
-            req.setAttribute("source", source != null ? source : "");
+            req.setAttribute("employeeId", employeeId);
+            req.setAttribute("startDate", (startDate != null) ? startDate.toString() : "");
+            req.setAttribute("endDate", (endDate != null) ? endDate.toString() : "");
+            req.setAttribute("status", status);
+            req.setAttribute("source", source);
             req.setAttribute("selectedPeriod", selectedPeriod);
-            req.setAttribute("department", department != null ? department : "");
+            req.setAttribute("department", department);
             req.setAttribute("currentPage", currentPage);
             req.setAttribute("totalPages", totalPages);
+            
+            if (selectedPeriod != null) {
+                boolean canToggle = tDAO.canToggleLockStatus(selectedPeriod.getId());
+                boolean isPermanentlyLocked = tDAO.isPermanentlyLocked(selectedPeriod.getId());
+                req.setAttribute("canToggleLock", canToggle);
+                req.setAttribute("isPermanentlyLocked", isPermanentlyLocked);
+            }
 
             req.getRequestDispatcher("/WEB-INF/views/attendance/attendance-record-HR.jsp").forward(req, resp);
 
@@ -137,6 +156,8 @@ public class AttendanceRecordHRServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
+            tDAO.autoLockExpiredPeriods();
+            
             int recordsPerPage = 10;
             int currentPage = PaginationUtil.getCurrentPage(req);
 
@@ -144,7 +165,6 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             String exportType = req.getParameter("exportType");
             String employeeIdStr = req.getParameter("employeeId");
             Long employeeId = parseLongSafe(employeeIdStr);
-            String employeeKeyword = getParam(req, "employeeKeyword");
             String department = getParam(req, "department");
             String startDateStr = getParam(req, "startDate");
             String endDateStr = getParam(req, "endDate");
@@ -158,7 +178,6 @@ public class AttendanceRecordHRServlet extends HttpServlet {
 
             if ("reset".equalsIgnoreCase(action)) {
                 employeeId = null;
-                employeeKeyword = "";
                 department = "";
                 status = "";
                 source = "";
@@ -184,8 +203,8 @@ public class AttendanceRecordHRServlet extends HttpServlet {
                 handleUpdate(req);
             } else if ("toggleLock".equalsIgnoreCase(action)) {
                 handleLockPeriod(req);
-
-                employeeKeyword = getParam(req, "employeeId");
+                employeeIdStr = req.getParameter("employeeId");
+                employeeId = parseLongSafe(employeeIdStr);
                 department = getParam(req, "department");
                 startDateStr = getParam(req, "startDate");
                 endDateStr = getParam(req, "endDate");
@@ -201,7 +220,7 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             if (exportType != null && !exportType.isEmpty()) {
                 List<AttendanceLogDto> filteredRecords = attendanceLogDao.findByFilter(
                         employeeId,
-                        employeeKeyword,
+                        null, 
                         department,
                         startDate,
                         endDate,
@@ -218,7 +237,7 @@ public class AttendanceRecordHRServlet extends HttpServlet {
 
             int totalRecords = attendanceLogDao.countByFilter(
                     employeeId,
-                    employeeKeyword,
+                    null, 
                     department,
                     startDate,
                     endDate,
@@ -235,7 +254,7 @@ public class AttendanceRecordHRServlet extends HttpServlet {
 
             List<AttendanceLogDto> attendanceList = attendanceLogDao.findByFilter(
                     employeeId,
-                    employeeKeyword,
+                    null,
                     department,
                     startDate,
                     endDate,
@@ -264,6 +283,13 @@ public class AttendanceRecordHRServlet extends HttpServlet {
                     ? tDAO.findById(periodId).orElse(null)
                     : null;
             req.setAttribute("selectedPeriod", selectedPeriod);
+            
+            if (selectedPeriod != null) {
+                boolean canToggle = tDAO.canToggleLockStatus(selectedPeriod.getId());
+                boolean isPermanentlyLocked = tDAO.isPermanentlyLocked(selectedPeriod.getId());
+                req.setAttribute("canToggleLock", canToggle);
+                req.setAttribute("isPermanentlyLocked", isPermanentlyLocked);
+            }
 
             req.setAttribute("currentPage", currentPage);
             req.setAttribute("totalPages", totalPages);
@@ -287,7 +313,20 @@ public class AttendanceRecordHRServlet extends HttpServlet {
         Long userId = (Long) req.getSession().getAttribute("accountId");
 
         if (periodIdLock != null && userId != null) {
-            tDAO.updateLockStatus(periodIdLock, isLocked, userId);
+            try {
+                if (!tDAO.canToggleLockStatus(periodIdLock)) {
+                    req.setAttribute("error", "Cannot change lock status: This period has been permanently locked. Periods are automatically locked after 7 days of the following month.");
+                    return;
+                }
+                
+                tDAO.updateLockStatus(periodIdLock, isLocked, userId);
+                
+                String action = isLocked ? "locked" : "unlocked";
+                req.setAttribute("message", "Period has been " + action + " successfully.");
+                
+            } catch (IllegalStateException e) {
+                req.setAttribute("error", e.getMessage());
+            }
         }
     }
 
@@ -329,7 +368,6 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             String dateStr = req.getParameter("dateUpdate");
             String checkInStr = req.getParameter("checkInUpdate");
             String checkOutStr = req.getParameter("checkOutUpdate");
-            String status = req.getParameter("statusUpdate");
             String source = req.getParameter("sourceUpdate");
             String period = req.getParameter("periodUpdate");
 
@@ -343,7 +381,6 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             record.setDate(LocalDate.parse(dateStr));
             record.setCheckIn(LocalTime.parse(checkInStr));
             record.setCheckOut(LocalTime.parse(checkOutStr));
-            // Tự động tính status thay vì dùng input từ form
             String calculatedStatus = AttendanceService.calculateAttendanceStatus(record);
             record.setStatus(calculatedStatus);
             record.setSource(source);
