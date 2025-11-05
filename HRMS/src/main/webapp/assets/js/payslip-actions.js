@@ -20,6 +20,7 @@ function showError(message) {
     }
 }
 
+
 /**
  * Show warning message
  */
