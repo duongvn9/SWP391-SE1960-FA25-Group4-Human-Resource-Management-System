@@ -419,9 +419,116 @@ public class TimesheetPeriodDao extends BaseDao<TimesheetPeriod, Long> {
         return null;
     }
 
+    public boolean canToggleLockStatus(Long periodId) throws SQLException {
+        if (periodId == null) {
+            return false;
+        }
+
+        Optional<TimesheetPeriod> periodOpt = findById(periodId);
+        if (periodOpt.isEmpty()) {
+            return false;
+        }
+
+        TimesheetPeriod period = periodOpt.get();
+        LocalDate today = LocalDate.now();
+        LocalDate periodEnd = period.getEndDate();
+        
+        // Tính ngày cuối cùng có thể toggle (7 ngày đầu tháng tiếp theo)
+        LocalDate nextMonth = periodEnd.plusDays(1).withDayOfMonth(1);
+        LocalDate lockDeadline = nextMonth.plusDays(6); // 7 ngày đầu tháng tiếp theo (1-7)
+        
+        // Nếu đã quá deadline, tự động khóa kì công
+        if (today.isAfter(lockDeadline)) {
+            autoLockPeriod(periodId);
+            return false;
+        }
+        
+        return true;
+    }
+
+    private void autoLockPeriod(Long periodId) throws SQLException {
+        String sql = "UPDATE timesheet_periods "
+                + "SET is_locked = true, "
+                + "locked_by = NULL, "
+                + "locked_at = ? "
+                + "WHERE id = ? AND is_locked = false";
+
+        try (Connection conn = DatabaseUtil.getConnection(); 
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
+            stmt.setLong(2, periodId);
+            
+            int updated = stmt.executeUpdate();
+            if (updated > 0) {
+                logger.info("Auto-locked period {} due to deadline expiry", periodId);
+            }
+        }
+    }
+
+    public boolean isPermanentlyLocked(Long periodId) throws SQLException {
+        if (periodId == null) {
+            return false;
+        }
+
+        Optional<TimesheetPeriod> periodOpt = findById(periodId);
+        if (periodOpt.isEmpty()) {
+            return false;
+        }
+
+        TimesheetPeriod period = periodOpt.get();
+        LocalDate today = LocalDate.now();
+        LocalDate periodEnd = period.getEndDate();
+        
+        // Tính ngày cuối cùng có thể toggle (7 ngày đầu tháng tiếp theo)
+        LocalDate nextMonth = periodEnd.plusDays(1).withDayOfMonth(1);
+        LocalDate lockDeadline = nextMonth.plusDays(6); // 7 ngày đầu tháng tiếp theo (1-7)
+        
+        // Bị khóa vĩnh viễn nếu đã quá deadline
+        boolean isPastDeadline = today.isAfter(lockDeadline);
+        
+        // Nếu quá deadline và chưa khóa thì tự động khóa
+        if (isPastDeadline && !Boolean.TRUE.equals(period.getIsLocked())) {
+            autoLockPeriod(periodId);
+        }
+        
+        return isPastDeadline;
+    }
+
+    public int autoLockExpiredPeriods() throws SQLException {
+        LocalDate today = LocalDate.now();
+        
+        String sql = """
+            UPDATE timesheet_periods 
+            SET is_locked = true, 
+                locked_by = NULL, 
+                locked_at = ? 
+            WHERE is_locked = false 
+            AND ? > DATE_ADD(LAST_DAY(date_end), INTERVAL 7 DAY)
+            """;
+
+        try (Connection conn = DatabaseUtil.getConnection(); 
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
+            stmt.setDate(2, Date.valueOf(today));
+            
+            int updated = stmt.executeUpdate();
+            if (updated > 0) {
+                logger.info("Auto-locked {} expired periods", updated);
+            }
+            return updated;
+        }
+    }
+
     public boolean updateLockStatus(Long periodId, boolean isLocked, Long userId) throws SQLException {
         if (periodId == null) {
             throw new IllegalArgumentException("periodId cannot be null");
+        }
+
+        // Kiểm tra xem có thể toggle không
+        if (!canToggleLockStatus(periodId)) {
+            throw new IllegalStateException("Cannot toggle lock status: period is outside the allowed time window (after 7 days of the following month)");
         }
 
         String sql = "UPDATE timesheet_periods "
