@@ -1026,7 +1026,8 @@
                                                 <i class="fas fa-eye position-absolute" id="toggleResetConfirmPassword"
                                                     style="top: 50%; right: 10px; transform: translateY(-50%); cursor: pointer; color: #6c757d;"></i>
                                             </div>
-                                            <div class="invalid-feedback" id="reset-password-mismatch">
+                                            <div class="invalid-feedback" id="reset-password-mismatch"
+                                                style="display: none;">
                                                 Passwords do not match
                                             </div>
                                         </div>
@@ -1195,7 +1196,22 @@
                             document.getElementById('reset-username').textContent = username;
                             document.getElementById('reset-newPassword').value = '';
                             document.getElementById('reset-confirmPassword').value = '';
-                            document.getElementById('reset-confirmPassword').classList.remove('is-invalid');
+
+                            // Clear validation states
+                            const confirmInput = document.getElementById('reset-confirmPassword');
+                            const mismatchDiv = document.getElementById('reset-password-mismatch');
+                            confirmInput.classList.remove('is-invalid');
+                            confirmInput.setCustomValidity('');
+                            mismatchDiv.style.display = 'none';
+
+                            // Reset touched flag
+                            confirmPasswordTouched = false;
+
+                            // Hide password strength indicator
+                            const strengthIndicator = document.getElementById('resetPasswordStrengthIndicator');
+                            if (strengthIndicator) {
+                                strengthIndicator.style.display = 'none';
+                            }
 
                             // Show modal
                             const modal = new bootstrap.Modal(document.getElementById('resetPasswordModal'));
@@ -1339,6 +1355,9 @@
                             const resetUppercaseReq = document.getElementById('resetUppercaseReq');
                             const resetSpecialCharReq = document.getElementById('resetSpecialCharReq');
 
+                            // Flag to track if user has interacted with confirm password field
+                            let confirmPasswordTouched = false;
+
                             function validateResetPasswordStrength(password) {
                                 const requirements = {
                                     minLength: password.length >= 6,
@@ -1403,17 +1422,37 @@
 
                             // Confirm password validation
                             function validateResetPasswordMatch() {
-                                if (resetPasswordInput.value !== resetConfirmPasswordInput.value) {
+                                const newPassword = resetPasswordInput.value;
+                                const confirmPassword = resetConfirmPasswordInput.value;
+                                const mismatchDiv = document.getElementById('reset-password-mismatch');
+
+                                // Only validate if confirm field has been touched and has content
+                                if (confirmPasswordTouched && confirmPassword.length > 0 && newPassword !== confirmPassword) {
                                     resetConfirmPasswordInput.setCustomValidity('Passwords do not match');
                                     resetConfirmPasswordInput.classList.add('is-invalid');
+                                    mismatchDiv.style.display = 'block';
                                 } else {
                                     resetConfirmPasswordInput.setCustomValidity('');
                                     resetConfirmPasswordInput.classList.remove('is-invalid');
+                                    mismatchDiv.style.display = 'none';
                                 }
                             }
 
-                            resetConfirmPasswordInput.addEventListener('keyup', validateResetPasswordMatch);
-                            resetConfirmPasswordInput.addEventListener('change', validateResetPasswordMatch);
+                            resetConfirmPasswordInput.addEventListener('focus', function () {
+                                confirmPasswordTouched = true;
+                            });
+
+                            resetConfirmPasswordInput.addEventListener('keyup', function () {
+                                if (confirmPasswordTouched) {
+                                    validateResetPasswordMatch();
+                                }
+                            });
+
+                            resetConfirmPasswordInput.addEventListener('change', function () {
+                                if (confirmPasswordTouched) {
+                                    validateResetPasswordMatch();
+                                }
+                            });
 
                             // Toggle password visibility for reset password modal
                             const toggleResetPassword = document.getElementById('toggleResetPassword');
