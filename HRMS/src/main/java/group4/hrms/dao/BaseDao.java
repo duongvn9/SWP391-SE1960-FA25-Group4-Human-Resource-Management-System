@@ -80,8 +80,8 @@ public abstract class BaseDao<T, ID> {
         String sql = "SELECT * FROM " + getTableName();
 
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
                 entities.add(mapResultSetToEntity(rs));
@@ -107,7 +107,7 @@ public abstract class BaseDao<T, ID> {
         String sql = "SELECT * FROM " + getTableName() + " WHERE " + getIdColumnName() + " = ?";
 
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setObject(1, id);
 
@@ -139,7 +139,7 @@ public abstract class BaseDao<T, ID> {
         String sql = createInsertSql();
 
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             setInsertParameters(stmt, entity);
 
@@ -181,7 +181,7 @@ public abstract class BaseDao<T, ID> {
         String sql = createUpdateSql();
 
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             setUpdateParameters(stmt, entity);
 
@@ -191,7 +191,14 @@ public abstract class BaseDao<T, ID> {
                 throw new SQLException("Updating record failed, no rows affected");
             }
 
-            logger.info("Updated record in {}", getTableName());
+            // Force commit if autocommit is disabled
+            if (!conn.getAutoCommit()) {
+                conn.commit();
+            }
+
+            logger.info("Updated record in {} with {} rows affected", getTableName(), affectedRows);
+            logger.debug("Update SQL: {}", sql);
+
             return entity;
 
         } catch (SQLException e) {
@@ -211,7 +218,7 @@ public abstract class BaseDao<T, ID> {
         String sql = "DELETE FROM " + getTableName() + " WHERE " + getIdColumnName() + " = ?";
 
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setObject(1, id);
 
@@ -239,8 +246,8 @@ public abstract class BaseDao<T, ID> {
         String sql = "SELECT COUNT(*) FROM " + getTableName();
 
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                ResultSet rs = stmt.executeQuery()) {
 
             if (rs.next()) {
                 return rs.getLong(1);
@@ -265,7 +272,7 @@ public abstract class BaseDao<T, ID> {
         String sql = "SELECT COUNT(*) FROM " + getTableName() + " WHERE " + getIdColumnName() + " = ?";
 
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setObject(1, id);
 
@@ -286,7 +293,8 @@ public abstract class BaseDao<T, ID> {
     /**
      * Helper method để set Timestamp từ LocalDateTime
      */
-    protected void setTimestamp(PreparedStatement stmt, int parameterIndex, LocalDateTime dateTime) throws SQLException {
+    protected void setTimestamp(PreparedStatement stmt, int parameterIndex, LocalDateTime dateTime)
+            throws SQLException {
         if (dateTime != null) {
             stmt.setTimestamp(parameterIndex, Timestamp.valueOf(dateTime));
         } else {

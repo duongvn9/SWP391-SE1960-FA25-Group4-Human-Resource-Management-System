@@ -315,7 +315,7 @@ function performBulkRegenerate() {
                 window.location.reload();
             }, 2000);
         } else {
-            showError(data.message || data.error || 'Regeneration failed');
+            showError(data.error || 'Regeneration failed');
             if (data.errors && data.errors.length > 0) {
                 showErrorDetails(data.errors);
             }
@@ -393,7 +393,7 @@ function performIndividualRegenerate(btn, payslipId) {
                 window.location.reload();
             }, 1500);
         } else {
-            showError(data.message || data.error || 'Regeneration failed');
+            showError(data.error || 'Regeneration failed');
         }
     })
     .catch(error => {
@@ -593,7 +593,7 @@ function performQuickRegenerate(btn, payslipIds) {
                 window.location.reload();
             }, 2000);
         } else {
-            showError(data.message || data.error || 'Quick regeneration failed');
+            showError(data.error || 'Quick regeneration failed');
             if (data.errors && data.errors.length > 0) {
                 showErrorDetails(data.errors);
             }
@@ -1080,7 +1080,7 @@ function performRegenerate(payslipId) {
                 location.reload();
             }, 1500);
         } else {
-            showError(data.message || data.error || 'Regeneration failed');
+            showError(data.error || 'Regeneration failed');
             if (btn) {
                 btn.disabled = false;
                 btn.innerHTML = originalText;
@@ -1119,87 +1119,3 @@ function clearFilters() {
 // NOTE: showToast() function is defined in payslip-list.jsp to avoid conflicts
 // NOTE: DOMContentLoaded handlers are also in payslip-list.jsp
 // This file only contains action handlers and utility functions
-
-
-// ========== GENERATION GUARD & RATE LIMITING ==========
-
-let isGeneratingPayslips = false;
-
-function setGeneratingState(generating) {
-    isGeneratingPayslips = generating;
-
-    if (generating) {
-        // Disable ALL buttons and forms
-        document.querySelectorAll('button, input[type="submit"]').forEach(btn => {
-            if (!btn.classList.contains('allow-during-generation')) {
-                btn.disabled = true;
-                btn.style.opacity = '0.5';
-                btn.style.cursor = 'not-allowed';
-            }
-        });
-
-        // Warn before leaving page
-        window.onbeforeunload = function() {
-            return 'Payslip generation is in progress. Leaving now may cause incomplete data.';
-        };
-
-        console.log('[Generation Guard] Enabled - All buttons disabled');
-
-    } else {
-        // Re-enable ALL buttons and forms
-        document.querySelectorAll('button, input[type="submit"]').forEach(btn => {
-            if (!btn.classList.contains('allow-during-generation')) {
-                btn.disabled = false;
-                btn.style.opacity = '1';
-                btn.style.cursor = 'pointer';
-            }
-        });
-
-        // Remove warning
-        window.onbeforeunload = null;
-
-        console.log('[Generation Guard] Disabled - All buttons enabled');
-    }
-}
-
-const RATE_LIMIT_DURATION = 30000; // 30 seconds
-let lastGenerationTime = 0;
-
-function canGenerate() {
-    const now = Date.now();
-    const timeSinceLastGeneration = now - lastGenerationTime;
-
-    if (timeSinceLastGeneration < RATE_LIMIT_DURATION) {
-        const remainingSeconds = Math.ceil((RATE_LIMIT_DURATION - timeSinceLastGeneration) / 1000);
-        if (typeof showToast === 'function') {
-            showToast('Please wait ' + remainingSeconds + ' seconds before generating again.', 'warning');
-        }
-        return false;
-    }
-
-    lastGenerationTime = now;
-    return true;
-}
-
-function exportMyPayslips() {
-    const contextPath = window.location.pathname.substring(0, window.location.pathname.indexOf('/', 1)) || '';
-    const periodStart = document.getElementById('hiddenPeriodStart')?.value;
-    const periodEnd = document.getElementById('hiddenPeriodEnd')?.value;
-
-    let exportUrl = contextPath + '/my-payslips/export';
-
-    if (periodStart && periodEnd) {
-        exportUrl += '?periodStart=' + encodeURIComponent(periodStart) +
-                     '&periodEnd=' + encodeURIComponent(periodEnd);
-    }
-
-    window.location.href = exportUrl;
-
-    if (typeof showToast === 'function') {
-        showToast('Exporting your payslips to Excel...', 'info');
-    }
-}
-
-window.setGeneratingState = setGeneratingState;
-window.canGenerate = canGenerate;
-window.exportMyPayslips = exportMyPayslips;

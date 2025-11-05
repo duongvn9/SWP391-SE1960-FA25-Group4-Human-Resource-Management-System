@@ -6,6 +6,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (toggle) {
         toggle.addEventListener("change", () => {
+            // Kiểm tra xem toggle có bị disabled không
+            if (toggle.disabled) {
+                // Revert lại trạng thái cũ
+                toggle.checked = !toggle.checked;
+                alert("Cannot change lock status: This period is outside the allowed time window.");
+                return;
+            }
+
             const locked = toggle.checked;
             const periodId = toggle.dataset.periodId;
 
@@ -36,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const filterForm = document.getElementById("filterForm");
             if (filterForm) {
-                const filterNames = ["employeeKeyword", "department", "startDate", "endDate", "status", "source", "periodSelect"];
+                const filterNames = ["employeeId", "department", "startDate", "endDate", "status", "source", "periodSelect"];
                 filterNames.forEach(name => {
                     const orig = filterForm.querySelector(`[name="${name}"]`);
                     const clone = document.createElement("input");

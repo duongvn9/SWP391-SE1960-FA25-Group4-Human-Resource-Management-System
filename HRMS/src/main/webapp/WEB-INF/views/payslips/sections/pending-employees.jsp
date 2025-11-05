@@ -47,14 +47,14 @@
 
     <!-- Employees With Attendance Changes -->
     <div class="col-lg-6">
-        <div class="alert alert-primary" role="alert" style="background-color: #e3f2fd; border-color: #2196f3; color: #0d47a1;">
+        <div class="alert alert-info" role="alert">
             <div class="clickable-header" style="cursor: pointer;" data-bs-toggle="collapse"
                 data-bs-target="#employeesWithAttendanceChangesCollapse" aria-expanded="false"
                 aria-controls="employeesWithAttendanceChangesCollapse" onclick="loadEmployeesWithAttendanceChanges()">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h6 class="mb-0" style="color: #0d47a1;">
+                    <h6 class="mb-0">
                         <i class="fas fa-user-clock me-2"></i>Employees With Attendance Changes
-                        <span class="badge bg-primary" id="employeesWithAttendanceChangesCount">
+                        <span class="badge bg-info" id="employeesWithAttendanceChangesCount">
                             <c:choose>
                                 <c:when test="${not empty employeesWithAttendanceChanges}">
                                     ${fn:length(employeesWithAttendanceChanges)}
@@ -63,18 +63,18 @@
                             </c:choose>
                         </span>
                     </h6>
-                    <i class="fas fa-chevron-down toggle-icon" style="color: #0d47a1;"></i>
+                    <i class="fas fa-chevron-down toggle-icon"></i>
                 </div>
-                <p class="mb-0 small" style="color: #1565c0;">Employees with attendance modifications in the current payroll period. These may need payslip regeneration.</p>
+                <p class="mb-0 small">Employees with attendance modifications in the current payroll period. These may need payslip regeneration.</p>
             </div>
             <div class="collapse mt-2" id="employeesWithAttendanceChangesCollapse">
                 <div id="employeesWithAttendanceChangesContent">
                     <!-- Loading state -->
                     <div class="text-center py-3" id="employeesWithAttendanceChangesLoading">
-                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                        <div class="spinner-border spinner-border-sm text-info" role="status">
                             <span class="visually-hidden">Loading...</span>
                         </div>
-                        <p class="mt-2 mb-0 small" style="color: #1565c0;">Loading employees...</p>
+                        <p class="mt-2 mb-0 small text-muted">Loading employees...</p>
                     </div>
                     <!-- Content will be loaded here -->
                     <div class="list-group" id="employeesWithAttendanceChangesList" style="display: none;">
@@ -96,8 +96,8 @@
                     <strong>Payroll Period Locked</strong>
                 </h6>
                 <p class="mb-0 small">
-                    The payroll period for <strong>${payrollLockInfo.lockedPeriod}</strong> has been locked since
-                    <strong>${payrollLockInfo.lockDate}</strong>.
+                    The payroll period for <strong>${payrollLockInfo.lockedPeriod}</strong> has been locked since 
+                    <strong>${payrollLockInfo.lockDate}</strong>. 
                     No new payslips can be generated or modified for this period.
                 </p>
                 <p class="mb-0 small mt-1">
@@ -172,7 +172,7 @@ function loadEmployeesWithoutPayslip() {
                                     <span class="badge bg-warning text-dark employee-badge">
                                         Missing: \${emp.missingPeriod}
                                     </span>
-                                    <button class="btn btn-sm btn-primary ms-2"
+                                    <button class="btn btn-sm btn-primary ms-2" 
                                             onclick="generatePayslipForEmployee(\${emp.userId}, '\${emp.missingPeriod}')">
                                         <i class="fas fa-plus me-1"></i>Generate
                                     </button>
@@ -240,15 +240,15 @@ function loadEmployeesWithAttendanceChanges() {
                                         <i class="fas fa-building me-1"></i>\${emp.departmentName}
                                     </small>
                                     <br>
-                                    <small style="color: #1976d2;">
+                                    <small class="text-info">
                                         <i class="fas fa-clock me-1"></i>Last modified: \${emp.lastModified}
                                     </small>
                                 </div>
                                 <div>
-                                    <span class="badge bg-primary employee-badge">
+                                    <span class="badge bg-info employee-badge">
                                         \${emp.changesCount} change(s)
                                     </span>
-                                    <button class="btn btn-sm btn-warning ms-2"
+                                    <button class="btn btn-sm btn-warning ms-2" 
                                             onclick="regeneratePayslipForEmployee(\${emp.userId}, '\${emp.affectedPeriod}')">
                                         <i class="fas fa-sync me-1"></i>Regenerate
                                     </button>

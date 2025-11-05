@@ -21,7 +21,6 @@ import group4.hrms.model.AttendanceLog;
 import group4.hrms.model.User;
 import group4.hrms.service.AttendanceMapper;
 import group4.hrms.service.AttendanceService;
-import group4.hrms.service.PayslipDirtyFlagService;
 import group4.hrms.util.SessionUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
@@ -38,9 +37,6 @@ import java.util.Map;
 @WebServlet("/attendance/import")
 @MultipartConfig
 public class ImportAttendanceServlet extends HttpServlet {
-
-    private static final Logger logger = Logger.getLogger(ImportAttendanceServlet.class.getName());
-    private final PayslipDirtyFlagService dirtyFlagService = new PayslipDirtyFlagService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -112,7 +108,7 @@ public class ImportAttendanceServlet extends HttpServlet {
         req.setAttribute("uList", uList);
         String activeTab = req.getParameter("activeTab");
         if (activeTab == null) {
-            activeTab = "upload";
+            activeTab = "upload"; 
         }
         req.setAttribute("activeTab", activeTab);
         req.getRequestDispatcher("/WEB-INF/views/attendance/import-attendance.jsp").forward(req, resp);
@@ -164,7 +160,7 @@ public class ImportAttendanceServlet extends HttpServlet {
                 for (AttendanceLogDto dto : manualLogs) {
                     dto.setSource("manual");
                 }
-
+                
                 // Sử dụng hàm enrichment mới
                 try {
                     manualLogs = AttendanceService.enrichAttendanceLogsFromDatabase(manualLogs);
@@ -184,9 +180,6 @@ public class ImportAttendanceServlet extends HttpServlet {
                 if (!validLogs.isEmpty()) {
                     List<AttendanceLog> record = AttendanceMapper.convertDtoToEntity(validLogs);
                     dao.saveAttendanceLogs(record);
-
-                    // --- ✅ Mark affected payslips as dirty ---
-                    markPayslipsDirtyForAttendanceChanges(validLogs, "Manual attendance import");
                 }
 
                 // --- ✅ Đưa thông tin ra FE ---
@@ -234,12 +227,12 @@ public class ImportAttendanceServlet extends HttpServlet {
         try {
             Path tempFilePath = handleFileUpload(req);
             List<AttendanceLogDto> logsDto = null;
-
+            
             if ("Preview".equalsIgnoreCase(action)) {
                 logsDto = AttendanceService.readExcelForPreview(tempFilePath);
                 req.setAttribute("previewLogsAll", logsDto);
                 System.out.println(logsDto);
-
+                
                 // Xử lý phân trang cho Preview
                 int page = 1;
                 String pageParam = req.getParameter("page");
@@ -269,27 +262,22 @@ public class ImportAttendanceServlet extends HttpServlet {
                 req.setAttribute("previewLogs", pageLogs);
                 req.setAttribute("currentPage", page);
                 req.setAttribute("totalPages", totalPages);
-
+                
             } else if ("Import".equalsIgnoreCase(action)) {
                 // Đọc tất cả bản ghi để tách biệt valid/invalid
                 logsDto = AttendanceService.readExcelForPreview(tempFilePath);
                 Map<String, List<AttendanceLogDto>> separatedLogs = AttendanceService.separateValidAndInvalidRecords(logsDto);
-
+                
                 List<AttendanceLogDto> validLogs = separatedLogs.get("valid");
                 List<AttendanceLogDto> formatInvalidLogs = separatedLogs.get("invalid");
-
+                
                 // Process import với chỉ valid logs
                 AttendanceService.processImport(validLogs, action, tempFilePath, req);
-
-                // --- ✅ Mark affected payslips as dirty ---
-                if (!validLogs.isEmpty()) {
-                    markPayslipsDirtyForAttendanceChanges(validLogs, "Excel attendance import");
-                }
-
+                
                 // Hiển thị format invalid logs nếu có
                 if (!formatInvalidLogs.isEmpty()) {
                     req.getSession().setAttribute("formatInvalidLogsAll", formatInvalidLogs);
-
+                    
                     // Phân trang cho format invalid logs
                     int invalidPage = 1;
                     String invalidPageParam = req.getParameter("formatInvalidPage");
@@ -315,7 +303,7 @@ public class ImportAttendanceServlet extends HttpServlet {
                     req.setAttribute("formatInvalidMessage", formatInvalidLogs.size() + " bản ghi có lỗi định dạng và không được import.");
                 }
             }
-
+            
             // Đảm bảo dữ liệu luôn có trong session để có thể truy cập từ doGet
             if (logsDto != null) {
                 req.getSession().setAttribute("previewLogsAll", logsDto);
@@ -398,42 +386,5 @@ public class ImportAttendanceServlet extends HttpServlet {
         }
 
         return tempFilePath;
-    }
-
-    /**
-     * Mark payslips as dirty for attendance changes
-     * This ensures payslips are recalculated when attendance data is updated
-     */
-    private void markPayslipsDirtyForAttendanceChanges(List<AttendanceLogDto> attendanceLogs, String source) {
-        try {
-            logger.info(String.format("Marking payslips dirty for %d attendance changes from %s",
-                                    attendanceLogs.size(), source));
-
-            int markedCount = 0;
-            for (AttendanceLogDto log : attendanceLogs) {
-                if (log.getUserId() != null && log.getDate() != null) {
-                    try {
-                        String reason = String.format("Attendance updated via %s", source);
-                        dirtyFlagService.markDirtyForAttendanceChange(
-                            log.getUserId(),
-                            log.getDate(),
-                            reason
-                        );
-                        markedCount++;
-                    } catch (Exception e) {
-                        logger.log(Level.WARNING,
-                                 String.format("Failed to mark payslip dirty for user %d on %s: %s",
-                                             log.getUserId(), log.getDate(), e.getMessage()), e);
-                        // Continue with other records
-                    }
-                }
-            }
-
-            logger.info(String.format("Successfully marked %d payslips as dirty", markedCount));
-
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error marking payslips dirty for attendance changes", e);
-            // Don't throw exception to avoid breaking the import operation
-        }
     }
 }

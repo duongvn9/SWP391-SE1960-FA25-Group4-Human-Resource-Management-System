@@ -35,10 +35,12 @@ public class DashboardKpiDto {
     private int lateCheckinsThisWeek;
     private double attendanceRate;
     
-    // Payroll metrics
-    private BigDecimal totalPayrollThisMonth;
+    // Payroll metrics - separated by currency
+    private BigDecimal totalPayrollThisMonthVND;
+    private BigDecimal totalPayrollThisMonthUSD;
     private int payslipsGenerated;
-    private BigDecimal averageSalary;
+    private BigDecimal averageSalaryVND;
+    private BigDecimal averageSalaryUSD;
     
     // Department breakdown
     private Map<String, Integer> employeesByDepartment;
@@ -209,12 +211,20 @@ public class DashboardKpiDto {
         this.attendanceRate = attendanceRate;
     }
 
-    public BigDecimal getTotalPayrollThisMonth() {
-        return totalPayrollThisMonth;
+    public BigDecimal getTotalPayrollThisMonthVND() {
+        return totalPayrollThisMonthVND;
     }
 
-    public void setTotalPayrollThisMonth(BigDecimal totalPayrollThisMonth) {
-        this.totalPayrollThisMonth = totalPayrollThisMonth;
+    public void setTotalPayrollThisMonthVND(BigDecimal totalPayrollThisMonthVND) {
+        this.totalPayrollThisMonthVND = totalPayrollThisMonthVND;
+    }
+
+    public BigDecimal getTotalPayrollThisMonthUSD() {
+        return totalPayrollThisMonthUSD;
+    }
+
+    public void setTotalPayrollThisMonthUSD(BigDecimal totalPayrollThisMonthUSD) {
+        this.totalPayrollThisMonthUSD = totalPayrollThisMonthUSD;
     }
 
     public int getPayslipsGenerated() {
@@ -225,12 +235,20 @@ public class DashboardKpiDto {
         this.payslipsGenerated = payslipsGenerated;
     }
 
-    public BigDecimal getAverageSalary() {
-        return averageSalary;
+    public BigDecimal getAverageSalaryVND() {
+        return averageSalaryVND;
     }
 
-    public void setAverageSalary(BigDecimal averageSalary) {
-        this.averageSalary = averageSalary;
+    public void setAverageSalaryVND(BigDecimal averageSalaryVND) {
+        this.averageSalaryVND = averageSalaryVND;
+    }
+
+    public BigDecimal getAverageSalaryUSD() {
+        return averageSalaryUSD;
+    }
+
+    public void setAverageSalaryUSD(BigDecimal averageSalaryUSD) {
+        this.averageSalaryUSD = averageSalaryUSD;
     }
 
     public Map<String, Integer> getEmployeesByDepartment() {

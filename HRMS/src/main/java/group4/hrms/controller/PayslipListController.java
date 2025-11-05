@@ -1027,32 +1027,19 @@ public class PayslipListController extends HttpServlet {
      * Requirements: 10.4, 10.5
      */
     private String determineUserRole(HttpServletRequest request, User user) {
-        // Check by positionId first (most accurate)
-        Long positionId = user.getPositionId();
-
-        // ADMIN (positionId = 6) only sees their own payslips
-        if (positionId != null && positionId == 6) {
-            return "EMPLOYEE";
-        }
-
-        // HRM (positionId = 7) can manage all payslips
-        if (positionId != null && positionId == 7) {
-            return "HRM";
-        }
-
-        // HR (positionId = 8) only sees their own payslips
-        if (positionId != null && positionId == 8) {
-            return "EMPLOYEE";
-        }
-
-        // Fallback: Check position code
-        String positionCode = PermissionUtil.getCurrentUserPositionCode(request);
-        if ("HRM".equals(positionCode)) {
-            return "HRM";
-        }
-
-        // Fallback: Check if user has HRM permissions
+        // Check if user has HRM permissions
         if (PermissionUtil.canViewAllUsers(request)) {
+            return "HRM";
+        }
+
+        // Check if user is admin
+        if (SessionUtil.isAdmin(request)) {
+            return "HRM";
+        }
+
+        // Check position-based roles
+        String positionCode = PermissionUtil.getCurrentUserPositionCode(request);
+        if ("HRM".equals(positionCode) || "HR".equals(positionCode) || "ADMIN".equals(positionCode)) {
             return "HRM";
         }
 

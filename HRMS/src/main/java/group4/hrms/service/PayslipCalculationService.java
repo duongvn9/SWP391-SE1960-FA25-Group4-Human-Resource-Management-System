@@ -143,18 +143,15 @@ public class PayslipCalculationService {
                                     workedDays, paidLeaveDays, totalPaidDays));
 
             // Step 6: Calculate base prorated amount
-            // CORRECT FORMULA: Base Salary × (Total Paid Days / Working Days in Period)
-            // Daily Rate is ONLY used for OT and deduction calculations
-            int workingDaysInPeriod = calculateWorkingDaysInPeriod(periodStart, periodEnd);
-            BigDecimal baseProrated = baseSalary
+            // NEW FORMULA: Daily Rate × Total Paid Days
+            BigDecimal baseProrated = dailyRate
                 .multiply(BigDecimal.valueOf(totalPaidDays))
-                .divide(BigDecimal.valueOf(workingDaysInPeriod), DECIMAL_PLACES, ROUNDING_MODE);
+                .setScale(DECIMAL_PLACES, ROUNDING_MODE);
 
             result.setBaseProrated(baseProrated);
-            result.setWorkingDaysInPeriod(workingDaysInPeriod); // Store for reference
 
-            logger.info(String.format("Base prorated calculation: baseSalary=%s, totalPaidDays=%.1f, workingDays=%d, result=%s",
-                                    baseSalary, totalPaidDays, workingDaysInPeriod, baseProrated));
+            logger.info(String.format("Base prorated calculation: dailyRate=%s, totalPaidDays=%.1f, result=%s",
+                                    dailyRate, totalPaidDays, baseProrated));
 
             // Step 7: Calculate overtime amount (NEW LOGIC)
             // Calculate OT amount directly from approved OT requests (using individual multipliers)
@@ -742,8 +739,7 @@ public class PayslipCalculationService {
 
         // Calculate worked days and hours (ONLY WEEKDAYS, not weekend/holiday/compensatory)
         // Worked Hours: MAX 8h per day (OT hours NOT included)
-        // Worked Days: Count UNIQUE dates (avoid duplicate counting if multiple records per day)
-        java.util.Set<LocalDate> workedDaysSet = new java.util.HashSet<>();
+        double workedDays = 0.0;
         double workedHours = 0.0;
         int lateMinutes = 0;
         LocalTime standardStartTime = LocalTime.of(8, 0);
@@ -762,8 +758,8 @@ public class PayslipCalculationService {
                 !isHoliday(attendanceDate) &&
                 !isCompensatoryDay(attendanceDate)) {
 
-                // Add to worked days set (automatically handles duplicates)
-                workedDaysSet.add(attendanceDate);
+                // This is a valid weekday attendance
+                workedDays += 1.0;
 
                 // Calculate hours worked (MAX 8h, no OT counted)
                 if (record.getCheckIn() != null && record.getCheckOut() != null) {
@@ -780,13 +776,11 @@ public class PayslipCalculationService {
                     // Cap at 8 hours (OT hours NOT included in Worked Hours)
                     hoursWorked = Math.min(hoursWorked, workingHoursPerDay);
 
-                    // Accumulate hours for this day (if multiple records, sum them up to max 8h)
-                    double currentDayHours = workedHoursPerDay.getOrDefault(attendanceDate, 0.0);
-                    double totalDayHours = Math.min(currentDayHours + hoursWorked, workingHoursPerDay);
-                    workedHoursPerDay.put(attendanceDate, totalDayHours);
+                    workedHours += hoursWorked;
+                    workedHoursPerDay.put(attendanceDate, hoursWorked);
                 }
 
-                // Calculate late minutes (only count once per day)
+                // Calculate late minutes
                 if (record.getCheckIn() != null &&
                     ("Late".equals(record.getStatus()) || "Late & Early Leave".equals(record.getStatus()))) {
                     LocalTime checkIn = record.getCheckIn();
@@ -799,10 +793,6 @@ public class PayslipCalculationService {
             }
             // Weekend/holiday/compensatory attendance will be counted as OT, not worked days
         }
-
-        // Calculate total worked hours from the map
-        workedHours = workedHoursPerDay.values().stream().mapToDouble(Double::doubleValue).sum();
-        double workedDays = workedDaysSet.size();
 
         snapshot.setWorkedDays((int) Math.round(workedDays));
         snapshot.setWorkedHours(workedHours);

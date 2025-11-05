@@ -488,7 +488,9 @@ public class EmploymentContractDao extends BaseDao<EmploymentContract, Long> {
     }
 
     /**
-     * Get full name from users table by account ID (JOIN accounts -> users)
+     * Get full name from users table by account ID
+     * The field created_by_account_id stores account.id, so we need to JOIN accounts -> users
+     * to get the user's full_name
      */
     public String getFullNameByAccountId(Long accountId) throws SQLException {
         if (accountId == null) {
