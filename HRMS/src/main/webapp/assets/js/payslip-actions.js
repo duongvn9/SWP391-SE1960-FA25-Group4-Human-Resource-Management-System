@@ -316,7 +316,7 @@ function performBulkRegenerate() {
                 window.location.reload();
             }, 2000);
         } else {
-            showError(data.error || 'Regeneration failed');
+            showError(data.message || data.error || 'Regeneration failed');
             if (data.errors && data.errors.length > 0) {
                 showErrorDetails(data.errors);
             }
@@ -394,7 +394,7 @@ function performIndividualRegenerate(btn, payslipId) {
                 window.location.reload();
             }, 1500);
         } else {
-            showError(data.error || 'Regeneration failed');
+            showError(data.message || data.error || 'Regeneration failed');
         }
     })
     .catch(error => {
@@ -594,7 +594,7 @@ function performQuickRegenerate(btn, payslipIds) {
                 window.location.reload();
             }, 2000);
         } else {
-            showError(data.error || 'Quick regeneration failed');
+            showError(data.message || data.error || 'Quick regeneration failed');
             if (data.errors && data.errors.length > 0) {
                 showErrorDetails(data.errors);
             }
@@ -1081,7 +1081,7 @@ function performRegenerate(payslipId) {
                 location.reload();
             }, 1500);
         } else {
-            showError(data.error || 'Regeneration failed');
+            showError(data.message || data.error || 'Regeneration failed');
             if (btn) {
                 btn.disabled = false;
                 btn.innerHTML = originalText;
