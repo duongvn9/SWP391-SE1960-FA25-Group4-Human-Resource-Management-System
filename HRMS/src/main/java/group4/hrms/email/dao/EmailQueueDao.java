@@ -286,4 +286,54 @@ public class EmailQueueDao extends BaseDao<EmailQueue, Long> {
             throw e;
         }
     }
+
+    /**
+     * Override update để đảm bảo commit và verify
+     */
+    @Override
+    public EmailQueue update(EmailQueue entity) throws SQLException {
+        if (entity == null || entity.getId() == null) {
+            throw new IllegalArgumentException("Entity and entity ID cannot be null");
+        }
+
+        logger.info("EmailQueueDao: Updating email queue ID {} to status {}",
+                entity.getId(), entity.getStatus());
+
+        Connection conn = null;
+        try {
+            conn = DatabaseUtil.getConnection();
+
+            String sql = createUpdateSql();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                setUpdateParameters(stmt, entity);
+
+                int affectedRows = stmt.executeUpdate();
+
+                if (affectedRows == 0) {
+                    throw new SQLException("Updating email_queue failed, no rows affected for ID: " + entity.getId());
+                }
+
+                logger.info("Updated record in {} with {} rows affected", getTableName(), affectedRows);
+                logger.debug("Update SQL: {}", sql);
+
+                // Verify update
+                String verifySql = "SELECT status FROM email_queue WHERE id = ?";
+                try (PreparedStatement verifyStmt = conn.prepareStatement(verifySql)) {
+                    verifyStmt.setLong(1, entity.getId());
+                    try (ResultSet rs = verifyStmt.executeQuery()) {
+                        if (rs.next()) {
+                            String dbStatus = rs.getString("status");
+                            logger.info("Verified status in DB for ID {}: {}", entity.getId(), dbStatus);
+                        }
+                    }
+                }
+
+                return entity;
+            }
+
+        } catch (SQLException e) {
+            logger.error("Error updating email_queue ID {}: {}", entity.getId(), e.getMessage(), e);
+            throw e;
+        }
+    }
 }

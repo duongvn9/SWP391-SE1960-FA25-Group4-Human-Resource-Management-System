@@ -129,6 +129,42 @@ public class UserDao {
     }
 
     /**
+     * Lấy tất cả employees cho payslip generation (bỏ qua tất cả status filtering)
+     * Chỉ lấy users có account, không quan tâm status của user hay account
+     */
+    public List<User> findActiveEmployees() {
+        List<User> users = new ArrayList<>();
+
+        // Lấy TẤT CẢ users (bỏ qua mọi status filtering) - không cần JOIN accounts
+        // Payslip được tạo cho USER, không phải ACCOUNT
+        String sql = """
+            SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
+                   u.gender, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                   u.start_work_date, u.created_at, u.updated_at,
+                   d.name as department_name, p.name as position_name
+            FROM users u
+            LEFT JOIN departments d ON u.department_id = d.id
+            LEFT JOIN positions p ON u.position_id = p.id
+            ORDER BY u.id
+            """;
+
+        try (Connection conn = DatabaseUtil.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                users.add(mapResultSetToUser(rs));
+            }
+
+            logger.info("Tìm thấy {} employees cho payslip generation (bỏ qua TẤT CẢ status filtering)", users.size());
+        } catch (SQLException e) {
+            logger.error("Lỗi khi lấy danh sách employees cho payslip", e);
+        }
+
+        return users;
+    }
+
+    /**
      * Tìm user theo ID
      */
     public Optional<User> findById(Long id) {
@@ -150,6 +186,45 @@ public class UserDao {
             }
         } catch (SQLException e) {
             logger.error("Lỗi khi tìm user với ID: " + id, e);
+        }
+
+        return Optional.empty();
+    }
+
+    /**
+     * Tìm user theo account ID (để resolve created_by_account_id)
+     */
+    public Optional<User> findByAccountId(Long accountId) {
+        if (accountId == null) {
+            return Optional.empty();
+        }
+
+        String sql = """
+            SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
+                   u.gender, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                   u.start_work_date, u.created_at, u.updated_at,
+                   d.name as department_name, p.name as position_name
+            FROM users u
+            LEFT JOIN departments d ON u.department_id = d.id
+            LEFT JOIN positions p ON u.position_id = p.id
+            INNER JOIN accounts a ON u.id = a.user_id
+            WHERE a.id = ?
+            """;
+
+        try (Connection conn = DatabaseUtil.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setLong(1, accountId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    User user = mapResultSetToUser(rs);
+                    logger.debug("Tìm thấy user với account ID {}: {}", accountId, user.getFullName());
+                    return Optional.of(user);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Lỗi khi tìm user với account ID: " + accountId, e);
         }
 
         return Optional.empty();
@@ -1417,7 +1492,7 @@ public class UserDao {
 
     /**
      * Count total number of users
-     * 
+     *
      * @return Total count of users
      */
     public int countAll() {
@@ -1440,7 +1515,7 @@ public class UserDao {
 
     /**
      * Check if a user is an admin based on position
-     * 
+     *
      * @param userId User ID to check
      * @return true if user is admin, false otherwise
      */
@@ -1474,7 +1549,7 @@ public class UserDao {
     /**
      * Count active admin users
      * Admin is identified by position name 'Administrator' or 'Admin'
-     * 
+     *
      * @return Number of active admin users
      */
     public int countActiveAdmins() {
