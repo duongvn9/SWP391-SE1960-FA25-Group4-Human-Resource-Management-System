@@ -492,7 +492,9 @@ document.addEventListener("DOMContentLoaded", function () {
 document.addEventListener("DOMContentLoaded", function () {
     const addNewRecordBtn = document.getElementById("addNewRecordBtn");
     const newRecordsContainer = document.getElementById("newRecordsContainer");
-    let recordCounter = 0;
+    
+    // Initialize recordCounter based on existing preserved records
+    let recordCounter = newRecordsContainer.querySelectorAll('.new-record-item').length;
 
     // Function to create a new record form
     function createNewRecordForm() {
@@ -656,6 +658,18 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     }
+
+    // Add event listeners for existing preserved records
+    newRecordsContainer.querySelectorAll('.new-record-item').forEach(item => {
+        const removeBtn = item.querySelector('.remove-record-btn');
+        if (removeBtn) {
+            removeBtn.addEventListener('click', function () {
+                item.remove();
+                updateRecordNumbers();
+            });
+        }
+        addTimeValidation(item);
+    });
 
     // Add first record automatically when "Add New Record" is selected
     const addRadio = document.getElementById("addNewRecord");

@@ -263,6 +263,27 @@
     transform: translateX(26px);
 }
 
+/* Disabled state for toggle */
+.toggle-switch input:disabled + .slider {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.slider.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.lock-info {
+    margin-top: 5px;
+}
+
+.lock-info small {
+    display: block;
+    max-width: 200px;
+    line-height: 1.3;
+}
+
 /* ---------------------------
    ATTENDANCE TABLE
 ----------------------------*/
