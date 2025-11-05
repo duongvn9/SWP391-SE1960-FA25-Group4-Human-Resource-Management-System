@@ -444,7 +444,7 @@ textarea.form-control {
   box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
 }
 
-/ * Bootstrap validation - hide by default */ .invalid-feedback {
+/* Bootstrap validation - hide by default */ .invalid-feedback {
   display: none;
   color: var(--danger-color);
   font-size: 0.875rem;
