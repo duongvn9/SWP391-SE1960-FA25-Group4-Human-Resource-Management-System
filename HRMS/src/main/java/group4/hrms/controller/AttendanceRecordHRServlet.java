@@ -11,6 +11,7 @@ import group4.hrms.model.User;
 import group4.hrms.service.AttendanceMapper;
 import group4.hrms.service.AttendanceService;
 import group4.hrms.service.ExportService;
+import group4.hrms.service.PayslipDirtyFlagService;
 import group4.hrms.util.PaginationUtil;
 import java.io.IOException;
 
@@ -30,9 +31,11 @@ import java.util.logging.Logger;
 @WebServlet("/attendance/record/HR")
 public class AttendanceRecordHRServlet extends HttpServlet {
 
+    private static final Logger logger = Logger.getLogger(AttendanceRecordHRServlet.class.getName());
     private final AttendanceLogDao attendanceLogDao = new AttendanceLogDao();
     private final TimesheetPeriodDao tDAO = new TimesheetPeriodDao();
     private final DepartmentDao dDAO = new DepartmentDao();
+    private final PayslipDirtyFlagService dirtyFlagService = new PayslipDirtyFlagService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -44,48 +47,59 @@ public class AttendanceRecordHRServlet extends HttpServlet {
         }
 
         try {
+            tDAO.autoLockExpiredPeriods();
+
             int recordsPerPage = 10;
             int currentPage = PaginationUtil.getCurrentPage(req);
             int offset = (currentPage - 1) * recordsPerPage;
 
-            String status = req.getParameter("status");
-            String source = req.getParameter("source");
-            String periodIdStr = req.getParameter("periodSelect");
-            String department = req.getParameter("department");
+            String employeeIdStr = req.getParameter("employeeId");
+            Long employeeId = parseLongSafe(employeeIdStr);
+            String department = getParam(req, "department");
+            String startDateStr = getParam(req, "startDate");
+            String endDateStr = getParam(req, "endDate");
+            String status = getParam(req, "status");
+            String source = getParam(req, "source");
+            String periodIdStr = getParam(req, "periodSelect");
 
-            LocalDate startDate;
-            LocalDate endDate;
-            Long periodId = null;
+            LocalDate startDate = parseDate(startDateStr);
+            LocalDate endDate = parseDate(endDateStr);
+            Long periodId = parseLongSafe(periodIdStr);
 
             TimesheetPeriod selectedPeriod = null;
 
-            if (periodIdStr != null && !periodIdStr.isEmpty()) {
-                try {
-                    periodId = Long.valueOf(periodIdStr);
-                    selectedPeriod = tDAO.findById(periodId).orElse(null);
-                } catch (NumberFormatException e) {
-                    periodId = null;
-                }
-            }
+            boolean hasAnyParameter = req.getParameter("employeeId") != null ||
+                                    req.getParameter("department") != null ||
+                                    req.getParameter("startDate") != null ||
+                                    req.getParameter("endDate") != null ||
+                                    req.getParameter("status") != null ||
+                                    req.getParameter("source") != null ||
+                                    req.getParameter("periodSelect") != null;
 
-            if (selectedPeriod == null) {
+            if (!hasAnyParameter) {
                 selectedPeriod = tDAO.findCurrentPeriod();
                 if (selectedPeriod != null) {
                     periodId = selectedPeriod.getId();
+                    startDate = selectedPeriod.getStartDate();
+                    endDate = selectedPeriod.getEndDate();
+                } else {
+                    LocalDate now = LocalDate.now();
+                    startDate = now.withDayOfMonth(1);
+                    endDate = now.withDayOfMonth(now.lengthOfMonth());
+                }
+            } else {
+                if (periodId != null) {
+                    selectedPeriod = tDAO.findById(periodId).orElse(null);
+                }
+
+                if (startDate == null && endDate == null && selectedPeriod != null) {
+                    startDate = selectedPeriod.getStartDate();
+                    endDate = selectedPeriod.getEndDate();
                 }
             }
 
-            if (selectedPeriod != null) {
-                startDate = selectedPeriod.getStartDate();
-                endDate = selectedPeriod.getEndDate();
-            } else {
-                LocalDate now = LocalDate.now();
-                startDate = now.withDayOfMonth(1);
-                endDate = now.withDayOfMonth(now.lengthOfMonth());
-            }
-
             List<AttendanceLogDto> attendanceList = attendanceLogDao.findByFilter(
-                    null,
+                    employeeId,
                     null,
                     department,
                     startDate,
@@ -99,7 +113,7 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             );
 
             int totalRecords = attendanceLogDao.countByFilter(
-                    null,
+                    employeeId,
                     null,
                     department,
                     startDate,
@@ -117,14 +131,22 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             req.setAttribute("attendanceList", attendanceList);
             req.setAttribute("periodList", tDAO.findAll());
             req.setAttribute("departmentList", dDAO.findAll());
-            req.setAttribute("startDate", startDate.toString());
-            req.setAttribute("endDate", endDate.toString());
-            req.setAttribute("status", status != null ? status : "");
-            req.setAttribute("source", source != null ? source : "");
+            req.setAttribute("employeeId", employeeId);
+            req.setAttribute("startDate", (startDate != null) ? startDate.toString() : "");
+            req.setAttribute("endDate", (endDate != null) ? endDate.toString() : "");
+            req.setAttribute("status", status);
+            req.setAttribute("source", source);
             req.setAttribute("selectedPeriod", selectedPeriod);
-            req.setAttribute("department", department != null ? department : "");
+            req.setAttribute("department", department);
             req.setAttribute("currentPage", currentPage);
             req.setAttribute("totalPages", totalPages);
+
+            if (selectedPeriod != null) {
+                boolean canToggle = tDAO.canToggleLockStatus(selectedPeriod.getId());
+                boolean isPermanentlyLocked = tDAO.isPermanentlyLocked(selectedPeriod.getId());
+                req.setAttribute("canToggleLock", canToggle);
+                req.setAttribute("isPermanentlyLocked", isPermanentlyLocked);
+            }
 
             req.getRequestDispatcher("/WEB-INF/views/attendance/attendance-record-HR.jsp").forward(req, resp);
 
@@ -137,6 +159,8 @@ public class AttendanceRecordHRServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
+            tDAO.autoLockExpiredPeriods();
+
             int recordsPerPage = 10;
             int currentPage = PaginationUtil.getCurrentPage(req);
 
@@ -144,7 +168,6 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             String exportType = req.getParameter("exportType");
             String employeeIdStr = req.getParameter("employeeId");
             Long employeeId = parseLongSafe(employeeIdStr);
-            String employeeKeyword = getParam(req, "employeeKeyword");
             String department = getParam(req, "department");
             String startDateStr = getParam(req, "startDate");
             String endDateStr = getParam(req, "endDate");
@@ -158,7 +181,6 @@ public class AttendanceRecordHRServlet extends HttpServlet {
 
             if ("reset".equalsIgnoreCase(action)) {
                 employeeId = null;
-                employeeKeyword = "";
                 department = "";
                 status = "";
                 source = "";
@@ -184,8 +206,8 @@ public class AttendanceRecordHRServlet extends HttpServlet {
                 handleUpdate(req);
             } else if ("toggleLock".equalsIgnoreCase(action)) {
                 handleLockPeriod(req);
-
-                employeeKeyword = getParam(req, "employeeId");
+                employeeIdStr = req.getParameter("employeeId");
+                employeeId = parseLongSafe(employeeIdStr);
                 department = getParam(req, "department");
                 startDateStr = getParam(req, "startDate");
                 endDateStr = getParam(req, "endDate");
@@ -201,7 +223,7 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             if (exportType != null && !exportType.isEmpty()) {
                 List<AttendanceLogDto> filteredRecords = attendanceLogDao.findByFilter(
                         employeeId,
-                        employeeKeyword,
+                        null,
                         department,
                         startDate,
                         endDate,
@@ -218,7 +240,7 @@ public class AttendanceRecordHRServlet extends HttpServlet {
 
             int totalRecords = attendanceLogDao.countByFilter(
                     employeeId,
-                    employeeKeyword,
+                    null,
                     department,
                     startDate,
                     endDate,
@@ -235,7 +257,7 @@ public class AttendanceRecordHRServlet extends HttpServlet {
 
             List<AttendanceLogDto> attendanceList = attendanceLogDao.findByFilter(
                     employeeId,
-                    employeeKeyword,
+                    null,
                     department,
                     startDate,
                     endDate,
@@ -265,6 +287,13 @@ public class AttendanceRecordHRServlet extends HttpServlet {
                     : null;
             req.setAttribute("selectedPeriod", selectedPeriod);
 
+            if (selectedPeriod != null) {
+                boolean canToggle = tDAO.canToggleLockStatus(selectedPeriod.getId());
+                boolean isPermanentlyLocked = tDAO.isPermanentlyLocked(selectedPeriod.getId());
+                req.setAttribute("canToggleLock", canToggle);
+                req.setAttribute("isPermanentlyLocked", isPermanentlyLocked);
+            }
+
             req.setAttribute("currentPage", currentPage);
             req.setAttribute("totalPages", totalPages);
 
@@ -287,7 +316,20 @@ public class AttendanceRecordHRServlet extends HttpServlet {
         Long userId = (Long) req.getSession().getAttribute("accountId");
 
         if (periodIdLock != null && userId != null) {
-            tDAO.updateLockStatus(periodIdLock, isLocked, userId);
+            try {
+                if (!tDAO.canToggleLockStatus(periodIdLock)) {
+                    req.setAttribute("error", "Cannot change lock status: This period has been permanently locked. Periods are automatically locked after 7 days of the following month.");
+                    return;
+                }
+
+                tDAO.updateLockStatus(periodIdLock, isLocked, userId);
+
+                String action = isLocked ? "locked" : "unlocked";
+                req.setAttribute("message", "Period has been " + action + " successfully.");
+
+            } catch (IllegalStateException e) {
+                req.setAttribute("error", e.getMessage());
+            }
         }
     }
 
@@ -311,6 +353,17 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             boolean deleted = attendanceLogDao.deleteAttendance(userId, date, checkIn, checkOut);
 
             if (deleted) {
+                // --- ✅ Mark affected payslip as dirty ---
+                try {
+                    String reason = String.format("Attendance deleted via HR attendance record (date: %s)", dateStr);
+                    dirtyFlagService.markDirtyForAttendanceChange(userId, date, reason);
+                    logger.info(String.format("Marked payslip dirty for user %d after attendance deletion", userId));
+                } catch (Exception e) {
+                    logger.log(Level.WARNING,
+                             String.format("Failed to mark payslip dirty for user %d: %s", userId, e.getMessage()), e);
+                    // Don't fail the delete operation if marking dirty fails
+                }
+
                 req.setAttribute("message", "Deleted attendance record successfully.");
             } else {
                 req.setAttribute("error", "Attendance record not found or could not be deleted.");
@@ -329,7 +382,6 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             String dateStr = req.getParameter("dateUpdate");
             String checkInStr = req.getParameter("checkInUpdate");
             String checkOutStr = req.getParameter("checkOutUpdate");
-            String status = req.getParameter("statusUpdate");
             String source = req.getParameter("sourceUpdate");
             String period = req.getParameter("periodUpdate");
 
@@ -343,7 +395,6 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             record.setDate(LocalDate.parse(dateStr));
             record.setCheckIn(LocalTime.parse(checkInStr));
             record.setCheckOut(LocalTime.parse(checkOutStr));
-            // Tự động tính status thay vì dùng input từ form
             String calculatedStatus = AttendanceService.calculateAttendanceStatus(record);
             record.setStatus(calculatedStatus);
             record.setSource(source);
@@ -354,6 +405,17 @@ public class AttendanceRecordHRServlet extends HttpServlet {
             boolean success = attendanceLogDao.updateAttendanceLogs(logs);
 
             if (success) {
+                // --- ✅ Mark affected payslip as dirty ---
+                try {
+                    String reason = String.format("Attendance updated via HR attendance record (date: %s)", dateStr);
+                    dirtyFlagService.markDirtyForAttendanceChange(userId, record.getDate(), reason);
+                    logger.info(String.format("Marked payslip dirty for user %d after attendance update", userId));
+                } catch (Exception e) {
+                    logger.log(Level.WARNING,
+                             String.format("Failed to mark payslip dirty for user %d: %s", userId, e.getMessage()), e);
+                    // Don't fail the update operation if marking dirty fails
+                }
+
                 req.setAttribute("message", "Record updated successfully!");
             } else {
                 req.setAttribute("error", "Failed to update record.");

@@ -62,6 +62,11 @@
                                                     <p class="page-subtitle">View your monthly payslips and compensation
                                                         details</p>
                                                 </div>
+                                                <div>
+                                                    <button type="button" class="btn btn-success" onclick="exportMyPayslips()">
+                                                        <i class="fas fa-file-excel me-2"></i>Export to Excel
+                                                    </button>
+                                                </div>
                                             </div>
 
                                             <!-- Employee Filters Section -->
@@ -1082,6 +1087,16 @@
 
                         // Generate payslip for specific employee via AJAX
                         function generatePayslipForEmployee(userId, userName, month, year, forceRegenerate) {
+                            // Check rate limit (prevent spam)
+                            if (typeof canGenerate === 'function' && !canGenerate()) {
+                                return; // Blocked by rate limit
+                            }
+
+                            // Enable generation guard
+                            if (typeof setGeneratingState === 'function') {
+                                setGeneratingState(true);
+                            }
+
                             // Show loading toast
                             if (typeof showToast === 'function') {
                                 showToast('Generating payslip for ' + userName + '...', 'info', 'Processing');
@@ -1140,6 +1155,12 @@
                                     console.error('Generation error:', error);
                                     if (typeof showToast === 'function') {
                                         showToast('Network error: ' + error.message, 'error', 'Error');
+                                    }
+                                })
+                                .finally(() => {
+                                    // Disable generation guard
+                                    if (typeof setGeneratingState === 'function') {
+                                        setGeneratingState(false);
                                     }
                                 });
                         }
@@ -1286,7 +1307,6 @@
 
                         // Auto-show toast on page load if there's a server message
                         document.addEventListener('DOMContentLoaded', function () {
-                            // Initialize event listeners from payslip-actions.js
                             if (typeof initializeEventListeners === 'function') {
                                 initializeEventListeners();
                             }
