@@ -72,7 +72,7 @@
                         </div>
                         <div class="col-md-4 text-end">
                             <button onclick="printPayslip()" class="btn btn-primary me-2 print-btn" title="In payslip thành file PDF">
-                                <i class="fas fa-print me-1"></i> Print Payslip
+                                <i class="fas fa-print me-1"></i> Export Payslip
                             </button>
                             <a href="${pageContext.request.contextPath}/payslips" class="btn btn-light">
                                 <i class="fas fa-arrow-left me-1"></i> Back
