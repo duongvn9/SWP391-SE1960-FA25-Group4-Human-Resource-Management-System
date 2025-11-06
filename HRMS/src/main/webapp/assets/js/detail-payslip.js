@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Add smooth animations
     addSmoothAnimations();
     
-    // Handle print functionality
+    // Handle print functionality (styles only)
     handlePrintFunctionality();
 });
 
@@ -21,10 +21,13 @@ document.addEventListener('DOMContentLoaded', function () {
  * Initialize payslip detail page
  */
 function initializePayslipDetail() {
+    // Fix net salary display
+    fixNetSalaryDisplay();
+    
     // Add loading states to buttons
     const buttons = document.querySelectorAll('.btn');
     buttons.forEach(button => {
-        button.addEventListener('click', function(e) {
+        button.addEventListener('click', function() {
             if (this.href || this.type === 'submit') {
                 this.classList.add('loading');
                 setTimeout(() => {
@@ -147,20 +150,7 @@ function addSmoothAnimations() {
  * Handle print functionality
  */
 function handlePrintFunctionality() {
-    // Add print button if needed
-    const payslipHeader = document.querySelector('.payslip-header .col-md-4');
-    if (payslipHeader) {
-        const printButton = document.createElement('button');
-        printButton.className = 'btn btn-light ms-2';
-        printButton.innerHTML = '<i class="fas fa-print me-1"></i> Print';
-        printButton.addEventListener('click', function() {
-            window.print();
-        });
-        
-        payslipHeader.appendChild(printButton);
-    }
-    
-    // Handle print styles
+    // Handle print styles only - DO NOT create additional print buttons
     window.addEventListener('beforeprint', function() {
         document.body.classList.add('printing');
     });
@@ -171,15 +161,62 @@ function handlePrintFunctionality() {
 }
 
 /**
+ * Fix net salary display to ensure correct calculation
+ */
+function fixNetSalaryDisplay() {
+    // Get gross income and total deductions from the page
+    let grossAmount = 0;
+    let totalDeductions = 0;
+    
+    // Find gross income
+    const grossElements = document.querySelectorAll('*');
+    for (let element of grossElements) {
+        if (element.textContent && element.textContent.includes('Gross Income')) {
+            const parent = element.closest('.calculation-row, .row');
+            if (parent) {
+                const amountElement = parent.querySelector('.text-end');
+                if (amountElement && amountElement.textContent.includes('VND')) {
+                    const amountText = amountElement.textContent.replace(/[^\d.,]/g, '').replace(/,/g, '');
+                    grossAmount = parseFloat(amountText) || 0;
+                    break;
+                }
+            }
+        }
+    }
+    
+    // Find total deductions
+    for (let element of grossElements) {
+        if (element.textContent && element.textContent.includes('Total Deductions')) {
+            const parent = element.closest('.calculation-row, .row');
+            if (parent) {
+                const amountElement = parent.querySelector('.text-end');
+                if (amountElement && amountElement.textContent.includes('VND')) {
+                    const amountText = amountElement.textContent.replace(/[^\d.,]/g, '').replace(/,/g, '');
+                    totalDeductions = parseFloat(amountText) || 0;
+                    break;
+                }
+            }
+        }
+    }
+    
+    // Calculate and update net salary if we have valid amounts
+    if (grossAmount > 0) {
+        const netAmount = grossAmount - totalDeductions;
+        const netSalaryElement = document.getElementById('net-salary-amount');
+        if (netSalaryElement && netAmount > 0) {
+            netSalaryElement.innerHTML = formatCurrency(netAmount);
+        }
+    }
+}
+
+/**
  * Format currency values
  */
 function formatCurrency(value) {
     return new Intl.NumberFormat('vi-VN', {
-        style: 'currency',
-        currency: 'VND',
         minimumFractionDigits: 0,
         maximumFractionDigits: 0
-    }).format(value);
+    }).format(value) + ' VND';
 }
 
 /**

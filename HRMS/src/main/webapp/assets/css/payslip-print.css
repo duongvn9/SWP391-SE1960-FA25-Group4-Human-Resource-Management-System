@@ -1,0 +1,245 @@
+/* Print Styles for Payslip Detail */
+@media print {
+    /* Hide everything except printable content */
+    body * {
+        visibility: hidden;
+    }
+    
+    #printable-content, #printable-content * {
+        visibility: visible;
+    }
+    
+    #printable-content {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 20px;
+    }
+    
+    /* Hide navigation, sidebar, buttons */
+    .sidebar, .main-header, .breadcrumb, .payslip-header, 
+    .btn, button, nav, .navbar, .content-area > nav {
+        display: none !important;
+    }
+    
+    /* Adjust layout for print */
+    .main-content {
+        margin-left: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+    }
+    
+    .content-area {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    /* Optimize card layout for print */
+    .info-card {
+        border: 1px solid #333 !important;
+        margin-bottom: 15px !important;
+        page-break-inside: avoid;
+        padding: 15px !important;
+        box-shadow: none !important;
+    }
+    
+    /* Ensure proper spacing */
+    .row {
+        margin: 0 !important;
+    }
+    
+    /* Two column layout for employee info */
+    .row:first-child .col-md-6 {
+        width: 48% !important;
+        float: left;
+        margin-right: 2%;
+    }
+    
+    .row:first-child .col-md-6:last-child {
+        margin-right: 0;
+    }
+    
+    /* Three column layout for salary calculation */
+    .calculation-section .col-md-4 {
+        width: 32% !important;
+        float: left;
+        margin-right: 2%;
+    }
+    
+    .calculation-section .col-md-4:last-child {
+        margin-right: 0;
+    }
+    
+    /* Two column layout for earnings and deductions */
+    .earnings-deductions {
+        display: table !important;
+        width: 100% !important;
+        clear: both;
+        table-layout: fixed !important;
+        border-spacing: 10px !important;
+    }
+    
+    .earnings-deductions .col-md-6 {
+        display: table-cell !important;
+        width: 50% !important;
+        vertical-align: top !important;
+        padding: 0 5px !important;
+        box-sizing: border-box !important;
+    }
+    
+    .earnings-deductions .info-card {
+        width: 100% !important;
+        height: auto !important;
+        min-height: 200px !important;
+        border: 1px solid #333 !important;
+        page-break-inside: avoid !important;
+    }
+    
+    /* Ensure all calculation rows are visible */
+    .calculation-row {
+        display: block !important;
+        margin-bottom: 5px !important;
+        page-break-inside: avoid !important;
+    }
+    
+    .calculation-row .row {
+        display: flex !important;
+        justify-content: space-between !important;
+    }
+    
+    .calculation-row .col-8,
+    .calculation-row .col-4 {
+        display: inline-block !important;
+        padding: 2px !important;
+    }
+    
+    .calculation-row .col-4 {
+        text-align: right !important;
+    }
+    
+    /* Final summary full width */
+    .salary-summary {
+        clear: both;
+        width: 100% !important;
+    }
+    
+    .salary-summary .col-md-8,
+    .salary-summary .col-md-4 {
+        width: 48% !important;
+        float: left;
+        margin-right: 2%;
+    }
+    
+    .salary-summary .col-md-4:last-child {
+        margin-right: 0;
+    }
+    
+    /* Remove background colors for print */
+    .bg-success, .bg-primary, .bg-warning, .bg-danger, .bg-info {
+        background-color: white !important;
+        color: black !important;
+        border: 1px solid #333 !important;
+    }
+    
+    .badge {
+        border: 1px solid #333 !important;
+        background-color: white !important;
+        color: black !important;
+        padding: 2px 6px !important;
+    }
+    
+    /* Ensure text is black */
+    * {
+        color: black !important;
+        -webkit-print-color-adjust: exact;
+    }
+    
+    /* Card styling */
+    .card {
+        border: 1px solid #333 !important;
+        background-color: white !important;
+    }
+    
+    .card-body {
+        padding: 10px !important;
+    }
+    
+    /* Section headers */
+    .section-header h5 {
+        font-size: 14px !important;
+        font-weight: bold !important;
+        margin-bottom: 10px !important;
+        border-bottom: 1px solid #333 !important;
+        padding-bottom: 5px !important;
+    }
+    
+    /* Calculation rows */
+    .calculation-row {
+        margin-bottom: 5px !important;
+        font-size: 12px !important;
+    }
+    
+    .total-row {
+        border-top: 1px solid #333 !important;
+        padding-top: 5px !important;
+        font-weight: bold !important;
+    }
+    
+    /* Icons - hide in print */
+    .fas, .fa {
+        display: none !important;
+    }
+    
+    /* Page breaks */
+    .page-break {
+        page-break-before: always;
+    }
+    
+    /* Avoid breaking inside important sections */
+    .info-card, .calculation-row {
+        page-break-inside: avoid;
+    }
+    
+    /* Print specific font sizes */
+    h2 { font-size: 18px !important; }
+    h3 { font-size: 16px !important; }
+    h4 { font-size: 14px !important; }
+    h5 { font-size: 13px !important; }
+    h6 { font-size: 12px !important; }
+    
+    /* Compact spacing */
+    .mb-1, .mb-2, .mb-3 { margin-bottom: 5px !important; }
+    .mt-1, .mt-2, .mt-3 { margin-top: 5px !important; }
+    
+    /* Clear floats */
+    .clearfix::after {
+        content: "";
+        display: table;
+        clear: both;
+    }
+}
+
+/* Print button styling (visible on screen) */
+@media screen {
+    .print-btn {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+    
+    .print-btn:hover {
+        background-color: #0056b3;
+        border-color: #0056b3;
+    }
+    
+    /* Ensure earnings and deductions are side by side on screen too */
+    .earnings-deductions {
+        display: flex;
+        gap: 15px;
+    }
+    
+    .earnings-deductions .col-md-6 {
+        flex: 1;
+    }
+}

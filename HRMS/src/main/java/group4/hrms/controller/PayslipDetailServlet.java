@@ -4,6 +4,7 @@ import group4.hrms.dao.PayslipDao;
 import group4.hrms.dao.UserDao;
 import group4.hrms.dao.DepartmentDao;
 import group4.hrms.dao.PositionDao;
+import group4.hrms.dao.AttendanceLogDao;
 import group4.hrms.dto.PayslipCalculationResult;
 import group4.hrms.model.Payslip;
 import group4.hrms.model.User;
@@ -35,6 +36,7 @@ public class PayslipDetailServlet extends HttpServlet {
     private UserDao userDao;
     private DepartmentDao departmentDao;
     private PositionDao positionDao;
+    private AttendanceLogDao attendanceLogDao;
     private PayslipCalculationService calculationService;
 
 
@@ -45,6 +47,7 @@ public class PayslipDetailServlet extends HttpServlet {
         this.userDao = new UserDao();
         this.departmentDao = new DepartmentDao();
         this.positionDao = new PositionDao();
+        this.attendanceLogDao = new AttendanceLogDao();
         this.calculationService = new PayslipCalculationService();
     }
 
@@ -186,6 +189,38 @@ public class PayslipDetailServlet extends HttpServlet {
                         "Error loading payslip data");
                     return;
                 }
+            }
+
+            // Calculate working days data if we have period information
+            if (payslip != null || calculationResult != null) {
+                LocalDate periodStart = payslip != null ? payslip.getPeriodStart() : calculationResult.getPeriodStart();
+                LocalDate periodEnd = payslip != null ? payslip.getPeriodEnd() : calculationResult.getPeriodEnd();
+                
+                // Use existing methods from PayslipCalculationService
+                int standardWorkingDays = calculationService.getWorkingDaysInMonth(periodStart.getYear(), periodStart.getMonthValue());
+                
+                // Get actual working days and hours from calculationResult if available
+                int actualWorkingDays = 0;
+                double actualWorkingHours = 0.0;
+                double requiredHours = 0.0;
+                
+                if (calculationResult != null) {
+                    actualWorkingDays = calculationResult.getWorkedDays();
+                    actualWorkingHours = calculationResult.getTotalActualHours();
+                    requiredHours = calculationResult.getRequiredHours();
+                }
+                
+                // Calculate ratios
+                double workingDaysRatio = standardWorkingDays > 0 ? (actualWorkingDays * 100.0 / standardWorkingDays) : 0.0;
+                double workingHoursRatio = requiredHours > 0 ? (actualWorkingHours * 100.0 / requiredHours) : 0.0;
+                
+                // Set working days attributes
+                request.setAttribute("standardWorkingDays", standardWorkingDays);
+                request.setAttribute("actualWorkingDays", actualWorkingDays);
+                request.setAttribute("workingDaysRatio", String.format("%.1f%%", workingDaysRatio));
+                request.setAttribute("workingHoursRatio", String.format("%.1f%%", workingHoursRatio));
+                request.setAttribute("avgHoursPerDay", actualWorkingDays > 0 ? 
+                    String.format("%.1f", actualWorkingHours / actualWorkingDays) : "0.0");
             }
 
             // Set attributes for JSP
