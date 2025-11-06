@@ -65,9 +65,15 @@ public class PayslipGenerationService {
         String lockKey = createLockKey(request.getPeriodStart(), request.getPeriodEnd());
         ReentrantLock lock = periodLocks.computeIfAbsent(lockKey, k -> new ReentrantLock());
 
+        // Try to acquire lock - if already locked, reject immediately
+        if (!lock.tryLock()) {
+            logger.warning("Generation already in progress for period: " + lockKey);
+            result.setSuccess(false);
+            result.setMessage("A payslip generation is already in progress for this period. Please wait and try again later.");
+            return result;
+        }
+
         try {
-            // Acquire lock for this period to prevent concurrent modifications
-            lock.lock();
             logger.info("Acquired lock for period: " + lockKey);
 
             // Check cutoff days for initial generation (not for regeneration)
@@ -98,49 +104,83 @@ public class PayslipGenerationService {
                 return result;
             }
 
-            // Process each user
-            Connection connection = null;
-            try {
-                connection = DatabaseUtil.getConnection();
-                connection.setAutoCommit(false); // Start transaction
+            // Process each user with batch commits to avoid long transactions
+            final int BATCH_SIZE = 10; // Commit every 10 users to prevent connection timeout
+            int processedCount = 0;
 
-                for (User user : usersToProcess) {
-                    try {
-                        processUserPayslip(user, request, result, connection);
-                    } catch (Exception e) {
-                        logger.log(Level.WARNING,
-                                 String.format("Error processing payslip for user %d: %s",
-                                             user.getId(), e.getMessage()), e);
-                        result.addError(user.getId(), "Processing failed: " + e.getMessage(), e);
-                        // Continue with next user - don't fail entire batch
-                    }
-                }
+            for (int i = 0; i < usersToProcess.size(); i += BATCH_SIZE) {
+                int endIndex = Math.min(i + BATCH_SIZE, usersToProcess.size());
+                List<User> batch = usersToProcess.subList(i, endIndex);
 
-                connection.commit();
-                logger.info("Payslip generation transaction committed successfully");
+                Connection connection = null;
+                try {
+                    connection = DatabaseUtil.getConnection();
 
-            } catch (SQLException e) {
-                if (connection != null) {
-                    try {
-                        connection.rollback();
-                        logger.warning("Payslip generation transaction rolled back due to error");
-                    } catch (SQLException rollbackEx) {
-                        logger.log(Level.SEVERE, "Error during rollback", rollbackEx);
-                    }
-                }
-                result.setSuccess(false);
-                result.setMessage("Database transaction failed: " + e.getMessage());
-                throw new RuntimeException("Generation failed", e);
-            } finally {
-                if (connection != null) {
-                    try {
-                        connection.setAutoCommit(true);
+                    // Validate connection before starting transaction
+                    if (!connection.isValid(5)) {
+                        logger.warning("Connection is not valid, getting new connection");
                         connection.close();
-                    } catch (SQLException e) {
-                        logger.log(Level.WARNING, "Error closing connection", e);
+                        connection = DatabaseUtil.getConnection();
+                    }
+
+                    connection.setAutoCommit(false); // Start transaction for this batch
+
+                    for (User user : batch) {
+                        try {
+                            processUserPayslip(user, request, result, connection);
+                            processedCount++;
+                        } catch (Exception e) {
+                            logger.log(Level.WARNING,
+                                     String.format("Error processing payslip for user %d: %s",
+                                                 user.getId(), e.getMessage()), e);
+                            result.addError(user.getId(), "Processing failed: " + e.getMessage(), e);
+                            // Continue with next user - don't fail entire batch
+                        }
+                    }
+
+                    connection.commit();
+                    logger.info(String.format("Batch %d/%d committed successfully (%d users processed)",
+                              (i / BATCH_SIZE) + 1,
+                              (usersToProcess.size() + BATCH_SIZE - 1) / BATCH_SIZE,
+                              processedCount));
+
+                } catch (SQLException e) {
+                    logger.log(Level.SEVERE, "Database error in batch processing", e);
+
+                    if (connection != null) {
+                        try {
+                            if (!connection.isClosed()) {
+                                connection.rollback();
+                                logger.warning("Batch transaction rolled back due to error");
+                            }
+                        } catch (SQLException rollbackEx) {
+                            logger.log(Level.SEVERE, "Error during rollback", rollbackEx);
+                        }
+                    }
+
+                    // Add errors for all users in this batch
+                    for (User user : batch) {
+                        result.addError(user.getId(), "Batch processing failed: " + e.getMessage(), e);
+                    }
+
+                    // Continue with next batch instead of failing completely
+                    logger.warning("Continuing with next batch after error");
+
+                } finally {
+                    if (connection != null) {
+                        try {
+                            if (!connection.isClosed()) {
+                                connection.setAutoCommit(true);
+                                connection.close();
+                            }
+                        } catch (SQLException e) {
+                            logger.log(Level.WARNING, "Error closing connection", e);
+                        }
                     }
                 }
             }
+
+            logger.info(String.format("Payslip generation completed: %d users processed", processedCount));
 
         } finally {
             lock.unlock();

@@ -238,6 +238,24 @@ body.sidebar-collapsed .main-content {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
+/* Icon wrapper for payroll summary */
+.content-area .icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: white;
+  flex-shrink: 0;
+}
+
+.content-area .icon-wrapper.bg-success {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.content-area .icon-wrapper.bg-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
 .content-area .stat-card-horizontal .stat-info {
   flex: 1;
 }
@@ -284,4 +302,73 @@ body.sidebar-collapsed .main-content {
   .content-area .stat-card .icon {
     font-size: 2rem;
   }
+}
+
+/* ---------- Stat Cards (KPI Cards with gradient background) ---------- */
+.stat-card {
+  position: relative;
+  padding: 1.5rem;
+  border-radius: 12px;
+  color: #fff;
+  text-align: center;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.stat-card .icon {
+  font-size: 3rem;
+  margin-bottom: 0.75rem;
+  opacity: 0.9;
+}
+
+.stat-card .stat-number {
+  font-size: 2rem;
+  font-weight: 700;
+  display: block;
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
+}
+
+.stat-card .stat-label {
+  font-size: 0.95rem;
+  font-weight: 500;
+  opacity: 0.95;
+  margin-bottom: 0.25rem;
+}
+
+.stat-card small {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+/* Gradient backgrounds for different card types */
+.stat-card.primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.stat-card.success {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.stat-card.info {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.stat-card.warning {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.stat-card.danger {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+/* Hover effect */
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
 }
