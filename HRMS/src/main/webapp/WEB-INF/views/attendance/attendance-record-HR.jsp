@@ -80,6 +80,8 @@
                                         </option>
                                         <option value="Over Time" <c:if test="${status eq 'Over Time'}">selected</c:if>
                                                 >Over Time</option>
+                                        <option value="Outside Working Hours" <c:if test="${status eq 'Outside Working Hours'}">selected</c:if>
+                                                >Outside Working Hours</option>
                                         <option value="Invalid" <c:if test="${status eq 'Invalid'}">selected</c:if>
                                                 >Invalid</option>
                                 </select>
@@ -391,10 +393,10 @@
                                 <input type="date" name="dateUpdate" id="modalDate" readonly>
 
                                 <label for="modalCheckIn">Check-in:</label>
-                                <input type="time" name="checkInUpdate" id="modalCheckIn" required>
+                                <input type="time" name="checkInUpdate" id="modalCheckIn">
 
                                 <label for="modalCheckOut">Check-out:</label>
-                                <input type="time" name="checkOutUpdate" id="modalCheckOut" required>
+                                <input type="time" name="checkOutUpdate" id="modalCheckOut">
 
                                 <label for="modalStatus">Status:</label>
                                 <input type="text" name="statusUpdate" id="modalStatus" readonly
