@@ -299,10 +299,7 @@ public class EmailQueueDao extends BaseDao<EmailQueue, Long> {
         logger.info("EmailQueueDao: Updating email queue ID {} to status {}",
                 entity.getId(), entity.getStatus());
 
-        Connection conn = null;
-        try {
-            conn = DatabaseUtil.getConnection();
-
+        try (Connection conn = DatabaseUtil.getConnection()) {
             String sql = createUpdateSql();
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 setUpdateParameters(stmt, entity);
@@ -336,4 +333,5 @@ public class EmailQueueDao extends BaseDao<EmailQueue, Long> {
             throw e;
         }
     }
+
 }

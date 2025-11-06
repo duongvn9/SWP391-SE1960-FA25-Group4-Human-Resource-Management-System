@@ -336,4 +336,81 @@ public class HolidayDao extends BaseDao<Holiday, Long> {
             throw e;
         }
     }
+
+    /**
+     * OPTIMIZATION: Batch load holidays for multiple years in ONE query.
+     * This reduces N queries (one per year) to 1 query for all years.
+     * Used by HolidayCache for performance optimization.
+     *
+     * @param startYear start year (inclusive)
+     * @param endYear end year (inclusive)
+     * @return list of all holidays in the year range
+     */
+    public List<Holiday> findByYearRange(int startYear, int endYear) throws SQLException {
+        List<Holiday> holidays = new ArrayList<>();
+        String sql = """
+            SELECT h.* FROM holidays h
+            INNER JOIN holiday_calendar hc ON h.calendar_id = hc.id
+            WHERE hc.year BETWEEN ? AND ?
+            ORDER BY h.date_holiday
+            """;
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, startYear);
+            stmt.setInt(2, endYear);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    holidays.add(mapResultSetToEntity(rs));
+                }
+            }
+
+            logger.info("Loaded {} holidays for years {}-{} in ONE query",
+                       holidays.size(), startYear, endYear);
+            return holidays;
+
+        } catch (SQLException e) {
+            logger.error("Error loading holidays for year range {}-{}: {}",
+                        startYear, endYear, e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    /**
+     * Find holidays for a specific year.
+     * Used for single-year queries.
+     *
+     * @param year the year to get holidays for
+     * @return list of holidays for the year
+     */
+    public List<Holiday> findByYear(int year) throws SQLException {
+        List<Holiday> holidays = new ArrayList<>();
+        String sql = """
+            SELECT h.* FROM holidays h
+            INNER JOIN holiday_calendar hc ON h.calendar_id = hc.id
+            WHERE hc.year = ?
+            ORDER BY h.date_holiday
+            """;
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, year);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    holidays.add(mapResultSetToEntity(rs));
+                }
+            }
+
+            logger.debug("Loaded {} holidays for year {}", holidays.size(), year);
+            return holidays;
+
+        } catch (SQLException e) {
+            logger.error("Error loading holidays for year {}: {}", year, e.getMessage(), e);
+            throw e;
+        }
+    }
 }

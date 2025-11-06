@@ -47,7 +47,7 @@ public class ContractListController extends HttpServlet {
 
             // Get pagination parameters
             int page = 1;
-            int pageSize = 10;
+            int pageSize = 20; // Increased from 10 for better performance
             try {
                 if (request.getParameter("page") != null) {
                     page = Integer.parseInt(request.getParameter("page"));
@@ -59,125 +59,43 @@ public class ContractListController extends HttpServlet {
                 // Use default values
             }
 
-            // Get all contracts
-            List<EmploymentContract> allContracts = contractDao.findAll();
+            // OPTIMIZATION: Batch update expired contracts ONCE before loading
+            // This is much faster than updating contracts one by one in a loop
+            contractDao.batchUpdateExpiredContracts();
 
-            // Convert to DTOs with user info and apply filters
-            List<EmploymentContractDto> contractDtos = new ArrayList<>();
-            for (EmploymentContract contract : allContracts) {
-                // Auto-update status to expired if contract has ended
-                String oldStatus = contract.getStatus();
-                contract.updateStatusIfExpired();
+            // Calculate offset for pagination
+            int offset = (page - 1) * pageSize;
 
-                // Save to database if status changed
-                if (!oldStatus.equals(contract.getStatus())) {
-                    contractDao.update(contract);
-                }
+            // OPTIMIZATION: Get contracts with filters and pagination in ONE optimized query
+            // This replaces the old approach of:
+            // 1. findAll() - 1 query
+            // 2. findById() for each contract's user - N queries
+            // 3. findById() for each contract's creator - N queries
+            // 4. findById() for each contract's approver - N queries
+            // Total: 1 + 3N queries
+            // New approach: Just 2 queries (1 for data, 1 for count)
+            List<EmploymentContractDto> contracts = contractDao.findWithFilters(
+                searchQuery, statusFilter, approvalStatusFilter, typeFilter, offset, pageSize
+            );
 
-                EmploymentContractDto dto = new EmploymentContractDto(contract);
-
-                // Get user info
-                Optional<User> userOpt = userDao.findById(contract.getUserId());
-                if (userOpt.isPresent()) {
-                    User user = userOpt.get();
-                    dto.setUserFullName(user.getFullName());
-                    dto.setUsername(user.getEmployeeCode());
-                }
-
-                // Get created by full name (treat createdByAccountId as user_id, same as approvedByAccountId)
-                if (contract.getCreatedByAccountId() != null) {
-                    Optional<User> createdByOpt = userDao.findById(contract.getCreatedByAccountId());
-                    if (createdByOpt.isPresent()) {
-                        dto.setCreatedByName(createdByOpt.get().getFullName());
-                    }
-                }
-
-                // Get approved by full name (approvedByAccountId references users.id)
-                if (contract.getApprovedByAccountId() != null) {
-                    Optional<User> approvedByOpt = userDao.findById(contract.getApprovedByAccountId());
-                    if (approvedByOpt.isPresent()) {
-                        dto.setApprovedByName(approvedByOpt.get().getFullName());
-                    }
-                }
-
-                // Apply filters
-                boolean matchesSearch = true;
-                boolean matchesStatus = true;
-                boolean matchesApprovalStatus = true;
-                boolean matchesType = true;
-
-                if (searchQuery != null && !searchQuery.trim().isEmpty()) {
-                    String query = searchQuery.toLowerCase();
-                    matchesSearch = dto.getContractNo().toLowerCase().contains(query) ||
-                                  dto.getUserFullName().toLowerCase().contains(query) ||
-                                  dto.getUsername().toLowerCase().contains(query);
-                }
-
-                if (statusFilter != null && !statusFilter.isEmpty() && !statusFilter.equals("all")) {
-                    matchesStatus = dto.getStatus().equalsIgnoreCase(statusFilter);
-                }
-
-                if (approvalStatusFilter != null && !approvalStatusFilter.isEmpty() && !approvalStatusFilter.equals("all")) {
-                    matchesApprovalStatus = dto.getApprovalStatus().equalsIgnoreCase(approvalStatusFilter);
-                }
-
-                if (typeFilter != null && !typeFilter.isEmpty() && !typeFilter.equals("all")) {
-                    matchesType = dto.getContractType().equalsIgnoreCase(typeFilter);
-                }
-
-                if (matchesSearch && matchesStatus && matchesApprovalStatus && matchesType) {
-                    contractDtos.add(dto);
-                }
-            }
+            // OPTIMIZATION: Get total count with same filters (ONE query)
+            int totalContracts = contractDao.countWithFilters(
+                searchQuery, statusFilter, approvalStatusFilter, typeFilter
+            );
 
             // Calculate pagination
-            int totalContracts = contractDtos.size();
             int totalPages = (int) Math.ceil((double) totalContracts / pageSize);
-
-            // Ensure page is within bounds
             if (page < 1) page = 1;
             if (page > totalPages && totalPages > 0) page = totalPages;
-
-            // Get contracts for current page
-            int startIndex = (page - 1) * pageSize;
-            int endIndex = Math.min(startIndex + pageSize, totalContracts);
-            List<EmploymentContractDto> paginatedContracts = new ArrayList<>();
-            if (startIndex < totalContracts) {
-                paginatedContracts = contractDtos.subList(startIndex, endIndex);
-            }
 
             // Get current user
             User currentUser = (User) request.getSession().getAttribute("user");
 
             // Load users without contract (for collapsible section)
-            // Users without contract = users that don't have ANY contract record (regardless of status)
-            List<UserProfile> usersWithoutContract = new ArrayList<>();
-            if (currentUser != null) {
-                List<User> allUsers = userDao.findAll();
-                List<Long> userIdsWithAnyContract = contractDao.findUserIdsWithAnyContract();
-
-                for (User user : allUsers) {
-                    // Skip users with ANY contract (draft/active/expired), inactive users, and current user
-                    if (userIdsWithAnyContract.contains(user.getId())) {
-                        continue;
-                    }
-                    if (!"active".equalsIgnoreCase(user.getStatus())) {
-                        continue;
-                    }
-                    if (user.getId().equals(currentUser.getId())) {
-                        continue;
-                    }
-
-                    // Get full profile for this user
-                    UserProfile profile = userProfileDao.findByUserId(user.getId());
-                    if (profile != null) {
-                        usersWithoutContract.add(profile);
-                    }
-                }
-            }
+            List<UserProfile> usersWithoutContract = loadUsersWithoutContract(currentUser);
 
             // Set attributes
-            request.setAttribute("contracts", paginatedContracts);
+            request.setAttribute("contracts", contracts);
             request.setAttribute("currentPage", page);
             request.setAttribute("totalPages", totalPages);
             request.setAttribute("totalContracts", totalContracts);
@@ -198,5 +116,41 @@ public class ContractListController extends HttpServlet {
         } catch (SQLException e) {
             throw new ServletException("Error loading contracts", e);
         }
+    }
+
+    /**
+     * Load users without contract (extracted to separate method for clarity)
+     * Users without contract = users that don't have ANY contract record (regardless of status)
+     */
+    private List<UserProfile> loadUsersWithoutContract(User currentUser) throws SQLException {
+        List<UserProfile> usersWithoutContract = new ArrayList<>();
+        
+        if (currentUser == null) {
+            return usersWithoutContract;
+        }
+
+        List<User> allUsers = userDao.findAll();
+        List<Long> userIdsWithAnyContract = contractDao.findUserIdsWithAnyContract();
+
+        for (User user : allUsers) {
+            // Skip users with ANY contract (draft/active/expired), inactive users, and current user
+            if (userIdsWithAnyContract.contains(user.getId())) {
+                continue;
+            }
+            if (!"active".equalsIgnoreCase(user.getStatus())) {
+                continue;
+            }
+            if (user.getId().equals(currentUser.getId())) {
+                continue;
+            }
+
+            // Get full profile for this user
+            UserProfile profile = userProfileDao.findByUserId(user.getId());
+            if (profile != null) {
+                usersWithoutContract.add(profile);
+            }
+        }
+
+        return usersWithoutContract;
     }
 }
