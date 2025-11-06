@@ -1,7 +1,47 @@
 /**
- * Detail Payslip Page JavaScript
- * Handles responsive behavior and interactions
+ * Detail Payslip Page JavaScript - Clean Version
+ * Handles responsive behavior and simple print functionality
  */
+
+// Simple print function that doesn't modify screen
+window.printPayslip = function() {
+    console.log('Simple print function called');
+    
+    const printBtn = document.querySelector('.print-btn');
+    
+    // Show loading state
+    if (printBtn) {
+        printBtn.classList.add('loading');
+        printBtn.disabled = true;
+    }
+
+    try {
+        // Just print without any modifications
+        setTimeout(() => {
+            console.log('Triggering print dialog...');
+            window.print();
+            
+            // Clean up loading state
+            if (printBtn) {
+                printBtn.classList.remove('loading');
+                printBtn.disabled = false;
+            }
+            console.log('Print completed');
+        }, 300);
+        
+    } catch (error) {
+        console.error('Print error:', error);
+        alert('Có lỗi xảy ra khi in payslip. Vui lòng thử lại.');
+        
+        if (printBtn) {
+            printBtn.classList.remove('loading');
+            printBtn.disabled = false;
+        }
+    }
+};
+
+// Debug log to confirm function is loaded
+console.log('PrintPayslip function loaded and available globally:', typeof window.printPayslip);
 
 document.addEventListener('DOMContentLoaded', function () {
     // Initialize page
@@ -11,9 +51,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Add smooth animations
     addSmoothAnimations();
-
-    // Handle print functionality (styles only)
-    handlePrintFunctionality();
+    
+    // Debug: Ensure printPayslip function is available
+    console.log('Enhanced PrintPayslip function loaded:', typeof window.printPayslip === 'function');
 });
 
 /**
@@ -146,20 +186,6 @@ function addSmoothAnimations() {
 }
 
 /**
- * Handle print functionality
- */
-function handlePrintFunctionality() {
-    // Handle print styles only - DO NOT create additional print buttons
-    window.addEventListener('beforeprint', function () {
-        document.body.classList.add('printing');
-    });
-
-    window.addEventListener('afterprint', function () {
-        document.body.classList.remove('printing');
-    });
-}
-
-/**
  * Fix net salary display to ensure correct calculation
  */
 function fixNetSalaryDisplay() {
@@ -264,9 +290,25 @@ function showToast(message, type = 'info') {
 
     toastContainer.appendChild(toast);
 
-    // Show toast
-    const bsToast = new bootstrap.Toast(toast);
-    bsToast.show();
+    // Show toast with fallback for bootstrap
+    try {
+        if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
+        } else {
+            // Fallback: just show the toast
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.remove();
+            }, 5000);
+        }
+    } catch (e) {
+        console.warn('Bootstrap Toast not available, using fallback');
+        toast.style.display = 'block';
+        setTimeout(() => {
+            toast.remove();
+        }, 5000);
+    }
 
     // Remove after hide
     toast.addEventListener('hidden.bs.toast', function () {
@@ -289,9 +331,11 @@ window.PayslipDetail = {
     formatCurrency,
     showLoading,
     hideLoading,
-    showToast
-};/**
- 
+    showToast,
+    printPayslip
+};
+
+/**
  * Handle sidebar toggle for proper layout
  */
 function handleSidebarLayout() {

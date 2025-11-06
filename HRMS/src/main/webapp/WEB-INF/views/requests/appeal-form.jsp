@@ -111,6 +111,30 @@
             .justify-content-md-end {
                 padding-right: 1rem !important;
             }
+
+            /* Dropdown styling fixes */
+            .dropdown-menu {
+                z-index: 1070 !important;
+                border: 1px solid #dee2e6;
+                box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+                min-width: 200px;
+            }
+            
+            /* Ensure dropdown doesn't get clipped */
+            .top-navbar .dropdown {
+                position: static;
+            }
+            
+            .dropdown-toggle::after {
+                display: inline-block !important;
+                margin-left: 0.255em;
+                vertical-align: 0.255em;
+                content: "";
+                border-top: 0.3em solid;
+                border-right: 0.3em solid transparent;
+                border-bottom: 0;
+                border-left: 0.3em solid transparent;
+            }
         </style>
     </head>
     <body>
@@ -524,6 +548,45 @@
                     </div>
                 </div>
             </div>
+            <!-- Bootstrap Bundle (Required for dropdown functionality) -->
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>        
             <script src="${pageContext.request.contextPath}/assets/js/appeal-request.js"></script>
+            <script>
+                // Additional debug after appeal-request.js loads
+                console.log('2. After appeal-request.js load');
+                console.log('Bootstrap available after appeal-request.js:', typeof window.bootstrap !== 'undefined');
+                
+                // Bootstrap loaded successfully
+                if (typeof window.bootstrap !== 'undefined') {
+                    console.log('✅ Bootstrap loaded successfully!');
+                    // Let appeal-request.js handle dropdown initialization
+                } else {
+                    console.error('❌ Bootstrap still not loaded!');
+                }
+                
+
+                
+                // Wait for everything to load
+                setTimeout(function() {
+                    console.log('3. After 1 second delay');
+                    console.log('Bootstrap available after delay:', typeof window.bootstrap !== 'undefined');
+                    
+                    // Final dropdown check
+                    const dropdowns = document.querySelectorAll('[data-bs-toggle="dropdown"]');
+                    console.log('Final dropdown count:', dropdowns.length);
+                    
+                    if (dropdowns.length > 0 && typeof window.bootstrap !== 'undefined') {
+                        console.log('Everything looks good - dropdown should work');
+                    } else {
+                        console.error('Problem detected:', {
+                            dropdownsFound: dropdowns.length,
+                            bootstrapLoaded: typeof window.bootstrap !== 'undefined'
+                        });
+                    }
+                }, 1000);
+            </script>
+            
+            <!-- Include Dashboard Footer for consistency -->
+            <jsp:include page="../layout/dashboard-footer.jsp" />
     </body>
 </html>

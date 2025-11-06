@@ -357,7 +357,29 @@ public class AttendanceService {
         LocalTime standardAfternoonStart = LocalTime.of(13, 0); 
         LocalTime standardAfternoonEnd = LocalTime.of(17, 0);  
 
-        int graceMinutes = 10; 
+        int graceMinutes = 10;
+        
+        // Kiểm tra ngoài giờ làm việc
+        // 1. Check-in sau 17h (ca tối/ngoài giờ)
+        if (checkIn.isAfter(standardAfternoonEnd)) {
+            return "Outside Working Hours";
+        }
+        
+        // 2. Check-in trước 6h sáng (ca đêm/sớm bất thường)
+        LocalTime earlyMorningLimit = LocalTime.of(6, 0);
+        if (checkIn.isBefore(earlyMorningLimit)) {
+            return "Outside Working Hours";
+        }
+        
+        // 3. Cả check-in và check-out đều ngoài khung giờ hành chính
+        boolean checkInOutsideNormal = checkIn.isBefore(standardMorningStart.minusMinutes(30)) || 
+                                      checkIn.isAfter(standardAfternoonEnd);
+        boolean checkOutOutsideNormal = checkOut.isBefore(standardMorningStart) || 
+                                       checkOut.isAfter(LocalTime.of(22, 0)); // sau 22h
+        
+        if (checkInOutsideNormal && checkOutOutsideNormal) {
+            return "Outside Working Hours";
+        } 
 
         // Biến tạm cho leave & OT
         boolean hasAMLeave = false;

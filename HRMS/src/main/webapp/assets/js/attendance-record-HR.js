@@ -174,14 +174,14 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("modalEmpName").value = getVal("employeeNameEdit");
         document.getElementById("modalDepartment").value = getVal("departmentEdit");
         document.getElementById("modalDate").value = getVal("dateEdit");
-        document.getElementById("modalCheckIn").value = getVal("checkInEdit");
-        document.getElementById("modalCheckOut").value = getVal("checkOutEdit");
+        document.getElementById("modalCheckIn").value = getVal("checkInEdit") || "";
+        document.getElementById("modalCheckOut").value = getVal("checkOutEdit") || "";
         document.getElementById("modalStatus").value = getVal("statusEdit");
         document.getElementById("modalSource").value = getVal("sourceEdit");
         document.getElementById("modalPeriod").value = getVal("periodEdit");
 
-        document.getElementById("checkInOld").value = getVal("checkInEdit");
-        document.getElementById("checkOutOld").value = getVal("checkOutEdit");
+        document.getElementById("checkInOld").value = getVal("checkInEdit") || "";
+        document.getElementById("checkOutOld").value = getVal("checkOutEdit") || "";
 
         document.getElementById("editModal").style.display = "flex";
     };

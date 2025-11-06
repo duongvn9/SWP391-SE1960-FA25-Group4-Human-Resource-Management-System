@@ -47,6 +47,7 @@ public class PayslipDetailServlet extends HttpServlet {
         this.departmentDao = new DepartmentDao();
         this.positionDao = new PositionDao();
         this.attendanceLogDao = new AttendanceLogDao();
+        this.calculationService = new PayslipCalculationService(); // Thêm dòng này
     }
 
     @Override

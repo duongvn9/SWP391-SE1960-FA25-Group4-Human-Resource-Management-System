@@ -102,7 +102,9 @@ public class AttendanceMapper {
         List<AttendanceLog> logs = new ArrayList<>();
         TimesheetPeriodDao dao = new TimesheetPeriodDao();
         LocalDate date = dto.getDate();
-        if (dto.getCheckIn() != null) {
+        
+        // Chỉ tạo log IN nếu có cả checkIn mới và oldCheckIn
+        if (dto.getCheckIn() != null && oldCheckIn != null) {
             AttendanceLog logIn = new AttendanceLog();
             logIn.setUserId(dto.getUserId());
             logIn.setCheckType("IN");
@@ -115,8 +117,20 @@ public class AttendanceMapper {
             // Nếu muốn lưu giá trị mới (checkIn) cho update, sẽ được DAO dùng trong UPDATE
             logIn.setCheckedAtNew(LocalDateTime.of(date, dto.getCheckIn())); 
         }
+        // Nếu chỉ có checkIn mới mà không có oldCheckIn (tức là thêm mới check-in)
+        else if (dto.getCheckIn() != null && oldCheckIn == null) {
+            AttendanceLog logIn = new AttendanceLog();
+            logIn.setUserId(dto.getUserId());
+            logIn.setCheckType("IN");
+            logIn.setCheckedAt(LocalDateTime.of(date, dto.getCheckIn())); 
+            logIn.setSource(dto.getSource());
+            logIn.setNote(dto.getStatus());
+            logIn.setPeriodId(dao.findIdByName(dto.getPeriod()).orElse(null));
+            logs.add(logIn);
+        }
 
-        if (dto.getCheckOut() != null) {
+        // Chỉ tạo log OUT nếu có cả checkOut mới và oldCheckOut
+        if (dto.getCheckOut() != null && oldCheckOut != null) {
             AttendanceLog logOut = new AttendanceLog();
             logOut.setUserId(dto.getUserId());
             logOut.setCheckType("OUT");
@@ -127,6 +141,17 @@ public class AttendanceMapper {
             logs.add(logOut);
 
             logOut.setCheckedAtNew(LocalDateTime.of(date, dto.getCheckOut())); 
+        }
+        // Nếu chỉ có checkOut mới mà không có oldCheckOut (tức là thêm mới check-out)
+        else if (dto.getCheckOut() != null && oldCheckOut == null) {
+            AttendanceLog logOut = new AttendanceLog();
+            logOut.setUserId(dto.getUserId());
+            logOut.setCheckType("OUT");
+            logOut.setCheckedAt(LocalDateTime.of(date, dto.getCheckOut())); 
+            logOut.setSource(dto.getSource());
+            logOut.setNote(dto.getStatus());
+            logOut.setPeriodId(dao.findIdByName(dto.getPeriod()).orElse(null));
+            logs.add(logOut);
         }
 
         return logs;
