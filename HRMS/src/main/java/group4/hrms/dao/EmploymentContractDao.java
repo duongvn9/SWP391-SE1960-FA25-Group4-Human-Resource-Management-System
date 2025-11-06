@@ -578,4 +578,243 @@ public class EmploymentContractDao extends BaseDao<EmploymentContract, Long> {
             throw e;
         }
     }
+
+    // ==================== PERFORMANCE OPTIMIZED METHODS ====================
+
+    /**
+     * Batch update expired contracts
+     * Updates all contracts where end_date < today and status = 'active' to status = 'expired'
+     * This is much faster than updating contracts one by one in a loop
+     */
+    public int batchUpdateExpiredContracts() throws SQLException {
+        String sql = "UPDATE employment_contracts " +
+                    "SET status = 'expired', updated_at = ? " +
+                    "WHERE status = 'active' " +
+                    "AND end_date IS NOT NULL " +
+                    "AND end_date < CURDATE()";
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            setTimestamp(stmt, 1, LocalDateTime.now());
+
+            int rowsAffected = stmt.executeUpdate();
+
+            if (rowsAffected > 0) {
+                logger.info("Batch updated {} expired contracts", rowsAffected);
+            }
+
+            return rowsAffected;
+
+        } catch (SQLException e) {
+            logger.error("Error batch updating expired contracts: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    /**
+     * Find contracts with filters and pagination (OPTIMIZED)
+     * Uses JOIN to get all data in ONE query instead of N+1 queries
+     * Applies filters at database level instead of in Java
+     * Returns only the requested page of results
+     */
+    public List<group4.hrms.dto.EmploymentContractDto> findWithFilters(
+            String searchQuery,
+            String statusFilter,
+            String approvalStatusFilter,
+            String typeFilter,
+            int offset,
+            int limit) throws SQLException {
+
+        List<group4.hrms.dto.EmploymentContractDto> dtos = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+            "SELECT " +
+            "    ec.*, " +
+            "    u.full_name as user_full_name, " +
+            "    u.employee_code as user_employee_code, " +
+            "    creator_user.full_name as created_by_name, " +
+            "    approver_user.full_name as approved_by_name " +
+            "FROM employment_contracts ec " +
+            "INNER JOIN users u ON ec.user_id = u.id " +
+            "LEFT JOIN users creator_user ON ec.created_by_account_id = creator_user.id " +
+            "LEFT JOIN users approver_user ON ec.approved_by_account_id = approver_user.id " +
+            "WHERE 1=1 "
+        );
+
+        List<Object> params = new ArrayList<>();
+
+        // Add search filter
+        if (searchQuery != null && !searchQuery.trim().isEmpty()) {
+            sql.append("AND (ec.contract_no LIKE ? OR u.full_name LIKE ? OR u.employee_code LIKE ?) ");
+            String searchPattern = "%" + searchQuery.trim() + "%";
+            params.add(searchPattern);
+            params.add(searchPattern);
+            params.add(searchPattern);
+        }
+
+        // Add status filter
+        if (statusFilter != null && !statusFilter.isEmpty() && !"all".equals(statusFilter)) {
+            sql.append("AND ec.status = ? ");
+            params.add(statusFilter);
+        }
+
+        // Add approval status filter
+        if (approvalStatusFilter != null && !approvalStatusFilter.isEmpty() && !"all".equals(approvalStatusFilter)) {
+            sql.append("AND ec.approval_status = ? ");
+            params.add(approvalStatusFilter);
+        }
+
+        // Add contract type filter
+        if (typeFilter != null && !typeFilter.isEmpty() && !"all".equals(typeFilter)) {
+            sql.append("AND ec.contract_type = ? ");
+            params.add(typeFilter);
+        }
+
+        // Add ordering and pagination
+        sql.append("ORDER BY ec.created_at DESC LIMIT ? OFFSET ?");
+        params.add(limit);
+        params.add(offset);
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+
+            // Set parameters
+            for (int i = 0; i < params.size(); i++) {
+                stmt.setObject(i + 1, params.get(i));
+            }
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    EmploymentContract contract = mapResultSetToEntity(rs);
+                    group4.hrms.dto.EmploymentContractDto dto = new group4.hrms.dto.EmploymentContractDto(contract);
+
+                    // Set user info from JOIN results
+                    dto.setUserFullName(rs.getString("user_full_name"));
+                    dto.setUsername(rs.getString("user_employee_code"));
+                    dto.setCreatedByName(rs.getString("created_by_name"));
+                    dto.setApprovedByName(rs.getString("approved_by_name"));
+
+                    dtos.add(dto);
+                }
+            }
+
+            return dtos;
+
+        } catch (SQLException e) {
+            logger.error("Error finding contracts with filters: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    /**
+     * Count contracts with filters (for pagination)
+     * Uses the same filters as findWithFilters to get accurate count
+     */
+    public int countWithFilters(
+            String searchQuery,
+            String statusFilter,
+            String approvalStatusFilter,
+            String typeFilter) throws SQLException {
+
+        StringBuilder sql = new StringBuilder(
+            "SELECT COUNT(*) " +
+            "FROM employment_contracts ec " +
+            "INNER JOIN users u ON ec.user_id = u.id " +
+            "WHERE 1=1 "
+        );
+
+        List<Object> params = new ArrayList<>();
+
+        // Add same filters as findWithFilters
+        if (searchQuery != null && !searchQuery.trim().isEmpty()) {
+            sql.append("AND (ec.contract_no LIKE ? OR u.full_name LIKE ? OR u.employee_code LIKE ?) ");
+            String searchPattern = "%" + searchQuery.trim() + "%";
+            params.add(searchPattern);
+            params.add(searchPattern);
+            params.add(searchPattern);
+        }
+
+        if (statusFilter != null && !statusFilter.isEmpty() && !"all".equals(statusFilter)) {
+            sql.append("AND ec.status = ? ");
+            params.add(statusFilter);
+        }
+
+        if (approvalStatusFilter != null && !approvalStatusFilter.isEmpty() && !"all".equals(approvalStatusFilter)) {
+            sql.append("AND ec.approval_status = ? ");
+            params.add(approvalStatusFilter);
+        }
+
+        if (typeFilter != null && !typeFilter.isEmpty() && !"all".equals(typeFilter)) {
+            sql.append("AND ec.contract_type = ? ");
+            params.add(typeFilter);
+        }
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+
+            // Set parameters
+            for (int i = 0; i < params.size(); i++) {
+                stmt.setObject(i + 1, params.get(i));
+            }
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+
+            return 0;
+
+        } catch (SQLException e) {
+            logger.error("Error counting contracts with filters: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    /**
+     * Find all contracts with user info using JOIN (OPTIMIZED)
+     * Returns DTOs with all necessary information in ONE query
+     * Use this instead of findAll() + multiple findById() calls
+     * 
+     * NOTE: created_by_account_id and approved_by_account_id store user.id directly
+     */
+    public List<group4.hrms.dto.EmploymentContractDto> findAllWithUserInfo() throws SQLException {
+        List<group4.hrms.dto.EmploymentContractDto> dtos = new ArrayList<>();
+
+        String sql = "SELECT " +
+                    "    ec.*, " +
+                    "    u.full_name as user_full_name, " +
+                    "    u.employee_code as user_employee_code, " +
+                    "    creator.full_name as created_by_name, " +
+                    "    approver.full_name as approved_by_name " +
+                    "FROM employment_contracts ec " +
+                    "INNER JOIN users u ON ec.user_id = u.id " +
+                    "LEFT JOIN users creator ON ec.created_by_account_id = creator.id " +
+                    "LEFT JOIN users approver ON ec.approved_by_account_id = approver.id " +
+                    "ORDER BY ec.created_at DESC";
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                EmploymentContract contract = mapResultSetToEntity(rs);
+                group4.hrms.dto.EmploymentContractDto dto = new group4.hrms.dto.EmploymentContractDto(contract);
+
+                // Set user info from JOIN results
+                dto.setUserFullName(rs.getString("user_full_name"));
+                dto.setUsername(rs.getString("user_employee_code"));
+                dto.setCreatedByName(rs.getString("created_by_name"));
+                dto.setApprovedByName(rs.getString("approved_by_name"));
+
+                dtos.add(dto);
+            }
+
+            return dtos;
+
+        } catch (SQLException e) {
+            logger.error("Error finding all contracts with user info: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
 }

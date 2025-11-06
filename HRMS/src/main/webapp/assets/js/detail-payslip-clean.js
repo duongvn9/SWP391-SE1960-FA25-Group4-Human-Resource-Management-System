@@ -40,10 +40,47 @@ window.printPayslip = function() {
     }
 };
 
+/**
+ * Load all content immediately when page loads
+ */
+function loadAllContent() {
+    console.log('Loading all content...');
+    
+    // Force all content to be visible and loaded
+    const allElements = document.querySelectorAll('*');
+    allElements.forEach(element => {
+        if (element.style.display === 'none' && 
+            !element.classList.contains('sidebar') && 
+            !element.classList.contains('btn') && 
+            element.tagName.toLowerCase() !== 'button') {
+            element.style.display = 'block';
+        }
+    });
+    
+    // Scroll to bottom to trigger any lazy loading, then back to top
+    setTimeout(() => {
+        const documentHeight = Math.max(
+            document.body.scrollHeight,
+            document.documentElement.scrollHeight
+        );
+        
+        window.scrollTo({ top: documentHeight, behavior: 'instant' });
+        
+        // Wait a bit then scroll back to top
+        setTimeout(() => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            console.log('All content loaded');
+        }, 500);
+    }, 100);
+}
+
 // Debug log to confirm function is loaded
 console.log('PrintPayslip function loaded and available globally:', typeof window.printPayslip);
 
 document.addEventListener('DOMContentLoaded', function () {
+    // Load all content immediately when page loads
+    loadAllContent();
+    
     // Initialize page
     initializePayslipDetail();
     // Handle responsive behavior
@@ -201,8 +238,10 @@ function fixNetSalaryDisplay() {
             if (parent) {
                 const amountElement = parent.querySelector('.text-end');
                 if (amountElement && amountElement.textContent.includes('VND')) {
-                    const amountText = amountElement.textContent.replace(/[^\d.,]/g, '').replace(/,/g, '');
-                    grossAmount = parseFloat(amountText) || 0;
+                    const amountText = amountElement.textContent.replace(/[^\d.,]/g, '');
+                    // Handle both comma and dot as thousand separators
+                    const cleanAmount = amountText.replace(/[,.]/g, '');
+                    grossAmount = parseFloat(cleanAmount) || 0;
                     break;
                 }
             }
@@ -216,8 +255,10 @@ function fixNetSalaryDisplay() {
             if (parent) {
                 const amountElement = parent.querySelector('.text-end');
                 if (amountElement && amountElement.textContent.includes('VND')) {
-                    const amountText = amountElement.textContent.replace(/[^\d.,]/g, '').replace(/,/g, '');
-                    totalDeductions = parseFloat(amountText) || 0;
+                    const amountText = amountElement.textContent.replace(/[^\d.,]/g, '');
+                    // Handle both comma and dot as thousand separators
+                    const cleanAmount = amountText.replace(/[,.]/g, '');
+                    totalDeductions = parseFloat(cleanAmount) || 0;
                     break;
                 }
             }
@@ -229,6 +270,12 @@ function fixNetSalaryDisplay() {
         const netAmount = grossAmount - totalDeductions;
         const netSalaryElement = document.getElementById('net-salary-amount');
         if (netSalaryElement && netAmount > 0) {
+            console.log('Updating Net Salary:', {
+                grossAmount: grossAmount,
+                totalDeductions: totalDeductions,
+                netAmount: netAmount,
+                formatted: formatCurrency(netAmount)
+            });
             netSalaryElement.innerHTML = formatCurrency(netAmount);
         }
     }
@@ -238,7 +285,8 @@ function fixNetSalaryDisplay() {
  * Format currency values
  */
 function formatCurrency(value) {
-    return new Intl.NumberFormat('vi-VN', {
+    return new Intl.NumberFormat('en-US', {
+        style: 'decimal',
         minimumFractionDigits: 0,
         maximumFractionDigits: 0
     }).format(value) + ' VND';

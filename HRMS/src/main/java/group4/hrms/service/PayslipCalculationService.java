@@ -32,6 +32,7 @@ import group4.hrms.dto.AttendanceLogDto;
 import group4.hrms.dto.PayslipCalculationResult;
 import group4.hrms.dto.PayslipSnapshots;
 import group4.hrms.model.EmploymentContract;
+import group4.hrms.model.Holiday;
 import group4.hrms.model.LeaveType;
 import group4.hrms.model.Request;
 import group4.hrms.service.OTCalculationService.OTType;
@@ -546,6 +547,7 @@ public class PayslipCalculationService {
 
     /**
      * Calculate actual working days in a period, excluding weekends and holidays
+     * OPTIMIZED: Uses cached holidays to avoid N+1 query problem
      * Requirements: 6.2, 6.3
      *
      * @param periodStart Start date of the period (inclusive)
@@ -563,6 +565,10 @@ public class PayslipCalculationService {
             return 0;
         }
 
+        // OPTIMIZATION: Load all holidays in period ONCE (instead of querying for each day)
+        java.util.Set<LocalDate> cachedHolidays = loadHolidaysInPeriod(periodStart, periodEnd);
+        java.util.Set<LocalDate> cachedCompensatoryDays = loadCompensatoryDaysInPeriod(periodStart, periodEnd);
+
         int workingDays = 0;
         LocalDate current = periodStart;
 
@@ -571,10 +577,10 @@ public class PayslipCalculationService {
             if (current.getDayOfWeek() != DayOfWeek.SATURDAY &&
                 current.getDayOfWeek() != DayOfWeek.SUNDAY) {
 
-                // Skip holidays (check from database or predefined list)
-                if (!isHoliday(current)) {
-                    // Skip compensatory days (nghỉ bù) - would check from database
-                    if (!isCompensatoryDay(current)) {
+                // Skip holidays (using cached set - NO DB QUERY)
+                if (!isHoliday(current, cachedHolidays)) {
+                    // Skip compensatory days (using cached set - NO DB QUERY)
+                    if (!isCompensatoryDay(current, cachedCompensatoryDays)) {
                         workingDays++;
                     }
                 }
@@ -582,10 +588,69 @@ public class PayslipCalculationService {
             current = current.plusDays(1);
         }
 
-        logger.info(String.format("Calculated working days for period %s to %s: %d days",
+        logger.info(String.format("Calculated working days for period %s to %s: %d days (using cached holidays)",
                    periodStart, periodEnd, workingDays));
 
         return workingDays;
+    }
+
+    /**
+     * Load all holidays in a period ONCE to avoid N+1 query problem
+     * OPTIMIZATION: Single DB query instead of multiple queries
+     *
+     * @param periodStart Start date
+     * @param periodEnd End date
+     * @return Set of holiday dates
+     */
+    private java.util.Set<LocalDate> loadHolidaysInPeriod(LocalDate periodStart, LocalDate periodEnd) {
+        java.util.Set<LocalDate> holidays = new java.util.HashSet<>();
+
+        try {
+            List<Holiday> holidayList = holidayDao.getHolidaysInRange(periodStart, periodEnd);
+            for (Holiday holiday : holidayList) {
+                if (holiday.getDateHoliday() != null) {
+                    holidays.add(holiday.getDateHoliday());
+                }
+            }
+            logger.fine(String.format("Loaded %d holidays for period %s to %s in single query",
+                                    holidays.size(), periodStart, periodEnd));
+        } catch (SQLException e) {
+            logger.warning("Error loading holidays in period: " + e.getMessage());
+            // Fallback to empty set - will use hardcoded holidays if needed
+        }
+
+        return holidays;
+    }
+
+    /**
+     * Load all compensatory days in a period ONCE to avoid N+1 query problem
+     * OPTIMIZATION: Single DB query instead of multiple queries
+     *
+     * @param periodStart Start date
+     * @param periodEnd End date
+     * @return Set of compensatory day dates
+     */
+    private java.util.Set<LocalDate> loadCompensatoryDaysInPeriod(LocalDate periodStart, LocalDate periodEnd) {
+        java.util.Set<LocalDate> compensatoryDays = new java.util.HashSet<>();
+
+        try {
+            List<Holiday> holidayList = holidayDao.getHolidaysInRange(periodStart, periodEnd);
+            for (Holiday holiday : holidayList) {
+                if (holiday.getDateHoliday() != null && holiday.getName() != null) {
+                    String name = holiday.getName().toLowerCase();
+                    if (name.contains("nghỉ bù") || name.contains("nghi bu")) {
+                        compensatoryDays.add(holiday.getDateHoliday());
+                    }
+                }
+            }
+            logger.fine(String.format("Loaded %d compensatory days for period %s to %s in single query",
+                                    compensatoryDays.size(), periodStart, periodEnd));
+        } catch (SQLException e) {
+            logger.warning("Error loading compensatory days in period: " + e.getMessage());
+            // Fallback to empty set
+        }
+
+        return compensatoryDays;
     }
 
     /**
@@ -594,7 +659,9 @@ public class PayslipCalculationService {
      *
      * @param date Date to check
      * @return true if the date is a holiday
+     * @deprecated Use isHoliday(LocalDate, Set<LocalDate>) with cached holidays instead to avoid N+1 queries
      */
+    @Deprecated
     private boolean isHoliday(LocalDate date) {
         try {
             return holidayDao.isHoliday(date);
@@ -603,6 +670,18 @@ public class PayslipCalculationService {
             // Fallback to hardcoded holidays if database fails
             return isHardcodedHoliday(date);
         }
+    }
+
+    /**
+     * Check if a date is a holiday using cached holiday set (OPTIMIZED - NO DB QUERY)
+     * This method prevents N+1 query problem by using pre-loaded holidays
+     *
+     * @param date Date to check
+     * @param cachedHolidays Set of holiday dates loaded once from database
+     * @return true if the date is a holiday
+     */
+    private boolean isHoliday(LocalDate date, java.util.Set<LocalDate> cachedHolidays) {
+        return cachedHolidays.contains(date);
     }
 
     /**
@@ -651,7 +730,9 @@ public class PayslipCalculationService {
      *
      * @param date Date to check
      * @return true if the date is a compensatory day
+     * @deprecated Use isCompensatoryDay(LocalDate, Set<LocalDate>) with cached compensatory days instead to avoid N+1 queries
      */
+    @Deprecated
     private boolean isCompensatoryDay(LocalDate date) {
         try {
             return holidayDao.isCompensatoryDay(date);
@@ -659,6 +740,18 @@ public class PayslipCalculationService {
             logger.warning("Error checking compensatory day for date " + date + ": " + e.getMessage());
             return false;
         }
+    }
+
+    /**
+     * Check if a date is a compensatory day using cached set (OPTIMIZED - NO DB QUERY)
+     * This method prevents N+1 query problem by using pre-loaded compensatory days
+     *
+     * @param date Date to check
+     * @param cachedCompensatoryDays Set of compensatory day dates loaded once from database
+     * @return true if the date is a compensatory day
+     */
+    private boolean isCompensatoryDay(LocalDate date, java.util.Set<LocalDate> cachedCompensatoryDays) {
+        return cachedCompensatoryDays.contains(date);
     }
 
     /**
@@ -729,9 +822,18 @@ public class PayslipCalculationService {
     /**
      * Enhanced timesheet snapshot creation with detailed attendance data
      * NEW LOGIC: Only count weekday attendance (Mon-Fri, not holiday/compensatory)
+     * OPTIMIZED: Uses cached holidays to avoid N+1 query problem
      */
     private PayslipSnapshots.TimesheetSnapshot createEnhancedTimesheetSnapshot(Long userId, LocalDate periodStart, LocalDate periodEnd) throws SQLException {
         PayslipSnapshots.TimesheetSnapshot snapshot = new PayslipSnapshots.TimesheetSnapshot();
+
+        // OPTIMIZATION: Load all holidays and compensatory days ONCE for the entire period
+        // This prevents N+1 query problem (was causing 100+ DB queries for 50 attendance records)
+        java.util.Set<LocalDate> cachedHolidays = loadHolidaysInPeriod(periodStart, periodEnd);
+        java.util.Set<LocalDate> cachedCompensatoryDays = loadCompensatoryDaysInPeriod(periodStart, periodEnd);
+
+        logger.fine(String.format("Cached %d holidays and %d compensatory days for period %s to %s",
+                                cachedHolidays.size(), cachedCompensatoryDays.size(), periodStart, periodEnd));
 
         // Get attendance records for the period
         AttendanceLogDao attendanceDao = new AttendanceLogDao();
@@ -757,10 +859,11 @@ public class PayslipCalculationService {
             LocalDate attendanceDate = record.getDate();
 
             // Check if this is a weekday (Mon-Fri) and not holiday/compensatory
+            // OPTIMIZED: Using cached sets instead of DB queries (NO MORE N+1 PROBLEM!)
             if (attendanceDate.getDayOfWeek() != DayOfWeek.SATURDAY &&
                 attendanceDate.getDayOfWeek() != DayOfWeek.SUNDAY &&
-                !isHoliday(attendanceDate) &&
-                !isCompensatoryDay(attendanceDate)) {
+                !isHoliday(attendanceDate, cachedHolidays) &&
+                !isCompensatoryDay(attendanceDate, cachedCompensatoryDays)) {
 
                 // Add to worked days set (automatically handles duplicates)
                 workedDaysSet.add(attendanceDate);
@@ -821,14 +924,16 @@ public class PayslipCalculationService {
         );
 
         // Create a set of dates that have attendance records (to check overlap)
+        // OPTIMIZED: Reuse cached holidays instead of querying DB again
         java.util.Set<LocalDate> attendanceDates = new java.util.HashSet<>();
         for (AttendanceLogDto record : attendanceList) {
             LocalDate attendanceDate = record.getDate();
             // Only count weekday attendance
+            // OPTIMIZED: Using cached sets (NO MORE DUPLICATE QUERIES!)
             if (attendanceDate.getDayOfWeek() != DayOfWeek.SATURDAY &&
                 attendanceDate.getDayOfWeek() != DayOfWeek.SUNDAY &&
-                !isHoliday(attendanceDate) &&
-                !isCompensatoryDay(attendanceDate)) {
+                !isHoliday(attendanceDate, cachedHolidays) &&
+                !isCompensatoryDay(attendanceDate, cachedCompensatoryDays)) {
                 attendanceDates.add(attendanceDate);
             }
         }

@@ -359,6 +359,7 @@
                             </c:if>
                         </form>
                     </div>
+                    <!-- Edit Modal -->
                     <div id="editModal" class="modal" style="display:none;">
                         <div class="modal-content">
                             <span class="close-btn" onclick="closeModal()">&times;</span>
@@ -411,6 +412,70 @@
 
                                 <button type="button" onclick="submitEdit()">Save</button>
                             </form>
+                        </div>
+                    </div>
+
+                    <!-- Delete Confirmation Modal -->
+                    <div id="deleteConfirmModal" class="modal delete-modal" style="display:none;">
+                        <div class="modal-content delete-modal-content">
+                            <div class="delete-modal-header">
+                                <div class="delete-icon">
+                                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M12 9V13M12 17H12.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </div>
+                                <h3>Confirm Delete</h3>
+                            </div>
+                            
+                            <div class="delete-modal-body">
+                                <p>Are you sure you want to delete this attendance record?</p>
+                                <div class="delete-details">
+                                    <div class="detail-grid">
+                                        <div class="detail-column">
+                                            <div class="detail-item">
+                                                <strong>Employee:</strong> 
+                                                <span id="deleteEmployeeName"></span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <strong>Date:</strong> 
+                                                <span id="deleteDate"></span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <strong>Check-in:</strong> 
+                                                <span id="deleteCheckIn"></span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <strong>Status:</strong> 
+                                                <span id="deleteStatus"></span>
+                                            </div>
+                                        </div>
+                                        <div class="detail-column">
+                                            <div class="detail-item">
+                                                <strong>ID:</strong> 
+                                                <span id="deleteEmployeeId"></span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <strong>Department:</strong> 
+                                                <span id="deleteDepartment"></span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <strong>Check-out:</strong> 
+                                                <span id="deleteCheckOut"></span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <strong>Source:</strong> 
+                                                <span id="deleteSource"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="delete-warning">This action cannot be undone.</p>
+                            </div>
+                            
+                            <div class="delete-modal-footer">
+                                <button type="button" class="btn btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+                                <button type="button" class="btn btn-delete-confirm" onclick="confirmDelete()">Delete</button>
+                            </div>
                         </div>
                     </div>
                 </main>
