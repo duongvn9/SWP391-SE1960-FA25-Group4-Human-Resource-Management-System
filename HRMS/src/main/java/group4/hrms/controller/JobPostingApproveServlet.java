@@ -30,7 +30,7 @@ public class JobPostingApproveServlet extends HttpServlet {
         Long positionId = logged != null ? logged.getPositionId() : null;
 
         if (approverId == null || !JobPostingPermissionHelper.canApproveJobPosting(positionId)) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied. Must be logged in as HRM.");
+            response.sendRedirect(request.getContextPath() + "/login?error=You don't have permission to approve job postings");
             return;
         }
 

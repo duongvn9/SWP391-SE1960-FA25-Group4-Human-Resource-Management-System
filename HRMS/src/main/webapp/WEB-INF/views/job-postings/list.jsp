@@ -39,8 +39,8 @@
                                 </p>
                             </div>
 
-                            <!-- Only HR Staff (8) can create new job postings. HR Manager (7) can only approve/reject/publish. -->
-                            <c:if test="${sessionScope.user != null && sessionScope.user.positionId == 8}">
+                            <!-- Both HR Staff (8) and HR Manager (7) can create new job postings -->
+                            <c:if test="${sessionScope.user != null && (sessionScope.user.positionId == 7 || sessionScope.user.positionId == 8)}">
                                 <a href="${pageContext.request.contextPath}/recruitment/approved"
                                     class="btn btn-primary">
                                     <i class="fas fa-plus-circle me-1"></i> Create New Posting
