@@ -201,10 +201,13 @@ public class PayslipExportService {
 
             logger.info(String.format("Excel export completed: %d payslips exported", payslips.size()));
 
+            // Generate filename based on filter criteria
+            String filename = generateExportFilename(filter, "excel");
+
             ExportResult exportResult = new ExportResult(true, "Excel export completed successfully");
             exportResult.setData(result);
             exportResult.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-            exportResult.setFileName("payslips_export.xlsx");
+            exportResult.setFileName(filename);
             exportResult.setRecordCount(payslips.size());
             return exportResult;
         }
@@ -258,10 +261,13 @@ public class PayslipExportService {
 
         logger.info(String.format("CSV export completed: %d payslips exported", payslips.size()));
 
+        // Generate filename based on filter criteria
+        String filename = generateExportFilename(filter, "csv");
+
         ExportResult exportResult = new ExportResult(true, "CSV export completed successfully");
         exportResult.setData(csv.toString().getBytes());
         exportResult.setContentType("text/csv");
-        exportResult.setFileName("payslips_export.csv");
+        exportResult.setFileName(filename);
         exportResult.setRecordCount(payslips.size());
         return exportResult;
     }
@@ -277,10 +283,19 @@ public class PayslipExportService {
     public String generateExportFilename(PayslipFilter filter, String format) {
         StringBuilder filename = new StringBuilder("payslips");
 
-        // Add period to filename if specified
+        // Add period to filename if specified, otherwise use "all"
         if (filter != null && filter.hasPeriodFilter()) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
             filename.append("_").append(filter.getPeriodStart().format(formatter));
+
+            // If period has both start and end, and they're different months, show range
+            if (filter.getPeriodEnd() != null &&
+                !filter.getPeriodStart().getMonth().equals(filter.getPeriodEnd().getMonth())) {
+                filename.append("_to_").append(filter.getPeriodEnd().format(formatter));
+            }
+        } else {
+            // No period filter - export all periods
+            filename.append("_all");
         }
 
         // Add department to filename if specified
