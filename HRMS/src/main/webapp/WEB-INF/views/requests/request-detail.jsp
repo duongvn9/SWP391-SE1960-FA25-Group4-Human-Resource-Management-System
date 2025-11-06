@@ -1,6 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" %>
     <%@ taglib uri="jakarta.tags.core" prefix="c" %>
         <%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
+            <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
             <!DOCTYPE html>
             <html lang="en">
 
@@ -59,8 +60,10 @@
                                 <!-- Conditional Approve Button -->
                                 <!-- Show for PENDING, APPROVED, or REJECTED status (allows manager override) -->
                                 <c:if test="${canApprove && (requestDto.status == 'PENDING' || requestDto.status == 'APPROVED' || requestDto.status == 'REJECTED')}">
-                                    <button onclick="openApprovalModal(${requestDto.id}, '${requestDto.title}', '${requestDto.status}')"
-                                        class="btn btn-warning">
+                                    <button class="btn btn-warning btn-approve-request-detail"
+                                        data-request-id="${requestDto.id}"
+                                        data-request-title="${fn:escapeXml(requestDto.title)}"
+                                        data-request-status="${requestDto.status}">
                                         <i class="fas fa-clipboard-check me-1"></i>
                                         <c:choose>
                                             <c:when test="${requestDto.status == 'APPROVED'}">Override Approval</c:when>
@@ -624,6 +627,28 @@
                 <!-- Page-specific JavaScript -->
                 <script src="${pageContext.request.contextPath}/assets/js/approval-modal.js?v=1"></script>
                 <script src="${pageContext.request.contextPath}/assets/js/request-detail.js?v=2"></script>
+
+                <!-- Event handler for approve button -->
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        // Add event listener for approve button in detail page
+                        const approveBtn = document.querySelector('.btn-approve-request-detail');
+                        if (approveBtn) {
+                            approveBtn.addEventListener('click', function() {
+                                const requestId = this.getAttribute('data-request-id');
+                                const requestTitle = this.getAttribute('data-request-title');
+                                const requestStatus = this.getAttribute('data-request-status');
+
+                                // Call the openApprovalModal function
+                                if (typeof openApprovalModal === 'function') {
+                                    openApprovalModal(requestId, requestTitle, requestStatus);
+                                } else {
+                                    console.error('openApprovalModal function not found');
+                                }
+                            });
+                        }
+                    });
+                </script>
             </body>
 
             </html>

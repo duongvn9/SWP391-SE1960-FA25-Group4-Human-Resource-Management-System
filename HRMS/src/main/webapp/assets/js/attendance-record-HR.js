@@ -126,9 +126,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (actionType === "update") {
             openEditModalFromForm(rowForm);
         } else if (actionType === "delete") {
-            if (confirm("Are you sure you want to delete this record?")) {
-                rowForm.submit();
-            }
+            showDeleteConfirmModal(rowForm);
         }
     };
 
@@ -188,5 +186,55 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.closeModal = () => {
         document.getElementById("editModal").style.display = "none";
+    };
+
+    // Delete confirmation modal functions
+    window.showDeleteConfirmModal = (form) => {
+        const modal = document.getElementById("deleteConfirmModal");
+        const getVal = (name) => form.querySelector(`[name="${name}"]`)?.value || "N/A";
+        
+        // Get all record information
+        const empId = getVal("userIdEdit");
+        const empName = getVal("employeeNameEdit");
+        const department = getVal("departmentEdit");
+        const date = getVal("dateEdit");
+        const checkIn = getVal("checkInEdit");
+        const checkOut = getVal("checkOutEdit");
+        const status = getVal("statusEdit");
+        const source = getVal("sourceEdit");
+        
+        // Update modal content
+        document.getElementById("deleteEmployeeId").textContent = empId;
+        document.getElementById("deleteEmployeeName").textContent = empName;
+        document.getElementById("deleteDepartment").textContent = department;
+        document.getElementById("deleteDate").textContent = date;
+        document.getElementById("deleteCheckIn").textContent = checkIn || "N/A";
+        document.getElementById("deleteCheckOut").textContent = checkOut || "N/A";
+        document.getElementById("deleteStatus").textContent = status;
+        document.getElementById("deleteSource").textContent = source;
+        
+        // Store form reference for later use
+        modal.dataset.formToSubmit = form.id || "temp-form-" + Date.now();
+        if (!form.id) {
+            form.id = modal.dataset.formToSubmit;
+        }
+        
+        modal.style.display = "flex";
+    };
+
+    window.closeDeleteModal = () => {
+        document.getElementById("deleteConfirmModal").style.display = "none";
+    };
+
+    window.confirmDelete = () => {
+        const modal = document.getElementById("deleteConfirmModal");
+        const formId = modal.dataset.formToSubmit;
+        const form = document.getElementById(formId);
+        
+        if (form) {
+            form.submit();
+        }
+        
+        closeDeleteModal();
     };
 });

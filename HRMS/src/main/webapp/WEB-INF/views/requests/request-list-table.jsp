@@ -1,6 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" %>
     <%@ taglib uri="jakarta.tags.core" prefix="c" %>
         <%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
+            <%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 
             <!-- Reusable Request List Table Component -->
             <div class="table-responsive">
@@ -145,25 +146,37 @@
                                                     <c:choose>
                                                         <c:when test="${req.status == 'APPROVED'}">
                                                             <button
-                                                                onclick="openApprovalModal(${req.id}, '${req.title}', 'APPROVED')"
-                                                                class="btn btn-warning" title="Review Request"
-                                                                data-bs-toggle="tooltip" data-bs-placement="top">
+                                                                class="btn btn-warning btn-approve-request"
+                                                                data-request-id="${req.id}"
+                                                                data-request-title="${fn:escapeXml(req.title)}"
+                                                                data-request-status="APPROVED"
+                                                                title="Review Request"
+                                                                data-bs-toggle="tooltip"
+                                                                data-bs-placement="top">
                                                                 <i class="fas fa-clipboard-check"></i>
                                                             </button>
                                                         </c:when>
                                                         <c:when test="${req.status == 'REJECTED'}">
                                                             <button
-                                                                onclick="openApprovalModal(${req.id}, '${req.title}', 'REJECTED')"
-                                                                class="btn btn-warning" title="Override Rejection"
-                                                                data-bs-toggle="tooltip" data-bs-placement="top">
+                                                                class="btn btn-warning btn-approve-request"
+                                                                data-request-id="${req.id}"
+                                                                data-request-title="${fn:escapeXml(req.title)}"
+                                                                data-request-status="REJECTED"
+                                                                title="Override Rejection"
+                                                                data-bs-toggle="tooltip"
+                                                                data-bs-placement="top">
                                                                 <i class="fas fa-redo"></i>
                                                             </button>
                                                         </c:when>
                                                         <c:otherwise>
                                                             <button
-                                                                onclick="openApprovalModal(${req.id}, '${req.title}', 'PENDING')"
-                                                                class="btn btn-warning" title="Approve Request"
-                                                                data-bs-toggle="tooltip" data-bs-placement="top">
+                                                                class="btn btn-warning btn-approve-request"
+                                                                data-request-id="${req.id}"
+                                                                data-request-title="${fn:escapeXml(req.title)}"
+                                                                data-request-status="PENDING"
+                                                                title="Approve Request"
+                                                                data-bs-toggle="tooltip"
+                                                                data-bs-placement="top">
                                                                 <i class="fas fa-clipboard-check"></i>
                                                             </button>
                                                         </c:otherwise>
@@ -257,8 +270,10 @@
                                             </a>
                                             <c:if test="${req.canApprove}">
                                                 <button
-                                                    onclick="openApprovalModal(${req.id}, '${req.title}', '${req.status}')"
-                                                    class="btn btn-sm btn-warning">
+                                                    class="btn btn-sm btn-warning btn-approve-request"
+                                                    data-request-id="${req.id}"
+                                                    data-request-title="${fn:escapeXml(req.title)}"
+                                                    data-request-status="${req.status}">
                                                     <i class="fas fa-clipboard-check"></i>
                                                 </button>
                                             </c:if>
@@ -319,13 +334,29 @@
                 </c:choose>
             </div>
 
-            <!-- Initialize Bootstrap tooltips -->
+            <!-- Initialize Bootstrap tooltips and event handlers -->
             <script>
                 document.addEventListener('DOMContentLoaded', function () {
                     // Initialize tooltips for action buttons
                     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
                     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
                         return new bootstrap.Tooltip(tooltipTriggerEl);
+                    });
+
+                    // Add event listeners for approve buttons
+                    document.querySelectorAll('.btn-approve-request').forEach(function(button) {
+                        button.addEventListener('click', function() {
+                            const requestId = this.getAttribute('data-request-id');
+                            const requestTitle = this.getAttribute('data-request-title');
+                            const requestStatus = this.getAttribute('data-request-status');
+
+                            // Call the openApprovalModal function
+                            if (typeof openApprovalModal === 'function') {
+                                openApprovalModal(requestId, requestTitle, requestStatus);
+                            } else {
+                                console.error('openApprovalModal function not found');
+                            }
+                        });
                     });
                 });
             </script>
