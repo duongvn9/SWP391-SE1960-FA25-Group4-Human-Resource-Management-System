@@ -94,23 +94,9 @@ public class LeaveRequestController extends HttpServlet {
         logger.info("Loading leave request form for user: " + user.getId() + " (account: " + account.getId() + ")");
 
         try {
-            logger.info("Initializing LeaveRequestService...");
-
-            // Initialize LeaveRequestService with required DAOs
-            LeaveRequestService service = new LeaveRequestService(
-                    new RequestDao(),
-                    new RequestTypeDao(),
-                    new LeaveTypeDao());
-
             // Load user profile to get gender
             group4.hrms.dao.UserProfileDao userProfileDao = new group4.hrms.dao.UserProfileDao();
             group4.hrms.model.UserProfile userProfile = userProfileDao.findByUserId(user.getId());
-
-            // Debug logging
-            logger.info("UserProfile found: " + (userProfile != null));
-            if (userProfile != null) {
-                logger.info("Raw gender value from DB: '" + userProfile.getGender() + "'");
-            }
 
             // Normalize gender: handle MALE/Male/M and FEMALE/Female/F
             String userGender = "MALE"; // default
@@ -124,139 +110,23 @@ public class LeaveRequestController extends HttpServlet {
             }
             logger.info("User gender (normalized): " + userGender);
 
-            logger.info("Loading available leave types...");
-            // Load available leave types using service.getAvailableLeaveTypes()
-            Map<String, String> allLeaveTypes = service.getAvailableLeaveTypes();
-
-            // Load holidays for current year and next 2 years to pass to JavaScript
-            logger.info("Loading holidays for current and future years...");
             int currentYear = java.time.Year.now().getValue();
 
-            java.util.List<String> allHolidays = new java.util.ArrayList<>();
-            java.util.List<String> allCompensatoryDays = new java.util.ArrayList<>();
+            // OPTIMIZATION: Use unified cache manager to load all data
+            // Before: ~55 queries per page load (13 holidays + 42 leave balances)
+            // After: 2 queries first time, 0 queries subsequent times
+            logger.info("Loading Leave form data with caching...");
+            group4.hrms.cache.LeaveFormCacheManager cacheManager = new group4.hrms.cache.LeaveFormCacheManager();
+            group4.hrms.cache.LeaveFormCacheManager.LeaveFormData formData = cacheManager.loadFormData(
+                session, user, userGender, currentYear
+            );
 
-            // Use OTRequestService to get holiday data
-            group4.hrms.service.OTRequestService otService = new group4.hrms.service.OTRequestService(
-                    new group4.hrms.dao.RequestDao(),
-                    new group4.hrms.dao.RequestTypeDao(),
-                    new group4.hrms.dao.HolidayDao(),
-                    new group4.hrms.dao.HolidayCalendarDao(),
-                    new group4.hrms.dao.UserDao());
-
-            // Load holidays for current year, next year, and year after
-            // This ensures users can create leave requests for future dates
-            for (int year = currentYear; year <= currentYear + 2; year++) {
-                allHolidays.addAll(otService.getHolidaysForYear(year));
-                allCompensatoryDays.addAll(otService.getCompensatoryDaysForYear(year));
-            }
-
-            logger.info("Loaded " + allHolidays.size() + " holidays and "
-                    + allCompensatoryDays.size() + " compensatory days for years "
-                    + currentYear + "-" + (currentYear + 2));
-            request.setAttribute("holidays", allHolidays);
-            request.setAttribute("compensatoryDays", allCompensatoryDays);
-
-            // Filter leave types based on gender (Maternity only for FEMALE)
-            Map<String, String> leaveTypes = new java.util.LinkedHashMap<>();
-            for (Map.Entry<String, String> entry : allLeaveTypes.entrySet()) {
-                String code = entry.getKey();
-                String name = entry.getValue();
-
-                // Filter MATERNITY/MATERNITY_LEAVE for females only
-                if ("MATERNITY".equals(code) || "MATERNITY_LEAVE".equals(code)) {
-                    if ("FEMALE".equalsIgnoreCase(userGender)) {
-                        leaveTypes.put(code, name);
-                    }
-                }
-                // Filter PATERNITY/PATERNITY_LEAVE for males only
-                else if ("PATERNITY".equals(code) || "PATERNITY_LEAVE".equals(code)) {
-                    if ("MALE".equalsIgnoreCase(userGender)) {
-                        leaveTypes.put(code, name);
-                    }
-                }
-                // All other leave types available for everyone
-                else {
-                    leaveTypes.put(code, name);
-                }
-            }
-            logger.info("Loaded " + (leaveTypes != null ? leaveTypes.size() : 0) + " leave types (filtered by gender)");
-
-            logger.info("Loading leave type rules...");
-            // Load leave type rules using service.getAllLeaveTypeRules()
-            List<LeaveTypeRules> allLeaveTypeRules = service.getAllLeaveTypeRules();
-
-            // Filter rules based on gender and calculate effective max days with seniority
-            List<LeaveTypeRules> leaveTypeRules = new java.util.ArrayList<>();
-            for (LeaveTypeRules rules : allLeaveTypeRules) {
-                String ruleCode = rules.getCode();
-
-                // Apply gender filter
-                boolean shouldInclude = true;
-                if ("MATERNITY".equals(ruleCode) || "MATERNITY_LEAVE".equals(ruleCode)) {
-                    shouldInclude = "FEMALE".equalsIgnoreCase(userGender);
-                } else if ("PATERNITY".equals(ruleCode) || "PATERNITY_LEAVE".equals(ruleCode)) {
-                    shouldInclude = "MALE".equalsIgnoreCase(userGender);
-                }
-
-                if (shouldInclude) {
-                    // For Annual Leave, calculate effective max days with seniority bonus
-                    if ("ANNUAL".equals(ruleCode)) {
-                        try {
-                            // Calculate seniority bonus for this user
-                            int seniorityBonus = service.calculateSeniorityBonus(user.getId(), ruleCode);
-                            int effectiveMaxDays = rules.getDefaultDays() + seniorityBonus;
-
-                            // Update max days to include seniority
-                            rules.maxDays = effectiveMaxDays;
-
-                            logger.info(String.format("Annual Leave effective max days: userId=%d, base=%d, seniority=%d, total=%d",
-                                       user.getId(), rules.getDefaultDays(), seniorityBonus, effectiveMaxDays));
-                        } catch (Exception e) {
-                            logger.warning("Error calculating seniority bonus for user " + user.getId() + ": " + e.getMessage());
-                            // Keep original max days if calculation fails
-                        }
-                    }
-
-                    leaveTypeRules.add(rules);
-                }
-            }
-            logger.info("Loaded " + (leaveTypeRules != null ? leaveTypeRules.size() : 0)
-                    + " leave type rules (filtered by gender)");
-
-            // Load leave balances from database
-            logger.info("Loading leave balances for user " + user.getId() + " in year " + currentYear);
-            List<group4.hrms.dto.LeaveBalance> allLeaveBalances = service.getAllLeaveBalances(user.getId(),
-                    currentYear);
-            logger.info("Loaded " + (allLeaveBalances != null ? allLeaveBalances.size() : 0) + " leave balances");
-
-            // Filter leave balances based on gender
-            List<group4.hrms.dto.LeaveBalance> leaveBalances = new java.util.ArrayList<>();
-            for (group4.hrms.dto.LeaveBalance balance : allLeaveBalances) {
-                String balanceCode = balance.getLeaveTypeCode();
-
-                // Filter MATERNITY/MATERNITY_LEAVE for females only
-                if ("MATERNITY".equals(balanceCode) || "MATERNITY_LEAVE".equals(balanceCode)) {
-                    if ("FEMALE".equalsIgnoreCase(userGender)) {
-                        leaveBalances.add(balance);
-                    }
-                }
-                // Filter PATERNITY/PATERNITY_LEAVE for males only
-                else if ("PATERNITY".equals(balanceCode) || "PATERNITY_LEAVE".equals(balanceCode)) {
-                    if ("MALE".equalsIgnoreCase(userGender)) {
-                        leaveBalances.add(balance);
-                    }
-                }
-                // All other leave types available for everyone
-                else {
-                    leaveBalances.add(balance);
-                }
-            }
-            logger.info("Filtered to " + leaveBalances.size() + " leave balances based on gender: " + userGender);
-
-            // Set leaveTypes, leaveTypeRules and leaveBalances as request attributes
-            request.setAttribute("leaveTypes", leaveTypes);
-            request.setAttribute("leaveTypeRules", leaveTypeRules);
-            request.setAttribute("leaveBalances", leaveBalances);
+            // Set attributes for JSP
+            request.setAttribute("holidays", formData.getHolidays());
+            request.setAttribute("compensatoryDays", formData.getCompensatoryDays());
+            request.setAttribute("leaveTypes", formData.getLeaveTypes());
+            request.setAttribute("leaveTypeRules", formData.getLeaveTypeRules());
+            request.setAttribute("leaveBalances", formData.getLeaveBalances());
             request.setAttribute("currentYear", currentYear);
             request.setAttribute("userGender", userGender);
 

@@ -114,19 +114,6 @@ public class OTRequestController extends HttpServlet {
         logger.info("Loading OT request form for user: " + user.getId() + " (account: " + account.getId() + ")");
 
         try {
-            logger.info("Initializing OTRequestService...");
-
-            // Initialize OTRequestService with required DAOs
-            OTRequestService service = new OTRequestService(
-                new RequestDao(),
-                new RequestTypeDao(),
-                new HolidayDao(),
-                new group4.hrms.dao.HolidayCalendarDao(),
-                new UserDao()
-            );
-
-            logger.info("Loading OT balance for user " + user.getId());
-
             // Get week/month/year offset from request parameters (default to 0 = current period)
             int weekOffset = 0;
             int monthOffset = 0;
@@ -149,53 +136,28 @@ public class OTRequestController extends HttpServlet {
                 // Keep default 0
             }
 
-            // Load OT balance for the user with offset (Requirement 8)
-            OTBalance otBalance = service.getOTBalanceWithOffset(user.getId(), weekOffset, monthOffset, yearOffset);
-            logger.info("Loaded OT balance: Week=" + otBalance.getCurrentWeekHours() + "h, Month="
-                + otBalance.getMonthlyHours() + "h, Annual=" + otBalance.getAnnualHours() + "h");
+            // OPTIMIZATION: Use unified cache manager to load all data
+            // Before: ~30 queries per page load
+            // After: 3 queries first time, 0 queries subsequent times
+            logger.info("Loading OT form data with caching...");
+            group4.hrms.cache.OTFormCacheManager cacheManager = new group4.hrms.cache.OTFormCacheManager();
+            group4.hrms.cache.OTFormCacheManager.OTFormData formData = cacheManager.loadFormData(
+                session, user, weekOffset, monthOffset, yearOffset
+            );
 
-            // Set OT balance as request attribute
-            request.setAttribute("otBalance", otBalance);
+            // Set attributes for JSP
+            request.setAttribute("otBalance", formData.getOtBalance());
+            request.setAttribute("holidays", formData.getHolidays());
+            request.setAttribute("compensatoryDays", formData.getCompensatoryDays());
 
-            // Load holidays for current year and next 2 years to pass to JavaScript
-            logger.info("Loading holidays for current and future years...");
-            int currentYear = java.time.Year.now().getValue();
-
-            java.util.List<String> allHolidays = new java.util.ArrayList<>();
-            java.util.List<String> allCompensatoryDays = new java.util.ArrayList<>();
-
-            // Load holidays for current year, next year, and year after
-            // This ensures users can create OT requests for future dates
-            for (int year = currentYear; year <= currentYear + 2; year++) {
-                allHolidays.addAll(service.getHolidaysForYear(year));
-                allCompensatoryDays.addAll(service.getCompensatoryDaysForYear(year));
+            if (formData.getSubordinates() != null && !formData.getSubordinates().isEmpty()) {
+                request.setAttribute("departmentEmployees", formData.getSubordinates());
+                logger.info("Found " + formData.getSubordinates().size() + " subordinates for user " + user.getId());
             }
 
-            logger.info("Loaded " + allHolidays.size() + " holidays and "
-                + allCompensatoryDays.size() + " compensatory days for years "
-                + currentYear + "-" + (currentYear + 2));
-            request.setAttribute("holidays", allHolidays);
-            request.setAttribute("compensatoryDays", allCompensatoryDays);
-
-            // Load subordinates if user has management privileges
-            // Based on job_level: lower number = higher authority
-            // ADMIN (1) > HR_MANAGER (2) > HR_STAFF (3) > DEPT_MANAGER (4) > STAFF (5)
-            logger.info("Loading subordinates for user " + user.getId());
-            try {
-                UserDao userDao = new UserDao();
-                List<User> subordinates = userDao.getSubordinates(user.getId());
-                if (subordinates != null && !subordinates.isEmpty()) {
-                    request.setAttribute("departmentEmployees", subordinates);
-                    logger.info("Loaded " + subordinates.size() + " subordinates for user " + user.getId());
-                } else {
-                    logger.info("No subordinates found for user " + user.getId());
-                }
-            } catch (Exception e) {
-                logger.warning("Error loading subordinates: " + e.getMessage());
-                // Continue without subordinates - user can still create for themselves
-            }
-
+            logger.info("OT form data loaded successfully with caching");
             logger.info("Forwarding to ot-form.jsp...");
+
             // Forward to ot-form.jsp
             request.getRequestDispatcher("/WEB-INF/views/requests/ot-form.jsp")
                    .forward(request, response);
@@ -347,6 +309,16 @@ public class OTRequestController extends HttpServlet {
 
             logger.info("OT request created successfully with ID: " + requestId);
 
+            // OPTIMIZATION: Invalidate OT balance cache after creating request
+            try {
+                group4.hrms.cache.OTFormCacheManager cacheManager = new group4.hrms.cache.OTFormCacheManager();
+                cacheManager.invalidateForUser(session, targetUserId);
+                logger.fine("Invalidated OT balance cache for userId: " + targetUserId);
+            } catch (Exception cacheError) {
+                logger.warning("Error invalidating cache: " + cacheError.getMessage());
+                // Continue - cache invalidation failure shouldn't block request creation
+            }
+
             // Handle attachments - both file uploads and external links
             try {
                 AttachmentService attachmentService = new AttachmentService();
@@ -461,51 +433,26 @@ public class OTRequestController extends HttpServlet {
         }
 
         try {
-            // Reload OT balance before forwarding
-            OTRequestService service = new OTRequestService(
-                new RequestDao(),
-                new RequestTypeDao(),
-                new HolidayDao(),
-                new group4.hrms.dao.HolidayCalendarDao(),
-                new UserDao()
+            // OPTIMIZATION: Reload form data with caching
+            // Cache was invalidated after request creation, so this will fetch fresh data
+            logger.info("Reloading OT form data with caching...");
+            group4.hrms.cache.OTFormCacheManager cacheManager = new group4.hrms.cache.OTFormCacheManager();
+            group4.hrms.cache.OTFormCacheManager.OTFormData formData = cacheManager.loadFormData(
+                session, user, 0, 0, 0 // Current period
             );
 
-            OTBalance otBalance = service.getOTBalance(user.getId());
-            request.setAttribute("otBalance", otBalance);
+            // Set attributes for JSP
+            request.setAttribute("otBalance", formData.getOtBalance());
+            request.setAttribute("holidays", formData.getHolidays());
+            request.setAttribute("compensatoryDays", formData.getCompensatoryDays());
 
-            // Reload holidays for current year and next 2 years to pass to JavaScript
-            logger.info("Reloading holidays for current and future years...");
-            int currentYear = java.time.Year.now().getValue();
-
-            java.util.List<String> allHolidays = new java.util.ArrayList<>();
-            java.util.List<String> allCompensatoryDays = new java.util.ArrayList<>();
-
-            // Load holidays for current year, next year, and year after
-            for (int year = currentYear; year <= currentYear + 2; year++) {
-                allHolidays.addAll(service.getHolidaysForYear(year));
-                allCompensatoryDays.addAll(service.getCompensatoryDaysForYear(year));
-            }
-
-            logger.info("Reloaded " + allHolidays.size() + " holidays and "
-                + allCompensatoryDays.size() + " compensatory days for years "
-                + currentYear + "-" + (currentYear + 2));
-            request.setAttribute("holidays", allHolidays);
-            request.setAttribute("compensatoryDays", allCompensatoryDays);
-
-            // Reload subordinates for dropdown
-            try {
-                UserDao userDao = new UserDao();
-                List<User> subordinates = userDao.getSubordinates(user.getId());
-                if (subordinates != null && !subordinates.isEmpty()) {
-                    request.setAttribute("departmentEmployees", subordinates);
-                    logger.info("Reloaded " + subordinates.size() + " subordinates for user " + user.getId());
-                }
-            } catch (Exception e) {
-                logger.warning("Error reloading subordinates: " + e.getMessage());
+            if (formData.getSubordinates() != null && !formData.getSubordinates().isEmpty()) {
+                request.setAttribute("departmentEmployees", formData.getSubordinates());
+                logger.info("Reloaded " + formData.getSubordinates().size() + " subordinates for user " + user.getId());
             }
 
         } catch (Exception e) {
-            logger.severe("Error reloading OT balance: " + e.getMessage());
+            logger.severe("Error reloading OT form data: " + e.getMessage());
         }
 
         // Forward back to ot-form.jsp with success/error message
