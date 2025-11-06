@@ -1,0 +1,291 @@
+/* =========================================================
+   DETAIL PAYSLIP FIX - Emergency fixes for display issues
+   ========================================================= */
+
+/* Fix horizontal scroll issues */
+html, body {
+    overflow-x: hidden !important;
+    max-width: 100% !important;
+}
+
+.main-content {
+    overflow-x: hidden !important;
+    max-width: 100% !important;
+}
+
+.content-area {
+    overflow-x: hidden !important;
+    max-width: 100% !important;
+}
+
+/* Fix container widths */
+.container, .container-fluid {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+}
+
+/* Fix for earnings and deductions side by side */
+.earnings-deductions {
+    display: flex !important;
+    gap: 15px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.earnings-deductions .col-md-6 {
+    flex: 1 !important;
+    max-width: calc(50% - 7.5px) !important;
+    width: calc(50% - 7.5px) !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    box-sizing: border-box !important;
+}
+
+/* Ensure info cards have proper height and content visibility */
+.earnings-deductions .info-card {
+    min-height: 300px !important;
+    height: auto !important;
+    overflow: visible !important;
+    word-wrap: break-word !important;
+}
+
+/* Fix calculation rows to prevent overflow */
+.calculation-row {
+    margin-bottom: 8px !important;
+    overflow: visible !important;
+    word-wrap: break-word !important;
+}
+
+.calculation-row .row {
+    margin: 0 !important;
+    overflow: visible !important;
+}
+
+.calculation-row .col-8,
+.calculation-row .col-4 {
+    padding: 2px 5px !important;
+    overflow: visible !important;
+    word-wrap: break-word !important;
+}
+
+/* Fix info cards */
+.info-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+}
+
+/* Fix all rows */
+.row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    max-width: 100% !important;
+}
+
+/* Fix columns */
+[class*="col-"] {
+    padding-left: 7.5px !important;
+    padding-right: 7.5px !important;
+    box-sizing: border-box !important;
+}
+
+/* Ensure deductions section shows all content */
+.earnings-deductions .info-card .section-header {
+    margin-bottom: 15px !important;
+}
+
+.deduction-highlight {
+    color: #dc3545 !important;
+    font-weight: 500 !important;
+}
+
+.sub-item {
+    padding-left: 15px !important;
+    font-size: 0.9em !important;
+    color: #666 !important;
+}
+
+.total-row {
+    border-top: 2px solid #dee2e6 !important;
+    padding-top: 8px !important;
+    margin-top: 10px !important;
+    font-weight: bold !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .earnings-deductions {
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+
+    .earnings-deductions .col-md-6 {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+
+    .earnings-deductions .info-card {
+        min-height: auto !important;
+    }
+}
+
+/* Fix specific elements that might cause overflow */
+.payslip-header, .breadcrumb, .section-header {
+    max-width: 100% !important;
+    overflow: hidden !important;
+}
+
+/* Print button enhancements */
+.print-btn {
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.print-btn.loading {
+    pointer-events: none !important;
+    opacity: 0.7 !important;
+}
+
+.print-btn.loading::after {
+    content: "" !important;
+    position: absolute !important;
+    top: 50% !important;
+    right: 15px !important;
+    width: 16px !important;
+    height: 16px !important;
+    margin-top: -8px !important;
+    border: 2px solid transparent !important;
+    border-top: 2px solid white !important;
+    border-radius: 50% !important;
+    animation: spin 1s linear infinite !important;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+
+
+/* Toast container for notifications */
+.toast-container {
+    z-index: 9999 !important;
+}
+
+.toast {
+    min-width: 300px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Ensure printable content is properly contained */
+#printable-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+}
+
+/* Fix for mobile print */
+@media (max-width: 768px) {
+    .payslip-header .col-md-4 {
+        text-align: center !important;
+        margin-top: 15px !important;
+    }
+    
+    .payslip-header .btn {
+        width: 100% !important;
+        margin-bottom: 8px !important;
+    }
+    
+    .payslip-header .btn:last-child {
+        margin-bottom: 0 !important;
+    }
+}
+
+/* Ensure proper text wrapping */
+.calculation-row .col-8,
+.calculation-row .col-7,
+.calculation-row .col-6 {
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+}
+
+.calculation-row .col-4,
+.calculation-row .col-5 {
+    text-align: right !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+}
+
+/* Fix for very long employee names or department names */
+.info-card .col-sm-8 {
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    max-width: 100% !important;
+}
+
+/* Ensure badges don't break layout */
+.badge {
+    display: inline-block !important;
+    max-width: 100% !important;
+    word-wrap: break-word !important;
+}
+
+/* Fix for net salary card */
+.salary-summary .card {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.salary-summary .card-body {
+    padding: 1.5rem !important;
+}
+
+/* Print-specific fixes */
+@media print {
+    /* Ensure all content is visible */
+    * {
+        visibility: visible !important;
+    }
+    
+    /* Hide only specific elements */
+    .sidebar,
+    .navbar,
+    .breadcrumb,
+    .btn:not(.print-btn),
+    button:not(.print-btn),
+    nav,
+    .dropdown,
+    .modal,
+    .toast {
+        visibility: hidden !important;
+        display: none !important;
+    }
+    
+    /* Show printable content */
+    #printable-content,
+    #printable-content * {
+        visibility: visible !important;
+    }
+    
+    /* Ensure proper page layout */
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    .main-content {
+        margin: 0 !important;
+        width: 100% !important;
+        padding: 0 !important;
+    }
+    
+    .content-area {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+}
