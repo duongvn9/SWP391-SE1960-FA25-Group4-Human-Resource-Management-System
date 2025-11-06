@@ -176,14 +176,18 @@
                         <div class="page-header">
                             <div class="d-flex justify-content-between align-items-center">
                                 <h2 class="mb-0"><i class="fas fa-file-contract"></i> Contract Management</h2>
-                                <a href="${pageContext.request.contextPath}/contracts/create" class="btn btn-primary">
-                                    <i class="fas fa-plus"></i> Create New Contract
-                                </a>
+                                <!-- Only HR (position_id = 8) can create contracts -->
+                                <c:if test="${sessionScope.user.positionId == 8}">
+                                    <a href="${pageContext.request.contextPath}/contracts/create" class="btn btn-primary">
+                                        <i class="fas fa-plus"></i> Create New Contract
+                                    </a>
+                                </c:if>
                             </div>
                         </div>
 
                         <!-- Users Without Contract Section -->
-                        <c:if test="${not empty usersWithoutContract}">
+                        <!-- Only show to HR (position_id = 8) since only HR can create contracts -->
+                        <c:if test="${sessionScope.user.positionId == 8 && not empty usersWithoutContract}">
                             <div class="alert alert-info" role="alert">
                                 <div class="clickable-header" style="cursor: pointer;" data-bs-toggle="collapse"
                                     data-bs-target="#usersWithoutContractCollapse" aria-expanded="false"
@@ -454,21 +458,21 @@
                                                                 <!-- HRM Actions: Approve/Reject for PENDING approval_status -->
                                                                 <c:if
                                                                     test="${sessionScope.user.positionId == 7 && contract.approvalStatus == 'pending'}">
-                                                                
-                                                                <button type="button" class="btn btn-sm btn-success"
-                                                                    data-contract-id="${contract.id}"
-                                                                    data-contract-no="${contract.contractNo}"
-                                                                    onclick="showApproveModal(this.getAttribute('data-contract-id'), this.getAttribute('data-contract-no'))"
-                                                                    title="Approve">
-                                                                    <i class="fas fa-check"></i>
-                                                                </button>
-                                                                <button type="button" class="btn btn-sm btn-danger"
-                                                                    data-contract-id="${contract.id}"
-                                                                    data-contract-no="${contract.contractNo}"
-                                                                    onclick="showRejectModal(this.getAttribute('data-contract-id'), this.getAttribute('data-contract-no'))"
-                                                                    title="Reject">
-                                                                    <i class="fas fa-times"></i>
-                                                                </button>
+
+                                                                    <button type="button" class="btn btn-sm btn-success"
+                                                                        data-contract-id="${contract.id}"
+                                                                        data-contract-no="${contract.contractNo}"
+                                                                        onclick="showApproveModal(this.getAttribute('data-contract-id'), this.getAttribute('data-contract-no'))"
+                                                                        title="Approve">
+                                                                        <i class="fas fa-check"></i>
+                                                                    </button>
+                                                                    <button type="button" class="btn btn-sm btn-danger"
+                                                                        data-contract-id="${contract.id}"
+                                                                        data-contract-no="${contract.contractNo}"
+                                                                        onclick="showRejectModal(this.getAttribute('data-contract-id'), this.getAttribute('data-contract-no'))"
+                                                                        title="Reject">
+                                                                        <i class="fas fa-times"></i>
+                                                                    </button>
                                                                 </c:if>
 
                                                                 <!-- HR Actions: Edit for PENDING or REJECTED approval_status -->
