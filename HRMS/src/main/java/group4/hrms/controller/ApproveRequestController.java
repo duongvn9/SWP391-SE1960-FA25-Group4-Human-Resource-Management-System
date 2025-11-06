@@ -20,8 +20,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 /**
- * Controller for approving/rejecting requests
- * Can be used from request list page or request detail page
+ * Controller for approving/rejecting requests Can be used from request list
+ * page or request detail page
  */
 @WebServlet("/requests/approve")
 public class ApproveRequestController extends HttpServlet {
@@ -153,7 +153,7 @@ public class ApproveRequestController extends HttpServlet {
                 boolean isOverride = "REJECTED".equals(req.getStatus());
                 if (isOverride) {
                     logger.info(String.format("HR override detected: User %d overriding REJECTED request %d",
-                               currentUser.getId(), requestId));
+                            currentUser.getId(), requestId));
 
                     // IMPORTANT: When overriding REJECTED, need to re-validate for conflicts
                     // because the situation may have changed since rejection
@@ -170,25 +170,25 @@ public class ApproveRequestController extends HttpServlet {
                         group4.hrms.dao.UserDao userDao = new group4.hrms.dao.UserDao();
 
                         group4.hrms.service.OTRequestService otService = new group4.hrms.service.OTRequestService(
-                            requestDao, requestTypeDao, holidayDao, holidayCalendarDao, userDao
+                                requestDao, requestTypeDao, holidayDao, holidayCalendarDao, userDao
                         );
 
                         group4.hrms.dto.OTRequestDetail otDetail = req.getOtDetail();
                         if (otDetail != null) {
                             // Validate weekly, monthly, and annual limits
                             otService.validateOTBalance(
-                                req.getUserId(),
-                                otDetail.getOtDate(),
-                                otDetail.getOtHours()
+                                    req.getUserId(),
+                                    otDetail.getOtDate(),
+                                    otDetail.getOtHours()
                             );
 
                             // Check conflict with existing leave requests
                             // This is critical when approving, especially for override cases
                             otService.checkConflictWithLeave(
-                                req.getUserId(),
-                                otDetail.getOtDate(),
-                                otDetail.getStartTime(),
-                                otDetail.getEndTime()
+                                    req.getUserId(),
+                                    otDetail.getOtDate(),
+                                    otDetail.getStartTime(),
+                                    otDetail.getEndTime()
                             );
                         }
                     } catch (IllegalArgumentException e) {
@@ -208,7 +208,7 @@ public class ApproveRequestController extends HttpServlet {
                         group4.hrms.dao.RequestTypeDao requestTypeDao = new group4.hrms.dao.RequestTypeDao();
 
                         group4.hrms.service.LeaveRequestService leaveService = new group4.hrms.service.LeaveRequestService(
-                            requestDao, requestTypeDao, leaveTypeDao
+                                requestDao, requestTypeDao, leaveTypeDao
                         );
 
                         group4.hrms.dto.LeaveRequestDetail leaveDetail = req.getLeaveDetail();
@@ -227,10 +227,10 @@ public class ApproveRequestController extends HttpServlet {
 
                                 // Validate leave balance before approval
                                 leaveService.validateLeaveBalance(
-                                    req.getUserId(),
-                                    leaveDetail.getLeaveTypeCode(),
-                                    requestedDays,
-                                    year
+                                        req.getUserId(),
+                                        leaveDetail.getLeaveTypeCode(),
+                                        requestedDays,
+                                        year
                                 );
 
                                 // Check conflicts with OT and other leave requests
@@ -240,12 +240,12 @@ public class ApproveRequestController extends HttpServlet {
 
                                 // Validate all conflicts (OT + overlapping leaves)
                                 leaveService.validateLeaveConflictsForApproval(
-                                    req.getUserId(),
-                                    startDateTime,
-                                    endDateTime,
-                                    req.getId(), // exclude this request from overlap check
-                                    isHalfDay,
-                                    halfDayPeriod
+                                        req.getUserId(),
+                                        startDateTime,
+                                        endDateTime,
+                                        req.getId(), // exclude this request from overlap check
+                                        isHalfDay,
+                                        halfDayPeriod
                                 );
                             } catch (java.time.format.DateTimeParseException e) {
                                 logger.log(Level.WARNING, "Invalid date format in leave detail", e);
@@ -388,8 +388,8 @@ public class ApproveRequestController extends HttpServlet {
     }
 
     /**
-     * Xử lý duyệt đơn appeal
-     * Luồng: PENDING -> APPROVED hoặc REJECTED -> APPROVED (ghi đè)
+     * Xử lý duyệt đơn appeal Luồng: PENDING -> APPROVED hoặc REJECTED ->
+     * APPROVED (ghi đè)
      */
     private boolean processAppealApproval(Request request, Long approverAccountId, String reason) {
         logger.info("Processing appeal approval for request: " + request.getId());
@@ -414,8 +414,8 @@ public class ApproveRequestController extends HttpServlet {
     }
 
     /**
-     * Xử lý từ chối đơn appeal
-     * Luồng: PENDING -> REJECTED hoặc APPROVED -> REJECTED (ghi đè)
+     * Xử lý từ chối đơn appeal Luồng: PENDING -> REJECTED hoặc APPROVED ->
+     * REJECTED (ghi đè)
      */
     private boolean processAppealRejection(Request request, Long approverAccountId, String reason) {
         logger.info("Processing appeal rejection for request: " + request.getId());
@@ -518,8 +518,8 @@ public class ApproveRequestController extends HttpServlet {
     }
 
     /**
-     * Parse records từ JSON detail
-     * Xử lý cấu trúc JSON thực tế: records[].newRecord và records[].oldRecord
+     * Parse records từ JSON detail Xử lý cấu trúc JSON thực tế:
+     * records[].newRecord và records[].oldRecord
      */
     private java.util.List<AttendanceRecord> parseRecordsFromDetail(String detailJson) {
         java.util.List<AttendanceRecord> records = new java.util.ArrayList<>();
@@ -572,12 +572,12 @@ public class ApproveRequestController extends HttpServlet {
 
                         records.add(record);
 
-                        logger.info("Parsed attendance record: date=" + record.date +
-                                   ", newCheckIn=" + record.checkIn +
-                                   ", newCheckOut=" + record.checkOut +
-                                   ", oldCheckIn=" + record.oldCheckIn +
-                                   ", oldCheckOut=" + record.oldCheckOut +
-                                   ", source=" + record.source);
+                        logger.info("Parsed attendance record: date=" + record.date
+                                + ", newCheckIn=" + record.checkIn
+                                + ", newCheckOut=" + record.checkOut
+                                + ", oldCheckIn=" + record.oldCheckIn
+                                + ", oldCheckOut=" + record.oldCheckOut
+                                + ", source=" + record.source);
                     } else {
                         logger.warning("Record missing newRecord or oldRecord: " + recordObj.toString());
                     }
@@ -596,30 +596,31 @@ public class ApproveRequestController extends HttpServlet {
 
     /**
      * Cập nhật attendance log
+     *
      * @param attendanceLogDao DAO để cập nhật
      * @param record Record chứa thông tin
      * @param useNewTime true = dùng giờ mới, false = dùng giờ cũ
      */
     private boolean updateAttendanceLog(group4.hrms.dao.AttendanceLogDao attendanceLogDao,
-                                       AttendanceRecord record, boolean useNewTime) {
+            AttendanceRecord record, boolean useNewTime) {
         try {
             // Tìm attendance log hiện tại theo userId và date
             java.time.LocalDate date = java.time.LocalDate.parse(record.date);
-            java.util.List<group4.hrms.model.AttendanceLog> existingLogs =
-                attendanceLogDao.findByUserIdAndDate(record.userId, date);
+            java.util.List<group4.hrms.model.AttendanceLog> existingLogs
+                    = attendanceLogDao.findByUserIdAndDate(record.userId, date);
 
             logger.info("Found " + existingLogs.size() + " existing logs for userId=" + record.userId + ", date=" + date);
 
             // Cập nhật cả check-in và check-out vì appeal thường sửa cả hai
             // Kiểm tra có dữ liệu check-in không
-            if (record.checkIn != null && !record.checkIn.trim().isEmpty() &&
-                record.oldCheckIn != null && !record.oldCheckIn.trim().isEmpty()) {
+            if (record.checkIn != null && !record.checkIn.trim().isEmpty()
+                    && record.oldCheckIn != null && !record.oldCheckIn.trim().isEmpty()) {
                 updateCheckInLog(attendanceLogDao, existingLogs, record, useNewTime);
             }
 
             // Kiểm tra có dữ liệu check-out không
-            if (record.checkOut != null && !record.checkOut.trim().isEmpty() &&
-                record.oldCheckOut != null && !record.oldCheckOut.trim().isEmpty()) {
+            if (record.checkOut != null && !record.checkOut.trim().isEmpty()
+                    && record.oldCheckOut != null && !record.oldCheckOut.trim().isEmpty()) {
                 updateCheckOutLog(attendanceLogDao, existingLogs, record, useNewTime);
             }
 
@@ -635,14 +636,14 @@ public class ApproveRequestController extends HttpServlet {
      * Cập nhật check-in log
      */
     private void updateCheckInLog(group4.hrms.dao.AttendanceLogDao attendanceLogDao,
-                                 java.util.List<group4.hrms.model.AttendanceLog> existingLogs,
-                                 AttendanceRecord record, boolean useNewTime) {
+            java.util.List<group4.hrms.model.AttendanceLog> existingLogs,
+            AttendanceRecord record, boolean useNewTime) {
         try {
             // Tìm log check-in hiện tại
             group4.hrms.model.AttendanceLog checkInLog = existingLogs.stream()
-                .filter(log -> "IN".equals(log.getCheckType()))
-                .findFirst()
-                .orElse(null);
+                    .filter(log -> "IN".equals(log.getCheckType()))
+                    .findFirst()
+                    .orElse(null);
 
             String timeToUse = useNewTime ? record.checkIn : record.oldCheckIn;
             if (timeToUse == null || timeToUse.trim().isEmpty()) {
@@ -686,14 +687,14 @@ public class ApproveRequestController extends HttpServlet {
      * Cập nhật check-out log
      */
     private void updateCheckOutLog(group4.hrms.dao.AttendanceLogDao attendanceLogDao,
-                                  java.util.List<group4.hrms.model.AttendanceLog> existingLogs,
-                                  AttendanceRecord record, boolean useNewTime) {
+            java.util.List<group4.hrms.model.AttendanceLog> existingLogs,
+            AttendanceRecord record, boolean useNewTime) {
         try {
             // Tìm log check-out hiện tại
             group4.hrms.model.AttendanceLog checkOutLog = existingLogs.stream()
-                .filter(log -> "OUT".equals(log.getCheckType()))
-                .findFirst()
-                .orElse(null);
+                    .filter(log -> "OUT".equals(log.getCheckType()))
+                    .findFirst()
+                    .orElse(null);
 
             String timeToUse = useNewTime ? record.checkOut : record.oldCheckOut;
             if (timeToUse == null || timeToUse.trim().isEmpty()) {
@@ -773,6 +774,7 @@ public class ApproveRequestController extends HttpServlet {
      * Inner class để represent attendance record từ JSON
      */
     private static class AttendanceRecord {
+
         public Long userId;
         public String date;
         public String status; // IN/OUT/BOTH
@@ -785,21 +787,21 @@ public class ApproveRequestController extends HttpServlet {
 
         @Override
         public String toString() {
-            return "AttendanceRecord{" +
-                    "userId=" + userId +
-                    ", date='" + date + '\'' +
-                    ", status='" + status + '\'' +
-                    ", checkIn='" + checkIn + '\'' +
-                    ", checkOut='" + checkOut + '\'' +
-                    ", oldCheckIn='" + oldCheckIn + '\'' +
-                    ", oldCheckOut='" + oldCheckOut + '\'' +
-                    '}';
+            return "AttendanceRecord{"
+                    + "userId=" + userId
+                    + ", date='" + date + '\''
+                    + ", status='" + status + '\''
+                    + ", checkIn='" + checkIn + '\''
+                    + ", checkOut='" + checkOut + '\''
+                    + ", oldCheckIn='" + oldCheckIn + '\''
+                    + ", oldCheckOut='" + oldCheckOut + '\''
+                    + '}';
         }
     }
 
     /**
-     * Validate appeal request for time conflicts before approval
-     * Kiểm tra xung đột thời gian giữa giờ mới trong appeal với attendance logs hiện tại
+     * Validate appeal request for time conflicts before approval Kiểm tra xung
+     * đột thời gian giữa giờ mới trong appeal với attendance logs hiện tại
      */
     private String validateAppealTimeConflicts(Request request) {
         logger.info("Validating appeal time conflicts for request: " + request.getId());
@@ -834,13 +836,13 @@ public class ApproveRequestController extends HttpServlet {
      * Validate một record cho time conflicts
      */
     private String validateSingleRecordTimeConflict(group4.hrms.dao.AttendanceLogDao attendanceLogDao,
-                                                   AttendanceRecord record) {
+            AttendanceRecord record) {
         try {
             java.time.LocalDate date = java.time.LocalDate.parse(record.date);
 
             // Lấy tất cả attendance logs trong ngày
-            java.util.List<group4.hrms.model.AttendanceLog> existingLogs =
-                attendanceLogDao.findByUserIdAndDate(record.userId, date);
+            java.util.List<group4.hrms.model.AttendanceLog> existingLogs
+                    = attendanceLogDao.findByUserIdAndDate(record.userId, date);
 
             // Parse thời gian mới từ appeal
             java.time.LocalDateTime newCheckIn = null;
@@ -860,31 +862,31 @@ public class ApproveRequestController extends HttpServlet {
                 String existingType = existingLog.getCheckType();
 
                 // Skip nếu đây là log sẽ được update (cùng type)
-                if (("IN".equals(existingType) && newCheckIn != null) ||
-                    ("OUT".equals(existingType) && newCheckOut != null)) {
+                if (("IN".equals(existingType) && newCheckIn != null)
+                        || ("OUT".equals(existingType) && newCheckOut != null)) {
                     continue; // Sẽ được replace, không cần check conflict
                 }
 
                 // Kiểm tra xung đột thời gian
                 if (newCheckIn != null && isTimeConflict(newCheckIn, existingTime)) {
-                    return "New check-in time " + newCheckIn.toLocalTime() +
-                           " conflicts with existing " + existingType.toLowerCase() +
-                           " at " + existingTime.toLocalTime() + " on " + record.date;
+                    return "New check-in time " + newCheckIn.toLocalTime()
+                            + " conflicts with existing " + existingType.toLowerCase()
+                            + " at " + existingTime.toLocalTime() + " on " + record.date;
                 }
 
                 if (newCheckOut != null && isTimeConflict(newCheckOut, existingTime)) {
-                    return "New check-out time " + newCheckOut.toLocalTime() +
-                           " conflicts with existing " + existingType.toLowerCase() +
-                           " at " + existingTime.toLocalTime() + " on " + record.date;
+                    return "New check-out time " + newCheckOut.toLocalTime()
+                            + " conflicts with existing " + existingType.toLowerCase()
+                            + " at " + existingTime.toLocalTime() + " on " + record.date;
                 }
             }
 
             // Kiểm tra logic thời gian: check-in phải trước check-out
             if (newCheckIn != null && newCheckOut != null) {
                 if (!newCheckIn.isBefore(newCheckOut)) {
-                    return "Check-in time (" + newCheckIn.toLocalTime() +
-                           ") must be before check-out time (" + newCheckOut.toLocalTime() +
-                           ") on " + record.date;
+                    return "Check-in time (" + newCheckIn.toLocalTime()
+                            + ") must be before check-out time (" + newCheckOut.toLocalTime()
+                            + ") on " + record.date;
                 }
             }
 
@@ -933,13 +935,13 @@ public class ApproveRequestController extends HttpServlet {
      * Validate một record cho reject conflicts (khôi phục thời gian cũ)
      */
     private String validateSingleRecordRejectConflict(group4.hrms.dao.AttendanceLogDao attendanceLogDao,
-                                                     AttendanceRecord record) {
+            AttendanceRecord record) {
         try {
             java.time.LocalDate date = java.time.LocalDate.parse(record.date);
 
             // Lấy tất cả attendance logs trong ngày
-            java.util.List<group4.hrms.model.AttendanceLog> existingLogs =
-                attendanceLogDao.findByUserIdAndDate(record.userId, date);
+            java.util.List<group4.hrms.model.AttendanceLog> existingLogs
+                    = attendanceLogDao.findByUserIdAndDate(record.userId, date);
 
             // Parse thời gian CŨ từ appeal (sẽ được khôi phục)
             java.time.LocalDateTime oldCheckIn = null;
@@ -959,31 +961,31 @@ public class ApproveRequestController extends HttpServlet {
                 String existingType = existingLog.getCheckType();
 
                 // Skip nếu đ là log sẽ được restore (cùng type)
-                if (("IN".equals(existingType) && oldCheckIn != null) ||
-                    ("OUT".equals(existingType) && oldCheckOut != null)) {
+                if (("IN".equals(existingType) && oldCheckIn != null)
+                        || ("OUT".equals(existingType) && oldCheckOut != null)) {
                     continue; // Sẽ được restore, không cần check conflict
                 }
 
                 // Kiểm tra xung đột thời gian khi khôi phục
                 if (oldCheckIn != null && isTimeConflict(oldCheckIn, existingTime)) {
-                    return "Cannot restore old check-in time " + oldCheckIn.toLocalTime() +
-                           " - conflicts with existing " + existingType.toLowerCase() +
-                           " at " + existingTime.toLocalTime() + " on " + record.date;
+                    return "Cannot restore old check-in time " + oldCheckIn.toLocalTime()
+                            + " - conflicts with existing " + existingType.toLowerCase()
+                            + " at " + existingTime.toLocalTime() + " on " + record.date;
                 }
 
                 if (oldCheckOut != null && isTimeConflict(oldCheckOut, existingTime)) {
-                    return "Cannot restore old check-out time " + oldCheckOut.toLocalTime() +
-                           " - conflicts with existing " + existingType.toLowerCase() +
-                           " at " + existingTime.toLocalTime() + " on " + record.date;
+                    return "Cannot restore old check-out time " + oldCheckOut.toLocalTime()
+                            + " - conflicts with existing " + existingType.toLowerCase()
+                            + " at " + existingTime.toLocalTime() + " on " + record.date;
                 }
             }
 
             // Kiểm tra logic thời gian cũ: check-in phải trước check-out
             if (oldCheckIn != null && oldCheckOut != null) {
                 if (!oldCheckIn.isBefore(oldCheckOut)) {
-                    return "Cannot restore - old check-in time (" + oldCheckIn.toLocalTime() +
-                           ") must be before old check-out time (" + oldCheckOut.toLocalTime() +
-                           ") on " + record.date;
+                    return "Cannot restore - old check-in time (" + oldCheckIn.toLocalTime()
+                            + ") must be before old check-out time (" + oldCheckOut.toLocalTime()
+                            + ") on " + record.date;
                 }
             }
 
@@ -1032,6 +1034,7 @@ public class ApproveRequestController extends HttpServlet {
 
     /**
      * Update appealStatus trong JSON detail của request
+     *
      * @param request Request cần update
      * @param newStatus Status mới (APPROVED, REJECTED, PENDING)
      */
