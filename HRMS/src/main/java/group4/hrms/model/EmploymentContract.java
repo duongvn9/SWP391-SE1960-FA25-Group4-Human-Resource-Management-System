@@ -187,10 +187,13 @@ public class EmploymentContract {
     }
 
     // Additional business methods (safe to add)
-    public boolean canBeEditedBy(Long accountId) {
-        // Basic logic - can be edited by creator or if pending approval
-        return "pending".equals(approvalStatus) &&
-               (createdByAccountId != null && createdByAccountId.equals(accountId));
+    public boolean canBeEditedBy(Long userId) {
+        // Only PENDING and REJECTED contracts can be edited, and only by the creator
+        if ("pending".equals(approvalStatus) || "rejected".equals(approvalStatus)) {
+            return createdByAccountId != null && createdByAccountId.equals(userId);
+        }
+        // Other statuses cannot be edited
+        return false;
     }
 
     public boolean canBeApproved() {
