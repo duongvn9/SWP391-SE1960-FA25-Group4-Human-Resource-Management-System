@@ -706,6 +706,34 @@
                 transform: translateY(0);
             }
         }
+
+        /* Error Toast Styles */
+        .toast {
+            min-width: 350px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            border-radius: 10px;
+            animation: slideInRight 0.4s ease-out;
+        }
+
+        .toast.bg-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+        }
+
+        .toast-body {
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
     </style>
 </head>
 
@@ -1233,7 +1261,40 @@
         </div>
     </div>
 
+    <!-- Error Notification Toast -->
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 11000;">
+        <div id="errorToast" class="toast align-items-center text-white bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body" style="color: white !important;">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <span id="errorMessage" style="color: white !important;">An error occurred</span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // Function to show error toast notification
+        function showErrorToast(message) {
+            var errorMessage = document.getElementById('errorMessage');
+            var errorToast = document.getElementById('errorToast');
+            
+            if (errorMessage && errorToast) {
+                // Check if it's the duplicate email error and show specific message
+                if (message.includes('already applied') || message.includes('duplicate') || message.includes('email can only submit one')) {
+                    errorMessage.textContent = 'You have already applied for this position with this email address. Each email can only submit one application per job.';
+                } else {
+                    errorMessage.textContent = message;
+                }
+                var toast = new bootstrap.Toast(errorToast, {
+                    autohide: true,
+                    delay: 5000
+                });
+                toast.show();
+            }
+        }
+
         function showApplicationModal(jobId, jobTitle) {
             // Set job information
             document.getElementById('jobId').value = jobId;
@@ -1301,14 +1362,14 @@
         function submitApplication() {
             var form = document.getElementById('applicationForm');
             if (!form) {
-                alert('Form not found!');
+                showErrorToast('Form not found!');
                 return;
             }
 
             // Get submit button
             var submitBtn = document.querySelector('button[onclick="submitApplication()"]');
             if (!submitBtn) {
-                alert('Submit button not found!');
+                showErrorToast('Submit button not found!');
                 return;
             }
 
@@ -1317,14 +1378,14 @@
                 var resumeUrl = document.getElementById('resumeUrl') ? document.getElementById('resumeUrl').value : '';
 
                 if (!resumeUrl || resumeUrl.trim() === '') {
-                    alert('Please provide a link to your resume');
+                    showErrorToast('Please provide a link to your resume');
                     return;
                 }
 
                 // CCCD validation (required)
                 var cccdNumber = document.getElementById('cccd').value;
                 if (!cccdNumber || cccdNumber.trim() === '') {
-                    alert('CCCD number is required. Please upload CCCD image and extract information.');
+                    showErrorToast('CCCD number is required. Please upload CCCD image and extract information.');
                     return;
                 }
 
@@ -1338,12 +1399,12 @@
                 var cccdBack = document.getElementById('cccdBack') ? document.getElementById('cccdBack').files[0] : null;
 
                 if (cccdFront && cccdFront.size > 5 * 1024 * 1024) {
-                    alert('CCCD front image size must be less than 5MB');
+                    showErrorToast('CCCD front image size must be less than 5MB');
                     return;
                 }
 
                 if (cccdBack && cccdBack.size > 5 * 1024 * 1024) {
-                    alert('CCCD back image size must be less than 5MB');
+                    showErrorToast('CCCD back image size must be less than 5MB');
                     return;
                 }
 
@@ -1366,9 +1427,9 @@
                         return response.text().then(function (errorText) {
                             try {
                                 var errorData = JSON.parse(errorText);
-                                throw new Error('Server Error (' + response.status + '): ' + (errorData.message || 'Unknown error'));
+                                throw new Error(errorData.message || 'Unknown error');
                             } catch (e) {
-                                throw new Error('Server Error (' + response.status + '): ' + errorText);
+                                throw new Error(errorText);
                             }
                         });
                     }
@@ -1392,7 +1453,7 @@
                             successModal.show();
                         }
                     } else {
-                        alert('Error: ' + data.message);
+                        showErrorToast(data.message);
                     }
                 })
                 .catch(function (error) {
@@ -1402,11 +1463,11 @@
                     submitBtn.innerHTML = originalText;
                     submitBtn.disabled = false;
 
-                    alert('An error occurred while submitting your application. Please try again.\nError: ' + error.message);
+                    showErrorToast(error.message);
                 });
 
             } catch (error) {
-                alert('JavaScript error: ' + error.message);
+                showErrorToast('JavaScript error: ' + error.message);
             }
         }
 
@@ -1423,13 +1484,13 @@
             }
 
             if (!allowedTypes.includes(file.type)) {
-                alert('Please select a valid image format (JPG, PNG)');
+                showErrorToast('Please select a valid image format (JPG, PNG)');
                 clearImagePreview();
                 return false;
             }
 
             if (file.size > maxSize) {
-                alert('File size must be less than 10MB');
+                showErrorToast('File size must be less than 10MB');
                 clearImagePreview();
                 return false;
             }
@@ -1443,7 +1504,7 @@
             var file = fileInput.files[0];
 
             if (!file) {
-                alert('Please select a CCCD image first');
+                showErrorToast('Please select a CCCD image first');
                 return;
             }
 
@@ -1474,7 +1535,7 @@
                 document.getElementById('ocrStatus').style.display = 'none';
 
                 if (data.error) {
-                    alert('OCR Error: ' + data.message);
+                    showErrorToast('OCR Error: ' + data.message);
                     return;
                 }
 
@@ -1515,7 +1576,7 @@
                 document.getElementById('ocrStatus').style.display = 'none';
 
                 console.error('OCR Error:', error);
-                alert('An error occurred while processing the image. Please try again.');
+                showErrorToast('An error occurred while processing the image. Please try again.');
             });
         }
 
