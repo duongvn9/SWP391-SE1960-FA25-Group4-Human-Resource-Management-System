@@ -1,30 +1,72 @@
 /**
- * Detail Payslip Page JavaScript
- * Handles responsive behavior and interactions
+ * Detail Payslip Page JavaScript - Clean Version
+ * Handles responsive behavior and simple print functionality
  */
+
+// Simple print function that doesn't modify screen
+window.printPayslip = function() {
+    console.log('Simple print function called');
+    
+    const printBtn = document.querySelector('.print-btn');
+    
+    // Show loading state
+    if (printBtn) {
+        printBtn.classList.add('loading');
+        printBtn.disabled = true;
+    }
+
+    try {
+        // Just print without any modifications
+        setTimeout(() => {
+            console.log('Triggering print dialog...');
+            window.print();
+            
+            // Clean up loading state
+            if (printBtn) {
+                printBtn.classList.remove('loading');
+                printBtn.disabled = false;
+            }
+            console.log('Print completed');
+        }, 300);
+        
+    } catch (error) {
+        console.error('Print error:', error);
+        alert('Có lỗi xảy ra khi in payslip. Vui lòng thử lại.');
+        
+        if (printBtn) {
+            printBtn.classList.remove('loading');
+            printBtn.disabled = false;
+        }
+    }
+};
+
+// Debug log to confirm function is loaded
+console.log('PrintPayslip function loaded and available globally:', typeof window.printPayslip);
 
 document.addEventListener('DOMContentLoaded', function () {
     // Initialize page
     initializePayslipDetail();
-    
     // Handle responsive behavior
     handleResponsiveBehavior();
-    
+
     // Add smooth animations
     addSmoothAnimations();
     
-    // Handle print functionality
-    handlePrintFunctionality();
+    // Debug: Ensure printPayslip function is available
+    console.log('Enhanced PrintPayslip function loaded:', typeof window.printPayslip === 'function');
 });
 
 /**
  * Initialize payslip detail page
  */
 function initializePayslipDetail() {
+    // Fix net salary display
+    fixNetSalaryDisplay();
+
     // Add loading states to buttons
     const buttons = document.querySelectorAll('.btn');
     buttons.forEach(button => {
-        button.addEventListener('click', function(e) {
+        button.addEventListener('click', function () {
             if (this.href || this.type === 'submit') {
                 this.classList.add('loading');
                 setTimeout(() => {
@@ -33,15 +75,15 @@ function initializePayslipDetail() {
             }
         });
     });
-    
+
     // Add hover effects to calculation rows (removed translateX to prevent horizontal scroll)
     const calculationRows = document.querySelectorAll('.calculation-row');
     calculationRows.forEach(row => {
-        row.addEventListener('mouseenter', function() {
+        row.addEventListener('mouseenter', function () {
             this.style.backgroundColor = '#f9fafb';
         });
-        
-        row.addEventListener('mouseleave', function() {
+
+        row.addEventListener('mouseleave', function () {
             this.style.backgroundColor = '';
         });
     });
@@ -52,10 +94,10 @@ function initializePayslipDetail() {
  */
 function handleResponsiveBehavior() {
     // Handle window resize
-    window.addEventListener('resize', function() {
+    window.addEventListener('resize', function () {
         adjustLayoutForScreenSize();
     });
-    
+
     // Initial adjustment
     adjustLayoutForScreenSize();
 }
@@ -67,17 +109,17 @@ function adjustLayoutForScreenSize() {
     const screenWidth = window.innerWidth;
     const payslipHeader = document.querySelector('.payslip-header');
     const infoCards = document.querySelectorAll('.info-card');
-    
+
     if (screenWidth <= 768) {
         // Mobile adjustments
         if (payslipHeader) {
             payslipHeader.classList.add('mobile-header');
         }
-        
+
         infoCards.forEach(card => {
             card.classList.add('mobile-card');
         });
-        
+
         // Adjust calculation rows for mobile
         const calculationRows = document.querySelectorAll('.calculation-row .row');
         calculationRows.forEach(row => {
@@ -94,7 +136,7 @@ function adjustLayoutForScreenSize() {
         if (payslipHeader) {
             payslipHeader.classList.remove('mobile-header');
         }
-        
+
         infoCards.forEach(card => {
             card.classList.remove('mobile-card');
         });
@@ -110,8 +152,8 @@ function addSmoothAnimations() {
         threshold: 0.1,
         rootMargin: '0px 0px -50px 0px'
     };
-    
-    const observer = new IntersectionObserver(function(entries) {
+
+    const observer = new IntersectionObserver(function (entries) {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.style.opacity = '1';
@@ -119,7 +161,7 @@ function addSmoothAnimations() {
             }
         });
     }, observerOptions);
-    
+
     // Observe all info cards
     const infoCards = document.querySelectorAll('.info-card');
     infoCards.forEach(card => {
@@ -128,14 +170,14 @@ function addSmoothAnimations() {
         card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
         observer.observe(card);
     });
-    
+
     // Animate payslip header
     const payslipHeader = document.querySelector('.payslip-header');
     if (payslipHeader) {
         payslipHeader.style.opacity = '0';
         payslipHeader.style.transform = 'translateY(-20px)';
         payslipHeader.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
-        
+
         setTimeout(() => {
             payslipHeader.style.opacity = '1';
             payslipHeader.style.transform = 'translateY(0)';
@@ -144,30 +186,52 @@ function addSmoothAnimations() {
 }
 
 /**
- * Handle print functionality
+ * Fix net salary display to ensure correct calculation
  */
-function handlePrintFunctionality() {
-    // Add print button if needed
-    const payslipHeader = document.querySelector('.payslip-header .col-md-4');
-    if (payslipHeader) {
-        const printButton = document.createElement('button');
-        printButton.className = 'btn btn-light ms-2';
-        printButton.innerHTML = '<i class="fas fa-print me-1"></i> Print';
-        printButton.addEventListener('click', function() {
-            window.print();
-        });
-        
-        payslipHeader.appendChild(printButton);
+function fixNetSalaryDisplay() {
+    // Get gross income and total deductions from the page
+    let grossAmount = 0;
+    let totalDeductions = 0;
+
+    // Find gross income
+    const grossElements = document.querySelectorAll('*');
+    for (let element of grossElements) {
+        if (element.textContent && element.textContent.includes('Gross Income')) {
+            const parent = element.closest('.calculation-row, .row');
+            if (parent) {
+                const amountElement = parent.querySelector('.text-end');
+                if (amountElement && amountElement.textContent.includes('VND')) {
+                    const amountText = amountElement.textContent.replace(/[^\d.,]/g, '').replace(/,/g, '');
+                    grossAmount = parseFloat(amountText) || 0;
+                    break;
+                }
+            }
+        }
     }
-    
-    // Handle print styles
-    window.addEventListener('beforeprint', function() {
-        document.body.classList.add('printing');
-    });
-    
-    window.addEventListener('afterprint', function() {
-        document.body.classList.remove('printing');
-    });
+
+    // Find total deductions
+    for (let element of grossElements) {
+        if (element.textContent && element.textContent.includes('Total Deductions')) {
+            const parent = element.closest('.calculation-row, .row');
+            if (parent) {
+                const amountElement = parent.querySelector('.text-end');
+                if (amountElement && amountElement.textContent.includes('VND')) {
+                    const amountText = amountElement.textContent.replace(/[^\d.,]/g, '').replace(/,/g, '');
+                    totalDeductions = parseFloat(amountText) || 0;
+                    break;
+                }
+            }
+        }
+    }
+
+    // Calculate and update net salary if we have valid amounts
+    if (grossAmount > 0) {
+        const netAmount = grossAmount - totalDeductions;
+        const netSalaryElement = document.getElementById('net-salary-amount');
+        if (netSalaryElement && netAmount > 0) {
+            netSalaryElement.innerHTML = formatCurrency(netAmount);
+        }
+    }
 }
 
 /**
@@ -175,11 +239,9 @@ function handlePrintFunctionality() {
  */
 function formatCurrency(value) {
     return new Intl.NumberFormat('vi-VN', {
-        style: 'currency',
-        currency: 'VND',
         minimumFractionDigits: 0,
         maximumFractionDigits: 0
-    }).format(value);
+    }).format(value) + ' VND';
 }
 
 /**
@@ -208,7 +270,7 @@ function showToast(message, type = 'info') {
     toast.setAttribute('role', 'alert');
     toast.setAttribute('aria-live', 'assertive');
     toast.setAttribute('aria-atomic', 'true');
-    
+
     toast.innerHTML = `
         <div class="d-flex">
             <div class="toast-body">
@@ -217,7 +279,7 @@ function showToast(message, type = 'info') {
             <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
         </div>
     `;
-    
+
     // Add to page
     let toastContainer = document.querySelector('.toast-container');
     if (!toastContainer) {
@@ -225,15 +287,31 @@ function showToast(message, type = 'info') {
         toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
         document.body.appendChild(toastContainer);
     }
-    
+
     toastContainer.appendChild(toast);
-    
-    // Show toast
-    const bsToast = new bootstrap.Toast(toast);
-    bsToast.show();
-    
+
+    // Show toast with fallback for bootstrap
+    try {
+        if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
+        } else {
+            // Fallback: just show the toast
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.remove();
+            }, 5000);
+        }
+    } catch (e) {
+        console.warn('Bootstrap Toast not available, using fallback');
+        toast.style.display = 'block';
+        setTimeout(() => {
+            toast.remove();
+        }, 5000);
+    }
+
     // Remove after hide
-    toast.addEventListener('hidden.bs.toast', function() {
+    toast.addEventListener('hidden.bs.toast', function () {
         toast.remove();
     });
 }
@@ -241,7 +319,7 @@ function showToast(message, type = 'info') {
 /**
  * Handle errors gracefully
  */
-window.addEventListener('error', function(event) {
+window.addEventListener('error', function (event) {
     console.error('Detail Payslip Error:', event.error);
     // Could show user-friendly error message here
 });
@@ -253,26 +331,28 @@ window.PayslipDetail = {
     formatCurrency,
     showLoading,
     hideLoading,
-    showToast
-};/**
+    showToast,
+    printPayslip
+};
 
+/**
  * Handle sidebar toggle for proper layout
  */
 function handleSidebarLayout() {
     // Check if sidebar toggle exists
-    const sidebarToggle = document.querySelector('[data-bs-toggle="sidebar"]') || 
-                         document.querySelector('.sidebar-toggle') ||
-                         document.querySelector('#sidebarToggle');
-    
+    const sidebarToggle = document.querySelector('[data-bs-toggle="sidebar"]') ||
+            document.querySelector('.sidebar-toggle') ||
+            document.querySelector('#sidebarToggle');
+
     if (sidebarToggle) {
-        sidebarToggle.addEventListener('click', function() {
+        sidebarToggle.addEventListener('click', function () {
             // Add a small delay to allow sidebar animation to complete
             setTimeout(() => {
                 adjustMainContentLayout();
             }, 300);
         });
     }
-    
+
     // Initial layout adjustment
     adjustMainContentLayout();
 }
@@ -283,14 +363,15 @@ function handleSidebarLayout() {
 function adjustMainContentLayout() {
     const mainContent = document.querySelector('.main-content');
     const sidebar = document.querySelector('.sidebar') || document.querySelector('.main-sidebar');
-    
-    if (!mainContent) return;
-    
+
+    if (!mainContent)
+        return;
+
     // Check if sidebar is collapsed
     const isCollapsed = document.body.classList.contains('sidebar-collapsed') ||
-                       document.body.classList.contains('sidebar-mini') ||
-                       (sidebar && sidebar.classList.contains('collapsed'));
-    
+            document.body.classList.contains('sidebar-mini') ||
+            (sidebar && sidebar.classList.contains('collapsed'));
+
     if (isCollapsed) {
         mainContent.style.marginLeft = '70px';
         mainContent.style.width = 'calc(100% - 70px)';
@@ -298,7 +379,7 @@ function adjustMainContentLayout() {
         mainContent.style.marginLeft = '250px';
         mainContent.style.width = 'calc(100% - 250px)';
     }
-    
+
     // On mobile, remove margins
     if (window.innerWidth <= 768) {
         mainContent.style.marginLeft = '0';
@@ -307,11 +388,11 @@ function adjustMainContentLayout() {
 }
 
 // Initialize sidebar layout handling
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     handleSidebarLayout();
-    
+
     // Handle window resize
-    window.addEventListener('resize', function() {
+    window.addEventListener('resize', function () {
         adjustMainContentLayout();
     });
 });

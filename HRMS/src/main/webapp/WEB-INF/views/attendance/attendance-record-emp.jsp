@@ -52,6 +52,8 @@
                                             : '' }>Late & Early Leave</option>
                                         <option value="Over Time" ${status=='Over Time' ? 'selected' : '' }>Over Time
                                         </option>
+                                        <option value="Outside Working Hours" ${status=='Outside Working Hours' ? 'selected' : '' }>Outside Working Hours
+                                        </option>
                                         <option value="Invalid" ${status=='Invalid' ? 'selected' : '' }>Invalid</option>
                                     </select>
                                 </div>

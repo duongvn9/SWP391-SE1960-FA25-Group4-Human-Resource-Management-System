@@ -833,3 +833,105 @@ document.addEventListener("DOMContentLoaded", function () {
         return hasValidSelection;
     }
 });
+
+// ===== SIMPLE DROPDOWN FIX =====
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        console.log('=== FIXING DROPDOWN ===');
+        
+        const dropdownToggles = document.querySelectorAll('[data-bs-toggle="dropdown"]');
+        console.log('Found dropdown toggles:', dropdownToggles.length);
+        
+        dropdownToggles.forEach((toggle, index) => {
+            // Check if dropdown already has an instance
+            let existingInstance = bootstrap.Dropdown.getInstance(toggle);
+            
+            if (existingInstance) {
+                console.log(`Dropdown ${index + 1} already initialized, disposing...`);
+                existingInstance.dispose();
+            }
+            
+            // Remove the problematic data-bs-auto-close="outside" attribute
+            toggle.removeAttribute('data-bs-auto-close');
+            
+            // Create new instance with default behavior
+            const newInstance = new bootstrap.Dropdown(toggle);
+            
+            // Ensure the toggle element is properly configured
+            toggle.setAttribute('role', 'button');
+            toggle.setAttribute('aria-haspopup', 'true');
+            toggle.setAttribute('aria-expanded', 'false');
+            
+            console.log(`✅ Fixed dropdown ${index + 1}:`, {
+                element: toggle,
+                instance: newInstance,
+                autoClose: 'default (true)'
+            });
+            
+            // Add Bootstrap event listeners for debugging
+            toggle.addEventListener('show.bs.dropdown', function(e) {
+                console.log(`🔽 Dropdown ${index + 1} showing...`);
+            });
+            
+            toggle.addEventListener('shown.bs.dropdown', function(e) {
+                console.log(`✅ Dropdown ${index + 1} shown!`);
+            });
+            
+            toggle.addEventListener('hide.bs.dropdown', function(e) {
+                console.log(`🔼 Dropdown ${index + 1} hiding...`);
+            });
+            
+            toggle.addEventListener('hidden.bs.dropdown', function(e) {
+                console.log(`❌ Dropdown ${index + 1} hidden!`);
+            });
+            
+            // Add click test and ensure proper event handling
+            toggle.addEventListener('click', function(e) {
+                console.log(`Dropdown ${index + 1} clicked:`, {
+                    target: e.target.tagName,
+                    currentTarget: e.currentTarget.tagName,
+                    instance: bootstrap.Dropdown.getInstance(toggle),
+                    defaultPrevented: e.defaultPrevented
+                });
+                
+                // Ensure the click is not prevented by other scripts
+                if (e.defaultPrevented) {
+                    console.log('Click was prevented, manually toggling dropdown...');
+                    const instance = bootstrap.Dropdown.getInstance(toggle);
+                    if (instance) {
+                        instance.toggle();
+                    }
+                }
+            });
+        });
+        
+        console.log('=== DROPDOWN FIX COMPLETE ===');
+        
+        // Add global test function
+        window.testDropdown = function() {
+            const dropdown = document.querySelector('[data-bs-toggle="dropdown"]');
+            if (dropdown) {
+                const instance = bootstrap.Dropdown.getInstance(dropdown);
+                console.log('Testing dropdown:', {
+                    element: dropdown,
+                    instance: instance,
+                    isShown: dropdown.classList.contains('show')
+                });
+                
+                if (instance) {
+                    if (dropdown.classList.contains('show')) {
+                        instance.hide();
+                        console.log('Hiding dropdown...');
+                    } else {
+                        instance.show();
+                        console.log('Showing dropdown...');
+                    }
+                } else {
+                    console.error('No dropdown instance found!');
+                }
+            }
+        };
+        
+        console.log('Run testDropdown() to manually test');
+    }, 300); // Increase delay to ensure no conflicts
+});

@@ -45,16 +45,17 @@
 ----------------------------*/
 .filter-form {
     display: flex;
-    flex-wrap: nowrap;          /* Luôn giữ trên 1 hàng */
-    gap: 0.5rem;                /* Giảm khoảng cách giữa các ô */
+    flex-wrap: nowrap;          /* LUÔN giữ trên 1 hàng */
+    gap: 0.4rem;                
     background: #fff;
-    padding: 0.75rem;
+    padding: 0.6rem;
     border-radius: var(--radius);
     box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-    overflow-x: auto;           /* Cho phép cuộn ngang nếu quá hẹp */
+    overflow-x: auto;           /* Cho phép cuộn ngang khi cần */
     align-items: flex-end;
-    justify-content: center;
+    justify-content: flex-start;
     scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
 }
 
 /* Mỗi filter co giãn linh hoạt */
@@ -62,9 +63,9 @@
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    flex: 1 1 110px;            /* Có thể co nhỏ xuống 110px khi hẹp */
-    min-width: 100px;           /* Giới hạn nhỏ nhất */
-    max-width: 180px;           /* Không quá to */
+    flex: 0 0 auto;             /* Không co giãn, giữ kích thước cố định */
+    min-width: 120px;           /* Kích thước tối thiểu */
+    width: 140px;               /* Kích thước cố định */
 }
 
 .filter-label {
@@ -98,6 +99,7 @@
     gap: 0.4rem;
     align-items: flex-end;
     flex: 0 0 auto;
+    min-width: 120px;
 }
 
 /* Giảm kích thước nút */
@@ -472,32 +474,354 @@
 }
 
 /* ---------------------------
-   RESPONSIVE
+   RESPONSIVE DESIGN
 ----------------------------*/
-@media (max-width: 992px) {
-    .main-content {
-        padding: 1.2rem;
-    }
 
+/* Breakpoint cho màn hình nhỏ hơn - CHỈ điều chỉnh kích thước, KHÔNG thay đổi layout */
+@media (max-width: 1100px) {
     .filter-form {
-        flex-direction: column;
+        gap: 0.3rem;
+        padding: 0.5rem;
     }
 
-    .filter-buttons {
-        align-self: flex-start;
+    .filter-group {
+        min-width: 100px;
+        width: 120px;
+    }
+
+    .filter-label {
+        font-size: 0.8rem;
+    }
+
+    .filter-input,
+    .filter-select {
+        padding: 0.3rem 0.4rem;
+        font-size: 0.85rem;
+    }
+
+    .filter-buttons button {
+        padding: 0.35rem 0.7rem;
+        font-size: 0.85rem;
     }
 }
 
+/* Tablet và màn hình vừa (992px trở xuống) */
+@media (max-width: 992px) {
+    .main-content {
+        padding: 1rem;
+    }
+
+    .page-title {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    /* Filter form - GIỮ NGUYÊN layout ngang, chỉ thu nhỏ */
+    .filter-form {
+        gap: 0.25rem;
+        padding: 0.4rem;
+    }
+
+    .filter-group {
+        min-width: 90px;
+        width: 110px;
+    }
+
+    .filter-label {
+        font-size: 0.75rem;
+        margin-bottom: 0.1rem;
+    }
+
+    .filter-input,
+    .filter-select {
+        padding: 0.25rem 0.3rem;
+        font-size: 0.8rem;
+    }
+
+    .filter-buttons {
+        gap: 0.2rem;
+    }
+
+    .filter-buttons button {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.8rem;
+    }
+
+    /* Table responsive */
+    .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .attendance-table {
+        min-width: 800px; /* Đảm bảo table không bị co quá nhỏ */
+    }
+
+    /* Action buttons */
+    .action-buttons {
+        justify-content: center;
+        gap: 0.5rem;
+    }
+}
+
+/* Mobile và màn hình nhỏ (768px trở xuống) */
 @media (max-width: 768px) {
+    .main-content {
+        padding: 0.75rem;
+    }
+
+    .page-title {
+        font-size: 1.25rem;
+        text-align: center;
+    }
+
+    /* Filter form mobile - VẪN GIỮ layout ngang */
+    .filter-form {
+        gap: 0.2rem;
+        padding: 0.3rem;
+        overflow-x: auto;
+    }
+
+    .filter-group {
+        min-width: 80px;
+        width: 95px;
+    }
+
+    .filter-label {
+        font-size: 0.7rem;
+        margin-bottom: 0.1rem;
+    }
+
+    .filter-input,
+    .filter-select {
+        padding: 0.2rem 0.25rem;
+        font-size: 0.75rem;
+    }
+
+    .filter-buttons {
+        gap: 0.15rem;
+    }
+
+    .filter-buttons button {
+        padding: 0.25rem 0.4rem;
+        font-size: 0.75rem;
+        white-space: nowrap;
+    }
+
+    /* Action buttons mobile */
     .action-buttons {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+
+    .action-buttons .btn {
+        width: 100%;
+        text-align: center;
+        padding: 0.75rem;
+        font-size: 1rem;
+    }
+
+    /* Table mobile */
+    .attendance-table {
+        font-size: 12px;
+        min-width: 900px; /* Tăng min-width để tránh bị co quá */
     }
 
     .attendance-table th,
     .attendance-table td {
+        padding: 0.4rem 0.3rem;
+        white-space: nowrap;
+    }
+
+    /* Table action buttons mobile */
+    .table .action-buttons {
+        flex-direction: row;
+        gap: 0.25rem;
+    }
+
+    .table .action-buttons .btn {
+        padding: 0.3rem 0.5rem;
+        font-size: 0.75rem;
+        min-width: 60px;
+        width: auto;
+    }
+
+    /* Pagination mobile */
+    .pagination-wrapper {
+        gap: 4px;
+        margin-top: 1rem;
+    }
+
+    .pagination-link,
+    .pagination-current {
+        min-width: 32px;
+        padding: 4px 8px;
+        font-size: 0.875rem;
+    }
+
+    /* Modal mobile */
+    .modal-content {
+        width: 95%;
+        margin: 1rem;
+        padding: 1rem;
+    }
+
+    .modal-content h3 {
+        font-size: 1.125rem;
+    }
+
+    /* Status toggle mobile */
+    .switch-container {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .lock-info small {
+        max-width: none;
+    }
+}
+
+/* Mobile nhỏ (480px trở xuống) */
+@media (max-width: 480px) {
+    .main-content {
         padding: 0.5rem;
     }
+
+    .page-title {
+        font-size: 1.125rem;
+    }
+
+    /* Filter form cho mobile nhỏ */
+    .filter-form {
+        padding: 0.5rem;
+    }
+
+    .filter-label {
+        font-size: 0.8rem;
+    }
+
+    .filter-input,
+    .filter-select {
+        padding: 0.4rem;
+        font-size: 0.9rem;
+    }
+
+    /* Table cho mobile nhỏ */
+    .attendance-table {
+        font-size: 11px;
+        min-width: 1000px; /* Tăng thêm để đảm bảo không bị vỡ */
+    }
+
+    .attendance-table th,
+    .attendance-table td {
+        padding: 0.3rem 0.2rem;
+    }
+
+    /* Điều chỉnh width cột cho mobile nhỏ */
+    .attendance-table th:nth-child(1),
+    .attendance-table td:nth-child(1) { width: 6%; }  /* ID */
+    .attendance-table th:nth-child(2),
+    .attendance-table td:nth-child(2) { width: 18%; } /* Name */
+    .attendance-table th:nth-child(3),
+    .attendance-table td:nth-child(3) { width: 10%; } /* Dept */
+    .attendance-table th:nth-child(4),
+    .attendance-table td:nth-child(4) { width: 12%; } /* Date */
+    .attendance-table th:nth-child(5),
+    .attendance-table td:nth-child(5),
+    .attendance-table th:nth-child(6),
+    .attendance-table td:nth-child(6) { width: 9%; }  /* Check-in/out */
+    .attendance-table th:nth-child(7),
+    .attendance-table td:nth-child(7) { width: 8%; }  /* Status */
+    .attendance-table th:nth-child(8),
+    .attendance-table td:nth-child(8) { width: 8%; }  /* Source */
+    .attendance-table th:nth-child(9),
+    .attendance-table td:nth-child(9) { width: 8%; }  /* Period */
+    .attendance-table th:nth-child(10),
+    .attendance-table td:nth-child(10) { width: 14%; } /* Actions */
+
+    /* Modal cho mobile nhỏ */
+    .modal-content {
+        width: 98%;
+        margin: 0.5rem;
+        padding: 0.75rem;
+    }
+
+    .close-btn {
+        font-size: 20px;
+        top: 5px;
+        right: 8px;
+    }
+}
+
+/* Landscape orientation cho mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+    .main-content {
+        padding: 0.5rem;
+    }
+
+    .filter-form {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .filter-group {
+        flex: 1 1 150px;
+        min-width: 120px;
+    }
+
+    .filter-buttons {
+        flex: 0 0 auto;
+    }
+}
+
+/* Đảm bảo table luôn có scroll horizontal khi cần */
+.table-wrapper {
+    position: relative;
+}
+
+.table-wrapper::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 20px;
+    background: linear-gradient(to left, rgba(255,255,255,0.8), transparent);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.table-wrapper:hover::after {
+    opacity: 1;
+}
+
+/* Cải thiện touch scrolling cho mobile */
+.table-wrapper {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e0 #f7fafc;
+}
+
+.table-wrapper::-webkit-scrollbar {
+    height: 8px;
+}
+
+.table-wrapper::-webkit-scrollbar-track {
+    background: #f7fafc;
+    border-radius: 4px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 4px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
 }
 
 /* ===== Modal Overlay ===== */
