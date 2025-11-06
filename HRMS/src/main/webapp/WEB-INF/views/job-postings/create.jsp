@@ -56,6 +56,12 @@
                         </div>
                     </c:if>
 
+                    <!-- Form Instructions -->
+                    <div class="alert alert-info mb-4" role="alert">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Form Validation:</strong> Validation messages will appear as you fill out the form. Required fields are marked with <span class="text-danger">*</span>
+                    </div>
+
                     <form method="post" action="${pageContext.request.contextPath}/job-postings/create" 
                           class="needs-validation" novalidate>
                         <input type="hidden" name="csrfToken" value="${csrfToken}"/>
@@ -107,27 +113,39 @@
                                         <i class="fas fa-heading"></i> Job Title
                                         <span class="text-danger">*</span>
                                     </label>
-                                    <input type="text" class="form-control ${not empty errors.jobTitle ? 'is-invalid' : ''}" 
+                                    <input type="text" class="form-control" 
                                            id="jobTitle" name="jobTitle" required
                                            minlength="3" maxlength="255"
-                                           value="${formData != null ? formData.jobTitle : (param.jobTitle != null ? param.jobTitle : requestDetails.positionName)}">
+                                           value="${formData != null ? formData.jobTitle : (param.jobTitle != null ? param.jobTitle : requestDetails.positionName)}"
+                                           data-server-error="${not empty errors.jobTitle ? errors.jobTitle : ''}">
                                     <div class="form-text">Title shown in job listing (3-255 characters)</div>
                                     <div class="invalid-feedback">
-                                        ${not empty errors.jobTitle ? errors.jobTitle : 'Job title must be 3-255 characters'}
+                                        Job title must be 3-255 characters
                                     </div>
+                                    <c:if test="${not empty errors.jobTitle}">
+                                        <div class="server-error-feedback text-danger small mt-1">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>${errors.jobTitle}
+                                        </div>
+                                    </c:if>
                                 </div>
                                 <div class="col-md-6">
                                     <label for="code" class="form-label">
                                         <i class="fas fa-barcode"></i> Job Code
                                     </label>
-                                    <input type="text" class="form-control ${not empty errors.code ? 'is-invalid' : ''}" 
+                                    <input type="text" class="form-control" 
                                            id="code" name="code" 
                                            maxlength="128"
-                                           value="${formData != null ? formData.code : (param.code != null ? param.code : requestDetails.positionCode)}">
+                                           value="${formData != null ? formData.code : (param.code != null ? param.code : requestDetails.positionCode)}"
+                                           data-server-error="${not empty errors.code ? errors.code : ''}">
                                     <div class="form-text">Public job code (max 128 characters)</div>
                                     <div class="invalid-feedback">
-                                        ${not empty errors.code ? errors.code : 'Code cannot exceed 128 characters'}
+                                        Code cannot exceed 128 characters
                                     </div>
+                                    <c:if test="${not empty errors.code}">
+                                        <div class="server-error-feedback text-danger small mt-1">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>${errors.code}
+                                        </div>
+                                    </c:if>
                                 </div>
                             </div>
 
@@ -158,8 +176,9 @@
                                 <div class="col-md-12">
                                     <label for="workingHours" class="form-label">Working Hours</label>
                                     <c:set var="currentWorkingHours" value="${formData != null ? formData.workingHours : param.workingHours}" />
-                                    <select class="form-select ${not empty errors.workingHours ? 'is-invalid' : ''}"
-                                            id="workingHours" name="workingHours">
+                                    <select class="form-select"
+                                            id="workingHours" name="workingHours"
+                                            data-server-error="${not empty errors.workingHours ? errors.workingHours : ''}">
                                         <option value="">Select working hours...</option>
                                         <option value="Monday - Friday 8h00 - 12h00 & 13h00- 17h00" 
                                                 ${currentWorkingHours == 'Monday - Friday 8h00 - 12h00 & 13h00- 17h00' ? 'selected' : ''}>
@@ -176,8 +195,13 @@
                                     </select>
                                     <div class="form-text">Select from predefined working hour options</div>
                                     <div class="invalid-feedback">
-                                        ${not empty errors.workingHours ? errors.workingHours : 'Please select a valid working hours option'}
+                                        Please select a valid working hours option
                                     </div>
+                                    <c:if test="${not empty errors.workingHours}">
+                                        <div class="server-error-feedback text-danger small mt-1">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>${errors.workingHours}
+                                        </div>
+                                    </c:if>
                                 </div>
                             </div>
                             <!-- Min Experience & Start Date -->
@@ -186,14 +210,20 @@
                                     <label for="minExperienceYears" class="form-label">
                                         <i class="fas fa-briefcase"></i> Min Experience Years
                                     </label>
-                                    <input type="number" class="form-control ${not empty errors.minExperienceYears ? 'is-invalid' : ''}" 
+                                    <input type="number" class="form-control" 
                                            id="minExperienceYears" name="minExperienceYears" 
                                            min="0" max="50"
-                                           value="${formData != null ? formData.minExperienceYears : param.minExperienceYears}">
+                                           value="${formData != null ? formData.minExperienceYears : param.minExperienceYears}"
+                                           data-server-error="${not empty errors.minExperienceYears ? errors.minExperienceYears : ''}">
                                     <div class="form-text">Required years of experience (0-50)</div>
                                     <div class="invalid-feedback">
-                                        ${not empty errors.minExperienceYears ? errors.minExperienceYears : 'Experience must be between 0 and 50 years'}
+                                        Experience must be between 0 and 50 years
                                     </div>
+                                    <c:if test="${not empty errors.minExperienceYears}">
+                                        <div class="server-error-feedback text-danger small mt-1">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>${errors.minExperienceYears}
+                                        </div>
+                                    </c:if>
                                 </div>
                                 <div class="col-md-4">
                                     <label for="startDate" class="form-label">
@@ -438,6 +468,80 @@
             const benefitsInput = document.getElementById('benefits');
             const locationInput = document.getElementById('location');
             const workingHoursInput = document.getElementById('workingHours');
+            
+            // Track which fields have been interacted with
+            const interactedFields = new Set();
+            
+            // Function to show server errors for fields that have them
+            function showServerErrors() {
+                document.querySelectorAll('[data-server-error]').forEach(field => {
+                    const serverError = field.getAttribute('data-server-error');
+                    if (serverError && serverError.trim() !== '') {
+                        field.classList.add('is-invalid');
+                        interactedFields.add(field.id);
+                    }
+                });
+            }
+            
+            // Show server errors on page load
+            showServerErrors();
+            
+            // Function to validate field and show error only if invalid
+            function validateFieldOnBlur(field) {
+                if (!field || !interactedFields.has(field.id)) return;
+                
+                // Clear previous validation classes
+                field.classList.remove('is-invalid', 'is-valid');
+                
+                // Run validation
+                let isValid = field.checkValidity();
+                
+                // Additional custom validations
+                if (field.id === 'jobTitle') {
+                    isValid = isValid && validateJobTitle();
+                } else if (field.id === 'minSalary' || field.id === 'maxSalary') {
+                    isValid = isValid && validateSalaries();
+                } else if (field.id === 'startDate' || field.id === 'applicationDeadline') {
+                    isValid = isValid && validateDates();
+                } else if (field.id === 'minExperienceYears') {
+                    isValid = isValid && validateExperience();
+                }
+                
+                // Only show invalid state if field is actually invalid
+                if (!isValid) {
+                    field.classList.add('is-invalid');
+                }
+                // Don't add 'is-valid' class to avoid showing green border while typing
+            }
+            
+            // Add event listeners to track field interactions
+            document.querySelectorAll('.form-control, .form-select').forEach(field => {
+                // Mark as interacted on first focus
+                field.addEventListener('focus', function() {
+                    if (!interactedFields.has(this.id)) {
+                        interactedFields.add(this.id);
+                    }
+                });
+                
+                // Clear validation while typing (remove error state if user is fixing)
+                field.addEventListener('input', function() {
+                    if (this.classList.contains('is-invalid')) {
+                        this.classList.remove('is-invalid');
+                    }
+                });
+                
+                // Validate only when user leaves the field
+                field.addEventListener('blur', function() {
+                    validateFieldOnBlur(this);
+                });
+                
+                // Validate on change for select elements
+                field.addEventListener('change', function() {
+                    if (this.tagName.toLowerCase() === 'select') {
+                        validateFieldOnBlur(this);
+                    }
+                });
+            });
             
             // Set today's date as minimum for date inputs
             const today = new Date().toISOString().split('T')[0];
@@ -779,6 +883,12 @@
                 console.log('Form action:', form.action);
                 console.log('Form method:', form.method);
                 
+                // Mark all fields as interacted and validate on submit
+                document.querySelectorAll('.form-control, .form-select').forEach(field => {
+                    interactedFields.add(field.id);
+                    validateFieldOnBlur(field);
+                });
+                
                 // Show loading state
                 const submitBtn = form.querySelector('button[type="submit"]');
                 const originalText = submitBtn.innerHTML;
@@ -902,6 +1012,14 @@
                 '    to { transform: translateX(100%); opacity: 0; }' +
                 '}';
             document.head.appendChild(style);
+            
+            // Reset validation when form is reset
+            form.addEventListener('reset', function() {
+                interactedFields.clear();
+                document.querySelectorAll('.form-control, .form-select').forEach(field => {
+                    field.classList.remove('is-invalid', 'is-valid');
+                });
+            });
             
             // Prevent form submission on Enter key (except in submit button)
             form.addEventListener('keydown', function(event) {
@@ -1179,6 +1297,54 @@
 
 ::-webkit-scrollbar-thumb:hover {
     background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+/* Server error feedback - initially hidden */
+.server-error-feedback {
+    display: none;
+}
+
+/* Show server errors only when field is invalid */
+.form-control.is-invalid + .form-text + .invalid-feedback + .server-error-feedback,
+.form-select.is-invalid + .form-text + .invalid-feedback + .server-error-feedback {
+    display: block;
+}
+
+/* Hide validation feedback by default */
+.invalid-feedback {
+    display: none !important;
+}
+
+/* Show validation feedback only when field is invalid */
+.form-control.is-invalid + .form-text + .invalid-feedback,
+.form-select.is-invalid + .form-text + .invalid-feedback,
+.form-control.is-invalid + .invalid-feedback,
+.form-select.is-invalid + .invalid-feedback {
+    display: block !important;
+}
+
+/* Don't show valid state styling to avoid green borders while typing */
+.form-control.is-valid,
+.form-select.is-valid {
+    border-color: #ced4da;
+    background-image: none;
+}
+
+/* Smooth transition for validation states */
+.form-control, .form-select {
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Custom validation message styling */
+.server-error-feedback {
+    font-size: 0.875rem;
+    font-weight: 500;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 /* Custom notification styles */
