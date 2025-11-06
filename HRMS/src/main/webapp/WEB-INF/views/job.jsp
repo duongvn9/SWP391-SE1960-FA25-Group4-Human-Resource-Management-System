@@ -25,7 +25,7 @@
                 <div class="col-lg-8 mx-auto text-center">
                     <div class="hero-content" data-aos="fade-up">
                         <h1 style="color: white; margin-bottom: 20px;">Career Opportunities</h1>
-                        <p style="color: rgba(255,255,255,0.9); font-size: 1.2rem; margin-bottom: 30px;">
+                        <p style="color: rgba(255,255,255,0.9); font-size: 1.2rem; margin-bottom: 30px; text-align: center; max-width: 600px; margin-left: auto; margin-right: auto;">
                             Join our team and build your career with exciting opportunities
                         </p>
                         <div class="stats-row"
@@ -81,10 +81,9 @@
                             <option value="">All Types</option>
                             <option value="FULL_TIME" <c:if test="${param.jobType == 'FULL_TIME'}">selected</c:if>>Full Time</option>
                             <option value="PART_TIME" <c:if test="${param.jobType == 'PART_TIME'}">selected</c:if>>Part Time</option>
-                            <option value="CONTRACT" <c:if test="${param.jobType == 'CONTRACT'}">selected</c:if>>Contract</option>
+                            
                             <option value="INTERN" <c:if test="${param.jobType == 'INTERN'}">selected</c:if>>Intern</option>
-                            <option value="TEMPORARY" <c:if test="${param.jobType == 'TEMPORARY'}">selected</c:if>>Temporary</option>
-                            <option value="INTERNSHIP" <c:if test="${param.jobType == 'INTERNSHIP'}">selected</c:if>>Internship</option>
+                            
                         </select>
                     </div>
 
@@ -110,18 +109,11 @@
                                 <c:when test="${job.jobType == 'PART_TIME'}">
                                     <c:set var="currentJobType" value="Part Time" />
                                 </c:when>
-                                <c:when test="${job.jobType == 'CONTRACT'}">
-                                    <c:set var="currentJobType" value="Contract" />
-                                </c:when>
+                                
                                 <c:when test="${job.jobType == 'INTERN'}">
                                     <c:set var="currentJobType" value="Intern" />
                                 </c:when>
-                                <c:when test="${job.jobType == 'TEMPORARY'}">
-                                    <c:set var="currentJobType" value="Temporary" />
-                                </c:when>
-                                <c:when test="${job.jobType == 'INTERNSHIP'}">
-                                    <c:set var="currentJobType" value="Internship" />
-                                </c:when>
+                                
                             </c:choose>
 
                             <%-- Format job level for current job --%>
