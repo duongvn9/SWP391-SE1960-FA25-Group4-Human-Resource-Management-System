@@ -1,0 +1,299 @@
+/* Clean Print CSS - ONLY applies during actual printing */
+
+/* Ensure no styles leak to screen */
+@media screen {
+    /* No styles for screen - everything should use main CSS */
+}
+
+@media print {
+    /* Page setup */
+    @page {
+        size: A4;
+        margin: 8mm;
+    }
+
+    /* Hide navigation only */
+    .sidebar,
+    .navbar,
+    .breadcrumb,
+    .btn,
+    button,
+    nav,
+    .dropdown,
+    .modal,
+    .toast,
+    .pagination {
+        display: none !important;
+    }
+
+    /* Basic print layout */
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+        font-size: 9px !important;
+        line-height: 1.2 !important;
+        color: #000 !important;
+        background: white !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Main content - full width */
+    .main-content,
+    .content-area {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* Payslip header - keep original styling */
+    .payslip-header {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+        color: white !important;
+        padding: 8px !important;
+        margin-bottom: 8px !important;
+        border-radius: 6px !important;
+        text-align: center !important;
+    }
+
+    .payslip-header h2 {
+        color: white !important;
+        font-size: 14px !important;
+        margin: 0 0 2px 0 !important;
+    }
+
+    .payslip-header p {
+        color: rgba(255, 255, 255, 0.9) !important;
+        font-size: 8px !important;
+        margin: 0 !important;
+    }
+
+    /* Info cards - keep original styling */
+    .info-card {
+        background: white !important;
+        border: 1px solid #e5e7eb !important;
+        border-radius: 6px !important;
+        padding: 6px !important;
+        margin-bottom: 8px !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .card-title {
+        color: #4f46e5 !important;
+        font-size: 9px !important;
+        font-weight: bold !important;
+        margin-bottom: 6px !important;
+        padding-bottom: 3px !important;
+        border-bottom: 1px solid #e5e7eb !important;
+    }
+
+    /* Section headers - keep original styling */
+    .section-header {
+        background: linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(139, 92, 246, 0.05) 100%) !important;
+        border-left: 4px solid #4f46e5 !important;
+        border-radius: 4px !important;
+        padding: 4px 6px !important;
+        margin-bottom: 6px !important;
+    }
+
+    .section-header h5,
+    .section-header h6 {
+        color: #4f46e5 !important;
+        font-size: 9px !important;
+        font-weight: bold !important;
+        margin: 0 !important;
+    }
+
+    /* Employee info layout - 2 columns */
+    .row {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        margin: 0 !important;
+        gap: 8px !important;
+    }
+
+    .col-md-6 {
+        flex: 1 !important;
+        min-width: 45% !important;
+    }
+
+    .col-md-4 {
+        flex: 1 !important;
+        min-width: 30% !important;
+    }
+
+    .col-md-8 {
+        flex: 2 !important;
+        min-width: 60% !important;
+    }
+
+    /* Basic salary 3-column layout */
+    .info-card .row .col-md-4 {
+        flex: 1 !important;
+        min-width: 30% !important;
+    }
+
+    /* Calculation rows */
+    .calculation-row {
+        padding: 1px 0 !important;
+        border-bottom: 1px dotted #e5e7eb !important;
+        margin-bottom: 1px !important;
+    }
+
+    .calculation-row .row {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        gap: 4px !important;
+    }
+
+    .calculation-row .col-8,
+    .calculation-row .col-7,
+    .calculation-row .col-6,
+    .calculation-row .col-sm-4 {
+        font-weight: 500 !important;
+        color: #374151 !important;
+    }
+
+    .calculation-row .col-4,
+    .calculation-row .col-5,
+    .calculation-row .col-sm-8 {
+        text-align: right !important;
+        font-weight: 600 !important;
+        color: #111827 !important;
+    }
+
+    /* Earnings and Deductions - force side by side */
+    .earnings-deductions {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 8px !important;
+        margin-bottom: 8px !important;
+        width: 100% !important;
+        page-break-inside: avoid !important;
+    }
+
+    .earnings-deductions .col-md-6 {
+        flex: 1 !important;
+        width: 48% !important;
+        max-width: 48% !important;
+        min-width: 48% !important;
+        display: block !important;
+        float: none !important;
+    }
+
+    /* Sub items */
+    .sub-item {
+        padding-left: 12px !important;
+        font-size: 8px !important;
+        color: #6b7280 !important;
+        font-style: italic !important;
+    }
+
+    /* Total rows */
+    .total-row {
+        background: #f9fafb !important;
+        border: 1px solid #d1d5db !important;
+        border-radius: 3px !important;
+        padding: 4px !important;
+        margin: 3px 0 !important;
+        font-weight: bold !important;
+    }
+
+    /* Salary Summary */
+    .salary-summary .row {
+        display: flex !important;
+        align-items: stretch !important;
+        gap: 8px !important;
+    }
+
+    .salary-summary .col-md-8 {
+        flex: 2 !important;
+    }
+
+    .salary-summary .col-md-4 {
+        flex: 1 !important;
+    }
+
+    /* Net Salary card */
+    .salary-summary .card.bg-success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+        color: white !important;
+        border-radius: 6px !important;
+        padding: 0 !important;
+        text-align: center !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    .salary-summary .card-body {
+        padding: 8px !important;
+        width: 100% !important;
+    }
+
+    .salary-summary .card-title {
+        color: white !important;
+        font-size: 8px !important;
+        margin-bottom: 4px !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.3) !important;
+    }
+
+    .salary-summary h3,
+    #net-salary-amount {
+        color: white !important;
+        font-size: 12px !important;
+        font-weight: bold !important;
+        margin: 0 !important;
+    }
+
+    /* Text colors */
+    .text-success {
+        color: #10b981 !important;
+    }
+
+    .text-primary {
+        color: #4f46e5 !important;
+    }
+
+    .deduction-highlight {
+        color: #dc2626 !important;
+        font-weight: 600 !important;
+    }
+
+    .text-end {
+        text-align: right !important;
+    }
+
+    /* Badges */
+    .badge {
+        background: #f3f4f6 !important;
+        color: #374151 !important;
+        border: 1px solid #d1d5db !important;
+        padding: 1px 3px !important;
+        border-radius: 8px !important;
+        font-size: 7px !important;
+        font-weight: bold !important;
+    }
+
+    .bg-success.badge {
+        background: #d1fae5 !important;
+        color: #065f46 !important;
+        border-color: #10b981 !important;
+    }
+
+    .bg-warning.badge {
+        background: #fef3c7 !important;
+        color: #92400e !important;
+        border-color: #f59e0b !important;
+    }
+
+    /* No page breaks */
+    .payslip-header,
+    .info-card,
+    .earnings-deductions,
+    .salary-summary {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+}
