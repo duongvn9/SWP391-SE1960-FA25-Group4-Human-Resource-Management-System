@@ -11,8 +11,10 @@ import org.slf4j.LoggerFactory;
 
 import group4.hrms.model.Department;
 import group4.hrms.model.JobPosting;
+import group4.hrms.model.User;
 import group4.hrms.service.DepartmentService;
 import group4.hrms.service.JobPostingService;
+import group4.hrms.util.JobPostingPermissionHelper;
 import group4.hrms.util.SecurityUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -46,6 +48,28 @@ public class JobPostingListServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        
+        // Check authentication and authorization
+        Object userObj = request.getSession(false) != null ? request.getSession(false).getAttribute("user") : null;
+        Long positionId = null;
+        
+        if (userObj instanceof User) {
+            User user = (User) userObj;
+            positionId = user.getPositionId();
+            logger.info("User position ID: {}", positionId);
+        } else {
+            logger.warn("No valid user found in session - redirecting to login");
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+        
+        // Check if user has permission to view job postings
+        if (!JobPostingPermissionHelper.canViewJobPosting(positionId)) {
+            logger.error("Access denied - User position ID {} cannot view job postings", positionId);
+            response.sendRedirect(request.getContextPath() + "/login?error=You don't have permission to view job postings");
+            return;
+        }
+        
         // Collect all filter parameters
         String status = request.getParameter("status");
         String departmentIdStr = request.getParameter("departmentId");
