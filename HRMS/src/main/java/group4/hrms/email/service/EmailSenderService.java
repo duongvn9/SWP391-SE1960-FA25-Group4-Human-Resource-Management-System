@@ -34,18 +34,33 @@ public class EmailSenderService {
     private static String FROM_EMAIL;
     private static String FROM_NAME;
 
+    // Email Settings - Đọc từ application.properties
+    private static int MAX_RETRY_ATTEMPTS;
+    private static int CONNECTION_TIMEOUT;
+    private static int READ_TIMEOUT;
+
     static {
         try {
             java.util.Properties props = new java.util.Properties();
             props.load(EmailSenderService.class.getClassLoader()
                     .getResourceAsStream("application.properties"));
 
+            // SMTP Configuration
             SMTP_HOST = props.getProperty("mail.smtp.host", "smtp.gmail.com").trim();
             SMTP_PORT = props.getProperty("mail.smtp.port", "587").trim();
             SMTP_USERNAME = props.getProperty("mail.username", "hrms8386@gmail.com").trim();
             SMTP_PASSWORD = props.getProperty("mail.password", "").trim();
             FROM_EMAIL = props.getProperty("mail.from.address", "hrms8386@gmail.com").trim();
             FROM_NAME = props.getProperty("mail.from.name", "HRMS System").trim();
+
+            // Email Settings
+            MAX_RETRY_ATTEMPTS = Integer.parseInt(props.getProperty("email.retry.max-attempts", "3"));
+            CONNECTION_TIMEOUT = Integer.parseInt(props.getProperty("email.timeout.connection", "10000"));
+            READ_TIMEOUT = Integer.parseInt(props.getProperty("email.timeout.read", "10000"));
+
+            LoggerFactory.getLogger(EmailSenderService.class)
+                    .info("Email configuration loaded: host={}, port={}, maxRetry={}, connTimeout={}ms, readTimeout={}ms",
+                            SMTP_HOST, SMTP_PORT, MAX_RETRY_ATTEMPTS, CONNECTION_TIMEOUT, READ_TIMEOUT);
 
         } catch (Exception e) {
             LoggerFactory.getLogger(EmailSenderService.class)
@@ -57,6 +72,9 @@ public class EmailSenderService {
             SMTP_PASSWORD = "";
             FROM_EMAIL = "hrms8386@gmail.com";
             FROM_NAME = "HRMS System";
+            MAX_RETRY_ATTEMPTS = 3;
+            CONNECTION_TIMEOUT = 30000; // 30 seconds - match với application.properties
+            READ_TIMEOUT = 30000; // 30 seconds - match với application.properties
         }
     }
 
@@ -83,6 +101,11 @@ public class EmailSenderService {
         props.put("mail.smtp.port", SMTP_PORT);
         props.put("mail.smtp.ssl.protocols", "TLSv1.2");
         props.put("mail.smtp.ssl.trust", SMTP_HOST);
+
+        // Timeout configuration từ application.properties
+        props.put("mail.smtp.connectiontimeout", String.valueOf(CONNECTION_TIMEOUT));
+        props.put("mail.smtp.timeout", String.valueOf(READ_TIMEOUT));
+        props.put("mail.smtp.writetimeout", String.valueOf(READ_TIMEOUT));
 
         return Session.getInstance(props, new Authenticator() {
             @Override
@@ -119,36 +142,74 @@ public class EmailSenderService {
             Transport.send(message);
             logger.info("✅ Email đã gửi thành công qua SMTP đến: {}", emailQueue.getRecipientEmail());
 
-            // Cập nhật status thành SENT bằng raw SQL
-            try {
-                logger.info("Chuẩn bị update status SENT cho email ID: {}", emailQueue.getId());
+            // Cập nhật status thành SENT bằng raw SQL với retry logic
+            boolean dbUpdateSuccess = false;
+            int retryCount = 0;
+            int maxRetries = MAX_RETRY_ATTEMPTS; // Đọc từ application.properties
 
-                String updateSql = "UPDATE email_queue SET status = 'SENT', sent_at = NOW() WHERE id = ?";
+            while (!dbUpdateSuccess && retryCount < maxRetries) {
+                try {
+                    logger.info("Chuẩn bị update status SENT cho email ID: {} (attempt {}/{})",
+                            emailQueue.getId(), retryCount + 1, maxRetries);
 
-                try (Connection conn = DatabaseUtil.getConnection();
-                        PreparedStatement stmt = conn.prepareStatement(updateSql)) {
+                    String updateSql = "UPDATE email_queue SET status = 'SENT', sent_at = NOW() WHERE id = ?";
 
-                    stmt.setLong(1, emailQueue.getId());
-                    int rows = stmt.executeUpdate();
+                    try (Connection conn = DatabaseUtil.getConnection()) {
+                        // Đảm bảo autoCommit = true để commit ngay lập tức
+                        conn.setAutoCommit(true);
 
-                    logger.info("✅ Đã cập nhật status SENT cho email ID: {} - {} rows affected",
-                            emailQueue.getId(), rows);
+                        try (PreparedStatement stmt = conn.prepareStatement(updateSql)) {
+                            stmt.setLong(1, emailQueue.getId());
+                            int rows = stmt.executeUpdate();
 
-                    // Update local object
-                    emailQueue.setStatus(EmailStatus.SENT);
-                    emailQueue.setSentAt(LocalDateTime.now());
+                            if (rows > 0) {
+                                logger.info("✅ Đã cập nhật status SENT cho email ID: {} - {} rows affected",
+                                        emailQueue.getId(), rows);
+
+                                // Update local object
+                                emailQueue.setStatus(EmailStatus.SENT);
+                                emailQueue.setSentAt(LocalDateTime.now());
+                                dbUpdateSuccess = true;
+                            } else {
+                                logger.warn("⚠️ Update không ảnh hưởng row nào cho email ID: {}", emailQueue.getId());
+                            }
+                        }
+                    }
+
+                } catch (SQLException ex) {
+                    retryCount++;
+                    logger.error("❌ Lỗi SQLException khi cập nhật status SENT cho email {} (attempt {}/{}): {}",
+                            emailQueue.getId(), retryCount, maxRetries, ex.getMessage());
+
+                    if (retryCount >= maxRetries) {
+                        logger.error("❌ ĐÃ HẾT SỐ LẦN RETRY! Email đã gửi nhưng DB không update được cho ID: {}",
+                                emailQueue.getId());
+                        ex.printStackTrace();
+                    } else {
+                        // Đợi một chút trước khi retry
+                        try {
+                            Thread.sleep(100 * retryCount); // 100ms, 200ms, 300ms
+                        } catch (InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                        }
+                    }
+                } catch (Exception ex) {
+                    retryCount++;
+                    logger.error("❌ Lỗi Exception khi cập nhật status SENT cho email {} (attempt {}/{}): {}",
+                            emailQueue.getId(), retryCount, maxRetries, ex.getMessage());
+                    ex.printStackTrace();
+
+                    if (retryCount >= maxRetries) {
+                        logger.error("❌ ĐÃ HẾT SỐ LẦN RETRY! Email đã gửi nhưng DB không update được cho ID: {}",
+                                emailQueue.getId());
+                    }
                 }
+            }
 
-            } catch (SQLException ex) {
-                logger.error("❌ Lỗi SQLException khi cập nhật status SENT cho email {}: {}",
-                        emailQueue.getId(), ex.getMessage(), ex);
-                ex.printStackTrace();
-                // Email đã gửi thành công nhưng không update được DB
-                // Vẫn return true vì email đã đến người nhận
-            } catch (Exception ex) {
-                logger.error("❌ Lỗi Exception khi cập nhật status SENT cho email {}: {}",
-                        emailQueue.getId(), ex.getMessage(), ex);
-                ex.printStackTrace();
+            if (!dbUpdateSuccess) {
+                logger.error(
+                        "❌ CRITICAL: Email ID {} đã gửi thành công nhưng DB status KHÔNG được update sau {} lần thử!",
+                        emailQueue.getId(), maxRetries);
             }
 
             logger.info("✅ Email đã gửi thành công đến: {}", emailQueue.getRecipientEmail());
@@ -158,29 +219,54 @@ public class EmailSenderService {
             logger.error("❌ Lỗi khi gửi email đến {}: {}",
                     emailQueue.getRecipientEmail(), e.getMessage(), e);
 
-            // Cập nhật status thành FAILED bằng raw SQL
-            try {
-                String updateSql = "UPDATE email_queue SET status = 'FAILED', retry_count = retry_count + 1, error_message = ? WHERE id = ?";
+            // Cập nhật status thành FAILED bằng raw SQL với retry logic
+            boolean dbUpdateSuccess = false;
+            int retryCount = 0;
+            int maxRetries = MAX_RETRY_ATTEMPTS; // Đọc từ application.properties
 
-                try (Connection conn = DatabaseUtil.getConnection();
-                        PreparedStatement stmt = conn.prepareStatement(updateSql)) {
+            while (!dbUpdateSuccess && retryCount < maxRetries) {
+                try {
+                    String updateSql = "UPDATE email_queue SET status = 'FAILED', retry_count = retry_count + 1, error_message = ? WHERE id = ?";
 
-                    stmt.setString(1, e.getMessage());
-                    stmt.setLong(2, emailQueue.getId());
-                    int rows = stmt.executeUpdate();
+                    try (Connection conn = DatabaseUtil.getConnection()) {
+                        // Đảm bảo autoCommit = true
+                        conn.setAutoCommit(true);
 
-                    logger.info("✅ Đã cập nhật status FAILED cho email ID: {} - {} rows affected",
-                            emailQueue.getId(), rows);
+                        try (PreparedStatement stmt = conn.prepareStatement(updateSql)) {
+                            stmt.setString(1, e.getMessage());
+                            stmt.setLong(2, emailQueue.getId());
+                            int rows = stmt.executeUpdate();
 
-                    // Update local object
-                    emailQueue.setStatus(EmailStatus.FAILED);
-                    emailQueue.setAttempts(emailQueue.getAttempts() + 1);
-                    emailQueue.setErrorMessage(e.getMessage());
+                            if (rows > 0) {
+                                logger.info("✅ Đã cập nhật status FAILED cho email ID: {} - {} rows affected",
+                                        emailQueue.getId(), rows);
+
+                                // Update local object
+                                emailQueue.setStatus(EmailStatus.FAILED);
+                                emailQueue.setRetryCount(emailQueue.getRetryCount() + 1);
+                                emailQueue.setErrorMessage(e.getMessage());
+                                dbUpdateSuccess = true;
+                            }
+                        }
+                    }
+
+                } catch (SQLException ex) {
+                    retryCount++;
+                    logger.error("❌ Lỗi khi cập nhật status FAILED cho email {} (attempt {}/{}): {}",
+                            emailQueue.getId(), retryCount, maxRetries, ex.getMessage());
+
+                    if (retryCount >= maxRetries) {
+                        logger.error("❌ CRITICAL: Không thể update status FAILED cho email ID {} sau {} lần thử!",
+                                emailQueue.getId(), maxRetries);
+                        ex.printStackTrace();
+                    } else {
+                        try {
+                            Thread.sleep(100 * retryCount);
+                        } catch (InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                        }
+                    }
                 }
-
-            } catch (SQLException ex) {
-                logger.error("❌ Lỗi khi cập nhật status FAILED cho email {}: {}",
-                        emailQueue.getId(), ex.getMessage(), ex);
             }
 
             return false;
@@ -239,6 +325,44 @@ public class EmailSenderService {
         } catch (Exception e) {
             logger.error("❌ SMTP connection thất bại: {}", e.getMessage(), e);
             return false;
+        }
+    }
+
+    /**
+     * Verify status của email trong database
+     * Method này dùng để debug và kiểm tra xem status có được update đúng không
+     * 
+     * @param emailId ID của email cần kiểm tra
+     * @return Status hiện tại trong DB, hoặc null nếu không tìm thấy
+     */
+    public String verifyEmailStatus(Long emailId) {
+        if (emailId == null) {
+            return null;
+        }
+
+        try {
+            String sql = "SELECT status FROM email_queue WHERE id = ?";
+
+            try (Connection conn = DatabaseUtil.getConnection();
+                    PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+                stmt.setLong(1, emailId);
+
+                try (java.sql.ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        String status = rs.getString("status");
+                        logger.debug("Email ID {} has status in DB: {}", emailId, status);
+                        return status;
+                    }
+                }
+            }
+
+            logger.warn("Email ID {} not found in database", emailId);
+            return null;
+
+        } catch (SQLException e) {
+            logger.error("Error verifying email status for ID {}: {}", emailId, e.getMessage(), e);
+            return null;
         }
     }
 }

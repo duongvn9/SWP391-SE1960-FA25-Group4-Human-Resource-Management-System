@@ -186,9 +186,8 @@ public class ContractCreateController extends HttpServlet {
             // Create contract with draft status and pending approval
             formData.setStatus("draft"); // Status is draft until approved
             formData.setApprovalStatus("pending"); // Waiting for HRM approval
-            // Get account ID from session (created_by_account_id references accounts.id)
-            Long accountId = SessionUtil.getCurrentAccountId(request);
-            formData.setCreatedByAccountId(accountId);
+            // Save the user_id of the HR who created this contract
+            formData.setCreatedByAccountId(currentUser.getId());
 
             // Save to database
             contractDao.save(formData);

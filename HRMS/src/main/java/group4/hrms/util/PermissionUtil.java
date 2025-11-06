@@ -62,8 +62,16 @@ public class PermissionUtil {
 
     /**
      * Lấy position code của user hiện tại
+     * PERFORMANCE: Cache trong request để tránh lookup lặp lại
      */
     public static String getCurrentUserPositionCode(HttpServletRequest request) {
+        // Check cache trong request attribute
+        String cacheKey = "user_position_code";
+        String cachedCode = (String) request.getAttribute(cacheKey);
+        if (cachedCode != null) {
+            return cachedCode;
+        }
+
         HttpSession session = request.getSession(false);
         if (session == null) {
             return null;
@@ -74,6 +82,8 @@ public class PermissionUtil {
         Boolean isAdmin = (Boolean) session.getAttribute(SessionUtil.IS_ADMIN_KEY);
         if (Boolean.TRUE.equals(isAdmin)) {
             logger.debug("User is admin by session flag");
+            // Cache kết quả
+            request.setAttribute(cacheKey, POSITION_ADMIN);
             return POSITION_ADMIN;
         }
 
@@ -87,6 +97,8 @@ public class PermissionUtil {
             String username = SessionUtil.getCurrentUsername(request);
             if ("admin".equalsIgnoreCase(username)) {
                 logger.debug("User is admin by username");
+                // Cache kết quả
+                request.setAttribute(cacheKey, POSITION_ADMIN);
                 return POSITION_ADMIN;
             }
             return null;
@@ -102,6 +114,8 @@ public class PermissionUtil {
             if (position.isPresent()) {
                 String positionCode = getPositionCode(position.get().getName());
                 logger.debug("User position: {} -> code: {}", position.get().getName(), positionCode);
+                // Cache kết quả
+                request.setAttribute(cacheKey, positionCode);
                 return positionCode;
             }
         } catch (Exception e) {
@@ -126,13 +140,25 @@ public class PermissionUtil {
 
     /**
      * Kiểm tra user có permission không
+     * PERFORMANCE: Cache kết quả trong request để tránh check lặp lại
      */
     public static boolean hasPermission(HttpServletRequest request, String permission) {
+        // Check cache trong request attribute
+        String cacheKey = "perm_cache_" + permission;
+        Boolean cachedResult = (Boolean) request.getAttribute(cacheKey);
+        if (cachedResult != null) {
+            logger.debug("Permission cache HIT: {} = {}", permission, cachedResult);
+            return cachedResult;
+        }
+
+        // Chưa có cache, check permission
         String positionCode = getCurrentUserPositionCode(request);
         logger.debug("Checking permission: {} for position code: {}", permission, positionCode);
 
         if (positionCode == null) {
             logger.warn("Position code is null, denying permission: {}", permission);
+            // Cache kết quả FALSE
+            request.setAttribute(cacheKey, false);
             return false;
         }
 
@@ -141,6 +167,8 @@ public class PermissionUtil {
         logger.debug("Position {} has permissions: {}, checking {}: {}",
                 positionCode, permissions, permission, hasPermission);
 
+        // Cache kết quả trong request
+        request.setAttribute(cacheKey, hasPermission);
         return hasPermission;
     }
 
@@ -274,7 +302,8 @@ public class PermissionUtil {
     }
 
     /**
-     * Lấy role của user hiện tại từ request (tái sử dụng getCurrentUserPositionCode)
+     * Lấy role của user hiện tại từ request (tái sử dụng
+     * getCurrentUserPositionCode)
      */
     public static String getCurrentUserRole(HttpServletRequest request) {
         String positionCode = getCurrentUserPositionCode(request);

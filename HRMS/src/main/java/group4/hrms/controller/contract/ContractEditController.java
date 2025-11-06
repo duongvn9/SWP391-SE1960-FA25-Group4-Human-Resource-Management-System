@@ -64,7 +64,7 @@ public class ContractEditController extends HttpServlet {
             
             EmploymentContract contract = contractOpt.get();
             
-            // Check if contract can be edited
+            // Check if contract can be edited (use user ID)
             if (!contract.canBeEditedBy(currentUser.getId())) {
                 response.sendRedirect(request.getContextPath() + 
                     "/contracts?error=" + java.net.URLEncoder.encode(
@@ -113,7 +113,7 @@ public class ContractEditController extends HttpServlet {
             
             EmploymentContract contract = contractOpt.get();
             
-            // Check if contract can be edited
+            // Check if contract can be edited (use user ID)
             if (!contract.canBeEditedBy(currentUser.getId())) {
                 response.sendRedirect(request.getContextPath() + 
                     "/contracts?error=" + java.net.URLEncoder.encode(
