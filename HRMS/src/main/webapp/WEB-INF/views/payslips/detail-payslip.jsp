@@ -16,12 +16,12 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/detail-payslip-fix.css">
         <!-- Print CSS -->
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/payslip-print-clean.css">
-        
+
         <!-- Meta tags for better PDF generation -->
         <meta name="format-detection" content="telephone=no">
         <meta name="print-color-adjust" content="exact">
         <meta name="color-scheme" content="light">
-        
+
 
 
 
