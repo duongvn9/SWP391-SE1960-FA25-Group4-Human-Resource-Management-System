@@ -13,7 +13,7 @@ import java.util.Properties;
 
 /**
  * Utility class để quản lý kết nối database sử dụng HikariCP connection pool
- * 
+ *
  * @author Group4
  * @since 1.0
  */
@@ -48,13 +48,18 @@ public class DatabaseUtil {
         // Cấu hình connection pool
         config.setMaximumPoolSize(Integer.parseInt(props.getProperty("db.pool.maximum", "20")));
         config.setMinimumIdle(Integer.parseInt(props.getProperty("db.pool.minimum", "5")));
-        config.setConnectionTimeout(Long.parseLong(props.getProperty("db.pool.timeout", "30000")));
-        config.setIdleTimeout(Long.parseLong(props.getProperty("db.pool.idle", "600000")));
-        config.setMaxLifetime(Long.parseLong(props.getProperty("db.pool.lifetime", "1800000")));
+        config.setConnectionTimeout(Long.parseLong(props.getProperty("db.pool.timeout", "60000")));
+        config.setIdleTimeout(Long.parseLong(props.getProperty("db.pool.idle", "300000")));
+        config.setMaxLifetime(Long.parseLong(props.getProperty("db.pool.lifetime", "1200000")));
+        config.setValidationTimeout(Long.parseLong(props.getProperty("db.pool.validation.timeout", "5000")));
+        config.setLeakDetectionThreshold(Long.parseLong(props.getProperty("db.pool.leak.detection.threshold", "60000")));
 
         // Test query để kiểm tra connection
         String testQuery = props.getProperty("db.pool.connection.test.query", "SELECT 1");
         config.setConnectionTestQuery(testQuery);
+
+        // Enable keepalive to prevent connection timeout
+        config.setKeepaliveTime(30000); // 30 seconds
 
         // Cấu hình bổ sung cho MySQL
         config.addDataSourceProperty("cachePrepStmts", "true");
@@ -66,6 +71,12 @@ public class DatabaseUtil {
         config.addDataSourceProperty("cacheServerConfiguration", "true");
         config.addDataSourceProperty("elideSetAutoCommits", "true");
         config.addDataSourceProperty("maintainTimeStats", "false");
+
+        // Connection timeout settings for MySQL (prevent connection reset)
+        config.addDataSourceProperty("connectTimeout", "60000"); // 60 seconds
+        config.addDataSourceProperty("socketTimeout", "120000"); // 120 seconds for long queries
+        config.addDataSourceProperty("autoReconnect", "true");
+        config.addDataSourceProperty("tcpKeepAlive", "true");
 
         // Pool name cho monitoring
         config.setPoolName("HRMS-HikariCP");
@@ -107,7 +118,7 @@ public class DatabaseUtil {
 
     /**
      * Lấy connection từ connection pool
-     * 
+     *
      * @return Connection object
      * @throws SQLException nếu không thể lấy connection
      */
@@ -138,7 +149,7 @@ public class DatabaseUtil {
 
     /**
      * Kiểm tra kết nối database
-     * 
+     *
      * @return true nếu kết nối thành công, false nếu thất bại
      */
     public static boolean testConnection() {
@@ -158,7 +169,7 @@ public class DatabaseUtil {
 
     /**
      * Lấy thông tin về connection pool hiện tại
-     * 
+     *
      * @return thông tin pool dưới dạng string
      */
     public static String getPoolInfo() {
