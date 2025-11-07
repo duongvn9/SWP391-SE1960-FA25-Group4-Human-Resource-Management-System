@@ -76,17 +76,18 @@ public class PayslipGenerationService {
         try {
             logger.info("Acquired lock for period: " + lockKey);
 
-            // Check cutoff days for initial generation (not for regeneration)
-            // TEMPORARILY DISABLED FOR TESTING - TODO: Re-enable after fixing period calculation
-            /*
-            if (!request.getForce() && !request.getOnlyDirty()) {
-                if (!isWithinCutoffDays(request.getPeriodStart())) {
-                    result.setSuccess(false);
-                    result.setMessage("The payslip generation window has closed. Payslips can only be generated within the first 7 days of the following month.");
-                    return result;
-                }
-            }
-            */
+            // Check cutoff days based on system time
+            boolean withinCutoff = isWithinCutoffDays(request.getPeriodStart());
+            logger.info(String.format("Cutoff check: withinCutoff=%b, force=%b, onlyDirty=%b",
+                                    withinCutoff, request.getForce(), request.getOnlyDirty()));
+
+            // After 7 days:
+            // - Still allow if force=true (admin override)
+            // - Still allow if onlyDirty=true (regenerating dirty payslips)
+            // - Individual payslip processing will handle missing payslips (always allowed)
+            // - Block only bulk regeneration of non-dirty payslips
+            // Note: We don't block here because processUserPayslip will handle the logic per user
+            // This allows creating new payslips while blocking regeneration of clean payslips
 
             // Get list of users to process based on scope
             List<User> usersToProcess;
@@ -223,10 +224,16 @@ public class PayslipGenerationService {
 
             Payslip existingPayslip = existingPayslipOpt.get();
 
-            // Check if regeneration is needed
-            if (!force && !Boolean.TRUE.equals(existingPayslip.getIsDirty())) {
+            // Check cutoff window
+            boolean withinCutoff = isWithinCutoffDays(existingPayslip.getPeriodStart());
+
+            // After cutoff: Only allow regeneration if dirty or force=true
+            if (!withinCutoff && !force && !Boolean.TRUE.equals(existingPayslip.getIsDirty())) {
                 result.incrementSkipped();
-                result.setMessage("Payslip is not dirty and force=false, skipped regeneration");
+                result.setSuccess(false);
+                result.setMessage("Cannot regenerate: outside cutoff window and payslip is not dirty. Only dirty payslips can be regenerated after day 7.");
+                logger.info(String.format("Regeneration blocked: payslipId=%d, withinCutoff=%b, force=%b, isDirty=%b",
+                                        payslipId, withinCutoff, force, existingPayslip.getIsDirty()));
                 return result;
             }
 
@@ -237,7 +244,7 @@ public class PayslipGenerationService {
                 GenerationRequest.GenerationScope.EMPLOYEE
             );
             request.setScopeId(existingPayslip.getUserId());
-            request.setForce(true); // Always force for regeneration
+            request.setForce(force); // Pass through the force parameter
             request.setOnlyDirty(false);
 
             // Use the bulk generation method for consistency
@@ -381,8 +388,18 @@ public class PayslipGenerationService {
         // Check if payslip already exists
         Optional<Payslip> existingPayslipOpt = payslipDao.findByUserAndPeriod(userId, periodStart, periodEnd);
 
+        // Check cutoff window
+        boolean withinCutoff = isWithinCutoffDays(periodStart);
+
         if (existingPayslipOpt.isPresent()) {
             Payslip existingPayslip = existingPayslipOpt.get();
+
+            // After cutoff: Only regenerate if dirty or force=true
+            if (!withinCutoff && !request.getForce() && !Boolean.TRUE.equals(existingPayslip.getIsDirty())) {
+                result.incrementSkipped();
+                logger.fine(String.format("Skipped user %d: outside cutoff window and not dirty", userId));
+                return;
+            }
 
             // Handle existing payslip based on request parameters
             if (request.getOnlyDirty() && !Boolean.TRUE.equals(existingPayslip.getIsDirty())) {
@@ -390,9 +407,9 @@ public class PayslipGenerationService {
                 return; // Skip non-dirty payslips when onlyDirty=true
             }
 
-            if (!request.getForce() && "GENERATED".equals(existingPayslip.getStatus())) {
+            if (!request.getForce() && "GENERATED".equals(existingPayslip.getStatus()) && withinCutoff) {
                 result.incrementSkipped();
-                return; // Skip already generated payslips when force=false
+                return; // Skip already generated payslips when force=false (within cutoff only)
             }
 
             // Update existing payslip
@@ -400,7 +417,7 @@ public class PayslipGenerationService {
             result.incrementUpdated();
 
         } else {
-            // Create new payslip
+            // No existing payslip - always allow creation (both within and after cutoff)
             createNewPayslip(userId, periodStart, periodEnd, connection);
             result.incrementCreated();
         }
@@ -517,6 +534,7 @@ public class PayslipGenerationService {
     }
 
     private boolean isWithinCutoffDays(LocalDate periodStart) {
+        // Use system time for checking (allows testing by changing system clock)
         LocalDate today = LocalDate.now();
         int cutoffDay = PayrollConfig.getGenerateCutoffDays(); // Default: 7
 
@@ -524,37 +542,39 @@ public class PayslipGenerationService {
         int periodYear = periodStart.getYear();
         int periodMonth = periodStart.getMonthValue();
 
-        // Get current year and month
+        // Get current year and month from system time
         int currentYear = today.getYear();
         int currentMonth = today.getMonthValue();
         int currentDay = today.getDayOfMonth();
 
-        logger.info(String.format("Checking generation window: period=%d-%d, today=%d-%d (day %d), cutoff=%d",
-                periodYear, periodMonth, currentYear, currentMonth, currentDay, cutoffDay));
+        logger.info(String.format("[CUTOFF CHECK] System time: %s, Period: %d-%02d, Cutoff: %d days",
+                today, periodYear, periodMonth, cutoffDay));
 
-        // Rule: Payslip for month X can only be generated in the first 7 days of month X+1
-        // Example: Payslip for October 2025 can only be generated from Nov 1-7, 2025
-        //          After Nov 7, the window closes and cannot generate October payslip anymore
+        // Rule: Payslip for month X can be generated freely in the first 7 days of month X+1
+        // Example: Payslip for October 2025 can be generated freely from Nov 1-7, 2025
+        //          After Nov 7, can only generate for missing or dirty payslips
 
         // Calculate the next month after the period
         LocalDate nextMonthStart = periodStart.plusMonths(1).withDayOfMonth(1);
         int nextYear = nextMonthStart.getYear();
         int nextMonth = nextMonthStart.getMonthValue();
 
-        logger.info(String.format("Expected generation window: %d-%d (first %d days)", nextYear, nextMonth, cutoffDay));
+        logger.info(String.format("[CUTOFF CHECK] Generation window: %d-%02d (first %d days)",
+                                nextYear, nextMonth, cutoffDay));
 
         // Check if today is in the next month after the period
         boolean isInNextMonth = (currentYear == nextYear && currentMonth == nextMonth);
 
         if (!isInNextMonth) {
-            logger.info(String.format("Not in generation window. isInNextMonth=%b", isInNextMonth));
-            // Not in the generation window (next month), not allowed
+            logger.info(String.format("[CUTOFF CHECK] Not in generation window. Current: %d-%02d, Expected: %d-%02d",
+                                    currentYear, currentMonth, nextYear, nextMonth));
             return false;
         }
 
         // In the next month, check if within first 7 days
         boolean withinCutoff = currentDay <= cutoffDay;
-        logger.info(String.format("In generation window. Within cutoff: %b", withinCutoff));
+        logger.info(String.format("[CUTOFF CHECK] In generation window. Day %d <= %d: %b",
+                                currentDay, cutoffDay, withinCutoff));
         return withinCutoff;
     }
 

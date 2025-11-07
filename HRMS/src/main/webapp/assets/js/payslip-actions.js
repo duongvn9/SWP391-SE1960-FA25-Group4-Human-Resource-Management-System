@@ -208,16 +208,22 @@ function getMonthName(month) {
 function validateGenerationRules(formData) {
     const month = parseInt(formData.get('payrollMonth'));
     const year = parseInt(formData.get('payrollYear'));
+    const force = formData.get('force') === 'true';
+    const onlyDirty = formData.get('onlyDirty') === 'true';
 
     if (!month || !year) {
         showError('Please select both month and year');
         return false;
     }
 
+    // Use system time for validation (allows testing by changing system clock)
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth() + 1; // 1-based
     const currentYear = currentDate.getFullYear();
     const currentDay = currentDate.getDate();
+
+    console.log('[VALIDATION] System time:', currentDate.toISOString(),
+                'Period:', year + '-' + month, 'Day:', currentDay);
 
     // Rule 1: Can only generate for previous months, not current or future
     if (year > currentYear || (year === currentYear && month >= currentMonth)) {
@@ -225,8 +231,8 @@ function validateGenerationRules(formData) {
         return false;
     }
 
-    // Rule 2: Can only generate within cutoff window (first 7 days of following month)
-    // Example: October payslip can only be generated from Nov 1-7
+    // Rule 2: Check cutoff window (first 7 days of following month)
+    // Example: October payslip can be generated freely from Nov 1-7
     const payrollDate = new Date(year, month - 1, 1); // First day of payroll month
     const followingMonth = new Date(payrollDate);
     followingMonth.setMonth(followingMonth.getMonth() + 1); // First day of following month
@@ -239,8 +245,30 @@ function validateGenerationRules(formData) {
         return false;
     }
 
-    if (currentDay > 7) {
-        showError(`The generation window has closed. Payslips for ${getMonthName(month)} ${year} could only be generated within the first 7 days of ${getMonthName(currentMonth)} ${currentYear}.`);
+    const withinCutoff = currentDay <= 7;
+    console.log('[VALIDATION] Within cutoff (day <= 7):', withinCutoff, 'force:', force, 'onlyDirty:', onlyDirty);
+
+    // After 7 days: ONLY block "Force regeneration"
+    // Allow: normal generation (creates new, skips clean), onlyDirty (regenerates dirty only)
+    if (!withinCutoff && force) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Force Regeneration Not Allowed',
+                html: `The generation window has closed (after day 7).<br><br>` +
+                     `<strong>"Force regeneration" is blocked after day 7.</strong><br><br>` +
+                     `<div style="text-align: left; margin-left: 20px;">` +
+                     `You can still:<br>` +
+                     `✓ Generate without "Force" (creates new for missing)<br>` +
+                     `✓ Use "Only dirty payslips" (regenerates modified only)` +
+                     `</div>`,
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#3085d6'
+            });
+        } else {
+            // Fallback to toast if Swal not available
+            showError('Force regeneration is not allowed after day 7. Uncheck "Force" option or use "Only dirty payslips".');
+        }
         return false;
     }
 
@@ -259,9 +287,14 @@ function validateGenerationRules(formData) {
  * Requirements: 3.2, 9.1
  */
 function handleBulkRegenerate() {
+    const withinCutoff = checkCutoffForRegenerate();
+    const message = withinCutoff
+        ? 'Are you sure you want to regenerate all dirty payslips?<br><small class="text-muted">This will recalculate all amounts and may take several minutes.</small>'
+        : 'Are you sure you want to regenerate all dirty payslips?<br><small class="text-warning">Note: After day 7, only dirty payslips will be regenerated.</small>';
+
     showConfirmModal({
         title: 'Bulk Regenerate Payslips',
-        message: 'Are you sure you want to regenerate all dirty payslips?<br><small class="text-muted">This will recalculate all amounts and may take several minutes.</small>',
+        message: message,
         confirmText: 'Regenerate All',
         cancelText: 'Cancel',
         confirmClass: 'btn-warning',
@@ -340,9 +373,16 @@ function handleIndividualRegenerate(event) {
     const btn = event.target.closest('button');
     const payslipId = btn.getAttribute('data-payslip-id');
     const employeeName = btn.getAttribute('data-employee-name') || '';
+    const isDirty = btn.getAttribute('data-is-dirty') === 'true';
 
     if (!payslipId) {
         showError('Payslip ID not found');
+        return;
+    }
+
+    // Check cutoff window for non-dirty payslips
+    if (!isDirty && !checkCutoffForRegenerate()) {
+        showWarning('The generation window has closed. You can only regenerate dirty payslips after day 7.');
         return;
     }
 
@@ -362,12 +402,33 @@ function handleIndividualRegenerate(event) {
     });
 }
 
+/**
+ * Check if within cutoff window for regeneration
+ */
+function checkCutoffForRegenerate() {
+    // Use system time
+    const currentDate = new Date();
+    const currentDay = currentDate.getDate();
+
+    // Within first 7 days of month
+    return currentDay <= 7;
+}
+
 function performIndividualRegenerate(btn, payslipId) {
 
     const params = new URLSearchParams();
     params.append('action', 'regenerate');
     params.append('payslipId', payslipId);
-    params.append('force', 'true');
+
+    // Only set force=true if within cutoff window
+    // After cutoff, backend will check if payslip is dirty
+    const withinCutoff = checkCutoffForRegenerate();
+    if (withinCutoff) {
+        params.append('force', 'true');
+        console.log('[REGENERATE] Within cutoff, setting force=true');
+    } else {
+        console.log('[REGENERATE] After cutoff, backend will check dirty flag');
+    }
 
     // Show loading state
     const originalText = btn.innerHTML;
@@ -1138,7 +1199,16 @@ function performRegenerate(payslipId) {
     const params = new URLSearchParams();
     params.append('action', 'regenerate');
     params.append('payslipId', payslipId);
-    params.append('force', 'true');
+
+    // Only set force=true if within cutoff window
+    // After cutoff, backend will check if payslip is dirty
+    const withinCutoff = checkCutoffForRegenerate();
+    if (withinCutoff) {
+        params.append('force', 'true');
+        console.log('[REGENERATE] Within cutoff, setting force=true');
+    } else {
+        console.log('[REGENERATE] After cutoff, backend will check dirty flag');
+    }
 
     // Make AJAX request
     fetch('/HRMS/payslips', {
