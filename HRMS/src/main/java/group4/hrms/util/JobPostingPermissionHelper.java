@@ -26,8 +26,7 @@ public class JobPostingPermissionHelper {
     
     /**
      * Check if user can create job postings based on their position.
-     * Only HR Staff (8) can create job postings.
-     * HR Manager (7) can only approve/reject/publish, not create.
+     * Both HR Staff (8) and HR Manager (7) can create job postings.
      *
      * @param positionId User's position ID
      * @return true if user can create job postings
@@ -36,12 +35,12 @@ public class JobPostingPermissionHelper {
         if (positionId == null) {
             return false;
         }
-        return positionId == POSITION_HR;
+        return positionId == POSITION_HR_MANAGER || positionId == POSITION_HR;
     }
     
     /**
      * Check if user can approve job postings based on their position.
-     * Only HR Manager (7) can approve job postings.
+     * Both HR Manager (7) and HR Staff (8) can approve job postings.
      *
      * @param positionId User's position ID
      * @return true if user can approve job postings
@@ -50,7 +49,7 @@ public class JobPostingPermissionHelper {
         if (positionId == null) {
             return false;
         }
-        return positionId == POSITION_HR_MANAGER;
+        return positionId == POSITION_HR_MANAGER || positionId == POSITION_HR;
     }
     
     /**

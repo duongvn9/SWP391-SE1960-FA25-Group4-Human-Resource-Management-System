@@ -466,15 +466,15 @@
                 
                 <%-- Department Manager (position 9) cannot see any action buttons --%>
                 <c:if test="${sessionScope.loggedInUser.positionId != 9}">
-                    <%-- HRM (position 7) can approve/reject PENDING, publish APPROVED --%>
-                    <c:if test="${sessionScope.loggedInUser.positionId == 7 && 
+                    <%-- Both HRM (position 7) and HR (position 8) can approve/reject PENDING, publish APPROVED --%>
+                    <c:if test="${(sessionScope.loggedInUser.positionId == 7 || sessionScope.loggedInUser.positionId == 8) && 
                                  (jobPosting.status == 'PENDING' || jobPosting.status == 'APPROVED')}">
                         <c:set var="showButtons" value="true"/>
                     </c:if>
                     
-                    <%-- HR (position 8) can edit PENDING --%>
-                    <c:if test="${sessionScope.loggedInUser.positionId == 8 && jobPosting.status == 'PENDING'}">
-                        <c:set var="showButtons" value="true"/>
+                    <%-- Both HRM and HR can edit PENDING --%>
+                    <c:if test="${(sessionScope.loggedInUser.positionId == 7 || sessionScope.loggedInUser.positionId == 8) && 
+                                 jobPosting.status == 'PENDING'}">
                         <c:set var="canEdit" value="true"/>
                     </c:if>
                     
@@ -489,8 +489,9 @@
                 <c:if test="${showButtons}">
                     <div class="detail-section mb-4">
                         <div class="action-buttons">
-                            <%-- HRM approve/reject buttons --%>
-                            <c:if test="${sessionScope.loggedInUser.positionId == 7 && jobPosting.status == 'PENDING'}">
+                            <%-- Both HRM and HR approve/reject buttons --%>
+                            <c:if test="${(sessionScope.loggedInUser.positionId == 7 || sessionScope.loggedInUser.positionId == 8) && 
+                                         jobPosting.status == 'PENDING'}">
                                 <button type="button" class="btn btn-success btn-action" onclick="approveJobPosting('${jobPosting.id}')">
                                     <i class="fas fa-check-circle"></i> Approve
                                 </button>
@@ -507,8 +508,9 @@
                                 </a>
                             </c:if>
                             
-                            <%-- HRM publish button --%>
-                            <c:if test="${sessionScope.loggedInUser.positionId == 7 && jobPosting.status == 'APPROVED'}">
+                            <%-- Both HRM and HR publish button --%>
+                            <c:if test="${(sessionScope.loggedInUser.positionId == 7 || sessionScope.loggedInUser.positionId == 8) && 
+                                         jobPosting.status == 'APPROVED'}">
                                 <button type="button" class="btn btn-primary btn-action" onclick="publishJobPosting('${jobPosting.id}')">
                                     <i class="fas fa-globe"></i> Publish
                                 </button>
