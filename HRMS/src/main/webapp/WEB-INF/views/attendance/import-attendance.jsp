@@ -141,11 +141,17 @@
                                         <c:set var="endPage" value="${totalPages}" />
                                     </c:if>
 
-                                    <c:if test="${startPage > 1}">
+                                    <!-- Hiển thị số 1 + dấu ... nếu cách từ startPage > 2 -->
+                                    <c:if test="${startPage > 2}">
                                         <a href="?action=Preview&page=1" class="page-btn">1</a>
                                         <span>...</span>
                                     </c:if>
+                                    <!-- Nếu startPage = 2 thì chỉ hiển thị 1 bình thường -->
+                                    <c:if test="${startPage == 2}">
+                                        <a href="?action=Preview&page=1" class="page-btn">1</a>
+                                    </c:if>
 
+                                    <!-- Các trang chính giữa -->
                                     <c:forEach var="i" begin="${startPage}" end="${endPage}">
                                         <c:choose>
                                             <c:when test="${i == currentPage}">
@@ -157,8 +163,14 @@
                                         </c:choose>
                                     </c:forEach>
 
-                                    <c:if test="${endPage < totalPages}">
+                                    <!-- Hiển thị dấu ... + trang cuối nếu khoảng cách > 1 -->
+                                    <c:if test="${endPage < totalPages - 1}">
                                         <span>...</span>
+                                        <a href="?action=Preview&page=${totalPages}"
+                                           class="page-btn">${totalPages}</a>
+                                    </c:if>
+                                    <!-- Nếu endPage liền kề trang cuối thì chỉ hiển thị trang cuối -->
+                                    <c:if test="${endPage == totalPages - 1}">
                                         <a href="?action=Preview&page=${totalPages}"
                                            class="page-btn">${totalPages}</a>
                                     </c:if>
