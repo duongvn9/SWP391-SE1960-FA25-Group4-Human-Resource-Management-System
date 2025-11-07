@@ -130,7 +130,11 @@ document.addEventListener("DOMContentLoaded", function () {
     submitBtn.closest("form").addEventListener("submit", function (e) {
         if (selectedRecords.length === 0) {
             e.preventDefault();
-            alert("⚠️ Please select at least one record before submitting!");
+            if (typeof window.showToast === 'function') {
+                window.showToast("Please select at least one record before submitting!", "warning");
+            } else {
+                alert("⚠️ Please select at least one record before submitting!");
+            }
             return;
         }
 
