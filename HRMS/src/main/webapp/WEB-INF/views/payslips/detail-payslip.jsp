@@ -2,10 +2,8 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
-
 <!DOCTYPE html>
 <html lang="en">
-
     <head>
         <!-- CSS riêng của trang -->
         <jsp:include page="../layout/head.jsp">
@@ -16,17 +14,11 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/detail-payslip-fix.css">
         <!-- Print CSS -->
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/payslip-print-clean.css">
-
         <!-- Meta tags for better PDF generation -->
         <meta name="format-detection" content="telephone=no">
         <meta name="print-color-adjust" content="exact">
         <meta name="color-scheme" content="light">
-
-
-
-
     </head>
-
     <body class="payslip-page">
         <!-- Sidebar -->
         <jsp:include page="../layout/sidebar.jsp">
@@ -71,8 +63,8 @@
                             </c:if>
                         </div>
                         <div class="col-md-4 text-end">
-                            <button onclick="printPayslip()" class="btn btn-primary me-2 print-btn" title="In payslip thành file PDF">
-                                <i class="fas fa-print me-1"></i> Print Payslip
+                            <button onclick="exportPayslipPDF()" class="btn btn-primary me-2 print-btn" title="Xuất payslip thành file PDF">
+                                <i class="fas fa-file-pdf me-1"></i> Export PDF
                             </button>
                             <a href="${pageContext.request.contextPath}/payslips" class="btn btn-light">
                                 <i class="fas fa-arrow-left me-1"></i> Back
@@ -692,12 +684,12 @@
                             </div>
                         </div>
                     </div>
-                    <!-- Printable Content End -->
                 </div>
             </c:if>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="${pageContext.request.contextPath}/assets/js/detail-payslip-clean.js"></script>  
 </body>
 </html>

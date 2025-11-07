@@ -208,16 +208,22 @@ function getMonthName(month) {
 function validateGenerationRules(formData) {
     const month = parseInt(formData.get('payrollMonth'));
     const year = parseInt(formData.get('payrollYear'));
+    const force = formData.get('force') === 'true';
+    const onlyDirty = formData.get('onlyDirty') === 'true';
 
     if (!month || !year) {
         showError('Please select both month and year');
         return false;
     }
 
+    // Use system time for validation (allows testing by changing system clock)
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth() + 1; // 1-based
     const currentYear = currentDate.getFullYear();
     const currentDay = currentDate.getDate();
+
+    console.log('[VALIDATION] System time:', currentDate.toISOString(),
+                'Period:', year + '-' + month, 'Day:', currentDay);
 
     // Rule 1: Can only generate for previous months, not current or future
     if (year > currentYear || (year === currentYear && month >= currentMonth)) {
@@ -225,8 +231,8 @@ function validateGenerationRules(formData) {
         return false;
     }
 
-    // Rule 2: Can only generate within cutoff window (first 7 days of following month)
-    // Example: October payslip can only be generated from Nov 1-7
+    // Rule 2: Check cutoff window (first 7 days of following month)
+    // Example: October payslip can be generated freely from Nov 1-7
     const payrollDate = new Date(year, month - 1, 1); // First day of payroll month
     const followingMonth = new Date(payrollDate);
     followingMonth.setMonth(followingMonth.getMonth() + 1); // First day of following month
@@ -239,8 +245,30 @@ function validateGenerationRules(formData) {
         return false;
     }
 
-    if (currentDay > 7) {
-        showError(`The generation window has closed. Payslips for ${getMonthName(month)} ${year} could only be generated within the first 7 days of ${getMonthName(currentMonth)} ${currentYear}.`);
+    const withinCutoff = currentDay <= 7;
+    console.log('[VALIDATION] Within cutoff (day <= 7):', withinCutoff, 'force:', force, 'onlyDirty:', onlyDirty);
+
+    // After 7 days: ONLY block "Force regeneration"
+    // Allow: normal generation (creates new, skips clean), onlyDirty (regenerates dirty only)
+    if (!withinCutoff && force) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Force Regeneration Not Allowed',
+                html: `The generation window has closed (after day 7).<br><br>` +
+                     `<strong>"Force regeneration" is blocked after day 7.</strong><br><br>` +
+                     `<div style="text-align: left; margin-left: 20px;">` +
+                     `You can still:<br>` +
+                     `✓ Generate without "Force" (creates new for missing)<br>` +
+                     `✓ Use "Only dirty payslips" (regenerates modified only)` +
+                     `</div>`,
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#3085d6'
+            });
+        } else {
+            // Fallback to toast if Swal not available
+            showError('Force regeneration is not allowed after day 7. Uncheck "Force" option or use "Only dirty payslips".');
+        }
         return false;
     }
 
@@ -259,9 +287,14 @@ function validateGenerationRules(formData) {
  * Requirements: 3.2, 9.1
  */
 function handleBulkRegenerate() {
+    const withinCutoff = checkCutoffForRegenerate();
+    const message = withinCutoff
+        ? 'Are you sure you want to regenerate all dirty payslips?<br><small class="text-muted">This will recalculate all amounts and may take several minutes.</small>'
+        : 'Are you sure you want to regenerate all dirty payslips?<br><small class="text-warning">Note: After day 7, only dirty payslips will be regenerated.</small>';
+
     showConfirmModal({
         title: 'Bulk Regenerate Payslips',
-        message: 'Are you sure you want to regenerate all dirty payslips?<br><small class="text-muted">This will recalculate all amounts and may take several minutes.</small>',
+        message: message,
         confirmText: 'Regenerate All',
         cancelText: 'Cancel',
         confirmClass: 'btn-warning',
@@ -340,9 +373,16 @@ function handleIndividualRegenerate(event) {
     const btn = event.target.closest('button');
     const payslipId = btn.getAttribute('data-payslip-id');
     const employeeName = btn.getAttribute('data-employee-name') || '';
+    const isDirty = btn.getAttribute('data-is-dirty') === 'true';
 
     if (!payslipId) {
         showError('Payslip ID not found');
+        return;
+    }
+
+    // Check cutoff window for non-dirty payslips
+    if (!isDirty && !checkCutoffForRegenerate()) {
+        showWarning('The generation window has closed. You can only regenerate dirty payslips after day 7.');
         return;
     }
 
@@ -362,12 +402,33 @@ function handleIndividualRegenerate(event) {
     });
 }
 
+/**
+ * Check if within cutoff window for regeneration
+ */
+function checkCutoffForRegenerate() {
+    // Use system time
+    const currentDate = new Date();
+    const currentDay = currentDate.getDate();
+
+    // Within first 7 days of month
+    return currentDay <= 7;
+}
+
 function performIndividualRegenerate(btn, payslipId) {
 
     const params = new URLSearchParams();
     params.append('action', 'regenerate');
     params.append('payslipId', payslipId);
-    params.append('force', 'true');
+
+    // Only set force=true if within cutoff window
+    // After cutoff, backend will check if payslip is dirty
+    const withinCutoff = checkCutoffForRegenerate();
+    if (withinCutoff) {
+        params.append('force', 'true');
+        console.log('[REGENERATE] Within cutoff, setting force=true');
+    } else {
+        console.log('[REGENERATE] After cutoff, backend will check dirty flag');
+    }
 
     // Show loading state
     const originalText = btn.innerHTML;
@@ -412,6 +473,9 @@ function performIndividualRegenerate(btn, payslipId) {
  * Requirements: 9.2, 9.3
  */
 function handleExport(format) {
+    // Update period dates from month/year before exporting
+    updateFilterPeriod();
+
     const filterForm = document.getElementById('hrmFilterForm');
     const formData = new FormData();
 
@@ -422,7 +486,16 @@ function handleExport(format) {
     if (filterForm) {
         const filterData = new FormData(filterForm);
         for (let [key, value] of filterData.entries()) {
-            formData.append(key, value);
+            // Only add non-empty values
+            if (value && value.trim() !== '') {
+                formData.append(key, value);
+            }
+        }
+
+        // Debug: Log export parameters
+        console.log('[Export] Parameters:');
+        for (let [key, value] of formData.entries()) {
+            console.log(`  ${key}: ${value}`);
         }
     }
 
@@ -648,20 +721,80 @@ function showNotification(message, type = 'info') {
         return;
     }
 
-    // Fallback to simple alert or console
+    // Fallback to creating a simple toast notification
+    createSimpleToast(message, type);
+}
+
+/**
+ * Create a simple toast notification (fallback when showToast is not available)
+ */
+function createSimpleToast(message, type = 'info') {
+    // Create toast container if it doesn't exist
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999;';
+        document.body.appendChild(container);
+    }
+
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${getBootstrapType(type)} alert-dismissible fade show`;
+    toast.style.cssText = 'min-width: 300px; margin-bottom: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);';
+    toast.setAttribute('role', 'alert');
+
+    const icon = getIconForType(type);
+    toast.innerHTML = `
+        <i class="fas ${icon} me-2"></i>
+        <strong>${type.charAt(0).toUpperCase() + type.slice(1)}:</strong> ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+
+    container.appendChild(toast);
+
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 150);
+    }, 5000);
+
+    // Log to console
     if (type === 'error') {
-        alert('Error: ' + message);
         console.error(message);
-    } else if (type === 'success') {
-        alert('Success: ' + message);
-        console.log(message);
     } else if (type === 'warning') {
-        alert('Warning: ' + message);
         console.warn(message);
+    } else if (type === 'success') {
+        console.log(message);
     } else {
-        alert(message);
         console.info(message);
     }
+}
+
+/**
+ * Get Bootstrap alert type from notification type
+ */
+function getBootstrapType(type) {
+    const typeMap = {
+        'error': 'danger',
+        'success': 'success',
+        'warning': 'warning',
+        'info': 'info'
+    };
+    return typeMap[type] || 'info';
+}
+
+/**
+ * Get icon for notification type
+ */
+function getIconForType(type) {
+    const iconMap = {
+        'error': 'fa-exclamation-circle',
+        'success': 'fa-check-circle',
+        'warning': 'fa-exclamation-triangle',
+        'info': 'fa-info-circle'
+    };
+    return iconMap[type] || 'fa-info-circle';
 }
 
 /**
@@ -670,18 +803,24 @@ function showNotification(message, type = 'info') {
 function showErrorDetails(errors) {
     if (!errors || errors.length === 0) return;
 
-    let errorMessage = 'Detailed errors:\n';
-    errors.forEach((error, index) => {
-        errorMessage += `${index + 1}. ${error}\n`;
-    });
-
     console.error('Detailed errors:', errors);
 
-    // Show in a more user-friendly way if possible
-    if (errors.length <= 5) {
-        alert(errorMessage);
+    // Show in a more user-friendly way
+    if (errors.length <= 3) {
+        // Show each error as separate toast
+        errors.forEach((error, index) => {
+            setTimeout(() => {
+                showError(`Error ${index + 1}: ${error}`);
+            }, index * 500); // Stagger toasts
+        });
     } else {
-        alert(`${errors.length} errors occurred. Check the console for details.`);
+        // Show summary toast
+        showError(`${errors.length} errors occurred. Check the console for details.`);
+
+        // Log all errors to console
+        errors.forEach((error, index) => {
+            console.error(`Error ${index + 1}:`, error);
+        });
     }
 }
 
@@ -708,8 +847,8 @@ function getCurrentFilters() {
  * Function to update period dates based on month/year selection
  */
 function updateFilterPeriod() {
-    const month = document.getElementById('filterMonth').value;
-    const year = document.getElementById('filterYear').value;
+    const month = document.getElementById('filterMonth')?.value;
+    const year = document.getElementById('filterYear')?.value;
     const periodStartInput = document.getElementById('periodStart');
     const periodEndInput = document.getElementById('periodEnd');
 
@@ -725,6 +864,8 @@ function updateFilterPeriod() {
         // Update hidden inputs
         if (periodStartInput) periodStartInput.value = startDate;
         if (periodEndInput) periodEndInput.value = endDate;
+
+        console.log('[Filter Period] Updated:', startDate, 'to', endDate);
     } else {
         // Clear hidden inputs
         if (periodStartInput) periodStartInput.value = '';
@@ -932,11 +1073,11 @@ function quickGenerate(type) {
     const periodEnd = document.getElementById('periodEnd').value;
 
     if (!periodStart || !periodEnd) {
-        alert('Please select a period first.');
+        showWarning('Please select a period first.');
         return;
     }
 
-    alert(`Quick ${type} generation would start here. Feature coming soon!`);
+    showInfo(`Quick ${type} generation would start here. Feature coming soon!`);
 }
 
 function refreshCounters() {
@@ -1058,7 +1199,16 @@ function performRegenerate(payslipId) {
     const params = new URLSearchParams();
     params.append('action', 'regenerate');
     params.append('payslipId', payslipId);
-    params.append('force', 'true');
+
+    // Only set force=true if within cutoff window
+    // After cutoff, backend will check if payslip is dirty
+    const withinCutoff = checkCutoffForRegenerate();
+    if (withinCutoff) {
+        params.append('force', 'true');
+        console.log('[REGENERATE] Within cutoff, setting force=true');
+    } else {
+        console.log('[REGENERATE] After cutoff, backend will check dirty flag');
+    }
 
     // Make AJAX request
     fetch('/HRMS/payslips', {
@@ -1184,8 +1334,26 @@ function canGenerate() {
 
 function exportMyPayslips() {
     const contextPath = window.location.pathname.substring(0, window.location.pathname.indexOf('/', 1)) || '';
-    const periodStart = document.getElementById('hiddenPeriodStart')?.value;
-    const periodEnd = document.getElementById('hiddenPeriodEnd')?.value;
+
+    // Get month and year from form
+    const month = document.getElementById('payslipMonth')?.value;
+    const year = document.getElementById('payslipYear')?.value;
+
+    let periodStart, periodEnd;
+
+    // Calculate period from month/year if available
+    if (month && year) {
+        const firstDay = new Date(year, month - 1, 1);
+        const lastDay = new Date(year, month, 0);
+        periodStart = firstDay.toISOString().split('T')[0];
+        periodEnd = lastDay.toISOString().split('T')[0];
+        console.log('[Export My Payslips] Calculated period:', periodStart, 'to', periodEnd);
+    } else {
+        // Fallback to hidden inputs
+        periodStart = document.getElementById('hiddenPeriodStart')?.value;
+        periodEnd = document.getElementById('hiddenPeriodEnd')?.value;
+        console.log('[Export My Payslips] Using hidden inputs:', periodStart, 'to', periodEnd);
+    }
 
     let exportUrl = contextPath + '/my-payslips/export';
 

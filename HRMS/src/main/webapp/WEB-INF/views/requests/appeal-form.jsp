@@ -163,19 +163,16 @@
                     </a>
                 </div>
 
-                <!-- Alert Messages -->
+                <!-- Toast Container -->
+                <div id="toastContainer" class="toast-container"></div>
+
+                <!-- Hidden messages for toast -->
                 <c:if test="${not empty message}">
-                    <div class="alert alert-warning" role="alert">
-                        <i class="fas fa-exclamation-circle me-2"></i>
-                        ${message}
-                    </div>
+                    <div class="hidden-message" data-type="warning" data-message="${message}" style="display: none;"></div>
                 </c:if>
 
                 <c:if test="${not empty success}">
-                    <div class="alert alert-success" role="alert">
-                        <i class="fas fa-check-circle me-2"></i>
-                        ${success}
-                    </div>
+                    <div class="hidden-message" data-type="success" data-message="${success}" style="display: none;"></div>
                 </c:if>
 
                 <!-- Form Card -->
@@ -549,43 +546,11 @@
                 </div>
             </div>
             <!-- Bootstrap Bundle (Required for dropdown functionality) -->
-            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>        
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+            <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/toast-notification.css">
+            <script src="${pageContext.request.contextPath}/assets/js/toast-notification.js"></script>
             <script src="${pageContext.request.contextPath}/assets/js/appeal-request.js"></script>
-            <script>
-                // Additional debug after appeal-request.js loads
-                console.log('2. After appeal-request.js load');
-                console.log('Bootstrap available after appeal-request.js:', typeof window.bootstrap !== 'undefined');
-                
-                // Bootstrap loaded successfully
-                if (typeof window.bootstrap !== 'undefined') {
-                    console.log('✅ Bootstrap loaded successfully!');
-                    // Let appeal-request.js handle dropdown initialization
-                } else {
-                    console.error('❌ Bootstrap still not loaded!');
-                }
-                
-
-                
-                // Wait for everything to load
-                setTimeout(function() {
-                    console.log('3. After 1 second delay');
-                    console.log('Bootstrap available after delay:', typeof window.bootstrap !== 'undefined');
-                    
-                    // Final dropdown check
-                    const dropdowns = document.querySelectorAll('[data-bs-toggle="dropdown"]');
-                    console.log('Final dropdown count:', dropdowns.length);
-                    
-                    if (dropdowns.length > 0 && typeof window.bootstrap !== 'undefined') {
-                        console.log('Everything looks good - dropdown should work');
-                    } else {
-                        console.error('Problem detected:', {
-                            dropdownsFound: dropdowns.length,
-                            bootstrapLoaded: typeof window.bootstrap !== 'undefined'
-                        });
-                    }
-                }, 1000);
-            </script>
-            
+         
             <!-- Include Dashboard Footer for consistency -->
             <jsp:include page="../layout/dashboard-footer.jsp" />
     </body>

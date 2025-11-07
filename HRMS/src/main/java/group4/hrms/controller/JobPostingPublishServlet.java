@@ -32,7 +32,7 @@ public class JobPostingPublishServlet extends HttpServlet {
         Long positionId = logged != null ? logged.getPositionId() : null;
 
         if (publisherId == null || !JobPostingPermissionHelper.canApproveJobPosting(positionId)) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied. Must be logged in as HRM.");
+            response.sendRedirect(request.getContextPath() + "/login?error=You don't have permission to publish job postings");
             return;
         }
 

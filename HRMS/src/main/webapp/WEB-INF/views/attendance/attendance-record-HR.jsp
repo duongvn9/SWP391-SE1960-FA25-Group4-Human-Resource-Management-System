@@ -175,11 +175,15 @@
                                value="${selectedPeriod != null ? selectedPeriod.id : ''}">
                     </form>
 
+                    <!-- Toast Container -->
+                    <div id="toastContainer" class="toast-container"></div>
+
+                    <!-- Hidden messages for toast -->
                     <c:if test="${not empty error}">
-                        <div class="form-message error-message" style="color: red">${error}</div>
+                        <div class="hidden-message" data-type="error" data-message="${error}" style="display: none;"></div>
                     </c:if>
                     <c:if test="${not empty message}">
-                        <div class="form-message success-message" style="color: green">${message}</div>
+                        <div class="hidden-message" data-type="success" data-message="${message}" style="display: none;"></div>
                     </c:if>
 
                     <!-- ========== MAIN TABLE ========== -->
@@ -520,5 +524,7 @@
             });
         </script>
         <script src="${pageContext.request.contextPath}/assets/js/attendance-record-HR.js"></script>
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/toast-notification.css">
+        <script src="${pageContext.request.contextPath}/assets/js/toast-notification.js"></script>
     </body>
 </html>

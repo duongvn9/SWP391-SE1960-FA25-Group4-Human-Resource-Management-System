@@ -281,7 +281,7 @@ public class AppealRequestDetail {
 
     /**
      * Get attendance records from the original JSON for display purposes
-     * This method parses the records array to extract attendance information
+     * This method parses both edited records and new records arrays
      *
      * @param originalJson The original JSON string containing records
      * @return List of AttendanceRecordInfo for display
@@ -296,12 +296,74 @@ public class AppealRequestDetail {
         try {
             JsonObject jsonObject = JsonParser.parseString(originalJson).getAsJsonObject();
 
-            if (jsonObject.has("records") && jsonObject.get("records").isJsonArray()) {
+            // Parse "Edit records" array (edited existing records)
+            if (jsonObject.has("Edit records") && jsonObject.get("Edit records").isJsonArray()) {
+                jsonObject.getAsJsonArray("Edit records").forEach(element -> {
+                    if (element.isJsonObject()) {
+                        JsonObject recordObj = element.getAsJsonObject();
+
+                        AttendanceRecordInfo info = new AttendanceRecordInfo();
+                        info.recordType = "EDIT"; // Mark as edited record
+
+                        // Parse newRecord
+                        if (recordObj.has("newRecord") && recordObj.get("newRecord").isJsonObject()) {
+                            JsonObject newRecord = recordObj.getAsJsonObject("newRecord");
+                            info.date = newRecord.has("date") ? newRecord.get("date").getAsString() : "";
+                            info.newCheckIn = newRecord.has("checkIn") ? newRecord.get("checkIn").getAsString() : "";
+                            info.newCheckOut = newRecord.has("checkOut") ? newRecord.get("checkOut").getAsString() : "";
+                            info.newStatus = newRecord.has("status") ? newRecord.get("status").getAsString() : "";
+                        }
+
+                        // Parse oldRecord
+                        if (recordObj.has("oldRecord") && recordObj.get("oldRecord").isJsonObject()) {
+                            JsonObject oldRecord = recordObj.getAsJsonObject("oldRecord");
+                            info.oldCheckIn = oldRecord.has("checkIn") ? oldRecord.get("checkIn").getAsString() : "";
+                            info.oldCheckOut = oldRecord.has("checkOut") ? oldRecord.get("checkOut").getAsString() : "";
+                            info.oldStatus = oldRecord.has("status") ? oldRecord.get("status").getAsString() : "";
+                            info.source = oldRecord.has("source") ? oldRecord.get("source").getAsString() : "";
+                            info.period = oldRecord.has("period") ? oldRecord.get("period").getAsString() : "";
+                        }
+
+                        records.add(info);
+                    }
+                });
+            }
+
+            // Parse "newRecords" array (completely new records)
+            if (jsonObject.has("newRecords") && jsonObject.get("newRecords").isJsonArray()) {
+                jsonObject.getAsJsonArray("newRecords").forEach(element -> {
+                    if (element.isJsonObject()) {
+                        JsonObject newRecordObj = element.getAsJsonObject();
+
+                        AttendanceRecordInfo info = new AttendanceRecordInfo();
+                        info.recordType = "NEW"; // Mark as new record
+                        
+                        // For new records, there's no old record - only new data
+                        info.date = newRecordObj.has("date") ? newRecordObj.get("date").getAsString() : "";
+                        info.newCheckIn = newRecordObj.has("checkIn") ? newRecordObj.get("checkIn").getAsString() : "";
+                        info.newCheckOut = newRecordObj.has("checkOut") ? newRecordObj.get("checkOut").getAsString() : "";
+                        info.newStatus = newRecordObj.has("status") ? newRecordObj.get("status").getAsString() : "";
+                        
+                        // No old record data for new records
+                        info.oldCheckIn = "";
+                        info.oldCheckOut = "";
+                        info.oldStatus = "";
+                        info.source = "appeal"; // New records are from appeal
+                        info.period = ""; // Will be determined by system
+
+                        records.add(info);
+                    }
+                });
+            }
+
+            // Fallback: Parse legacy "records" array format for backward compatibility
+            if (records.isEmpty() && jsonObject.has("records") && jsonObject.get("records").isJsonArray()) {
                 jsonObject.getAsJsonArray("records").forEach(element -> {
                     if (element.isJsonObject()) {
                         JsonObject recordObj = element.getAsJsonObject();
 
                         AttendanceRecordInfo info = new AttendanceRecordInfo();
+                        info.recordType = "EDIT"; // Assume edited for legacy format
 
                         // Parse newRecord
                         if (recordObj.has("newRecord") && recordObj.get("newRecord").isJsonObject()) {
@@ -346,6 +408,7 @@ public class AppealRequestDetail {
         public String oldStatus;
         public String source;
         public String period;
+        public String recordType; // "EDIT" or "NEW"
 
         public String getDate() { return date; }
         public String getNewCheckIn() { return newCheckIn; }
@@ -356,6 +419,11 @@ public class AppealRequestDetail {
         public String getOldStatus() { return oldStatus; }
         public String getSource() { return source; }
         public String getPeriod() { return period; }
+        public String getRecordType() { return recordType; }
+        
+        // Helper methods
+        public boolean isNewRecord() { return "NEW".equals(recordType); }
+        public boolean isEditRecord() { return "EDIT".equals(recordType); }
     }
 
     @Override

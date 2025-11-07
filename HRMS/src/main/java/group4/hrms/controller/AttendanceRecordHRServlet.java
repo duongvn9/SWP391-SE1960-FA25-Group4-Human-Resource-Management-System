@@ -35,7 +35,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.Pair;
 import group4.hrms.util.DatabaseUtil;
 
@@ -214,6 +213,32 @@ public class AttendanceRecordHRServlet extends HttpServlet {
 
                 currentPage = 1;
             } else if ("filter".equalsIgnoreCase(action)) {
+                // Xử lý logic filter với period
+                if (periodId != null) {
+                    TimesheetPeriod selectedPeriod = tDAO.findById(periodId).orElse(null);
+                    if (selectedPeriod != null) {
+                        LocalDate periodStart = selectedPeriod.getStartDate();
+                        LocalDate periodEnd = selectedPeriod.getEndDate();
+                        
+                        // Nếu startDate và endDate rỗng hoặc nằm ngoài khoảng period
+                        if (startDate == null || endDate == null || 
+                            startDate.isBefore(periodStart) || endDate.isAfter(periodEnd) ||
+                            (startDate.isBefore(periodStart) && endDate.isAfter(periodEnd))) {
+                            // Tự động cập nhật về ngày bắt đầu và kết thúc của kì công
+                            startDate = periodStart;
+                            endDate = periodEnd;
+                        } else {
+                            // Điều chỉnh startDate nếu nằm ngoài khoảng period
+                            if (startDate.isBefore(periodStart)) {
+                                startDate = periodStart;
+                            }
+                            // Điều chỉnh endDate nếu nằm ngoài khoảng period  
+                            if (endDate.isAfter(periodEnd)) {
+                                endDate = periodEnd;
+                            }
+                        }
+                    }
+                }
                 currentPage = 1;
             } else if ("delete".equalsIgnoreCase(action)) {
                 handleDelete(req);
@@ -630,9 +655,7 @@ public class AttendanceRecordHRServlet extends HttpServlet {
         // Không cho phép edit từ record đầy đủ thành record thiếu
         boolean hadBothOldTimes = (oldCheckIn != null && oldCheckOut != null);
         boolean hasBothNewTimes = (newCheckIn != null && newCheckOut != null);
-        
-        logger.info(String.format("Completeness check: hadBoth=%s, hasBoth=%s", hadBothOldTimes, hasBothNewTimes));
-        
+                
         if (hadBothOldTimes && !hasBothNewTimes) {
             if (newCheckIn == null && newCheckOut == null) {
                 return "Cannot remove both check-in and check-out times from a complete attendance record";
@@ -734,11 +757,7 @@ public class AttendanceRecordHRServlet extends HttpServlet {
                         outs.add(ts.toLocalDateTime());
                     }
                 }
-            }
-            
-            logger.info(String.format("Found existing records - INs: %s, OUTs: %s", ins, outs));
-            
-            // Kiểm tra trực tiếp với từng existing record thay vì ghép cặp phức tạp
+            }                       
             
             // 1. Kiểm tra duplicate exact times
             if (newCheckInDT != null) {
@@ -753,6 +772,23 @@ public class AttendanceRecordHRServlet extends HttpServlet {
                 for (LocalDateTime existingOut : outs) {
                     if (newCheckOutDT.equals(existingOut)) {
                         return String.format("Check-out time %s already exists", newCheckOut.toString());
+                    }
+                }
+            }
+            
+            // 1.1. Kiểm tra check-in trùng với check-out và ngược lại
+            if (newCheckInDT != null) {
+                for (LocalDateTime existingOut : outs) {
+                    if (newCheckInDT.equals(existingOut)) {
+                        return String.format("Check-in time %s conflicts with existing check-out time", newCheckIn.toString());
+                    }
+                }
+            }
+            
+            if (newCheckOutDT != null) {
+                for (LocalDateTime existingIn : ins) {
+                    if (newCheckOutDT.equals(existingIn)) {
+                        return String.format("Check-out time %s conflicts with existing check-in time", newCheckOut.toString());
                     }
                 }
             }
