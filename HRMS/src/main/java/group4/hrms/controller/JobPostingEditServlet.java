@@ -77,9 +77,9 @@ public class JobPostingEditServlet extends HttpServlet {
         User user = (User) request.getSession().getAttribute("user");
         Long positionId = user != null ? user.getPositionId() : null;
         
-        // Only HR (8) can edit job postings
+        // Both HR and HRM can edit job postings
         if (!JobPostingPermissionHelper.canManageJobPosting(positionId)) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied. Must be logged in as HR.");
+            response.sendRedirect(request.getContextPath() + "/login?error=You don't have permission to edit job postings");
             return;
         }
 
