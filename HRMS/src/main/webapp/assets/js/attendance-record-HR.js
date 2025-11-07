@@ -10,7 +10,11 @@ document.addEventListener("DOMContentLoaded", () => {
             if (toggle.disabled) {
                 // Revert lại trạng thái cũ
                 toggle.checked = !toggle.checked;
-                alert("Cannot change lock status: This period is outside the allowed time window.");
+                if (typeof window.showToast === 'function') {
+                    window.showToast("Cannot change lock status: This period is outside the allowed time window.", "error");
+                } else {
+                    alert("Cannot change lock status: This period is outside the allowed time window.");
+                }
                 return;
             }
 
