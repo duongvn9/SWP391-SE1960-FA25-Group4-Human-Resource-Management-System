@@ -140,6 +140,22 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!form)
             return;
 
+        // Lấy nút Save
+        const saveBtn = form.querySelector('button[type="button"]');
+        
+        // Kiểm tra nếu nút đã bị disable thì không làm gì
+        if (saveBtn && saveBtn.disabled) {
+            return;
+        }
+
+        // Disable nút Save để tránh spam
+        if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.style.opacity = "0.6";
+            saveBtn.style.cursor = "not-allowed";
+            saveBtn.textContent = "Saving...";
+        }
+
         // xóa clone cũ
         form.querySelectorAll(".filter-clone").forEach(el => el.remove());
 
@@ -185,11 +201,36 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("checkInOld").value = getVal("checkInEdit") || "";
         document.getElementById("checkOutOld").value = getVal("checkOutEdit") || "";
 
+        // Reset nút Save về trạng thái ban đầu khi mở modal
+        const editForm = document.getElementById("editForm");
+        if (editForm) {
+            const saveBtn = editForm.querySelector('button[type="button"]');
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.style.opacity = "1";
+                saveBtn.style.cursor = "pointer";
+                saveBtn.textContent = "Save";
+            }
+        }
+
         document.getElementById("editModal").style.display = "flex";
     };
 
     window.closeModal = () => {
-        document.getElementById("editModal").style.display = "none";
+        const modal = document.getElementById("editModal");
+        modal.style.display = "none";
+        
+        // Reset lại nút Save khi đóng modal
+        const form = document.getElementById("editForm");
+        if (form) {
+            const saveBtn = form.querySelector('button[type="button"]');
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.style.opacity = "1";
+                saveBtn.style.cursor = "pointer";
+                saveBtn.textContent = "Save";
+            }
+        }
     };
 
     // Delete confirmation modal functions

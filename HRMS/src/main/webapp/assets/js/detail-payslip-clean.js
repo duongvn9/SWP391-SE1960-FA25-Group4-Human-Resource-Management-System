@@ -1,44 +1,275 @@
 /**
  * Detail Payslip Page JavaScript - Clean Version
- * Handles responsive behavior and simple print functionality
+ * Handles responsive behavior and PDF export functionality
  */
 
-// Simple print function that doesn't modify screen
-window.printPayslip = function() {
-    console.log('Simple print function called');
+// Export payslip as PDF directly without preview
+window.exportPayslipPDF = function() {
+    console.log('Export PDF function called');
     
     const printBtn = document.querySelector('.print-btn');
     
     // Show loading state
     if (printBtn) {
-        printBtn.classList.add('loading');
+        printBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Exporting...';
         printBtn.disabled = true;
     }
 
     try {
-        // Just print without any modifications
-        setTimeout(() => {
-            console.log('Triggering print dialog...');
-            window.print();
+        // Get the printable content
+        const element = document.getElementById('printable-content');
+        
+        if (!element) {
+            throw new Error('No payslip content found');
+        }
+
+        // Get employee info for filename
+        const employeeName = document.querySelector('.info-card .col-sm-8')?.textContent.trim() || 'Employee';
+        const periodText = document.querySelector('.payslip-header .opacity-75')?.textContent.trim() || '';
+        const period = periodText.replace('Pay Period: ', '').replace(/\//g, '-').replace(/\s+/g, '_');
+        
+        // Generate filename
+        const filename = `Payslip_${employeeName.replace(/\s+/g, '_')}_${period}.pdf`;
+
+        // Create a complete HTML document with inline styles
+        const pdfContainer = document.createElement('div');
+        pdfContainer.style.cssText = `
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm;
+            margin: 0 auto;
+            background: white;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            color: #000;
+            line-height: 1.6;
+        `;
+
+        // Add company header
+        const header = `
+            <div style="text-align: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 3px solid #333;">
+                <h1 style="margin: 0 0 8px 0; color: #000; font-size: 24px; font-weight: bold;">ABC COMPANY LIMITED</h1>
+                <p style="margin: 3px 0; color: #555; font-size: 11px;">Address: 123 ABC Street, XYZ District, Ho Chi Minh City</p>
+                <p style="margin: 3px 0; color: #555; font-size: 11px;">Phone: (028) 1234 5678 | Email: hr@company.com</p>
+                <h2 style="margin: 15px 0 0 0; color: #2563eb; font-size: 20px; font-weight: bold;">PAYSLIP</h2>
+            </div>
+        `;
+
+        let contentHTML = '';
+
+        // Extract Employee and Pay Period Information (2 columns)
+        const infoCards = element.querySelectorAll('.row > .col-md-6 > .info-card');
+        if (infoCards.length >= 2) {
+            contentHTML += '<div style="display: flex; gap: 15px; margin-bottom: 20px;">';
             
-            // Clean up loading state
+            // Employee Information (Left)
+            const empCard = infoCards[0];
+            const empRows = empCard.querySelectorAll('.row');
+            contentHTML += '<div style="flex: 1; border: 1px solid #ddd; padding: 12px; background: #f9f9f9;">';
+            contentHTML += '<h3 style="color: #000; font-size: 13px; font-weight: bold; margin: 0 0 10px 0; border-bottom: 2px solid #2563eb; padding-bottom: 5px;">Employee Information</h3>';
+            empRows.forEach(row => {
+                const cols = row.querySelectorAll('[class*="col-"]');
+                if (cols.length >= 2) {
+                    const label = cols[0].textContent.trim().replace(':', '');
+                    const value = cols[1].textContent.trim();
+                    if (label && value && !label.includes('Information')) {
+                        contentHTML += `<div style="margin: 6px 0; font-size: 11px;"><strong style="color: #000;">${label}:</strong> <span style="color: #333;">${value}</span></div>`;
+                    }
+                }
+            });
+            contentHTML += '</div>';
+            
+            // Pay Period Information (Right)
+            const periodCard = infoCards[1];
+            const periodRows = periodCard.querySelectorAll('.row');
+            contentHTML += '<div style="flex: 1; border: 1px solid #ddd; padding: 12px; background: #f9f9f9;">';
+            contentHTML += '<h3 style="color: #000; font-size: 13px; font-weight: bold; margin: 0 0 10px 0; border-bottom: 2px solid #2563eb; padding-bottom: 5px;">Pay Period Information</h3>';
+            periodRows.forEach(row => {
+                const cols = row.querySelectorAll('[class*="col-"]');
+                if (cols.length >= 2) {
+                    const label = cols[0].textContent.trim().replace(':', '');
+                    const value = cols[1].textContent.trim();
+                    if (label && value && !label.includes('Information')) {
+                        contentHTML += `<div style="margin: 6px 0; font-size: 11px;"><strong style="color: #000;">${label}:</strong> <span style="color: #333;">${value}</span></div>`;
+                    }
+                }
+            });
+            contentHTML += '</div>';
+            contentHTML += '</div>';
+        }
+
+        // Basic Salary Information (3 columns layout)
+        const basicSalarySection = Array.from(element.querySelectorAll('.info-card')).find(card => 
+            card.querySelector('h5')?.textContent.includes('Basic Salary')
+        );
+        
+        if (basicSalarySection) {
+            contentHTML += '<div style="border: 1px solid #ddd; padding: 12px; margin-bottom: 15px; background: #f9f9f9;">';
+            contentHTML += '<h3 style="color: #000; font-size: 14px; font-weight: bold; margin: 0 0 12px 0; border-bottom: 2px solid #2563eb; padding-bottom: 5px;">Basic Salary Information</h3>';
+            
+            const columns = basicSalarySection.querySelectorAll('.row > .col-md-4');
+            contentHTML += '<div style="display: flex; gap: 15px;">';
+            
+            columns.forEach(col => {
+                const colTitle = col.querySelector('h6');
+                const calcRows = col.querySelectorAll('.calculation-row');
+                
+                contentHTML += '<div style="flex: 1;">';
+                if (colTitle) {
+                    contentHTML += `<h4 style="color: #2563eb; font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">${colTitle.textContent.trim()}</h4>`;
+                }
+                
+                calcRows.forEach(calcRow => {
+                    const rowData = calcRow.querySelectorAll('[class*="col-"]');
+                    if (rowData.length >= 2) {
+                        const label = rowData[0].textContent.trim();
+                        const value = rowData[1].textContent.trim();
+                        const isTotal = calcRow.classList.contains('total-row');
+                        
+                        if (isTotal) {
+                            contentHTML += `<div style="margin-top: 8px; padding-top: 8px; border-top: 2px solid #333; font-size: 11px;"><strong style="color: #000;">${label}:</strong> <strong style="color: #000;">${value}</strong></div>`;
+                        } else {
+                            contentHTML += `<div style="margin: 5px 0; font-size: 10px;"><span style="color: #555;">${label}:</span> <span style="color: #000;">${value}</span></div>`;
+                        }
+                    }
+                });
+                contentHTML += '</div>';
+            });
+            contentHTML += '</div></div>';
+        }
+
+        // Earnings and Deductions (2 columns)
+        const earningsSection = Array.from(element.querySelectorAll('.info-card')).find(card => 
+            card.querySelector('h5')?.textContent.includes('Earnings')
+        );
+        const deductionsSection = Array.from(element.querySelectorAll('.info-card')).find(card => 
+            card.querySelector('h5')?.textContent.includes('Deductions')
+        );
+        
+        if (earningsSection || deductionsSection) {
+            contentHTML += '<div style="display: flex; gap: 15px; margin-bottom: 15px;">';
+            
+            // Earnings (Left)
+            if (earningsSection) {
+                contentHTML += '<div style="flex: 1; border: 1px solid #ddd; padding: 12px; background: #f0fdf4;">';
+                contentHTML += '<h3 style="color: #198754; font-size: 13px; font-weight: bold; margin: 0 0 10px 0; border-bottom: 2px solid #198754; padding-bottom: 5px;">Earnings</h3>';
+                
+                const calcRows = earningsSection.querySelectorAll('.calculation-row');
+                calcRows.forEach(calcRow => {
+                    const rowData = calcRow.querySelectorAll('[class*="col-"]');
+                    if (rowData.length >= 2) {
+                        const label = rowData[0].textContent.trim();
+                        const value = rowData[1].textContent.trim();
+                        const isTotal = calcRow.classList.contains('total-row');
+                        const isSubItem = calcRow.classList.contains('sub-item');
+                        
+                        if (isTotal) {
+                            contentHTML += `<div style="margin-top: 10px; padding: 8px; background: #dcfce7; border-top: 2px solid #198754; font-size: 11px;"><strong style="color: #000;">${label}</strong> <strong style="float: right; color: #198754;">${value}</strong></div>`;
+                        } else if (isSubItem) {
+                            contentHTML += `<div style="margin: 4px 0 4px 15px; font-size: 10px; color: #555;"><span>${label}</span> <span style="float: right;">${value}</span></div>`;
+                        } else {
+                            contentHTML += `<div style="margin: 6px 0; font-size: 11px;"><span style="color: #000;">${label}</span> <span style="float: right; color: #000;">${value}</span></div>`;
+                        }
+                    }
+                });
+                contentHTML += '</div>';
+            }
+            
+            // Deductions (Right)
+            if (deductionsSection) {
+                contentHTML += '<div style="flex: 1; border: 1px solid #ddd; padding: 12px; background: #fef2f2;">';
+                contentHTML += '<h3 style="color: #dc3545; font-size: 13px; font-weight: bold; margin: 0 0 10px 0; border-bottom: 2px solid #dc3545; padding-bottom: 5px;">Deductions</h3>';
+                
+                const calcRows = deductionsSection.querySelectorAll('.calculation-row');
+                const hasDeductions = calcRows.length > 0;
+                
+                if (hasDeductions) {
+                    calcRows.forEach(calcRow => {
+                        const rowData = calcRow.querySelectorAll('[class*="col-"]');
+                        if (rowData.length >= 2) {
+                            const label = rowData[0].textContent.trim();
+                            const value = rowData[1].textContent.trim();
+                            const isTotal = calcRow.classList.contains('total-row');
+                            const isSubItem = calcRow.classList.contains('sub-item');
+                            
+                            if (isTotal) {
+                                contentHTML += `<div style="margin-top: 10px; padding: 8px; background: #fee2e2; border-top: 2px solid #dc3545; font-size: 11px;"><strong style="color: #000;">${label}</strong> <strong style="float: right; color: #dc3545;">${value}</strong></div>`;
+                            } else if (isSubItem) {
+                                contentHTML += `<div style="margin: 4px 0 4px 15px; font-size: 10px; color: #555;"><span>${label}</span> <span style="float: right;">${value}</span></div>`;
+                            } else {
+                                contentHTML += `<div style="margin: 6px 0; font-size: 11px;"><span style="color: #000;">${label}</span> <span style="float: right; color: #dc3545;">${value}</span></div>`;
+                            }
+                        }
+                    });
+                } else {
+                    contentHTML += '<div style="text-align: center; padding: 20px; color: #999; font-size: 11px;">No Deductions</div>';
+                }
+                contentHTML += '</div>';
+            }
+            contentHTML += '</div>';
+        }
+
+        // Net Salary (Full width)
+        const netSalary = document.getElementById('net-salary-amount');
+        if (netSalary) {
+            contentHTML += `
+                <div style="margin-top: 20px; padding: 18px; background: #198754; color: white; text-align: center; border-radius: 5px;">
+                    <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: bold;">Net Salary</h3>
+                    <h2 style="margin: 0; font-size: 28px; font-weight: bold;">${netSalary.textContent.trim()}</h2>
+                </div>
+            `;
+        }
+
+        pdfContainer.innerHTML = header + contentHTML;
+
+        // PDF options
+        const opt = {
+            margin: 0,
+            filename: filename,
+            image: { type: 'jpeg', quality: 0.95 },
+            html2canvas: { 
+                scale: 2,
+                useCORS: true,
+                letterRendering: true,
+                backgroundColor: '#ffffff',
+                logging: true
+            },
+            jsPDF: { 
+                unit: 'mm', 
+                format: 'a4', 
+                orientation: 'portrait'
+            }
+        };
+
+        // Generate PDF and trigger download
+        html2pdf().set(opt).from(pdfContainer).save().then(() => {
+            console.log('PDF exported successfully');
+            
+            // Reset button state
             if (printBtn) {
-                printBtn.classList.remove('loading');
+                printBtn.innerHTML = '<i class="fas fa-file-pdf me-1"></i> Export PDF';
                 printBtn.disabled = false;
             }
-            console.log('Print completed');
-        }, 300);
+            
+            // Show success message
+            showToast('PDF exported successfully!', 'success');
+        }).catch(error => {
+            throw error;
+        });
         
     } catch (error) {
-        console.error('Print error:', error);
-        alert('Có lỗi xảy ra khi in payslip. Vui lòng thử lại.');
+        console.error('Export PDF error:', error);
+        alert('An error occurred while exporting PDF. Please try again.');
         
         if (printBtn) {
-            printBtn.classList.remove('loading');
+            printBtn.innerHTML = '<i class="fas fa-file-pdf me-1"></i> Export PDF';
             printBtn.disabled = false;
         }
     }
 };
+
+// Keep old function for backward compatibility
+window.printPayslip = window.exportPayslipPDF;
 
 /**
  * Load all content immediately when page loads
@@ -75,7 +306,7 @@ function loadAllContent() {
 }
 
 // Debug log to confirm function is loaded
-console.log('PrintPayslip function loaded and available globally:', typeof window.printPayslip);
+console.log('ExportPayslipPDF function loaded and available globally:', typeof window.exportPayslipPDF);
 
 document.addEventListener('DOMContentLoaded', function () {
     // Load all content immediately when page loads
@@ -89,8 +320,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // Add smooth animations
     addSmoothAnimations();
     
-    // Debug: Ensure printPayslip function is available
-    console.log('Enhanced PrintPayslip function loaded:', typeof window.printPayslip === 'function');
+    // Debug: Ensure export function is available
+    console.log('Export PDF function loaded:', typeof window.exportPayslipPDF === 'function');
 });
 
 /**
@@ -380,7 +611,8 @@ window.PayslipDetail = {
     showLoading,
     hideLoading,
     showToast,
-    printPayslip
+    exportPayslipPDF,
+    printPayslip: window.exportPayslipPDF // Alias for backward compatibility
 };
 
 /**
