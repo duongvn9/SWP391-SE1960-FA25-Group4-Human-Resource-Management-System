@@ -394,8 +394,8 @@
                                                     <i class="fas fa-list"></i><span>Job Postings List</span>
                                                 </a>
                                             </li>
-                                            <!-- Only HR Staff (8) can create job postings. HR Manager (7) and Department Manager (9) cannot create. -->
-                                            <c:if test="${sessionScope.user != null && sessionScope.user.positionId == 8}">
+                                            <!-- Both HR Staff (8) and HR Manager (7) can create job postings. Department Manager (9) can only view. -->
+                                            <c:if test="${sessionScope.user != null && (sessionScope.user.positionId == 7 || sessionScope.user.positionId == 8)}">
                                                 <li>
                                                     <a href="${pageContext.request.contextPath}/recruitment/approved"
                                                         class="nav-link ${param.currentPage == 'approved-recruitment-requests' ? 'active' : ''}">
