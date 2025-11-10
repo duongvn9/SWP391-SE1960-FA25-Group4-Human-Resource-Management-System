@@ -89,6 +89,11 @@
                                 <strong>Payroll Period:</strong> Payslips can only be generated for the previous month.
                                 The system automatically sets the period based on the current date.
                             </div>
+                            <div class="alert alert-warning" role="alert" id="cutoffWarning" style="display: none;">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Generation Window:</strong>
+                                <span id="cutoffMessage"></span>
+                            </div>
                         </div>
 
                         <div class="col-md-6">
@@ -454,10 +459,63 @@ window.updateCalculatedPeriod = function updateCalculatedPeriod() {
 
         calculatedPeriodSpan.innerHTML = displayText;
         calculatedPeriodSpan.className = 'text-success fw-bold';
+
+        // Check cutoff window and show warning
+        updateCutoffWarning(monthInt, yearInt);
     } else {
         calculatedPeriodSpan.textContent = 'Please select month and year';
         calculatedPeriodSpan.className = 'text-muted';
     }
+}
+
+// Function to check and display cutoff warning
+function updateCutoffWarning(month, year) {
+    const cutoffWarning = document.getElementById('cutoffWarning');
+    const cutoffMessage = document.getElementById('cutoffMessage');
+
+    if (!cutoffWarning || !cutoffMessage) return;
+
+    // Use system time for checking
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1; // 1-based
+    const currentYear = currentDate.getFullYear();
+    const currentDay = currentDate.getDate();
+
+    // Calculate the following month after the payroll period
+    const payrollDate = new Date(year, month - 1, 1);
+    const followingMonth = new Date(payrollDate);
+    followingMonth.setMonth(followingMonth.getMonth() + 1);
+
+    const isInFollowingMonth = (currentYear === followingMonth.getFullYear() &&
+                               currentMonth === followingMonth.getMonth() + 1);
+
+    if (!isInFollowingMonth) {
+        cutoffWarning.style.display = 'none';
+        return;
+    }
+
+    const withinCutoff = currentDay <= 7;
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                       'July', 'August', 'September', 'October', 'November', 'December'];
+
+    if (withinCutoff) {
+        cutoffWarning.className = 'alert alert-success';
+        cutoffWarning.querySelector('i').className = 'fas fa-check-circle me-2';
+        cutoffMessage.innerHTML = `<strong>✅ Within Generation Window (Day ${currentDay} of 7)</strong><br>` +
+                                 `You can freely generate or regenerate payslips for ${monthNames[month - 1]} ${year}.`;
+    } else {
+        cutoffWarning.className = 'alert alert-warning';
+        cutoffWarning.querySelector('i').className = 'fas fa-exclamation-triangle me-2';
+        cutoffMessage.innerHTML = `<strong>⚠️ Generation Window Closed (After Day 7)</strong><br><br>` +
+                                 `<strong>Allowed:</strong><br>` +
+                                 `✅ Generate for All/Department/Employee (creates new for missing employees)<br>` +
+                                 `✅ "Only generate dirty payslips" (regenerates modified payslips only)<br><br>` +
+                                 `<strong>Not Allowed:</strong><br>` +
+                                 `❌ "Force regeneration of existing payslips" (blocked after day 7)<br><br>` +
+                                 `<small class="text-muted">The system will automatically skip clean payslips when generating.</small>`;
+    }
+
+    cutoffWarning.style.display = 'block';
 }
 
 // Employee Search Filter

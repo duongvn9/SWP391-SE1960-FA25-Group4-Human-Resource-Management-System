@@ -299,6 +299,147 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Payroll by Department Tables (VND & USD) -->
+                            <div class="row mb-4">
+                                <!-- VND Table -->
+                                <div class="col-lg-6 col-md-12 mb-3 mb-lg-0">
+                                    <div class="dashboard-card h-100">
+                                        <h5 class="mb-3">
+                                            <i class="fas fa-building me-2"></i>Payroll by Department
+                                            <span class="badge bg-success ms-2">VND</span>
+                                            <small class="text-muted d-block mt-1" style="font-size: 0.85rem;">Latest Month</small>
+                                        </h5>
+                                        <div class="table-responsive">
+                                            <table class="table table-hover table-sm">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Department</th>
+                                                        <th class="text-end">Total Payroll</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <c:choose>
+                                                        <c:when test="${not empty kpis.payrollByDepartmentVND}">
+                                                            <c:forEach items="${kpis.payrollByDepartmentVND}" var="entry">
+                                                                <tr>
+                                                                    <td>
+                                                                        <i class="fas fa-building text-primary me-2"></i>
+                                                                        <strong>${entry.key}</strong>
+                                                                    </td>
+                                                                    <td class="text-end">
+                                                                        <span class="badge bg-success">
+                                                                            <fmt:formatNumber value="${entry.value}" 
+                                                                                type="number" groupingUsed="true" maxFractionDigits="0" /> ₫
+                                                                        </span>
+                                                                    </td>
+                                                                </tr>
+                                                            </c:forEach>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <tr>
+                                                                <td colspan="2" class="text-center text-muted py-4">
+                                                                    <i class="fas fa-info-circle me-2"></i>
+                                                                    No VND payroll data
+                                                                </td>
+                                                            </tr>
+                                                        </c:otherwise>
+                                                    </c:choose>
+                                                </tbody>
+                                                <c:if test="${not empty kpis.payrollByDepartmentVND}">
+                                                    <tfoot class="table-light">
+                                                        <tr class="fw-bold">
+                                                            <td>
+                                                                <i class="fas fa-calculator text-primary me-2"></i>
+                                                                Total
+                                                            </td>
+                                                            <td class="text-end">
+                                                                <c:set var="totalVND" value="0"/>
+                                                                <c:forEach items="${kpis.payrollByDepartmentVND}" var="entry">
+                                                                    <c:set var="totalVND" value="${totalVND + entry.value}"/>
+                                                                </c:forEach>
+                                                                <span class="badge bg-primary">
+                                                                    <fmt:formatNumber value="${totalVND}" 
+                                                                        type="number" groupingUsed="true" maxFractionDigits="0" /> ₫
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    </tfoot>
+                                                </c:if>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- USD Table -->
+                                <div class="col-lg-6 col-md-12">
+                                    <div class="dashboard-card h-100">
+                                        <h5 class="mb-3">
+                                            <i class="fas fa-building me-2"></i>Payroll by Department
+                                            <span class="badge bg-info ms-2">USD</span>
+                                            <small class="text-muted d-block mt-1" style="font-size: 0.85rem;">Latest Month</small>
+                                        </h5>
+                                        <div class="table-responsive">
+                                            <table class="table table-hover table-sm">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Department</th>
+                                                        <th class="text-end">Total Payroll</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <c:choose>
+                                                        <c:when test="${not empty kpis.payrollByDepartmentUSD}">
+                                                            <c:forEach items="${kpis.payrollByDepartmentUSD}" var="entry">
+                                                                <tr>
+                                                                    <td>
+                                                                        <i class="fas fa-building text-primary me-2"></i>
+                                                                        <strong>${entry.key}</strong>
+                                                                    </td>
+                                                                    <td class="text-end">
+                                                                        <span class="badge bg-info">
+                                                                            <fmt:formatNumber value="${entry.value}" 
+                                                                                type="currency" currencySymbol="$" />
+                                                                        </span>
+                                                                    </td>
+                                                                </tr>
+                                                            </c:forEach>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <tr>
+                                                                <td colspan="2" class="text-center text-muted py-4">
+                                                                    <i class="fas fa-info-circle me-2"></i>
+                                                                    No USD payroll data
+                                                                </td>
+                                                            </tr>
+                                                        </c:otherwise>
+                                                    </c:choose>
+                                                </tbody>
+                                                <c:if test="${not empty kpis.payrollByDepartmentUSD}">
+                                                    <tfoot class="table-light">
+                                                        <tr class="fw-bold">
+                                                            <td>
+                                                                <i class="fas fa-calculator text-primary me-2"></i>
+                                                                Total
+                                                            </td>
+                                                            <td class="text-end">
+                                                                <c:set var="totalUSD" value="0"/>
+                                                                <c:forEach items="${kpis.payrollByDepartmentUSD}" var="entry">
+                                                                    <c:set var="totalUSD" value="${totalUSD + entry.value}"/>
+                                                                </c:forEach>
+                                                                <span class="badge bg-primary">
+                                                                    <fmt:formatNumber value="${totalUSD}" 
+                                                                        type="currency" currencySymbol="$" />
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    </tfoot>
+                                                </c:if>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </c:if>
 
                         <!-- Quick Actions for Admin -->
