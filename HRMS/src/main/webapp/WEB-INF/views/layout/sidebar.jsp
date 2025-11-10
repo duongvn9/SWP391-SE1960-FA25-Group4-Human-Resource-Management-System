@@ -310,7 +310,7 @@
                                     <!-- My Payslip - For all users (including Admin) -->
                                     <li>
                                         <a href="${pageContext.request.contextPath}/payslips?viewMode=personal"
-                                            class="nav-link ${param.currentPage == 'my-payslip' ? 'active' : ''}">
+                                            class="nav-link ${currentPage == 'my-payslip' ? 'active' : ''}">
                                             <i class="fas fa-file-invoice"></i><span>My Payslip</span>
                                         </a>
                                     </li>
@@ -318,7 +318,7 @@
                                     <c:if test="${sessionScope.user.positionId == 7}">
                                         <li>
                                             <a href="${pageContext.request.contextPath}/payslips"
-                                                class="nav-link ${param.currentPage == 'payslip-list' ? 'active' : ''}">
+                                                class="nav-link ${currentPage == 'payslip-list' ? 'active' : ''}">
                                                 <i class="fas fa-list"></i><span>Payslip List</span>
                                             </a>
                                         </li>
