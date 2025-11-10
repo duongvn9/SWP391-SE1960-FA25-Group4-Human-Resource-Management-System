@@ -46,6 +46,11 @@ public class DashboardKpiDto {
     private Map<String, Integer> employeesByDepartment;
     private Map<String, Integer> employeesByPosition;
     
+    // Payroll by department
+    private Map<String, BigDecimal> payrollByDepartment;
+    private Map<String, BigDecimal> payrollByDepartmentVND;
+    private Map<String, BigDecimal> payrollByDepartmentUSD;
+    
     // Request status breakdown
     private Map<String, Integer> requestsByStatus;
     private Map<String, Integer> requestsByType;
@@ -265,6 +270,30 @@ public class DashboardKpiDto {
 
     public void setEmployeesByPosition(Map<String, Integer> employeesByPosition) {
         this.employeesByPosition = employeesByPosition;
+    }
+
+    public Map<String, BigDecimal> getPayrollByDepartment() {
+        return payrollByDepartment;
+    }
+
+    public void setPayrollByDepartment(Map<String, BigDecimal> payrollByDepartment) {
+        this.payrollByDepartment = payrollByDepartment;
+    }
+
+    public Map<String, BigDecimal> getPayrollByDepartmentVND() {
+        return payrollByDepartmentVND;
+    }
+
+    public void setPayrollByDepartmentVND(Map<String, BigDecimal> payrollByDepartmentVND) {
+        this.payrollByDepartmentVND = payrollByDepartmentVND;
+    }
+
+    public Map<String, BigDecimal> getPayrollByDepartmentUSD() {
+        return payrollByDepartmentUSD;
+    }
+
+    public void setPayrollByDepartmentUSD(Map<String, BigDecimal> payrollByDepartmentUSD) {
+        this.payrollByDepartmentUSD = payrollByDepartmentUSD;
     }
 
     public Map<String, Integer> getRequestsByStatus() {
