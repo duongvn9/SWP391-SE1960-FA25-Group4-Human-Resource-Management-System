@@ -470,7 +470,7 @@ public class PayslipListController extends HttpServlet {
      */
     private PaginationMetadata buildPagination(HttpServletRequest request) {
         int page = 1;
-        int pageSize = 20; // Default page size
+        int pageSize = 10; // Default page size
 
         String pageStr = request.getParameter("page");
         if (pageStr != null) {

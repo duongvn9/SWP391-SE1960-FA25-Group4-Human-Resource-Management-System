@@ -3,7 +3,7 @@ package group4.hrms.controller;
 import java.io.IOException;
 
 import group4.hrms.dto.DashboardKpiDto;
-import group4.hrms.service.DashboardService;
+import group4.hrms.service.DashboardServiceOptimized;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 public class DashboardServlet extends HttpServlet {
 
     private static final Logger logger = LoggerFactory.getLogger(DashboardServlet.class);
-    private final DashboardService dashboardService = new DashboardService();
+    private final DashboardServiceOptimized dashboardService = new DashboardServiceOptimized();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)

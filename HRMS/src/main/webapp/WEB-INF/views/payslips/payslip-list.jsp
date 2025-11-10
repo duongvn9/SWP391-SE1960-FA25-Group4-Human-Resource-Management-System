@@ -8,7 +8,7 @@
                 <head>
                     <!-- CSS riêng của trang -->
                     <jsp:include page="../layout/head.jsp">
-                        <jsp:param name="pageTitle" value="Payslip Management - HRMS" />
+                        <jsp:param name="pageTitle" value="Payslip List - HRMS" />
                         <jsp:param name="pageCss" value="payslip-list.css" />
                     </jsp:include>
                 </head>
@@ -313,7 +313,7 @@
                                                 <div>
                                                     <h2 class="page-title">
                                                         <i class="fas fa-file-invoice-dollar me-2"></i>
-                                                        <span id="pageTitle">Payslip Management</span>
+                                                        <span id="pageTitle">Payslip List</span>
                                                     </h2>
                                                     <p class="page-subtitle" id="pageSubtitle">Manage payslips for all
                                                         employees</p>
@@ -685,9 +685,6 @@
                                             <!-- Bulk Actions -->
                                             <jsp:include page="sections/bulk-actions.jsp" />
 
-                                            <!-- Issues Panel -->
-                                            <jsp:include page="sections/issues-panel.jsp" />
-
                                             <!-- HRM Payslip Table -->
                                             <div class="table-card">
                                                 <div class="card-header">
@@ -755,7 +752,9 @@
                                                                                         </a>
                                                                                         <button type="button"
                                                                                             class="btn btn-sm btn-outline-warning"
-                                                                                            onclick="regeneratePayslip(${payslip.id}, '${fn:escapeXml(payslip.userFullName)}')"
+                                                                                            data-payslip-id="${payslip.id}"
+                                                                                            data-user-name="${fn:escapeXml(payslip.userFullName)}"
+                                                                                            onclick="regeneratePayslip(this.getAttribute('data-payslip-id'), this.getAttribute('data-user-name'))"
                                                                                             title="Regenerate Payslip">
                                                                                             <i class="fas fa-sync"></i>
                                                                                         </button>
@@ -915,7 +914,15 @@
                         }
 
                         // Global data for employees without payslips
-                        const employeesWithoutPayslipData = [<c:forEach items="${employeesWithoutPayslip}" var="emp" varStatus="status">{id: ${emp.id}, employeeCode: '${fn:escapeXml(emp.employeeCode)}', fullName: '${fn:escapeXml(emp.fullName)}', departmentId: ${emp.departmentId != null ? emp.departmentId : 'null'}}<c:if test="${!status.last}">,</c:if></c:forEach>];
+                        const employeesWithoutPayslipData = [];
+                        <c:forEach items="${employeesWithoutPayslip}" var="emp">
+                        employeesWithoutPayslipData.push({
+                            id: <c:out value="${emp.id}"/>,
+                            employeeCode: '<c:out value="${emp.employeeCode}"/>',
+                            fullName: '<c:out value="${emp.fullName}"/>',
+                            departmentId: <c:if test="${not empty emp.departmentId}"><c:out value="${emp.departmentId}"/></c:if><c:if test="${empty emp.departmentId}">null</c:if>
+                        });
+                        </c:forEach>
                         let employeesWithoutPayslipLoaded = false;
                         const itemsPerPageWithout = 12;
 
@@ -934,16 +941,16 @@
                                 col.className = 'col-md-6 col-lg-4';
                                 col.innerHTML = `
                     <div class="card border-warning" style="cursor: pointer;"
-                         onclick="showGenerateModalForEmployee(\${emp.id}, '\${emp.fullName}')">
+                         onclick="showGenerateModalForEmployee(${'$'}{emp.id}, '${'$'}{emp.fullName}')">
                         <div class="card-body p-2">
                             <div class="d-flex align-items-center">
                                 <div class="flex-shrink-0">
                                     <i class="fas fa-user-circle fa-2x text-warning"></i>
                                 </div>
                                 <div class="flex-grow-1 ms-2">
-                                    <h6 class="mb-0">\${emp.fullName}</h6>
-                                    <small class="text-muted">\${emp.employeeCode}</small>
-                                    \${emp.departmentName ? '<br><small class="text-muted"><i class="fas fa-building me-1"></i>' + emp.departmentName + '</small>' : ''}
+                                    <h6 class="mb-0">${'$'}{emp.fullName}</h6>
+                                    <small class="text-muted">${'$'}{emp.employeeCode}</small>
+                                    ${'$'}{emp.departmentName ? '<br><small class="text-muted"><i class="fas fa-building me-1"></i>' + emp.departmentName + '</small>' : ''}
                                 </div>
                                 <div class="flex-shrink-0">
                                     <i class="fas fa-plus-circle text-success"></i>
@@ -962,17 +969,17 @@
                                 paginationDiv.className = 'col-12 mt-3';
                                 paginationDiv.innerHTML = `
                     <div class="d-flex justify-content-between align-items-center">
-                        <small class="text-muted">Showing \${startIdx + 1}-\${Math.min(endIdx, employeesWithoutPayslipData.length)} of \${employeesWithoutPayslipData.length} employees</small>
+                        <small class="text-muted">Showing ${'$'}{startIdx + 1}-${'$'}{Math.min(endIdx, employeesWithoutPayslipData.length)} of ${'$'}{employeesWithoutPayslipData.length} employees</small>
                         <div class="btn-group btn-group-sm" role="group">
-                            <button type="button" class="btn btn-outline-warning" \${page === 1 ? 'disabled' : ''}
-                                    onclick="renderEmployeesWithoutPayslip(\${page - 1})">
+                            <button type="button" class="btn btn-outline-warning" ${'$'}{page === 1 ? 'disabled' : ''}
+                                    onclick="renderEmployeesWithoutPayslip(${'$'}{page - 1})">
                                 <i class="fas fa-chevron-left"></i> Previous
                             </button>
                             <button type="button" class="btn btn-outline-warning" disabled>
-                                Page \${page} of \${totalPages}
+                                Page ${'$'}{page} of ${'$'}{totalPages}
                             </button>
-                            <button type="button" class="btn btn-outline-warning" \${page === totalPages ? 'disabled' : ''}
-                                    onclick="renderEmployeesWithoutPayslip(\${page + 1})">
+                            <button type="button" class="btn btn-outline-warning" ${'$'}{page === totalPages ? 'disabled' : ''}
+                                    onclick="renderEmployeesWithoutPayslip(${'$'}{page + 1})">
                                 Next <i class="fas fa-chevron-right"></i>
                             </button>
                         </div>
@@ -1001,9 +1008,19 @@
                         }
 
                         // Global data for employees with attendance changes
-                        const employeesWithAttendanceChangesData = [<c:forEach items="${employeesWithAttendanceChanges}" var="emp" varStatus="status">{id: ${emp.id}, employeeCode: '${fn:escapeXml(emp.employeeCode)}', fullName: '${fn:escapeXml(emp.fullName)}', departmentId: ${emp.departmentId != null ? emp.departmentId : 'null'}, payslipId: ${emp.payslipId}, changeReason: '${fn:escapeXml(emp.changeReason)}'}<c:if test="${!status.last}">,</c:if></c:forEach>];
+                        const employeesWithAttendanceChangesData = [];
+                        <c:forEach items="${employeesWithAttendanceChanges}" var="emp">
+                        employeesWithAttendanceChangesData.push({
+                            id: <c:out value="${emp.id}"/>,
+                            employeeCode: '<c:out value="${emp.employeeCode}"/>',
+                            fullName: '<c:out value="${emp.fullName}"/>',
+                            departmentId: <c:if test="${not empty emp.departmentId}"><c:out value="${emp.departmentId}"/></c:if><c:if test="${empty emp.departmentId}">null</c:if>,
+                            payslipId: <c:out value="${emp.payslipId}"/>,
+                            changeReason: '<c:out value="${emp.changeReason}"/>'
+                        });
+                        </c:forEach>
                         let employeesWithAttendanceChangesLoaded = false;
-                        const itemsPerPageChanges = 12;
+                   const itemsPerPageChanges = 12;
 
                         // Global function for pagination (must be in window scope for onclick)
                         window.renderEmployeesWithChanges = function (page) {
@@ -1020,17 +1037,17 @@
                                 col.className = 'col-md-6 col-lg-4';
                                 col.innerHTML = `
                     <div class="card border-info" style="cursor: pointer;"
-                         onclick="showRegenerateModalForEmployee(\${emp.id}, '\${emp.fullName}')">
+                         onclick="showRegenerateModalForEmployee(${'$'}{emp.id}, '${'$'}{emp.fullName}')">
                         <div class="card-body p-2">
                             <div class="d-flex align-items-center">
                                 <div class="flex-shrink-0">
                                     <i class="fas fa-user-circle fa-2x text-info"></i>
                                 </div>
                                 <div class="flex-grow-1 ms-2">
-                                    <h6 class="mb-0">\${emp.fullName}</h6>
-                                    <small class="text-muted">\${emp.employeeCode}</small>
-                                    \${emp.departmentName ? '<br><small class="text-muted"><i class="fas fa-building me-1"></i>' + emp.departmentName + '</small>' : ''}
-                                    \${emp.changeReason ? '<br><small class="text-info"><i class="fas fa-info-circle me-1"></i>' + emp.changeReason + '</small>' : ''}
+                                    <h6 class="mb-0">${'$'}{emp.fullName}</h6>
+                                    <small class="text-muted">${'$'}{emp.employeeCode}</small>
+                                    ${'$'}{emp.departmentName ? '<br><small class="text-muted"><i class="fas fa-building me-1"></i>' + emp.departmentName + '</small>' : ''}
+                                    ${'$'}{emp.changeReason ? '<br><small class="text-info"><i class="fas fa-info-circle me-1"></i>' + emp.changeReason + '</small>' : ''}
                                 </div>
                                 <div class="flex-shrink-0">
                                     <i class="fas fa-sync-alt text-primary"></i>
@@ -1049,17 +1066,17 @@
                                 paginationDiv.className = 'col-12 mt-3';
                                 paginationDiv.innerHTML = `
                     <div class="d-flex justify-content-between align-items-center">
-                        <small class="text-muted">Showing \${startIdx + 1}-\${Math.min(endIdx, employeesWithAttendanceChangesData.length)} of \${employeesWithAttendanceChangesData.length} employees</small>
+                        <small class="text-muted">Showing ${'$'}{startIdx + 1}-${'$'}{Math.min(endIdx, employeesWithAttendanceChangesData.length)} of ${'$'}{employeesWithAttendanceChangesData.length} employees</small>
                         <div class="btn-group btn-group-sm" role="group">
-                            <button type="button" class="btn btn-outline-info" \${page === 1 ? 'disabled' : ''}
-                                    onclick="renderEmployeesWithChanges(\${page - 1})">
+                            <button type="button" class="btn btn-outline-info" ${'$'}{page === 1 ? 'disabled' : ''}
+                                    onclick="renderEmployeesWithChanges(${'$'}{page - 1})">
                                 <i class="fas fa-chevron-left"></i> Previous
                             </button>
                             <button type="button" class="btn btn-outline-info" disabled>
-                                Page \${page} of \${totalPages}
+                                Page ${'$'}{page} of ${'$'}{totalPages}
                             </button>
-                            <button type="button" class="btn btn-outline-info" \${page === totalPages ? 'disabled' : ''}
-                                    onclick="renderEmployeesWithChanges(\${page + 1})">
+                            <button type="button" class="btn btn-outline-info" ${'$'}{page === totalPages ? 'disabled' : ''}
+                                    onclick="renderEmployeesWithChanges(${'$'}{page + 1})">
                                 Next <i class="fas fa-chevron-right"></i>
                             </button>
                         </div>
@@ -1089,7 +1106,7 @@
 
                         // Generate payslip for specific employee directly
                         function showGenerateModalForEmployee(userId, userName) {
-                            // Get current period info
+                            // Use system time for checking
                             const currentDate = new Date();
                             let prevMonth = currentDate.getMonth(); // 0-based
                             let prevYear = currentDate.getFullYear();
@@ -1103,10 +1120,19 @@
                                 'July', 'August', 'September', 'October', 'November', 'December'];
                             const monthName = monthNames[prevMonth - 1];
 
+                            // Check cutoff window (always allow generation for missing payslips)
+                            const currentDay = currentDate.getDate();
+                            const withinCutoff = currentDay <= 7;
+
+                            let message = 'Generate payslip for <strong>' + userName + '</strong> for <strong>' + monthName + ' ' + prevYear + '</strong>?';
+                            if (!withinCutoff) {
+                                message += '<br><small class="text-info"><i class="fas fa-info-circle me-1"></i>Note: After day 7, generating new payslips is still allowed.</small>';
+                            }
+
                             // Show custom confirmation dialog
                             showCustomConfirm(
                                 'Generate Payslip',
-                                'Generate payslip for <strong>' + userName + '</strong> for <strong>' + monthName + ' ' + prevYear + '</strong>?',
+                                message,
                                 'success',
                                 function () {
                                     // Generate directly without opening modal
@@ -1197,7 +1223,7 @@
 
                         // Regenerate payslip for specific employee directly
                         function showRegenerateModalForEmployee(userId, userName) {
-                            // Get current period info
+                            // Use system time for checking
                             const currentDate = new Date();
                             let prevMonth = currentDate.getMonth(); // 0-based
                             let prevYear = currentDate.getFullYear();
@@ -1211,10 +1237,20 @@
                                 'July', 'August', 'September', 'October', 'November', 'December'];
                             const monthName = monthNames[prevMonth - 1];
 
+                            // Check cutoff window
+                            const currentDay = currentDate.getDate();
+                            const withinCutoff = currentDay <= 7;
+
+                            let message = 'Regenerate payslip for <strong>' + userName + '</strong> for <strong>' + monthName + ' ' + prevYear + '</strong>?<br><br><span class="text-warning"><i class="fas fa-exclamation-triangle me-1"></i>This will overwrite the existing payslip.</span>';
+
+                            if (!withinCutoff) {
+                                message += '<br><br><small class="text-info"><i class="fas fa-info-circle me-1"></i>Note: After day 7, only dirty payslips should be regenerated. This will force regeneration.</small>';
+                            }
+
                             // Show custom confirmation dialog
                             showCustomConfirm(
                                 'Regenerate Payslip',
-                                'Regenerate payslip for <strong>' + userName + '</strong> for <strong>' + monthName + ' ' + prevYear + '</strong>?<br><br><span class="text-warning"><i class="fas fa-exclamation-triangle me-1"></i>This will overwrite the existing payslip.</span>',
+                                message,
                                 'warning',
                                 function () {
                                     // Regenerate directly without opening modal (force = true)

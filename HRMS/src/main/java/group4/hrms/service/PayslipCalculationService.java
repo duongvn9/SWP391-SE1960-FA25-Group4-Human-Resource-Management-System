@@ -185,6 +185,15 @@ public class PayslipCalculationService {
             double actualPaidHours = workedHours + paidLeaveHours;
             double underHours = Math.max(0, paidBaseHours - actualPaidHours);
 
+            // Apply threshold: Ignore under hours less than 5 minutes (0.083 hours)
+            // This prevents deduction for minor rounding differences
+            final double UNDER_HOURS_THRESHOLD = 0.083; // 5 minutes
+            if (underHours < UNDER_HOURS_THRESHOLD) {
+                underHours = 0;
+                logger.info(String.format("Under hours %.4f is below threshold (%.3f hours / 5 minutes), setting to 0",
+                                        underHours, UNDER_HOURS_THRESHOLD));
+            }
+
             result.setRequiredHours(paidBaseHours);
             result.setUnderHours(underHours);
 
