@@ -155,6 +155,9 @@ public class PayslipListController extends HttpServlet {
         request.setAttribute("userRole", "EMPLOYEE");
         request.setAttribute("currentUser", user);
 
+        // Set currentPage for sidebar highlighting
+        request.setAttribute("currentPage", "my-payslip");
+
         logger.debug("Employee view: found {} payslips for user {}", payslips.size(), user.getId());
 
         // Forward to JSP
@@ -297,6 +300,9 @@ public class PayslipListController extends HttpServlet {
         request.setAttribute("employeesWithAttendanceChanges", employeesWithAttendanceChanges);
         request.setAttribute("userRole", "HRM");
         request.setAttribute("currentUser", user);
+
+        // Set currentPage for sidebar highlighting
+        request.setAttribute("currentPage", "payslip-list");
 
         logger.debug("HRM view: found {} payslips, counters: {}", payslips.size(), counters);
 
@@ -470,7 +476,7 @@ public class PayslipListController extends HttpServlet {
      */
     private PaginationMetadata buildPagination(HttpServletRequest request) {
         int page = 1;
-        int pageSize = 20; // Default page size
+        int pageSize = 10; // Default page size
 
         String pageStr = request.getParameter("page");
         if (pageStr != null) {

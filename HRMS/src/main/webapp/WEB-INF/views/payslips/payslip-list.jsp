@@ -685,9 +685,6 @@
                                             <!-- Bulk Actions -->
                                             <jsp:include page="sections/bulk-actions.jsp" />
 
-                                            <!-- Issues Panel -->
-                                            <jsp:include page="sections/issues-panel.jsp" />
-
                                             <!-- HRM Payslip Table -->
                                             <div class="table-card">
                                                 <div class="card-header">
