@@ -8,7 +8,7 @@
                 <head>
                     <!-- CSS riêng của trang -->
                     <jsp:include page="../layout/head.jsp">
-                        <jsp:param name="pageTitle" value="Payslip Management - HRMS" />
+                        <jsp:param name="pageTitle" value="Payslip List - HRMS" />
                         <jsp:param name="pageCss" value="payslip-list.css" />
                     </jsp:include>
                 </head>
@@ -313,7 +313,7 @@
                                                 <div>
                                                     <h2 class="page-title">
                                                         <i class="fas fa-file-invoice-dollar me-2"></i>
-                                                        <span id="pageTitle">Payslip Management</span>
+                                                        <span id="pageTitle">Payslip List</span>
                                                     </h2>
                                                     <p class="page-subtitle" id="pageSubtitle">Manage payslips for all
                                                         employees</p>
