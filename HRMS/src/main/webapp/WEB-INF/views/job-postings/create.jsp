@@ -310,13 +310,11 @@
                                     <textarea class="form-control ${not empty errors.description ? 'is-invalid' : ''}"
                                               id="description" name="description" rows="5" required
                                               maxlength="4000"
-                                              placeholder="Describe the job role, responsibilities, and expectations..."> 
-                                        <c:out value="${param.description != null ? param.description : (formData != null ? formData.description : requestDetails.jobSummary)}"/>
-                                    </textarea>
+                                              placeholder="Describe the job role, responsibilities, and expectations..."><c:out value="${param.description != null ? param.description : (formData != null ? formData.description : requestDetails.jobSummary)}"/></textarea>
                                     <div class="form-text">Required (max 4000 characters)</div>
-                                    <div class="invalid-feedback">
+                                    <div class="invalid-feedback"></div>
                                         ${not empty errors.description ? errors.description : 'Job description is required and cannot exceed 4000 characters'}
-                                    </div>
+                                    </div>div>
                                 </div>
                                 <div class="col-12">
                                     <label for="requirements" class="form-label">

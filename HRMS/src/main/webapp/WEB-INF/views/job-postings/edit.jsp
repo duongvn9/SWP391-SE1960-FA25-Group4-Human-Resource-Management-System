@@ -487,6 +487,18 @@
                             const locationInput = document.getElementById('location');
                             const workingHoursInput = document.getElementById('workingHours');
 
+                            // Track which fields have been interacted with
+                            const interactedFields = new Set();
+
+                            // Remove all validation classes on page load to prevent showing validation before interaction
+                            // We'll re-add them only after user interacts with fields
+                            document.querySelectorAll('.form-control, .form-select').forEach(field => {
+                                field.classList.remove('is-invalid', 'is-valid');
+                            });
+
+                            // Remove was-validated class from form if it exists
+                            form.classList.remove('was-validated');
+
                             // Set today's date as minimum for date inputs
                             const today = new Date().toISOString().split('T')[0];
                             if (startDateInput) {
@@ -748,6 +760,50 @@
                                 return true;
                             }
 
+                            // Setup validation for all form fields - only show after interaction
+                            document.querySelectorAll('.form-control, .form-select').forEach(field => {
+                                // Mark field as interacted on blur
+                                field.addEventListener('blur', function() {
+                                    interactedFields.add(this.id);
+                                    
+                                    // Clear validation classes first
+                                    this.classList.remove('is-invalid', 'is-valid');
+                                    
+                                    // Run appropriate validation
+                                    if (this === minSalaryInput || this === maxSalaryInput) {
+                                        validateSalaries();
+                                    } else if (this === startDateInput || this === applicationDeadlineInput) {
+                                        validateDates();
+                                    } else if (this === minExperienceInput) {
+                                        validateExperience();
+                                    } else if (this === jobTitleInput) {
+                                        validateJobTitle();
+                                    } else if (this === descriptionInput) {
+                                        validateTextField(this, 1, 4000, 'Job description');
+                                    } else if (this === requirementsInput) {
+                                        validateTextField(this, 1, 4000, 'Requirements');
+                                    } else if (this === benefitsInput) {
+                                        validateTextField(this, 0, 2000, 'Benefits');
+                                    } else if (this === locationInput) {
+                                        validateTextField(this, 1, 255, 'Working location');
+                                    } else if (this === workingHoursInput) {
+                                        validateDropdown(this, 'Working hours');
+                                    }
+                                    
+                                    // Only show invalid state if field has been interacted with
+                                    if (interactedFields.has(this.id) && !this.checkValidity()) {
+                                        this.classList.add('is-invalid');
+                                    }
+                                });
+                                
+                                // Clear validation while typing
+                                field.addEventListener('input', function() {
+                                    if (this.classList.contains('is-invalid')) {
+                                        this.classList.remove('is-invalid');
+                                    }
+                                });
+                            });
+
                             // Add event listeners for real-time validation
                             if (minSalaryInput) {
                                 minSalaryInput.addEventListener('blur', function() {
@@ -755,7 +811,6 @@
                                     if (value) {
                                         this.value = formatNumber(value);
                                     }
-                                    validateSalaries();
                                 });
                                 
                                 // Allow only numbers and commas
@@ -770,50 +825,11 @@
                                     if (value) {
                                         this.value = formatNumber(value);
                                     }
-                                    validateSalaries();
                                 });
                                 
                                 // Allow only numbers and commas
                                 maxSalaryInput.addEventListener('input', function() {
                                     this.value = this.value.replace(/[^0-9,]/g, '');
-                                });
-                            }
-                            if (salaryTypeInput) salaryTypeInput.addEventListener('change', validateSalaries);
-
-                            if (startDateInput) startDateInput.addEventListener('change', validateDates);
-                            if (applicationDeadlineInput) applicationDeadlineInput.addEventListener('change', validateDates);
-
-                            if (minExperienceInput) minExperienceInput.addEventListener('blur', validateExperience);
-                            if (jobTitleInput) jobTitleInput.addEventListener('blur', validateJobTitle);
-
-                            // Validate text fields on blur
-                            if (descriptionInput) {
-                                descriptionInput.addEventListener('blur', function () {
-                                    validateTextField(this, 1, 4000, 'Job description');
-                                });
-                            }
-
-                            if (requirementsInput) {
-                                requirementsInput.addEventListener('blur', function () {
-                                    validateTextField(this, 1, 4000, 'Requirements');
-                                });
-                            }
-
-                            if (benefitsInput) {
-                                benefitsInput.addEventListener('blur', function () {
-                                    validateTextField(this, 0, 2000, 'Benefits');
-                                });
-                            }
-
-                            if (locationInput) {
-                                locationInput.addEventListener('blur', function () {
-                                    validateTextField(this, 1, 255, 'Working location');
-                                });
-                            }
-
-                            if (workingHoursInput) {
-                                workingHoursInput.addEventListener('change', function () {
-                                    validateDropdown(this, 'Working hours');
                                 });
                             }
 
@@ -822,6 +838,13 @@
                                 console.log('=== FORM SUBMIT EVENT TRIGGERED ===');
                                 console.log('Form action:', form.action);
                                 console.log('Form method:', form.method);
+
+                                // Mark all fields as interacted on submit
+                                document.querySelectorAll('.form-control, .form-select').forEach(field => {
+                                    if (field.id) {
+                                        interactedFields.add(field.id);
+                                    }
+                                });
 
                                 // Show loading state
                                 const submitBtn = form.querySelector('button[type="submit"]');
@@ -1142,33 +1165,61 @@
                     }
 
                     /* Enhanced validation styles */
+                    /* Hide validation feedback by default */
+                    .invalid-feedback {
+                        display: none;
+                        font-weight: 500;
+                        font-size: 0.875rem;
+                    }
+
+                    /* Only show validation when field has is-invalid class or form was validated */
+                    .form-control.is-invalid ~ .invalid-feedback,
+                    .form-select.is-invalid ~ .invalid-feedback,
+                    .was-validated .form-control:invalid ~ .invalid-feedback,
+                    .was-validated .form-select:invalid ~ .invalid-feedback {
+                        display: block;
+                    }
+
+                    /* Validation border styles - only when explicitly marked invalid */
+                    .form-control.is-invalid,
+                    .form-select.is-invalid {
+                        border-color: #dc3545;
+                        background: rgba(220, 53, 69, 0.05);
+                    }
+
+                    .form-control.is-invalid:focus,
+                    .form-select.is-invalid:focus {
+                        border-color: #dc3545;
+                        box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+                    }
+
+                    /* Only apply validation styles when form was validated */
                     .was-validated .form-control:invalid,
-                    .form-control.is-invalid {
+                    .was-validated .form-select:invalid {
                         border-color: #dc3545;
                         background: rgba(220, 53, 69, 0.05);
                     }
 
                     .was-validated .form-control:invalid:focus,
-                    .form-control.is-invalid:focus {
+                    .was-validated .form-select:invalid:focus {
                         border-color: #dc3545;
                         box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
                     }
 
                     .was-validated .form-control:valid,
-                    .form-control.is-valid {
+                    .was-validated .form-select:valid,
+                    .form-control.is-valid,
+                    .form-select.is-valid {
                         border-color: #198754;
                         background: rgba(25, 135, 84, 0.05);
                     }
 
                     .was-validated .form-control:valid:focus,
-                    .form-control.is-valid:focus {
+                    .was-validated .form-select:valid:focus,
+                    .form-control.is-valid:focus,
+                    .form-select.is-valid:focus {
                         border-color: #198754;
                         box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
-                    }
-
-                    .invalid-feedback {
-                        font-weight: 500;
-                        font-size: 0.875rem;
                     }
 
                     /* Responsive adjustments */

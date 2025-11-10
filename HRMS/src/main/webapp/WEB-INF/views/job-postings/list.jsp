@@ -167,9 +167,7 @@
                                             <option value="FULL_TIME" ${param.jobType=='FULL_TIME' ? 'selected' : '' }>
                                                 Full Time</option>
                                             <option value="PART_TIME" ${param.jobType=='PART_TIME' ? 'selected' : '' }>
-                                                Part Time</option>
-                                            <option value="CONTRACT" ${param.jobType=='CONTRACT' ? 'selected' : '' }>
-                                                Contract</option>
+                                                Part Time</option>                                           
                                             <option value="INTERN" ${param.jobType=='INTERN' ? 'selected' : '' }>Intern
                                             </option>
                                         </select>

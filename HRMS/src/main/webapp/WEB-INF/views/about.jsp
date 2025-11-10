@@ -199,41 +199,7 @@
         </div>
     </section>
     
-          <!-- Stats Section -->
-        <section class="stats-section">
-            <div class="container">
-                <div class="row">
-                    <div class="col-lg-3 col-md-6">
-                        <div class="stat-item">
-                            <div class="stat-icon"><i class="fas fa-question-circle"></i></div>
-                            <div class="stat-number" data-count="50">50+</div>
-                            <div class="stat-label">FAQs</div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-md-6">
-                        <div class="stat-item">
-                            <div class="stat-icon"><i class="fas fa-users"></i></div>
-                            <div class="stat-number" data-count="1000">1000+</div>
-                            <div class="stat-label">Satisfied users</div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-md-6">
-                        <div class="stat-item">
-                            <div class="stat-icon"><i class="fas fa-clock"></i></div>
-                            <div class="stat-number" data-count="24">24/7</div>
-                            <div class="stat-label">Online support</div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-md-6">
-                        <div class="stat-item">
-                            <div class="stat-icon"><i class="fas fa-star"></i></div>
-                            <div class="stat-number" data-count="4">4.9/5</div>
-                            <div class="stat-label">Customer ratings</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+         
 
     <!-- Footer -->
     <jsp:include page="/WEB-INF/views/layout/footer.jsp" />
