@@ -286,7 +286,17 @@ function loadEmployeesWithAttendanceChanges() {
 
 // Generate payslip for specific employee
 function generatePayslipForEmployee(userId, period) {
-    if (!confirm(`Generate payslip for this employee for period ${period}?`)) {
+    // Use system time for checking
+    const currentDate = new Date();
+    const currentDay = currentDate.getDate();
+    const withinCutoff = currentDay <= 7;
+
+    let message = `Generate payslip for this employee for period ${period}?`;
+    if (!withinCutoff) {
+        message += '\n\nNote: After day 7, generating new payslips is still allowed.';
+    }
+
+    if (!confirm(message)) {
         return;
     }
 
@@ -305,7 +315,17 @@ function generatePayslipForEmployee(userId, period) {
 
 // Regenerate payslip for specific employee
 function regeneratePayslipForEmployee(userId, period) {
-    if (!confirm(`Regenerate payslip for this employee for period ${period}?`)) {
+    // Use system time for checking
+    const currentDate = new Date();
+    const currentDay = currentDate.getDate();
+    const withinCutoff = currentDay <= 7;
+
+    let message = `Regenerate payslip for this employee for period ${period}?`;
+    if (!withinCutoff) {
+        message += '\n\nNote: After day 7, only dirty payslips should be regenerated. This will force regeneration.';
+    }
+
+    if (!confirm(message)) {
         return;
     }
 

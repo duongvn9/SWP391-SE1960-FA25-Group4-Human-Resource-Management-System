@@ -1089,7 +1089,7 @@
 
                         // Generate payslip for specific employee directly
                         function showGenerateModalForEmployee(userId, userName) {
-                            // Get current period info
+                            // Use system time for checking
                             const currentDate = new Date();
                             let prevMonth = currentDate.getMonth(); // 0-based
                             let prevYear = currentDate.getFullYear();
@@ -1103,10 +1103,19 @@
                                 'July', 'August', 'September', 'October', 'November', 'December'];
                             const monthName = monthNames[prevMonth - 1];
 
+                            // Check cutoff window (always allow generation for missing payslips)
+                            const currentDay = currentDate.getDate();
+                            const withinCutoff = currentDay <= 7;
+
+                            let message = 'Generate payslip for <strong>' + userName + '</strong> for <strong>' + monthName + ' ' + prevYear + '</strong>?';
+                            if (!withinCutoff) {
+                                message += '<br><small class="text-info"><i class="fas fa-info-circle me-1"></i>Note: After day 7, generating new payslips is still allowed.</small>';
+                            }
+
                             // Show custom confirmation dialog
                             showCustomConfirm(
                                 'Generate Payslip',
-                                'Generate payslip for <strong>' + userName + '</strong> for <strong>' + monthName + ' ' + prevYear + '</strong>?',
+                                message,
                                 'success',
                                 function () {
                                     // Generate directly without opening modal
@@ -1197,7 +1206,7 @@
 
                         // Regenerate payslip for specific employee directly
                         function showRegenerateModalForEmployee(userId, userName) {
-                            // Get current period info
+                            // Use system time for checking
                             const currentDate = new Date();
                             let prevMonth = currentDate.getMonth(); // 0-based
                             let prevYear = currentDate.getFullYear();
@@ -1211,10 +1220,20 @@
                                 'July', 'August', 'September', 'October', 'November', 'December'];
                             const monthName = monthNames[prevMonth - 1];
 
+                            // Check cutoff window
+                            const currentDay = currentDate.getDate();
+                            const withinCutoff = currentDay <= 7;
+
+                            let message = 'Regenerate payslip for <strong>' + userName + '</strong> for <strong>' + monthName + ' ' + prevYear + '</strong>?<br><br><span class="text-warning"><i class="fas fa-exclamation-triangle me-1"></i>This will overwrite the existing payslip.</span>';
+
+                            if (!withinCutoff) {
+                                message += '<br><br><small class="text-info"><i class="fas fa-info-circle me-1"></i>Note: After day 7, only dirty payslips should be regenerated. This will force regeneration.</small>';
+                            }
+
                             // Show custom confirmation dialog
                             showCustomConfirm(
                                 'Regenerate Payslip',
-                                'Regenerate payslip for <strong>' + userName + '</strong> for <strong>' + monthName + ' ' + prevYear + '</strong>?<br><br><span class="text-warning"><i class="fas fa-exclamation-triangle me-1"></i>This will overwrite the existing payslip.</span>',
+                                message,
                                 'warning',
                                 function () {
                                     // Regenerate directly without opening modal (force = true)
