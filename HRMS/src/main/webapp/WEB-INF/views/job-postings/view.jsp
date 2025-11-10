@@ -609,9 +609,7 @@
                 <h3 class="section-title">
                     <i class="fas fa-file-alt me-2"></i>Job Description
                 </h3>
-                <div class="content-block">
-                    ${jobPosting.description}
-                </div>
+                <div class="content-block">${jobPosting.description}</div>
             </div>
 
             <!-- Requirements -->
@@ -619,9 +617,7 @@
                 <h3 class="section-title">
                     <i class="fas fa-list-check me-2"></i>Requirements
                 </h3>
-                <div class="content-block">
-                    ${jobPosting.requirements}
-                </div>
+                <div class="content-block">${jobPosting.requirements}</div>
             </div>
 
             <!-- Benefits -->
@@ -629,9 +625,7 @@
                 <h3 class="section-title">
                     <i class="fas fa-gift me-2"></i>Benefits
                 </h3>
-                <div class="content-block">
-                    ${jobPosting.benefits}
-                </div>
+                <div class="content-block">${jobPosting.benefits}</div>
             </div>
         </div>
 
