@@ -143,37 +143,7 @@
 
         
 
-            <!-- Stats Section -->
-            <section class="stats-section">
-                <div class="container">
-                    <div class="row">
-                        <div class="col-lg-3 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="80">
-                            <div class="stat-item">
-                                <span class="stat-number" data-count="200">0</span>
-                                <div class="stat-label">Trusted Businesses</div>
-                            </div>
-                        </div>
-                        <div class="col-lg-3 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="200">
-                            <div class="stat-item">
-                                <span class="stat-number" data-count="5000">0</span>
-                                <div class="stat-label">Employees Managed</div>
-                            </div>
-                        </div>
-                        <div class="col-lg-3 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="300">
-                            <div class="stat-item">
-                                <span class="stat-number" data-count="99">0</span>
-                                <div class="stat-label">% System Uptime</div>
-                            </div>
-                        </div>
-                        <div class="col-lg-3 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="400">
-                            <div class="stat-item">
-                                <span class="stat-number" data-count="24">0</span>
-                                <div class="stat-label">24/7 Support</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
+           
 
             <!-- Services Section -->
             <section class="services-section">

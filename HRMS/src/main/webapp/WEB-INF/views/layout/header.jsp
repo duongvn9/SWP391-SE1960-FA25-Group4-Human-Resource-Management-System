@@ -22,9 +22,7 @@
                     <a class="nav-link ${param.currentPage == 'jobs' ? 'active' : ''}"
                        href="${pageContext.request.contextPath}/jobs">Jobs</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#features">Features</a>
-                </li>
+                
                 <li class="nav-item">
                     <a class="nav-link ${param.currentPage == 'about' ? 'active' : ''}"
                        href="${pageContext.request.contextPath}/about">About</a>
