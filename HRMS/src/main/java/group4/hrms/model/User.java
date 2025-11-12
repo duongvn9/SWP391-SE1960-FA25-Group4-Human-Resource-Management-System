@@ -17,6 +17,7 @@ public class User {
     private String emailCompany;
     private String phone;
     private String gender;
+    private LocalDate dob;
     private Long departmentId;
     private Long positionId;
     private String status;
@@ -128,6 +129,14 @@ public class User {
 
     public void setGender(String gender) {
         this.gender = gender;
+    }
+
+    public LocalDate getDob() {
+        return dob;
+    }
+
+    public void setDob(LocalDate dob) {
+        this.dob = dob;
     }
 
     public Long getDepartmentId() {

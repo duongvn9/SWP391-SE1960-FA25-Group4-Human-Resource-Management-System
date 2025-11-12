@@ -302,6 +302,7 @@ public class UserCreateServlet extends HttpServlet {
             user.setEmployeeCode(employeeCode);
             user.setFullName(fullName.trim());
             user.setGender(gender.trim().toLowerCase());
+            user.setDob(dateOfBirth);
             user.setEmailCompany(emailCompany.trim().toLowerCase());
             user.setPhone(phone.trim());
             user.setDepartmentId(departmentId);
