@@ -1530,4 +1530,170 @@ public class OTRequestService {
         }
     }
 
+    /**
+     * Validate OT balance for approval flow
+     * This excludes the current PENDING request from calculation to avoid double-counting
+     *
+     * When approving a PENDING request, we should not count it twice:
+     * - Once in the PENDING list (already counted in validateOTBalance)
+     * - Once more when validating for approval
+     *
+     * This method only counts APPROVED requests + the new request being approved
+     *
+     * @param userId User ID
+     * @param otDate OT date (yyyy-MM-dd format)
+     * @param otHours OT hours
+     * @param excludeRequestId Request ID to exclude (the one being approved)
+     * @throws IllegalArgumentException if limits exceeded
+     */
+    public void validateOTBalanceForApproval(Long userId, String otDate, Double otHours, Long excludeRequestId) {
+        logger.fine(String.format("Validating OT balance for approval: userId=%d, date=%s, hours=%.1f, excludeId=%d",
+                   userId, otDate, otHours, excludeRequestId));
+
+        try {
+            LocalDate date = LocalDate.parse(otDate);
+
+            // Calculate current OT hours EXCLUDING the request being approved
+            // Only count APPROVED requests to avoid double-counting PENDING
+            double currentWeekHours = calculateOTHoursInWeekExcluding(userId, date, excludeRequestId);
+            double monthlyHours = calculateOTHoursInMonthExcluding(userId, date.getYear(), date.getMonthValue(), excludeRequestId);
+            double annualHours = calculateOTHoursInYearExcluding(userId, date.getYear(), excludeRequestId);
+
+            // Calculate regular hours
+            double regularHoursThisWeek = computeRegularHoursForWeek(userId, date);
+            double totalWorkHours = regularHoursThisWeek + currentWeekHours + otHours;
+
+            logger.fine(String.format("Balance for approval: userId=%d, weekly=%.2f+%.1f=%.2f/%.0f, monthly=%.2f+%.1f=%.2f/%.0f, annual=%.2f+%.1f=%.2f/%.0f",
+                       userId, currentWeekHours, otHours, currentWeekHours + otHours, (double)WEEKLY_LIMIT,
+                       monthlyHours, otHours, monthlyHours + otHours, (double)MONTHLY_LIMIT,
+                       annualHours, otHours, annualHours + otHours, (double)ANNUAL_LIMIT));
+
+            // Check weekly limit
+            if (totalWorkHours > WEEKLY_LIMIT) {
+                double remainingWeeklyHours = WEEKLY_LIMIT - regularHoursThisWeek - currentWeekHours;
+                logger.warning(String.format("Weekly work limit exceeded during approval: userId=%d, regular=%.2f, currentOT=%.2f, requestedOT=%.1f, total=%.2f, limit=%d",
+                              userId, regularHoursThisWeek, currentWeekHours, otHours, totalWorkHours, WEEKLY_LIMIT));
+                throw new IllegalArgumentException(
+                    String.format("Weekly work limit (48h) exceeded! Regular work: %.1fh, Current OT: %.1fh, Requested OT: %.1fh, " +
+                        "Total: %.1fh. You can only add %.1fh more OT this week.",
+                        regularHoursThisWeek, currentWeekHours, otHours, totalWorkHours, Math.max(0, remainingWeeklyHours))
+                );
+            }
+
+            // Check monthly limit
+            if (monthlyHours + otHours > MONTHLY_LIMIT) {
+                logger.warning(String.format("Monthly OT limit exceeded during approval: userId=%d, current=%.2f, requested=%.1f, limit=%d",
+                              userId, monthlyHours, otHours, MONTHLY_LIMIT));
+                throw new IllegalArgumentException(
+                    String.format("Monthly OT limit exceeded! Current: %.1fh, Requested: %.1fh, " +
+                        "Limit: %dh. Remaining: %.1fh.",
+                        monthlyHours, otHours, MONTHLY_LIMIT, MONTHLY_LIMIT - monthlyHours)
+                );
+            }
+
+            // Check annual limit
+            if (annualHours + otHours > ANNUAL_LIMIT) {
+                logger.warning(String.format("Annual OT limit exceeded during approval: userId=%d, current=%.2f, requested=%.1f, limit=%d",
+                              userId, annualHours, otHours, ANNUAL_LIMIT));
+                throw new IllegalArgumentException(
+                    String.format("Annual OT limit exceeded! Current: %.1fh, Requested: %.1fh, " +
+                        "Limit: %dh. Remaining: %.1fh.",
+                        annualHours, otHours, ANNUAL_LIMIT, ANNUAL_LIMIT - annualHours)
+                );
+            }
+
+            logger.info(String.format("OT balance validation for approval passed: userId=%d, date=%s, regular=%.2f, weekly=%.2f/%.0f, monthly=%.2f/%.0f, annual=%.2f/%.0f",
+                       userId, otDate, regularHoursThisWeek, currentWeekHours, (double)WEEKLY_LIMIT, monthlyHours, (double)MONTHLY_LIMIT,
+                       annualHours, (double)ANNUAL_LIMIT));
+
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, String.format("Error validating OT balance for approval: userId=%d, date=%s",
+                      userId, otDate), e);
+            throw new RuntimeException("Error validating OT balance for approval", e);
+        }
+    }
+
+    /**
+     * Calculate OT hours in week excluding specific request
+     */
+    private double calculateOTHoursInWeekExcluding(Long userId, LocalDate date, Long excludeRequestId) {
+        LocalDate weekStart = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDate weekEnd = date.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+        return calculateApprovedOTHoursExcluding(userId, weekStart, weekEnd, excludeRequestId);
+    }
+
+    /**
+     * Calculate OT hours in month excluding specific request
+     */
+    private double calculateOTHoursInMonthExcluding(Long userId, int year, int month, Long excludeRequestId) {
+        LocalDate monthStart = LocalDate.of(year, month, 1);
+        LocalDate monthEnd = monthStart.with(TemporalAdjusters.lastDayOfMonth());
+        return calculateApprovedOTHoursExcluding(userId, monthStart, monthEnd, excludeRequestId);
+    }
+
+    /**
+     * Calculate OT hours in year excluding specific request
+     */
+    private double calculateOTHoursInYearExcluding(Long userId, int year, Long excludeRequestId) {
+        LocalDate yearStart = LocalDate.of(year, 1, 1);
+        LocalDate yearEnd = LocalDate.of(year, 12, 31);
+        return calculateApprovedOTHoursExcluding(userId, yearStart, yearEnd, excludeRequestId);
+    }
+
+    /**
+     * Calculate approved OT hours in date range, excluding specific request
+     * Only counts APPROVED requests (not PENDING) to avoid double-counting
+     *
+     * @param userId User ID
+     * @param startDate Start date of range
+     * @param endDate End date of range
+     * @param excludeRequestId Request ID to exclude from calculation
+     * @return Total approved OT hours (excluding the specified request)
+     */
+    private double calculateApprovedOTHoursExcluding(Long userId, LocalDate startDate, LocalDate endDate, Long excludeRequestId) {
+        logger.fine(String.format("Calculating approved OT hours excluding request: userId=%d, range=%s to %s, excludeId=%d",
+                   userId, startDate, endDate, excludeRequestId));
+
+        try {
+            List<Request> otRequests = getUserOTRequests(userId);
+            double totalHours = 0.0;
+            int approvedCount = 0;
+
+            for (Request request : otRequests) {
+                // Skip the request being approved
+                if (request.getId().equals(excludeRequestId)) {
+                    logger.fine(String.format("Skipping excluded request: requestId=%d", excludeRequestId));
+                    continue;
+                }
+
+                // Only count APPROVED requests (not PENDING to avoid double-counting)
+                if (!"APPROVED".equals(request.getStatus())) {
+                    continue;
+                }
+
+                OTRequestDetail detail = request.getOtDetail();
+                if (detail == null) {
+                    continue;
+                }
+
+                LocalDate otDate = LocalDate.parse(detail.getOtDate());
+                if (!otDate.isBefore(startDate) && !otDate.isAfter(endDate)) {
+                    totalHours += detail.getOtHours();
+                    approvedCount++;
+                }
+            }
+
+            logger.info(String.format("Calculated approved OT hours (excluding request %d): userId=%d, range=%s to %s, hours=%.2f, count=%d",
+                       excludeRequestId, userId, startDate, endDate, totalHours, approvedCount));
+            return totalHours;
+
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, String.format("Error calculating OT hours excluding request: userId=%d, excludeId=%d",
+                      userId, excludeRequestId), e);
+            return 0.0;
+        }
+    }
+
 }

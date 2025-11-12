@@ -31,8 +31,9 @@ function getContextPath() {
  * @param {number} requestId - The ID of the request
  * @param {string} requestTitle - The title of the request
  * @param {string} requestStatus - The current status of the request (optional)
+ * @param {string} employeeName - The name of the employee who created the request (optional)
  */
-function openApprovalModal(requestId, requestTitle, requestStatus) {
+function openApprovalModal(requestId, requestTitle, requestStatus, employeeName) {
     // Set modal data
     const modalRequestIdEl = document.getElementById('modalRequestId');
     if (modalRequestIdEl) modalRequestIdEl.value = requestId;
@@ -40,20 +41,23 @@ function openApprovalModal(requestId, requestTitle, requestStatus) {
     const modalRequestTitleEl = document.getElementById('modalRequestTitle');
     if (modalRequestTitleEl) modalRequestTitleEl.textContent = requestTitle;
 
-    // Get employee name from the page
-    // Try multiple selectors to find employee name (works for both list and detail pages)
-    let employeeName = 'N/A';
-    const employeeNameSelectors = [
-        '.fw-semibold', // From detail page
-        '.employee-name', // From list page (if exists)
-        '[data-employee-name]' // Fallback
-    ];
+    // Set employee name (use provided parameter or fallback to finding it on the page)
+    if (!employeeName || employeeName.trim() === '') {
+        // Fallback: Try to find employee name from the page
+        // Look for specific employee information section (more precise than before)
+        const employeeInfoSelectors = [
+            '.info-section .info-value.fw-semibold', // From detail page employee section
+            'td .fw-semibold', // From list page table
+            '[data-employee-name]' // Explicit data attribute
+        ];
 
-    for (const selector of employeeNameSelectors) {
-        const element = document.querySelector(selector);
-        if (element && element.textContent.trim()) {
-            employeeName = element.textContent.trim();
-            break;
+        employeeName = 'N/A';
+        for (const selector of employeeInfoSelectors) {
+            const element = document.querySelector(selector);
+            if (element && element.textContent.trim()) {
+                employeeName = element.textContent.trim();
+                break;
+            }
         }
     }
 
@@ -349,3 +353,28 @@ function createCustomToast(type, message) {
     });
 }
 
+
+
+// ==================== Event Listeners ====================
+
+/**
+ * Initialize approval modal event listeners when DOM is ready
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle approve button clicks using event delegation
+    document.addEventListener('click', function(e) {
+        const approveBtn = e.target.closest('.btn-approve-request, .btn-approve-request-detail');
+        if (approveBtn) {
+            e.preventDefault();
+
+            // Get data from button attributes
+            const requestId = approveBtn.getAttribute('data-request-id');
+            const requestTitle = approveBtn.getAttribute('data-request-title');
+            const requestStatus = approveBtn.getAttribute('data-request-status') || 'PENDING';
+            const employeeName = approveBtn.getAttribute('data-employee-name') || '';
+
+            // Open modal with employee name
+            openApprovalModal(requestId, requestTitle, requestStatus, employeeName);
+        }
+    });
+});
