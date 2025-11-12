@@ -66,6 +66,9 @@ public class ContractListController extends HttpServlet {
             // Calculate offset for pagination
             int offset = (page - 1) * pageSize;
 
+            // Get current user
+            User currentUser = (User) request.getSession().getAttribute("user");
+
             // OPTIMIZATION: Get contracts with filters and pagination in ONE optimized query
             // This replaces the old approach of:
             // 1. findAll() - 1 query
@@ -74,8 +77,12 @@ public class ContractListController extends HttpServlet {
             // 4. findById() for each contract's approver - N queries
             // Total: 1 + 3N queries
             // New approach: Just 2 queries (1 for data, 1 for count)
+            
+            // Check if current user is HRM (position_id = 7) to prioritize pending contracts
+            boolean isHRM = currentUser != null && currentUser.getPositionId() != null && currentUser.getPositionId() == 7;
+            
             List<EmploymentContractDto> contracts = contractDao.findWithFilters(
-                searchQuery, statusFilter, approvalStatusFilter, typeFilter, offset, pageSize
+                searchQuery, statusFilter, approvalStatusFilter, typeFilter, offset, pageSize, isHRM
             );
 
             // OPTIMIZATION: Get total count with same filters (ONE query)
@@ -87,9 +94,6 @@ public class ContractListController extends HttpServlet {
             int totalPages = (int) Math.ceil((double) totalContracts / pageSize);
             if (page < 1) page = 1;
             if (page > totalPages && totalPages > 0) page = totalPages;
-
-            // Get current user
-            User currentUser = (User) request.getSession().getAttribute("user");
 
             // Load users without contract (for collapsible section)
             List<UserProfile> usersWithoutContract = loadUsersWithoutContract(currentUser);

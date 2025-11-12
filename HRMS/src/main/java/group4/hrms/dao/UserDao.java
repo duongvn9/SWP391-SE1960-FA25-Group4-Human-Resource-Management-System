@@ -30,7 +30,7 @@ public class UserDao {
     // SQL queries
     private static final String SELECT_ALL = """
             SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
-                   u.gender, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                   u.gender, u.dob, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
                    u.start_work_date, u.created_at, u.updated_at,
                    d.name as department_name, p.name as position_name
             FROM users u
@@ -41,7 +41,7 @@ public class UserDao {
 
     private static final String SELECT_BY_ID = """
             SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
-                   u.gender, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                   u.gender, u.dob, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
                    u.start_work_date, u.created_at, u.updated_at,
                    d.name as department_name, p.name as position_name
             FROM users u
@@ -52,7 +52,7 @@ public class UserDao {
 
     private static final String SELECT_BY_EMPLOYEE_CODE = """
             SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
-                   u.gender, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                   u.gender, u.dob, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
                    u.start_work_date, u.created_at, u.updated_at,
                    d.name as department_name, p.name as position_name
             FROM users u
@@ -63,7 +63,7 @@ public class UserDao {
 
     private static final String SELECT_BY_EMAIL = """
             SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
-                   u.gender, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                   u.gender, u.dob, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
                    u.start_work_date, u.created_at, u.updated_at,
                    d.name as department_name, p.name as position_name
             FROM users u
@@ -74,7 +74,7 @@ public class UserDao {
 
     private static final String SELECT_BY_DEPARTMENT = """
             SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
-                   u.gender, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                   u.gender, u.dob, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
                    u.start_work_date, u.created_at, u.updated_at,
                    d.name as department_name, p.name as position_name
             FROM users u
@@ -86,14 +86,14 @@ public class UserDao {
 
     private static final String INSERT_USER = """
             INSERT INTO users (employee_code, full_name, cccd, email_company, phone,
-                              gender, department_id, position_id, status, date_joined, start_work_date)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                              gender, dob, department_id, position_id, status, date_joined, start_work_date)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
 
     private static final String UPDATE_USER = """
             UPDATE users SET
                 employee_code = ?, full_name = ?, cccd = ?, email_company = ?, phone = ?,
-                gender = ?, department_id = ?, position_id = ?, status = ?, date_joined = ?, start_work_date = ?,
+                gender = ?, dob = ?, department_id = ?, position_id = ?, status = ?, date_joined = ?, start_work_date = ?,
                 updated_at = NOW()
             WHERE id = ?
             """;
@@ -138,15 +138,15 @@ public class UserDao {
         // Lấy TẤT CẢ users (bỏ qua mọi status filtering) - không cần JOIN accounts
         // Payslip được tạo cho USER, không phải ACCOUNT
         String sql = """
-            SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
-                   u.gender, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
-                   u.start_work_date, u.created_at, u.updated_at,
-                   d.name as department_name, p.name as position_name
-            FROM users u
-            LEFT JOIN departments d ON u.department_id = d.id
-            LEFT JOIN positions p ON u.position_id = p.id
-            ORDER BY u.id
-            """;
+                SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
+                       u.gender, u.dob, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                       u.start_work_date, u.created_at, u.updated_at,
+                       d.name as department_name, p.name as position_name
+                FROM users u
+                LEFT JOIN departments d ON u.department_id = d.id
+                LEFT JOIN positions p ON u.position_id = p.id
+                ORDER BY u.id
+                """;
 
         try (Connection conn = DatabaseUtil.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql);
@@ -200,16 +200,16 @@ public class UserDao {
         }
 
         String sql = """
-            SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
-                   u.gender, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
-                   u.start_work_date, u.created_at, u.updated_at,
-                   d.name as department_name, p.name as position_name
-            FROM users u
-            LEFT JOIN departments d ON u.department_id = d.id
-            LEFT JOIN positions p ON u.position_id = p.id
-            INNER JOIN accounts a ON u.id = a.user_id
-            WHERE a.id = ?
-            """;
+                SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
+                       u.gender, u.dob, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                       u.start_work_date, u.created_at, u.updated_at,
+                       d.name as department_name, p.name as position_name
+                FROM users u
+                LEFT JOIN departments d ON u.department_id = d.id
+                LEFT JOIN positions p ON u.position_id = p.id
+                INNER JOIN accounts a ON u.id = a.user_id
+                WHERE a.id = ?
+                """;
 
         try (Connection conn = DatabaseUtil.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -339,11 +339,12 @@ public class UserDao {
             ps.setString(4, user.getEmailCompany());
             ps.setString(5, user.getPhone());
             ps.setString(6, user.getGender());
-            setLongOrNull(ps, 7, user.getDepartmentId());
-            setLongOrNull(ps, 8, user.getPositionId());
-            ps.setString(9, user.getStatus() != null ? user.getStatus() : "active");
-            setDateOrNull(ps, 10, user.getDateJoined());
-            setDateOrNull(ps, 11, user.getStartWorkDate());
+            setDateOrNull(ps, 7, user.getDob());
+            setLongOrNull(ps, 8, user.getDepartmentId());
+            setLongOrNull(ps, 9, user.getPositionId());
+            ps.setString(10, user.getStatus() != null ? user.getStatus() : "active");
+            setDateOrNull(ps, 11, user.getDateJoined());
+            setDateOrNull(ps, 12, user.getStartWorkDate());
 
             int affectedRows = ps.executeUpdate();
 
@@ -381,12 +382,13 @@ public class UserDao {
             ps.setString(4, user.getEmailCompany());
             ps.setString(5, user.getPhone());
             ps.setString(6, user.getGender());
-            setLongOrNull(ps, 7, user.getDepartmentId());
-            setLongOrNull(ps, 8, user.getPositionId());
-            ps.setString(9, user.getStatus());
-            setDateOrNull(ps, 10, user.getDateJoined());
-            setDateOrNull(ps, 11, user.getStartWorkDate());
-            ps.setLong(12, user.getId());
+            setDateOrNull(ps, 7, user.getDob());
+            setLongOrNull(ps, 8, user.getDepartmentId());
+            setLongOrNull(ps, 9, user.getPositionId());
+            ps.setString(10, user.getStatus());
+            setDateOrNull(ps, 11, user.getDateJoined());
+            setDateOrNull(ps, 12, user.getStartWorkDate());
+            ps.setLong(13, user.getId());
 
             int affectedRows = ps.executeUpdate();
 
@@ -474,7 +476,7 @@ public class UserDao {
         List<User> users = new ArrayList<>();
         StringBuilder sql = new StringBuilder("""
                 SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
-                       u.gender, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                       u.gender, u.dob, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
                        u.start_work_date, u.created_at, u.updated_at,
                        d.name as department_name, p.name as position_name
                 FROM users u
@@ -816,6 +818,11 @@ public class UserDao {
         user.setPhone(rs.getString("phone"));
         user.setGender(rs.getString("gender"));
 
+        Date dob = rs.getDate("dob");
+        if (dob != null) {
+            user.setDob(dob.toLocalDate());
+        }
+
         long deptId = rs.getLong("department_id");
         if (!rs.wasNull()) {
             user.setDepartmentId(deptId);
@@ -871,7 +878,7 @@ public class UserDao {
 
         String query = """
                 SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
-                       u.gender, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                       u.gender, u.dob, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
                        u.start_work_date, u.created_at, u.updated_at,
                        d.name as department_name, p.name as position_name, p.job_level
                 FROM users u
@@ -1234,7 +1241,7 @@ public class UserDao {
         // Find user with "Department Manager" position in the specified department
         String sql = """
                 SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
-                       u.gender, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                       u.gender, u.dob, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
                        u.start_work_date, u.created_at, u.updated_at,
                        d.name as department_name, p.name as position_name
                 FROM users u
@@ -1341,7 +1348,7 @@ public class UserDao {
 
         String sql = """
                 SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
-                       u.gender, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                       u.gender, u.dob, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
                        u.start_work_date, u.created_at, u.updated_at,
                        d.name as department_name, p.name as position_name
                 FROM users u
@@ -1383,7 +1390,7 @@ public class UserDao {
 
         String sql = """
                 SELECT u.id, u.employee_code, u.full_name, u.cccd, u.email_company, u.phone,
-                       u.gender, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
+                       u.gender, u.dob, u.department_id, u.position_id, u.status, u.date_joined, u.date_left,
                        u.start_work_date, u.created_at, u.updated_at,
                        d.name as department_name, p.name as position_name
                 FROM users u

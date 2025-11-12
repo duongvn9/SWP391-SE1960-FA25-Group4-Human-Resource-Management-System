@@ -176,10 +176,12 @@ public class ApproveRequestController extends HttpServlet {
                         group4.hrms.dto.OTRequestDetail otDetail = req.getOtDetail();
                         if (otDetail != null) {
                             // Validate weekly, monthly, and annual limits
-                            otService.validateOTBalance(
+                            // Use validateOTBalanceForApproval to avoid counting PENDING request twice
+                            otService.validateOTBalanceForApproval(
                                     req.getUserId(),
                                     otDetail.getOtDate(),
-                                    otDetail.getOtHours()
+                                    otDetail.getOtHours(),
+                                    req.getId()  // Exclude this request from calculation to avoid double-counting
                             );
 
                             // Check conflict with existing leave requests
@@ -220,25 +222,40 @@ public class ApproveRequestController extends HttpServlet {
                                 java.time.LocalDateTime endDateTime = java.time.LocalDateTime.parse(leaveDetail.getEndDate());
                                 java.time.LocalDate startDate = startDateTime.toLocalDate();
                                 java.time.LocalDate endDate = endDateTime.toLocalDate();
-
-                                // Calculate requested days (inclusive)
-                                int requestedDays = (int) java.time.temporal.ChronoUnit.DAYS.between(startDate, endDate) + 1;
                                 int year = startDate.getYear();
 
-                                // Validate leave balance before approval
+                                // Get isHalfDay and halfDayPeriod from detail
+                                Boolean isHalfDay = leaveDetail.getIsHalfDay();
+                                String halfDayPeriod = leaveDetail.getHalfDayPeriod();
+
+                                // Calculate requested days correctly (same logic as creation)
+                                // IMPORTANT: Use dayCount from detail which was calculated with working days during creation
+                                double requestedDays;
+                                if (isHalfDay != null && isHalfDay) {
+                                    // Half-day leave: always 0.5 days
+                                    requestedDays = 0.5;
+                                    logger.info(String.format("Validating half-day leave balance for approval: userId=%d, period=%s, days=%.1f",
+                                               req.getUserId(), halfDayPeriod, requestedDays));
+                                } else {
+                                    // Full-day leave: use dayCount from detail (already calculated with working days during creation)
+                                    // This was calculated using calculateWorkingDays() which excludes weekends and holidays
+                                    requestedDays = leaveDetail.getDayCount() != null ? leaveDetail.getDayCount() : 1;
+                                    logger.info(String.format("Validating full-day leave balance for approval: userId=%d, days=%.1f",
+                                               req.getUserId(), requestedDays));
+                                }
+
+                                // Validate leave balance before approval (using correct working days)
+                                // IMPORTANT: Pass requestedDays as double to support half-day (0.5)
                                 leaveService.validateLeaveBalance(
                                         req.getUserId(),
                                         leaveDetail.getLeaveTypeCode(),
-                                        requestedDays,
+                                        requestedDays,  // Use exact value: 0.5 for half-day, working days for full-day
                                         year
                                 );
 
                                 // Check conflicts with OT and other leave requests
                                 // This is critical when approving, especially for half-day leaves
-                                Boolean isHalfDay = leaveDetail.getIsHalfDay();
-                                String halfDayPeriod = leaveDetail.getHalfDayPeriod();
-
-                                // Validate all conflicts (OT + overlapping leaves)
+                                // Note: isHalfDay and halfDayPeriod already declared above
                                 leaveService.validateLeaveConflictsForApproval(
                                         req.getUserId(),
                                         startDateTime,

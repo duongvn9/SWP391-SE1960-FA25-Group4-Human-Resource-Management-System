@@ -130,18 +130,33 @@
             <div class="form-card">
                 <h2 class="mb-4">
                     <i class="fas fa-file-contract"></i> 
-                    ${empty contract ? 'Create New Contract' : 'Edit Contract'}
+                    <c:choose>
+                        <c:when test="${isReplaceMode}">Replace Contract</c:when>
+                        <c:when test="${empty contract}">Create New Contract</c:when>
+                        <c:otherwise>Edit Contract</c:otherwise>
+                    </c:choose>
                 </h2>
                 
-                <form method="post" action="${pageContext.request.contextPath}/contracts/${empty contract ? 'create' : 'edit'}">
+                <c:if test="${isReplaceMode && not empty oldContract}">
+                    <div class="alert alert-warning mb-4">
+                        <i class="fas fa-exchange-alt"></i> 
+                        <strong>Replacing Contract:</strong> ${oldContract.contractNo} 
+                        <br><small>The old contract will be terminated after the new contract is successfully created.</small>
+                    </div>
+                </c:if>
+                
+                <form method="post" action="${pageContext.request.contextPath}/contracts/${isReplaceMode ? 'replace' : (empty contract ? 'create' : 'edit')}">
                     <c:if test="${not empty contract}">
                         <input type="hidden" name="id" value="${contract.id}">
+                    </c:if>
+                    <c:if test="${isReplaceMode && not empty oldContract}">
+                        <input type="hidden" name="oldContractId" value="${oldContract.id}">
                     </c:if>
                     
                     <!-- Employee Selection -->
                     <div class="mb-3">
                         <label for="userId" class="form-label">Employee <span class="text-danger">*</span></label>
-                        <select class="form-select" id="userId" name="userId" required ${not empty contract ? 'disabled' : ''}>
+                        <select class="form-select" id="userId" name="userId" required ${not empty contract || isReplaceMode ? 'disabled' : ''}>
                             <option value="">Select Employee</option>
                             <c:forEach var="user" items="${users}">
                                 <option value="${user.id}" 
@@ -151,11 +166,11 @@
                                 </option>
                             </c:forEach>
                         </select>
-                        <c:if test="${not empty contract}">
-                            <input type="hidden" name="userId" value="${contract.userId}">
-                            <small class="text-muted">Employee cannot be changed after contract creation</small>
+                        <c:if test="${not empty contract || isReplaceMode}">
+                            <input type="hidden" name="userId" value="${not empty contract ? contract.userId : preSelectedUserId}">
+                            <small class="text-muted">Employee cannot be changed ${isReplaceMode ? 'when replacing contract' : 'after contract creation'}</small>
                         </c:if>
-                        <c:if test="${empty contract && not empty preSelectedUserId}">
+                        <c:if test="${empty contract && not empty preSelectedUserId && !isReplaceMode}">
                             <small class="text-muted">
                                 <i class="fas fa-info-circle"></i> Employee pre-selected from users without contract list
                             </small>
@@ -223,7 +238,7 @@
                         <div class="col-md-8 mb-3">
                             <label for="baseSalary" class="form-label">Base Salary <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="baseSalary" name="baseSalary" 
-                                   value="${displayData.baseSalary}" step="0.01" required>
+                                   value="${displayData.baseSalary}" step="0.01" min="0" required>
                         </div>
                         
                         <!-- Currency -->
@@ -265,9 +280,10 @@
                     
                     <!-- Buttons -->
                     <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary" 
+                        <button type="submit" class="btn ${isReplaceMode ? 'btn-warning' : 'btn-primary'}" 
                                 ${contract.status == 'expired' || contract.status == 'terminated' ? 'disabled' : ''}>
-                            <i class="fas fa-save"></i> Save Contract
+                            <i class="fas ${isReplaceMode ? 'fa-exchange-alt' : 'fa-save'}"></i> 
+                            ${isReplaceMode ? 'Replace Contract' : 'Save Contract'}
                         </button>
                         <a href="${pageContext.request.contextPath}/contracts" class="btn btn-secondary">
                             <i class="fas fa-times"></i> Cancel

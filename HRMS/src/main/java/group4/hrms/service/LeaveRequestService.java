@@ -209,16 +209,17 @@ public class LeaveRequestService {
      * Requirements: 2
      *
      * Kiểm tra số ngày nghỉ phép còn lại trước khi tạo đơn
+     * Supports half-day leave (0.5 days)
      *
      * @param userId User ID
      * @param leaveTypeCode Leave type code
-     * @param requestedDays Number of days requested
+     * @param requestedDays Number of days requested (supports decimal for half-day: 0.5, 1.0, 1.5, etc.)
      * @param year Year to check balance
      * @throws IllegalArgumentException if balance is insufficient
      */
     public void validateLeaveBalance(Long userId, String leaveTypeCode,
-                                      int requestedDays, int year) {
-        logger.fine(String.format("Validating leave balance: userId=%d, leaveType=%s, requestedDays=%d, year=%d",
+                                      double requestedDays, int year) {
+        logger.fine(String.format("Validating leave balance: userId=%d, leaveType=%s, requestedDays=%.1f, year=%d",
                    userId, leaveTypeCode, requestedDays, year));
 
         try {
@@ -252,12 +253,12 @@ public class LeaveRequestService {
             // Calculate remaining days (supports decimal)
             double remainingDays = totalAllowed - usedDays;
 
-            logger.fine(String.format("Balance calculation: userId=%d, leaveType=%s, total=%d, used=%.1f, remaining=%.1f, requested=%d",
+            logger.fine(String.format("Balance calculation: userId=%d, leaveType=%s, total=%d, used=%.1f, remaining=%.1f, requested=%.1f",
                        userId, leaveTypeCode, totalAllowed, usedDays, remainingDays, requestedDays));
 
-            // Validate if requested days exceed remaining days
+            // Validate if requested days exceed remaining days (supports decimal comparison for half-day)
             if (requestedDays > remainingDays) {
-                logger.warning(String.format("Insufficient leave balance: userId=%d, leaveType=%s, requested=%d, remaining=%.1f, used=%.1f, total=%d",
+                logger.warning(String.format("Insufficient leave balance: userId=%d, leaveType=%s, requested=%.1f, remaining=%.1f, used=%.1f, total=%d",
                               userId, leaveTypeCode, requestedDays, remainingDays, usedDays, totalAllowed));
                 ValidationErrorMessage errorMsg = ValidationErrorMessage.balanceExceededError(
                     leaveType.getName(),
@@ -269,7 +270,7 @@ public class LeaveRequestService {
                 throw new LeaveValidationException(errorMsg);
             }
 
-            logger.info(String.format("Leave balance validation passed: userId=%d, leaveType=%s, requested=%d, remaining=%.1f",
+            logger.info(String.format("Leave balance validation passed: userId=%d, leaveType=%s, requested=%.1f, remaining=%.1f",
                        userId, leaveTypeCode, requestedDays, remainingDays));
 
         } catch (IllegalArgumentException e) {

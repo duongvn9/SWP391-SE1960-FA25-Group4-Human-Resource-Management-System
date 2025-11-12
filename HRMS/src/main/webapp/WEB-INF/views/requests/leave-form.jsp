@@ -113,7 +113,7 @@
                                                                         test="${balance.leaveTypeCode == 'UNPAID_LEAVE' || balance.leaveTypeCode == 'UNPAID'}">
                                                                         <div class="compact-value">
                                                                             <div class="value-label">Used</div>
-                                                                            <div class="value-number text-danger">
+                                                                            <div class="value-number text-danger fw-bold">
                                                                                 <fmt:formatNumber
                                                                                     value="${balance.usedDays}"
                                                                                     minFractionDigits="1"
@@ -125,7 +125,7 @@
                                                                     <c:otherwise>
                                                                         <div class="compact-value">
                                                                             <div class="value-label">Available</div>
-                                                                            <div class="value-number">
+                                                                            <div class="value-number fw-bold">
                                                                                 <fmt:formatNumber
                                                                                     value="${balance.availableDays}"
                                                                                     minFractionDigits="1"
@@ -1365,6 +1365,25 @@
 
                     <!-- Toast Styles -->
                     <style>
+                        /* Leave Balance Number Styling - Make numbers bold and larger */
+                        .value-number {
+                            font-weight: 700 !important;
+                            font-size: 2rem !important;
+                            line-height: 1.2;
+                        }
+
+                        /* Modal Balance Detail - Make all numbers bold */
+                        .balance-detail-stats .stat-row strong {
+                            font-weight: 800 !important;
+                            font-size: 1.1rem !important;
+                        }
+
+                        /* Modal stats highlight rows - even bolder */
+                        .balance-detail-stats .stat-row.highlight strong {
+                            font-weight: 900 !important;
+                            font-size: 1.15rem !important;
+                        }
+
                         /* Toast notification styling */
                         #validationToast {
                             min-width: 350px;
