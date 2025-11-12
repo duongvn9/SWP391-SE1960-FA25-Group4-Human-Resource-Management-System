@@ -19,6 +19,7 @@ public class AttendanceLog {
     private LocalDateTime checkedAtNew;
 
     // Các trường chỉ dùng khi map DTO
+    private String employeeCode;
     private String employeeName;
     private String departmentName;
     private String periodName;
@@ -119,6 +120,14 @@ public class AttendanceLog {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getEmployeeCode() {
+        return employeeCode;
+    }
+
+    public void setEmployeeCode(String employeeCode) {
+        this.employeeCode = employeeCode;
     }
 
     public String getEmployeeName() {
