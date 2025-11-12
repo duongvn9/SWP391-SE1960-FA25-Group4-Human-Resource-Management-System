@@ -355,6 +355,19 @@ function createCustomToast(type, message) {
 
 
 
+/**
+ * Close the approval modal and clean up
+ */
+function closeApprovalModal() {
+    const modalElement = document.getElementById('approvalModal');
+    if (modalElement) {
+        const modal = bootstrap.Modal.getInstance(modalElement);
+        if (modal) {
+            modal.hide();
+        }
+    }
+}
+
 // ==================== Event Listeners ====================
 
 /**
@@ -377,4 +390,47 @@ document.addEventListener('DOMContentLoaded', function() {
             openApprovalModal(requestId, requestTitle, requestStatus, employeeName);
         }
     });
+
+    // Clean up modal state when it's hidden
+    const modalElement = document.getElementById('approvalModal');
+    if (modalElement) {
+        // Handle modal hide event
+        modalElement.addEventListener('hide.bs.modal', function(e) {
+            // Allow the modal to close
+            console.log('Modal is closing...');
+        });
+
+        // Handle modal hidden event (after animation completes)
+        modalElement.addEventListener('hidden.bs.modal', function(e) {
+            console.log('Modal closed, cleaning up...');
+
+            // Clear form fields
+            const approvalReasonEl = document.getElementById('approvalReason');
+            if (approvalReasonEl) {
+                approvalReasonEl.value = '';
+                approvalReasonEl.classList.remove('is-invalid');
+            }
+
+            // Clear validation errors
+            clearValidationErrors();
+
+            // Reset submit button
+            const submitBtn = document.getElementById('submitApprovalBtn');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Submit';
+            }
+
+            // Force remove all backdrops
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => {
+                backdrop.remove();
+            });
+
+            // Ensure body classes are cleaned up
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        });
+    }
 });
