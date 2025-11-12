@@ -227,6 +227,13 @@ public class PayslipDetailServlet extends HttpServlet {
             request.setAttribute("calculationResult", calculationResult);
             request.setAttribute("isOwnPayslip", targetUserId.equals(currentUser.getId()));
             request.setAttribute("canViewAllUsers", PermissionUtil.canViewAllUsers(request));
+            
+            // Set currency - get from payslip or default to VND
+            String currency = "VND";
+            if (payslip != null && payslip.getCurrency() != null) {
+                currency = payslip.getCurrency();
+            }
+            request.setAttribute("currency", currency);
 
             // Format dates for JSP display (JSP can't handle LocalDate directly)
             if (payslip != null) {

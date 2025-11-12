@@ -10,6 +10,14 @@
     </head>
 
     <body class="import-attendance-page">
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+                <p id="loadingText" class="loading-text">Processing, please wait...</p>
+            </div>
+        </div>
+
         <c:set var="activeTab" value="${activeTab != null ? activeTab : 'upload'}" />
         <jsp:include page="../layout/sidebar.jsp">
             <jsp:param name="currentPage" value="attendance-record-emp" />
@@ -46,11 +54,17 @@
 
                         <div class="form-group btn-group">
                             <button type="submit" id="preview" name="action" value="Preview"
-                                    class="form-button btn-primary">Preview</button>
+                                    class="form-button btn-primary">
+                                <i class="fas fa-eye"></i> Preview
+                            </button>
                             <button type="submit" id="import" name="action" value="Import"
-                                    class="form-button btn-secondary">Import</button>
+                                    class="form-button btn-secondary">
+                                <i class="fas fa-file-import"></i> Import
+                            </button>
                             <button type="submit" id="delete" name="action" value="Delete"
-                                    class="form-button btn-danger">Delete</button>
+                                    class="form-button btn-danger">
+                                <i class="fas fa-trash-alt"></i> Delete
+                            </button>
                         </div>
 
                         <!-- Success/Error Messages (Hidden - will show as toast) -->
@@ -64,7 +78,7 @@
                             <div class="hidden-message" data-type="warning" data-message="${warning}"></div>
                         </c:if>
                         <c:if test="${not empty message}">
-                            <div class="hidden-message" data-type="error" data-message="${message}"></div>
+                            <div class="hidden-message" data-type="success" data-message="${message}"></div>
                         </c:if>
 
                         <!-- Preview Table -->
@@ -74,7 +88,7 @@
                             <table class="preview-data-table">
                                 <thead>
                                     <tr class="table-header">
-                                        <th>Employee ID</th>
+                                        <th>Employee Code</th>
                                         <th>Employee Name</th>
                                         <th>Department</th>
                                         <th>Date</th>
@@ -92,7 +106,7 @@
                                     <!-- Hiển thị bản ghi hợp lệ (valid) -->
                                     <c:forEach var="log" items="${previewLogs}">
                                         <tr class="data-row">
-                                            <td>${log.userId}</td>
+                                            <td>${log.employeeCode}</td>
                                             <td>${log.employeeName}</td>
                                             <td>${log.department}</td>
                                             <td>${log.date}</td>
@@ -101,13 +115,15 @@
                                             <td>${log.status}</td>
                                             <td>${log.source}</td>
                                             <td>${log.period}</td>
-                                            <td></td>
+                                            <c:if test="${not empty invalidLogsExcel}">
+                                                <td></td>
+                                            </c:if>
                                         </tr>
                                     </c:forEach>
 
                                     <c:forEach var="log" items="${invalidLogsExcel}">
                                         <tr class="data-row" style="background-color: #ffe6e6;">
-                                            <td>${log.userId}</td>
+                                            <td>${log.employeeCode}</td>
                                             <td>${log.employeeName}</td>
                                             <td>${log.department}</td>
                                             <td>${log.date}</td>
@@ -432,6 +448,27 @@
 
         <script>
             document.addEventListener("DOMContentLoaded", () => {
+                // Handle form submission with loading overlay
+                const uploadForm = document.querySelector('.upload-form');
+                const previewBtn = document.getElementById('preview');
+                const importBtn = document.getElementById('import');
+                const loadingOverlay = document.getElementById('loadingOverlay');
+                const loadingText = document.getElementById('loadingText');
+                
+                if (previewBtn) {
+                    previewBtn.addEventListener('click', function(e) {
+                        loadingText.textContent = 'Previewing data, please wait...';
+                        loadingOverlay.style.display = 'flex';
+                    });
+                }
+                
+                if (importBtn) {
+                    importBtn.addEventListener('click', function(e) {
+                        loadingText.textContent = 'Importing data, please wait...';
+                        loadingOverlay.style.display = 'flex';
+                    });
+                }
+                
                 function showTab(tabId) {
                     // Ẩn tất cả tab
                     document.querySelectorAll(".tab-content").forEach(tab => {

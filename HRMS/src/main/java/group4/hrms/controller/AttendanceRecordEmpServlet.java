@@ -77,6 +77,41 @@ public class AttendanceRecordEmpServlet extends HttpServlet {
                     try {
                         selectedPeriodId = Long.valueOf(periodIdStr);
                         selectedPeriod = tDAO.findById(selectedPeriodId).orElse(null);
+                        
+                        // Logic filter khi chọn period
+                        if (selectedPeriod != null) {
+                            LocalDate periodStart = selectedPeriod.getStartDate();
+                            LocalDate periodEnd = selectedPeriod.getEndDate();
+                            
+                            // Nếu cả startDate và endDate đều rỗng -> set về period
+                            if (startDate == null && endDate == null) {
+                                startDate = periodStart;
+                                endDate = periodEnd;
+                            } else if (startDate == null) {
+                                // Chỉ startDate rỗng -> set về periodStart
+                                startDate = periodStart;
+                            } else if (endDate == null) {
+                                // Chỉ endDate rỗng -> set về periodEnd
+                                endDate = periodEnd;
+                            } else {
+                                // Cả 2 đều có giá trị -> kiểm tra xem có nằm trong period không
+                                boolean startInPeriod = !startDate.isBefore(periodStart) && !startDate.isAfter(periodEnd);
+                                boolean endInPeriod = !endDate.isBefore(periodStart) && !endDate.isAfter(periodEnd);
+                                
+                                if (!startInPeriod && !endInPeriod) {
+                                    // Cả 2 nằm ngoài -> reset cả 2
+                                    startDate = periodStart;
+                                    endDate = periodEnd;
+                                } else if (!startInPeriod && endInPeriod) {
+                                    // startDate nằm ngoài, endDate nằm trong -> reset startDate, giữ nguyên endDate
+                                    startDate = periodStart;
+                                } else if (startInPeriod && !endInPeriod) {
+                                    // startDate nằm trong, endDate nằm ngoài -> giữ nguyên startDate, reset endDate
+                                    endDate = periodEnd;
+                                }
+                                // Cả 2 nằm trong -> giữ nguyên (không làm gì)
+                            }
+                        }
                     } catch (NumberFormatException e) {
                         selectedPeriodId = null;
                         selectedPeriod = null;

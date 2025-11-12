@@ -23,6 +23,9 @@ window.exportPayslipPDF = function() {
             throw new Error('No payslip content found');
         }
 
+        // Get currency from page
+        const currency = document.body.getAttribute('data-currency') || 'VND';
+
         // Get employee info for filename
         const employeeName = document.querySelector('.info-card .col-sm-8')?.textContent.trim() || 'Employee';
         const periodText = document.querySelector('.payslip-header .opacity-75')?.textContent.trim() || '';
@@ -48,9 +51,9 @@ window.exportPayslipPDF = function() {
         // Add company header
         const header = `
             <div style="text-align: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 3px solid #333;">
-                <h1 style="margin: 0 0 8px 0; color: #000; font-size: 24px; font-weight: bold;">ABC COMPANY LIMITED</h1>
-                <p style="margin: 3px 0; color: #555; font-size: 11px;">Address: 123 ABC Street, XYZ District, Ho Chi Minh City</p>
-                <p style="margin: 3px 0; color: #555; font-size: 11px;">Phone: (028) 1234 5678 | Email: hr@company.com</p>
+                <h1 style="margin: 0 0 8px 0; color: #000; font-size: 24px; font-weight: bold;">HRMS</h1>
+                <p style="margin: 3px 0; color: #555; font-size: 11px;">Address: FPT University Hanoi, Hoa Lac Hi-Tech Park, Thach That, Hanoi</p>
+                <p style="margin: 3px 0; color: #555; font-size: 11px;">Phone: +84 982188435 | Email: hrms8386@gmail.com</p>
                 <h2 style="margin: 15px 0 0 0; color: #2563eb; font-size: 20px; font-weight: bold;">PAYSLIP</h2>
             </div>
         `;
@@ -457,6 +460,9 @@ function addSmoothAnimations() {
  * Fix net salary display to ensure correct calculation
  */
 function fixNetSalaryDisplay() {
+    // Get currency from page
+    const currency = document.body.getAttribute('data-currency') || 'VND';
+    
     // Get gross income and total deductions from the page
     let grossAmount = 0;
     let totalDeductions = 0;
@@ -468,7 +474,7 @@ function fixNetSalaryDisplay() {
             const parent = element.closest('.calculation-row, .row');
             if (parent) {
                 const amountElement = parent.querySelector('.text-end');
-                if (amountElement && amountElement.textContent.includes('VND')) {
+                if (amountElement) {
                     const amountText = amountElement.textContent.replace(/[^\d.,]/g, '');
                     // Handle both comma and dot as thousand separators
                     const cleanAmount = amountText.replace(/[,.]/g, '');
@@ -485,7 +491,7 @@ function fixNetSalaryDisplay() {
             const parent = element.closest('.calculation-row, .row');
             if (parent) {
                 const amountElement = parent.querySelector('.text-end');
-                if (amountElement && amountElement.textContent.includes('VND')) {
+                if (amountElement) {
                     const amountText = amountElement.textContent.replace(/[^\d.,]/g, '');
                     // Handle both comma and dot as thousand separators
                     const cleanAmount = amountText.replace(/[,.]/g, '');
@@ -505,22 +511,49 @@ function fixNetSalaryDisplay() {
                 grossAmount: grossAmount,
                 totalDeductions: totalDeductions,
                 netAmount: netAmount,
-                formatted: formatCurrency(netAmount)
+                currency: currency,
+                formatted: formatCurrency(netAmount, currency)
             });
-            netSalaryElement.innerHTML = formatCurrency(netAmount);
+            netSalaryElement.innerHTML = formatCurrency(netAmount, currency);
         }
     }
 }
 
 /**
- * Format currency values
+ * Format currency values with dynamic currency support
  */
-function formatCurrency(value) {
-    return new Intl.NumberFormat('en-US', {
-        style: 'decimal',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0
-    }).format(value) + ' VND';
+function formatCurrency(value, currency) {
+    // Get currency from parameter or from page data attribute
+    if (!currency) {
+        currency = document.body.getAttribute('data-currency') || 'VND';
+    }
+    
+    // Format based on currency type
+    let formatted;
+    if (currency === 'USD') {
+        formatted = new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(value);
+    } else if (currency === 'VND') {
+        formatted = new Intl.NumberFormat('vi-VN', {
+            style: 'decimal',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(value) + ' VND';
+    } else {
+        // Generic format for other currencies
+        formatted = new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: currency,
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(value);
+    }
+    
+    return formatted;
 }
 
 /**
