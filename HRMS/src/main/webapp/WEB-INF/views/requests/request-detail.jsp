@@ -63,6 +63,7 @@
                                     <button class="btn btn-warning btn-approve-request-detail"
                                         data-request-id="${requestDto.id}"
                                         data-request-title="${fn:escapeXml(requestDto.title)}"
+                                        data-employee-name="${fn:escapeXml(requestDto.userFullName)}"
                                         data-request-status="${requestDto.status}">
                                         <i class="fas fa-clipboard-check me-1"></i>
                                         <c:choose>

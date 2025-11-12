@@ -226,8 +226,16 @@ public class PayslipCalculationService {
             logger.info(String.format("Final calculation: gross=%s, deductions=%s, taxable=%s, tax=%s, net=%s",
                                     grossAmount, totalDeductions, taxableIncome, taxAmount, netAmount));
 
-            logger.info(String.format("Payslip calculation completed: userId=%d, gross=%s, net=%s",
-                                    userId, grossAmount, netAmount));
+            // Enhanced summary logging
+            logger.info(String.format(
+                "PAYSLIP SUMMARY: userId=%d, period=%s to %s | " +
+                "Base=%s, OT=%s, Gross=%s | Deductions=%s, Tax=%s | Net=%s | " +
+                "WorkedDays=%d, PaidLeaveDays=%d, UnderHours=%.2f",
+                userId, periodStart, periodEnd,
+                baseProrated, otAmount, grossAmount,
+                totalDeductions, taxAmount, netAmount,
+                result.getWorkedDays(), result.getPaidLeaveDays(), underHours
+            ));
 
             return result;
 
@@ -274,6 +282,7 @@ public class PayslipCalculationService {
     /**
      * Calculate overtime amount directly from approved OT requests
      * Uses individual multipliers from each request for accurate calculation
+     * NEW: Cross-checks with attendance records to ensure OT was actually worked
      * Requirements: 6.5
      *
      * @param userId User ID
@@ -295,28 +304,72 @@ public class PayslipCalculationService {
                 periodEnd.atTime(23, 59, 59)
             );
 
+            // Get attendance records for cross-checking
+            AttendanceLogDao attendanceDao = new AttendanceLogDao();
+            List<AttendanceLogDto> attendanceList = attendanceDao.findByFilter(
+                userId, null, null, periodStart, periodEnd, null, null, null,
+                Integer.MAX_VALUE, 0, false
+            );
+
+            // Create a map of attendance records by date for quick lookup
+            Map<LocalDate, List<AttendanceLogDto>> attendanceByDate = new HashMap<>();
+            for (AttendanceLogDto record : attendanceList) {
+                attendanceByDate.computeIfAbsent(record.getDate(), k -> new ArrayList<>()).add(record);
+            }
+
             BigDecimal totalOTAmount = BigDecimal.ZERO;
 
             // Calculate OT amount for each request using its individual multiplier
+            // NEW: Cross-check with attendance to verify actual worked hours
             for (Request otRequest : approvedOTRequests) {
                 if (otRequest.getOtDetail() != null) {
                     try {
-                        double hours = otRequest.getOtDetail().getOtHours();
+                        LocalDate otDate = LocalDate.parse(otRequest.getOtDetail().getOtDate());
+                        double approvedHours = otRequest.getOtDetail().getOtHours();
                         Double payMultiplier = otRequest.getOtDetail().getPayMultiplier();
                         String otType = otRequest.getOtDetail().getOtType();
+
+                        // Get OT time window from request
+                        LocalTime otStartTime = LocalTime.parse(otRequest.getOtDetail().getStartTime());
+                        LocalTime otEndTime = LocalTime.parse(otRequest.getOtDetail().getEndTime());
 
                         // Use multiplier from request (default to 1.5 if not set)
                         double multiplier = payMultiplier != null ? payMultiplier : 1.5;
 
+                        // Cross-check with attendance records
+                        double actualOTHours = calculateActualOTHours(otDate, otStartTime, otEndTime,
+                                                                     attendanceByDate.get(otDate));
+
+                        // Use the MINIMUM of approved hours and actual worked hours
+                        double payableHours = Math.min(approvedHours, actualOTHours);
+
+                        // Enhanced logging for OT reduction
+                        if (payableHours < approvedHours) {
+                            double lostHours = approvedHours - payableHours;
+                            BigDecimal lostAmount = hourlyRate
+                                .multiply(BigDecimal.valueOf(lostHours))
+                                .multiply(BigDecimal.valueOf(multiplier))
+                                .setScale(DECIMAL_PLACES, ROUNDING_MODE);
+
+                            logger.warning(String.format(
+                                "OT REDUCED: userId=%d, date=%s, type=%s, approved=%.2fh, actual=%.2fh, payable=%.2fh, lost=%.2fh (-%s VND)",
+                                userId, otDate, otType, approvedHours, actualOTHours, payableHours, lostHours, lostAmount));
+                        } else if (actualOTHours > approvedHours) {
+                            // Employee worked more than approved - log for information
+                            logger.info(String.format(
+                                "OT CAPPED: userId=%d, date=%s, worked=%.2fh but only approved=%.2fh (extra %.2fh not paid)",
+                                userId, otDate, actualOTHours, approvedHours, actualOTHours - approvedHours));
+                        }
+
                         BigDecimal otAmount = hourlyRate
-                            .multiply(BigDecimal.valueOf(hours))
+                            .multiply(BigDecimal.valueOf(payableHours))
                             .multiply(BigDecimal.valueOf(multiplier))
                             .setScale(DECIMAL_PLACES, ROUNDING_MODE);
 
                         totalOTAmount = totalOTAmount.add(otAmount);
 
-                        logger.fine(String.format("OT calculation: type=%s, hours=%.2f, multiplier=%.1f, amount=%s",
-                                                otType, hours, multiplier, otAmount));
+                        logger.fine(String.format("OT calculation: type=%s, approved=%.2f, actual=%.2f, payable=%.2f, multiplier=%.1f, amount=%s",
+                                                otType, approvedHours, actualOTHours, payableHours, multiplier, otAmount));
 
                     } catch (Exception e) {
                         logger.warning(String.format("Error calculating OT for request %d: %s",
@@ -335,6 +388,73 @@ public class PayslipCalculationService {
                                                    userId, e.getMessage()), e);
             return BigDecimal.ZERO;
         }
+    }
+
+    /**
+     * Calculate actual OT hours worked based on attendance records
+     * Cross-checks OT request time window with actual check-in/check-out times
+     *
+     * @param otDate OT date
+     * @param otStartTime OT start time from request
+     * @param otEndTime OT end time from request
+     * @param attendanceRecords Attendance records for that date (may be null or empty)
+     * @return Actual OT hours worked (0 if no attendance found)
+     */
+    private double calculateActualOTHours(LocalDate otDate, LocalTime otStartTime, LocalTime otEndTime,
+                                         List<AttendanceLogDto> attendanceRecords) {
+        // Validation: Check for null or empty attendance
+        if (attendanceRecords == null || attendanceRecords.isEmpty()) {
+            logger.warning(String.format("OT VALIDATION: No attendance record found for OT date: %s (OT window: %s-%s)",
+                otDate, otStartTime, otEndTime));
+            return 0.0; // No attendance = no OT paid
+        }
+
+        // Validation: Check OT time window is valid
+        if (otStartTime == null || otEndTime == null || !otStartTime.isBefore(otEndTime)) {
+            logger.severe(String.format("OT VALIDATION: Invalid OT time window for date %s: start=%s, end=%s",
+                otDate, otStartTime, otEndTime));
+            return 0.0;
+        }
+
+        double totalOTHours = 0.0;
+
+        // Check each attendance record for overlap with OT window
+        for (AttendanceLogDto record : attendanceRecords) {
+            if (record.getCheckIn() == null || record.getCheckOut() == null) {
+                logger.warning(String.format("OT VALIDATION: Incomplete attendance for date %s (missing check-in or check-out)",
+                    otDate));
+                continue;
+            }
+
+            LocalTime checkIn = record.getCheckIn();
+            LocalTime checkOut = record.getCheckOut();
+
+            // Validation: Check attendance time is valid
+            if (!checkIn.isBefore(checkOut)) {
+                logger.warning(String.format("OT VALIDATION: Invalid attendance time for date %s: checkIn=%s >= checkOut=%s",
+                    otDate, checkIn, checkOut));
+                continue;
+            }
+
+            // Calculate overlap between OT window and actual work time
+            LocalTime overlapStart = checkIn.isAfter(otStartTime) ? checkIn : otStartTime;
+            LocalTime overlapEnd = checkOut.isBefore(otEndTime) ? checkOut : otEndTime;
+
+            // If there's an overlap, calculate the hours
+            if (overlapStart.isBefore(overlapEnd)) {
+                long overlapMinutes = java.time.Duration.between(overlapStart, overlapEnd).toMinutes();
+                double overlapHours = overlapMinutes / 60.0;
+                totalOTHours += overlapHours;
+
+                logger.fine(String.format("OT overlap found: date=%s, OT window=%s-%s, actual=%s-%s, overlap=%.2fh",
+                                        otDate, otStartTime, otEndTime, checkIn, checkOut, overlapHours));
+            } else {
+                logger.warning(String.format("No overlap between OT window and attendance: date=%s, OT=%s-%s, actual=%s-%s",
+                                           otDate, otStartTime, otEndTime, checkIn, checkOut));
+            }
+        }
+
+        return totalOTHours;
     }
 
     /**
@@ -976,32 +1096,22 @@ public class PayslipCalculationService {
                         String halfDayPeriod = request.getLeaveDetail().getHalfDayPeriod(); // "AM" or "PM"
                         boolean isFullDay = (isHalfDay == null || !isHalfDay);
 
-                        // Process each day in the leave period
-                        LocalDate currentDate = leaveStartDate;
-                        while (!currentDate.isAfter(leaveEndDate)) {
-                            // Check if this leave day overlaps with attendance
-                            if (attendanceDates.contains(currentDate)) {
-                                // Employee came to work despite having leave request
+                        // IMPORTANT: For half-day leave, only process the single day (startDate = endDate)
+                        // For full-day leave, process each working day in the range
 
-                                if (isFullDay) {
-                                    // Full-day leave + came to work → Only count leave, subtract worked day
-                                    workedDays -= 1.0;
-                                    workedHours -= workedHoursPerDay.getOrDefault(currentDate, 0.0);
+                        if (isHalfDay != null && isHalfDay) {
+                            // Half-day leave: Only process the single day
+                            LocalDate leaveDate = leaveStartDate;
 
-                                    if (isPaid) {
-                                        paidLeaveDays += 1.0;
-                                        paidLeaveHours += workingHoursPerDay;
-                                    } else {
-                                        unpaidLeaveDays += 1;
-                                    }
+                            // Check if this is a working day (not weekend/holiday/compensatory)
+                            if (leaveDate.getDayOfWeek() != DayOfWeek.SATURDAY &&
+                                leaveDate.getDayOfWeek() != DayOfWeek.SUNDAY &&
+                                !isHoliday(leaveDate, cachedHolidays) &&
+                                !isCompensatoryDay(leaveDate, cachedCompensatoryDays)) {
 
-                                    overlappedLeaveDays++;
-                                    logger.info(String.format("Full-day leave overlap: userId=%d, date=%s (only count leave)",
-                                                            userId, currentDate));
-                                } else {
-                                    // Half-day leave + came to work
-                                    // Subtract 0.5 from worked days (regardless of which session)
-                                    // The leave balance is still deducted
+                                // Check if overlaps with attendance
+                                if (attendanceDates.contains(leaveDate)) {
+                                    // Half-day leave + came to work → Subtract 0.5 from worked days
                                     workedDays -= 0.5;
                                     workedHours -= (workingHoursPerDay / 2.0);
 
@@ -1009,22 +1119,68 @@ public class PayslipCalculationService {
                                         paidLeaveDays += 0.5;
                                         paidLeaveHours += (workingHoursPerDay / 2.0);
                                     } else {
-                                        unpaidLeaveDays += 1; // Count as 1 for unpaid (simplified)
+                                        unpaidLeaveDays += 1;
                                     }
 
-                                    logger.info(String.format("Half-day leave overlap: userId=%d, date=%s, period=%s (only count leave)",
-                                                            userId, currentDate, halfDayPeriod));
+                                    overlappedLeaveDays++;
+                                    logger.info(String.format("Half-day leave overlap: userId=%d, date=%s, period=%s",
+                                                            userId, leaveDate, halfDayPeriod));
+                                } else {
+                                    // No attendance → Count as 0.5 leave day
+                                    if (isPaid) {
+                                        paidLeaveDays += 0.5;
+                                        paidLeaveHours += (workingHoursPerDay / 2.0);
+                                    } else {
+                                        unpaidLeaveDays += 1;
+                                    }
                                 }
                             } else {
-                                // No attendance on this leave day → Count as leave
-                                if (isPaid) {
-                                    paidLeaveDays += dayCount;
-                                    paidLeaveHours += (dayCount * workingHoursPerDay);
-                                } else {
-                                    unpaidLeaveDays += (int) Math.ceil(dayCount);
-                                }
+                                // Half-day leave on weekend/holiday → Don't count (shouldn't happen, but handle gracefully)
+                                logger.warning(String.format("Half-day leave on non-working day: userId=%d, date=%s (ignored)",
+                                                           userId, leaveDate));
                             }
-                            currentDate = currentDate.plusDays(1);
+
+                        } else {
+                            // Full-day leave: Process each WORKING day in the range
+                            LocalDate currentDate = leaveStartDate;
+                            while (!currentDate.isAfter(leaveEndDate)) {
+                                // CRITICAL: Only count WORKING DAYS (not weekend/holiday/compensatory)
+                                // This matches the logic used when creating the leave request
+                                if (currentDate.getDayOfWeek() != DayOfWeek.SATURDAY &&
+                                    currentDate.getDayOfWeek() != DayOfWeek.SUNDAY &&
+                                    !isHoliday(currentDate, cachedHolidays) &&
+                                    !isCompensatoryDay(currentDate, cachedCompensatoryDays)) {
+
+                                    // Check if this leave day overlaps with attendance
+                                    if (attendanceDates.contains(currentDate)) {
+                                        // Full-day leave + came to work → Only count leave, subtract worked day
+                                        workedDays -= 1.0;
+                                        workedHours -= workedHoursPerDay.getOrDefault(currentDate, 0.0);
+
+                                        if (isPaid) {
+                                            paidLeaveDays += 1.0;
+                                            paidLeaveHours += workingHoursPerDay;
+                                        } else {
+                                            unpaidLeaveDays += 1;
+                                        }
+
+                                        overlappedLeaveDays++;
+                                        logger.fine(String.format("Full-day leave overlap: userId=%d, date=%s",
+                                                                userId, currentDate));
+                                    } else {
+                                        // No attendance on this working day → Count as 1 leave day
+                                        if (isPaid) {
+                                            paidLeaveDays += 1.0;
+                                            paidLeaveHours += workingHoursPerDay;
+                                        } else {
+                                            unpaidLeaveDays += 1;
+                                        }
+                                    }
+                                }
+                                // Skip weekend/holiday/compensatory days (don't count them)
+
+                                currentDate = currentDate.plusDays(1);
+                            }
                         }
                     }
                 } catch (Exception e) {
@@ -1044,12 +1200,18 @@ public class PayslipCalculationService {
                                 userId, paidLeaveDays, unpaidLeaveDays, overlappedLeaveDays));
 
         // Get approved OT requests for the period (NEW LOGIC)
-        // OT hours and multiplier are taken directly from approved OT requests
+        // OT hours cross-checked with attendance records
         List<Request> approvedOTRequests = requestDao.findOTRequestsByUserIdAndDateRange(
             userId,
             periodStart.atStartOfDay(),
             periodEnd.atTime(23, 59, 59)
         );
+
+        // Create a map of attendance records by date for OT cross-checking
+        Map<LocalDate, List<AttendanceLogDto>> attendanceByDate = new HashMap<>();
+        for (AttendanceLogDto record : attendanceList) {
+            attendanceByDate.computeIfAbsent(record.getDate(), k -> new ArrayList<>()).add(record);
+        }
 
         Map<String, Double> otHours = new HashMap<>();
         otHours.put("WEEKDAY", 0.0);
@@ -1058,23 +1220,39 @@ public class PayslipCalculationService {
         otHours.put("COMPENSATORY", 0.0);
 
         // Process approved OT requests
-        // Take OT hours and multiplier directly from the request (already calculated and approved)
+        // NEW: Cross-check with attendance to get actual worked hours
         for (Request otRequest : approvedOTRequests) {
             if (otRequest.getOtDetail() != null) {
                 try {
                     LocalDate otDate = LocalDate.parse(otRequest.getOtDetail().getOtDate());
-                    double hours = otRequest.getOtDetail().getOtHours(); // Use approved hours from request
-                    Double payMultiplier = otRequest.getOtDetail().getPayMultiplier(); // Use multiplier from request
-                    String otTypeFromRequest = otRequest.getOtDetail().getOtType(); // Get OT type from request
+                    double approvedHours = otRequest.getOtDetail().getOtHours();
+                    Double payMultiplier = otRequest.getOtDetail().getPayMultiplier();
+                    String otTypeFromRequest = otRequest.getOtDetail().getOtType();
+
+                    // Get OT time window from request
+                    LocalTime otStartTime = LocalTime.parse(otRequest.getOtDetail().getStartTime());
+                    LocalTime otEndTime = LocalTime.parse(otRequest.getOtDetail().getEndTime());
+
+                    // Cross-check with attendance records
+                    double actualOTHours = calculateActualOTHours(otDate, otStartTime, otEndTime,
+                                                                 attendanceByDate.get(otDate));
+
+                    // Use the MINIMUM of approved hours and actual worked hours
+                    double payableHours = Math.min(approvedHours, actualOTHours);
 
                     // Use OT type from request (already determined when creating the request)
                     String otTypeKey = otTypeFromRequest != null ? otTypeFromRequest : "WEEKDAY";
 
-                    // Add to total OT hours for this type
-                    otHours.put(otTypeKey, otHours.get(otTypeKey) + hours);
+                    // Add to total OT hours for this type (using payable hours, not approved)
+                    otHours.put(otTypeKey, otHours.get(otTypeKey) + payableHours);
 
-                    logger.info(String.format("OT approved: userId=%d, date=%s, type=%s, hours=%.2f, multiplier=%.1f",
-                                            userId, otDate, otTypeKey, hours,
+                    if (payableHours < approvedHours) {
+                        logger.warning(String.format("OT hours reduced in snapshot: userId=%d, date=%s, approved=%.2f, actual=%.2f, payable=%.2f",
+                                                   userId, otDate, approvedHours, actualOTHours, payableHours));
+                    }
+
+                    logger.info(String.format("OT snapshot: userId=%d, date=%s, type=%s, approved=%.2f, actual=%.2f, payable=%.2f, multiplier=%.1f",
+                                            userId, otDate, otTypeKey, approvedHours, actualOTHours, payableHours,
                                             payMultiplier != null ? payMultiplier : 1.5));
 
                 } catch (Exception e) {
