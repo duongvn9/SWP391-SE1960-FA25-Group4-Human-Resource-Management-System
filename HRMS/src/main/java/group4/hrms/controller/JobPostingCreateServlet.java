@@ -53,8 +53,16 @@ public class JobPostingCreateServlet extends HttpServlet {
         logger.info("Request URI: {}", request.getRequestURI());
         logger.info("Content type: {}", request.getContentType());
         
+        // Check authentication first
+        jakarta.servlet.http.HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("user") == null) {
+            logger.warn("User not authenticated, redirecting to login");
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+        
         // Get user's position ID for permission check 
-        Object sessUserObj2 = request.getSession(false) != null ? request.getSession(false).getAttribute("user") : null;
+        Object sessUserObj2 = session.getAttribute("user");
         Long sessPositionId2 = null;
         if (sessUserObj2 instanceof group4.hrms.model.User) {
             group4.hrms.model.User su2 = (group4.hrms.model.User) sessUserObj2;
@@ -62,6 +70,8 @@ public class JobPostingCreateServlet extends HttpServlet {
             logger.info("User position ID: {}", sessPositionId2);
         } else {
             logger.warn("No valid user found in session");
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
         }
         
         // Only HR Staff (8) can create job postings. HR Manager (7) can only approve/reject/publish.
@@ -117,6 +127,11 @@ public class JobPostingCreateServlet extends HttpServlet {
                     if (details != null) {
                         request.setAttribute("requestDetails", details);
                         request.setAttribute("sourceRequestId", reqId);
+                        // Pass the request title (Job Title) for prefill
+                        request.setAttribute("requestTitle", reqEntity.getTitle());
+                        logger.info("Loaded request title='{}' for prefill", reqEntity.getTitle());
+                        logger.info("Recruitment details: minSalary={}, maxSalary={}, salaryType={}", 
+                                details.getMinSalary(), details.getMaxSalary(), details.getSalaryType());
                     } else {
                         logger.warn("Request details is null for request ID: {}", reqId);
                     }
@@ -144,12 +159,24 @@ public class JobPostingCreateServlet extends HttpServlet {
         // Debug logs removed - functionality working
         logger.info("JobPostingCreateServlet.doPost: starting...");
         
+        // Check authentication first
+        jakarta.servlet.http.HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("user") == null) {
+            logger.warn("User not authenticated, redirecting to login");
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+        
         // Get user's position ID for permission check 
-        Object sessUserObj2 = request.getSession(false) != null ? request.getSession(false).getAttribute("user") : null;
+        Object sessUserObj2 = session.getAttribute("user");
         Long sessPositionId2 = null;
         if (sessUserObj2 instanceof group4.hrms.model.User) {
             group4.hrms.model.User su2 = (group4.hrms.model.User) sessUserObj2;
             sessPositionId2 = su2.getPositionId();
+        } else {
+            logger.warn("No valid user found in session");
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
         }
         
         // Only HR Staff (8) can create job postings. HR Manager (7) can only approve/reject/publish.
@@ -169,7 +196,7 @@ public class JobPostingCreateServlet extends HttpServlet {
 
         // Validate CSRF token (with detailed logging for debugging)
         String csrfToken = request.getParameter("csrfToken");
-        HttpSession session = request.getSession(false);
+        session = request.getSession(false);
         
         logger.info("CSRF Validation - Request token: {}", csrfToken);
         logger.info("CSRF Validation - Session exists: {}", session != null);

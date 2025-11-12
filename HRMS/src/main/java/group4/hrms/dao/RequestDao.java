@@ -138,7 +138,7 @@ public class RequestDao extends BaseDao<Request, Long> {
             + "FROM " + TABLE_NAME + " r "
             + "LEFT JOIN users u ON r.created_by_user_id = u.id "
             + "LEFT JOIN request_types rt ON r.request_type_id = rt.id "
-            + "LEFT JOIN departments d ON u.department_id = d.id "
+            + "LEFT JOIN departments d ON r.department_id = d.id "
             + "LEFT JOIN accounts approver_acc ON r.current_approver_account_id = approver_acc.id "
             + "LEFT JOIN users approver_user ON approver_acc.user_id = approver_user.id "
             + "LEFT JOIN attachments a ON a.owner_type = 'REQUEST' AND a.owner_id = r.id ";
@@ -1249,7 +1249,8 @@ public class RequestDao extends BaseDao<Request, Long> {
         sql.append("COALESCE(COUNT(a.id), 0) as attachment_count ");
         sql.append("FROM ").append(TABLE_NAME).append(" r ");
         sql.append("LEFT JOIN users u ON r.created_by_user_id = u.id ");
-        sql.append("LEFT JOIN departments d ON u.department_id = d.id ");
+        sql.append("LEFT JOIN departments d ON r.department_id = d.id ");
+        logger.info("RequestDao.findWithFilters: JOIN departments ON r.department_id (FIXED VERSION)");
         sql.append("LEFT JOIN request_types rt ON r.request_type_id = rt.id ");
         sql.append("LEFT JOIN attachments a ON a.owner_type = 'REQUEST' AND a.owner_id = r.id ");
         sql.append("WHERE 1=1 ");
@@ -1304,7 +1305,7 @@ public class RequestDao extends BaseDao<Request, Long> {
 
         // Department filter
         if (filter.hasDepartmentFilter()) {
-            sql.append("AND u.department_id = ? ");
+            sql.append("AND r.department_id = ? ");
             params.add(filter.getDepartmentId());
         }
 
@@ -1348,7 +1349,11 @@ public class RequestDao extends BaseDao<Request, Long> {
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
+                    Long deptId = rs.getLong("department_id");
+                    String deptName = rs.getString("department_name");
                     RequestDto dto = mapResultSetToDtoExtended(rs);
+                    logger.info("RequestDao: Mapped request ID={}, DepartmentId={}, DepartmentName='{}' (from DTO: '{}')", 
+                            dto.getId(), deptId, deptName, dto.getDepartmentName());
                     requests.add(dto);
                 }
             }
@@ -1380,11 +1385,7 @@ public class RequestDao extends BaseDao<Request, Long> {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT COUNT(*) FROM ").append(TABLE_NAME).append(" r ");
 
-        // Join users table if department filter is present
-        if (filter.hasDepartmentFilter()) {
-            sql.append("INNER JOIN users u ON r.created_by_user_id = u.id ");
-        }
-
+        // No need to join users table for department filter since department_id is in requests table
         sql.append("WHERE 1=1 ");
 
         List<Object> params = new ArrayList<>();
@@ -1437,7 +1438,7 @@ public class RequestDao extends BaseDao<Request, Long> {
 
         // Department filter
         if (filter.hasDepartmentFilter()) {
-            sql.append("AND u.department_id = ? ");
+            sql.append("AND r.department_id = ? ");
             params.add(filter.getDepartmentId());
         }
 
@@ -1557,7 +1558,7 @@ public class RequestDao extends BaseDao<Request, Long> {
 
         // Department filter
         if (filter.hasDepartmentFilter()) {
-            sql.append("AND u.department_id = ? ");
+            sql.append("AND r.department_id = ? ");
             params.add(filter.getDepartmentId());
         }
 
