@@ -585,6 +585,12 @@
 
                     // HTML5 validation is enabled by default with 'required' attributes
                     form.addEventListener('submit', function (e) {
+                        // Clear all custom validity messages first
+                        const allInputs = form.querySelectorAll('input, select');
+                        allInputs.forEach(input => {
+                            input.setCustomValidity('');
+                        });
+
                         // Age validation for Date of Birth
                         const dateOfBirth = dateOfBirthInput.value;
                         if (dateOfBirth) {
@@ -714,27 +720,65 @@
                     });
 
                     const dateJoinedInput = document.getElementById('dateJoined');
-                    dateJoinedInput.addEventListener('invalid', function () {
-                        if (this.validity.valueMissing) {
-                            this.setCustomValidity('Please enter the date joined');
-                        }
-                    });
-                    dateJoinedInput.addEventListener('input', function () {
+
+                    // Clear custom validity on any interaction
+                    dateJoinedInput.addEventListener('input', function (e) {
+                        console.log('Date Joined input event, value:', this.value);
                         this.setCustomValidity('');
                         const isValid = this.value !== '';
                         updateFieldValidation(this, isValid);
                     });
 
-                    const startWorkDateInput = document.getElementById('startWorkDate');
-                    startWorkDateInput.addEventListener('invalid', function () {
-                        if (this.validity.valueMissing) {
-                            this.setCustomValidity('Please enter the start work date');
-                        }
-                    });
-                    startWorkDateInput.addEventListener('change', function () {
+                    dateJoinedInput.addEventListener('change', function (e) {
+                        console.log('Date Joined change event, value:', this.value);
                         this.setCustomValidity('');
                         const isValid = this.value !== '';
                         updateFieldValidation(this, isValid);
+                    });
+
+                    dateJoinedInput.addEventListener('focus', function (e) {
+                        console.log('Date Joined focus event');
+                        this.setCustomValidity('');
+                    });
+
+                    // Only set custom message if truly invalid
+                    dateJoinedInput.addEventListener('invalid', function (e) {
+                        console.log('Date Joined invalid event triggered, value:', this.value, 'validity:', this.validity);
+                        // Clear first to reset
+                        this.setCustomValidity('');
+                        // Only set message if value is actually missing
+                        if (!this.value || this.value.trim() === '') {
+                            this.setCustomValidity('Please enter the date joined');
+                        }
+                    });
+
+                    const startWorkDateInput = document.getElementById('startWorkDate');
+
+                    // Clear custom validity on any interaction
+                    startWorkDateInput.addEventListener('input', function (e) {
+                        this.setCustomValidity('');
+                        const isValid = this.value !== '';
+                        updateFieldValidation(this, isValid);
+                    });
+
+                    startWorkDateInput.addEventListener('change', function (e) {
+                        this.setCustomValidity('');
+                        const isValid = this.value !== '';
+                        updateFieldValidation(this, isValid);
+                    });
+
+                    startWorkDateInput.addEventListener('focus', function (e) {
+                        this.setCustomValidity('');
+                    });
+
+                    // Only set custom message if truly invalid
+                    startWorkDateInput.addEventListener('invalid', function (e) {
+                        // Clear first to reset
+                        this.setCustomValidity('');
+                        // Only set message if value is actually missing
+                        if (!this.value || this.value.trim() === '') {
+                            this.setCustomValidity('Please enter the start work date');
+                        }
                     });
 
                     const genderSelect = document.getElementById('gender');
@@ -770,12 +814,6 @@
 
                         // Focus on first field
                         document.getElementById('fullName').focus();
-                    });
-
-                    startWorkDateInput.addEventListener('input', function () {
-                        this.setCustomValidity('');
-                        const isValid = this.value !== '';
-                        updateFieldValidation(this, isValid);
                     });
 
                     const employeeCodeInput = document.getElementById('employeeCode');
