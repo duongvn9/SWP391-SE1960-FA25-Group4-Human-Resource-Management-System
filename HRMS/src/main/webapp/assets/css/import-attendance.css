@@ -111,50 +111,152 @@
 }
 
 .import-attendance-page .upload-form .form-group {
-    margin-bottom: 0.75rem;
+    margin-bottom: 1rem;
 }
 
+.import-attendance-page .form-label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+}
+
+/* File upload - Giống request form */
 .import-attendance-page .file-upload {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    background: #f8fafc;
-    padding: 0.5rem;
+    background: #ffffff;
+    padding: 0.75rem 1rem;
     border-radius: 8px;
-    border: 1px dashed rgba(15, 23, 42, 0.06);
+    border: 2px solid #e2e8f0;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.import-attendance-page .file-upload:hover {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+}
+
+.import-attendance-page .file-upload:focus-within {
+    border-color: var(--ia-primary);
+    background: #f8faff;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
 .import-attendance-page .file-input {
-    flex: 0 0 auto;
+    flex: 1;
+    font-size: 0.9rem;
+    color: #475569;
+    cursor: pointer;
+}
+
+.import-attendance-page .file-input::file-selector-button {
+    padding: 0.5rem 1rem;
+    margin-right: 1rem;
+    background: var(--ia-primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.import-attendance-page .file-input::file-selector-button:hover {
+    background: var(--ia-primary-dark, #3730a3);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(79, 70, 229, 0.2);
 }
 
 .import-attendance-page .file-upload .form-text {
     margin: 0;
     color: var(--ia-muted);
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    font-style: italic;
 }
 
 .import-attendance-page .btn-group {
-    margin-top: 0.75rem;
+    margin-top: 1.25rem;
     display: flex;
-    gap: 0.5rem;
+    gap: 0.75rem;
+    flex-wrap: wrap;
 }
 
 .import-attendance-page .form-button {
-    padding: 0.5rem 0.9rem;
-    border-radius: 0.5rem;
-    border: 0;
+    padding: 0.65rem 1.5rem;
+    border-radius: 8px;
+    border: none;
     cursor: pointer;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.25s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+.import-attendance-page .form-button::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.import-attendance-page .form-button:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+.import-attendance-page .form-button:active {
+    transform: scale(0.98);
+}
+
+.import-attendance-page .form-button i {
+    margin-right: 0.5rem;
+    font-size: 0.9rem;
 }
 
 .import-attendance-page .btn-primary {
-    background: var(--ia-primary);
+    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
     color: #fff;
 }
 
+.import-attendance-page .btn-primary:hover {
+    background: linear-gradient(135deg, #4338ca 0%, #4f46e5 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(79, 70, 229, 0.3);
+}
+
 .import-attendance-page .btn-secondary {
-    background: #eef2ff;
-    color: var(--ia-primary);
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #fff;
+}
+
+.import-attendance-page .btn-secondary:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(16, 185, 129, 0.3);
+}
+
+.import-attendance-page .btn-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: #fff;
+}
+
+.import-attendance-page .btn-danger:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(239, 68, 68, 0.3);
 }
 
 /* Messages */
@@ -175,47 +277,127 @@
     color: #065f46;
 }
 
-/* Preview table */
+/* Preview table - Đồng nhất với attendance-record-HR */
 .import-attendance-page .preview-data-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     margin-top: 1rem;
     background: #fff;
-    overflow: auto;
-}
-.import-attendance-page .preview-data-table th,
-.import-attendance-page .preview-data-table td {
-    padding: 0.85rem 1rem;
-    border-bottom: 1px solid rgba(15, 23, 42, 0.06);
-    text-align: left;
-    font-size: 1rem; /* slightly larger for preview */
-}
-.import-attendance-page .preview-data-table thead tr {
-    background: linear-gradient(
-        90deg,
-        rgba(79, 70, 229, 0.06),
-        rgba(139, 92, 246, 0.03)
-        );
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    table-layout: fixed;
+    font-family: "Segoe UI", sans-serif;
+    font-size: 14px;
 }
 
+.import-attendance-page .preview-data-table th {
+    padding: 10px 12px;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 2px solid #ddd;
+    white-space: nowrap;
+    text-align: left;
+    background-color: #6974dd;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.import-attendance-page .preview-data-table th:last-child {
+    border-right: none;
+}
+
+.import-attendance-page .preview-data-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #e5e7eb;
+    border-right: 1px solid #f3f4f6;
+    color: #444;
+    vertical-align: middle;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.import-attendance-page .preview-data-table td:last-child {
+    border-right: none;
+}
+
+.import-attendance-page .preview-data-table tbody tr:nth-child(even) {
+    background-color: #fafafa;
+}
+
+.import-attendance-page .preview-data-table tbody tr:hover {
+    background-color: #f0f8ff;
+}
+
+/* Column widths - giống attendance-record-HR */
+.import-attendance-page .preview-data-table th:nth-child(1),
+.import-attendance-page .preview-data-table td:nth-child(1) {
+    width: 10%;
+}  /* Employee Code */
+.import-attendance-page .preview-data-table th:nth-child(2),
+.import-attendance-page .preview-data-table td:nth-child(2) {
+    width: 15%;
+} /* Employee Name */
+.import-attendance-page .preview-data-table th:nth-child(3),
+.import-attendance-page .preview-data-table td:nth-child(3) {
+    width: 12%;
+} /* Department */
+.import-attendance-page .preview-data-table th:nth-child(4),
+.import-attendance-page .preview-data-table td:nth-child(4) {
+    width: 10%;
+} /* Date */
+.import-attendance-page .preview-data-table th:nth-child(5),
+.import-attendance-page .preview-data-table td:nth-child(5),
+.import-attendance-page .preview-data-table th:nth-child(6),
+.import-attendance-page .preview-data-table td:nth-child(6) {
+    width: 8%;
+}  /* Check-in/out */
+.import-attendance-page .preview-data-table th:nth-child(7),
+.import-attendance-page .preview-data-table td:nth-child(7) {
+    width: 10%;
+} /* Status */
+.import-attendance-page .preview-data-table th:nth-child(8),
+.import-attendance-page .preview-data-table td:nth-child(8) {
+    width: 10%;
+} /* Source */
+.import-attendance-page .preview-data-table th:nth-child(9),
+.import-attendance-page .preview-data-table td:nth-child(9) {
+    width: 10%;
+} /* Period */
+.import-attendance-page .preview-data-table th:nth-child(10),
+.import-attendance-page .preview-data-table td:nth-child(10) {
+    width: 15%;
+} /* Error */
+
+/* Pagination - Đồng nhất với attendance-record-HR */
 .import-attendance-page .preview-pagination {
     display: flex;
-    gap: 0.35rem;
+    justify-content: center;
     align-items: center;
-    justify-content: center; /* centered per request */
-    margin-top: 0.75rem;
+    gap: 6px;
+    margin-top: 1.2rem;
+    flex-wrap: wrap;
 }
+
 .import-attendance-page .preview-pagination a,
 .import-attendance-page .preview-pagination span {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0.35rem 0.55rem;
-    border-radius: 0.35rem;
-    background: #fff;
-    border: 1px solid rgba(15, 23, 42, 0.06);
-    color: #0f172a;
+    min-width: 36px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    font-weight: 500;
     text-decoration: none;
+    transition: all 0.2s ease;
+    background: #fff;
+    color: var(--ia-primary);
+}
+
+.import-attendance-page .preview-pagination a:hover {
+    background: #e0e7ff;
+    transform: scale(1.05);
 }
 
 /* Current page highlight */
@@ -223,7 +405,13 @@
     background: var(--ia-primary);
     color: #fff;
     border-color: var(--ia-primary);
-    box-shadow: 0 4px 10px rgba(79,70,229,0.12);
+    font-weight: 700;
+    cursor: default;
+}
+
+.import-attendance-page .preview-pagination .page-btn.prev-btn,
+.import-attendance-page .preview-pagination .page-btn.next-btn {
+    font-weight: 600;
 }
 
 /* Ensure header dropdown appears above content */
@@ -424,6 +612,28 @@
 #importRowBtn,
 #addRowBtn {
     background: linear-gradient(135deg, #10b981, #059669);
+    position: relative;
+    overflow: hidden;
+}
+
+#importRowBtn::before,
+#addRowBtn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+#importRowBtn:hover::before,
+#addRowBtn:hover::before {
+    width: 300px;
+    height: 300px;
 }
 
 #importRowBtn:hover,
@@ -433,15 +643,79 @@
     box-shadow: 0 6px 12px rgba(16, 185, 129, 0.25);
 }
 
+#importRowBtn:active,
+#addRowBtn:active {
+    transform: scale(0.98);
+}
+
+/* Nút Delete Row */
+#deleteRowBtn {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    position: relative;
+    overflow: hidden;
+}
+
+#deleteRowBtn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+#deleteRowBtn:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+#deleteRowBtn:hover {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(239, 68, 68, 0.25);
+}
+
+#deleteRowBtn:active {
+    transform: scale(0.98);
+}
+
 /* Nút Import */
 .import-attendance-page .manual-inner .btn-import {
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    background: linear-gradient(135deg, #4f46e5, #6366f1);
+    position: relative;
+    overflow: hidden;
+}
+
+.import-attendance-page .manual-inner .btn-import::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.import-attendance-page .manual-inner .btn-import:hover::before {
+    width: 300px;
+    height: 300px;
 }
 
 .import-attendance-page .manual-inner .btn-import:hover {
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    background: linear-gradient(135deg, #4338ca, #4f46e5);
     transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(59, 130, 246, 0.25);
+    box-shadow: 0 6px 12px rgba(79, 70, 229, 0.25);
+}
+
+.import-attendance-page .manual-inner .btn-import:active {
+    transform: scale(0.98);
 }
 
 /* Feedback message */
@@ -850,4 +1124,72 @@
 /* Small print */
 .import-attendance-page small.helper {
     color: var(--ia-muted);
+}
+
+
+/* ===== LOADING OVERLAY ===== */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
+    backdrop-filter: blur(4px);
+}
+
+.loading-spinner {
+    text-align: center;
+    background: white;
+    padding: 2.5rem 3rem;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    animation: fadeInScale 0.3s ease-out;
+}
+
+.spinner {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 1.5rem;
+    border: 5px solid #f3f4f6;
+    border-top: 5px solid #4f46e5;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.loading-text {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1e293b;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
 }

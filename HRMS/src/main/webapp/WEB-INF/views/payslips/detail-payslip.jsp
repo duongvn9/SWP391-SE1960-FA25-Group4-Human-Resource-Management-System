@@ -19,7 +19,7 @@
         <meta name="print-color-adjust" content="exact">
         <meta name="color-scheme" content="light">
     </head>
-    <body class="payslip-page">
+    <body class="payslip-page" data-currency="${currency}">
         <!-- Sidebar -->
         <jsp:include page="../layout/sidebar.jsp">
             <jsp:param name="currentPage" value="payslip-list" />
@@ -228,7 +228,7 @@
                                                         <fmt:formatNumber
                                                             value="${calculationResult.baseSalary}"
                                                             type="currency" currencySymbol=""
-                                                            maxFractionDigits="0" /> VND
+                                                            maxFractionDigits="0" /> ${currency}
                                                     </div>
                                                 </div>
                                             </div>
@@ -238,7 +238,7 @@
                                                     <div class="col-5 text-end">
                                                         <fmt:formatNumber value="${calculationResult.dailyRate}"
                                                                           type="currency" currencySymbol=""
-                                                                          maxFractionDigits="0" /> VND
+                                                                          maxFractionDigits="0" /> ${currency}
                                                     </div>
                                                 </div>
                                             </div>
@@ -249,7 +249,7 @@
                                                         <fmt:formatNumber
                                                             value="${calculationResult.hourlyRate}"
                                                             type="currency" currencySymbol=""
-                                                            maxFractionDigits="0" /> VND
+                                                            maxFractionDigits="0" /> ${currency}
                                                     </div>
                                                 </div>
                                             </div>
@@ -419,7 +419,7 @@
                                             <div class="col-4 text-end">
                                                 <fmt:formatNumber value="${calculationResult.baseProrated}"
                                                                   type="currency" currencySymbol="" maxFractionDigits="0" />
-                                                VND
+                                                ${currency}
                                             </div>
                                         </div>
                                     </div>
@@ -433,7 +433,7 @@
                                                     <fmt:formatNumber value="${calculationResult.otAmount}"
                                                                       type="currency" currencySymbol=""
                                                                       maxFractionDigits="0" />
-                                                    VND
+                                                    ${currency}
                                                 </div>
                                             </div>
                                         </div>
@@ -503,7 +503,7 @@
                                                 <fmt:formatNumber value="${calculationResult.grossAmount}"
                                                                   type="currency" currencySymbol=""
                                                                   maxFractionDigits="0" />
-                                                VND
+                                                ${currency}
                                             </div>
                                         </div>
                                     </div>
@@ -532,7 +532,7 @@
                                                             <fmt:formatNumber
                                                                 value="${calculationResult.latenessDeduction}"
                                                                 type="currency" currencySymbol=""
-                                                                maxFractionDigits="0" /> VND
+                                                                maxFractionDigits="0" /> ${currency}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -557,7 +557,7 @@
                                                             <fmt:formatNumber
                                                                 value="${calculationResult.underHoursDeduction}"
                                                                 type="currency" currencySymbol=""
-                                                                maxFractionDigits="0" /> VND
+                                                                maxFractionDigits="0" /> ${currency}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -594,7 +594,7 @@
                                                             <fmt:formatNumber
                                                                 value="${calculationResult.taxAmount}"
                                                                 type="currency" currencySymbol=""
-                                                                maxFractionDigits="0" /> VND
+                                                                maxFractionDigits="0" /> ${currency}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -609,7 +609,7 @@
                                                         -
                                                         <fmt:formatNumber value="${totalDeductions}"
                                                                           type="currency" currencySymbol=""
-                                                                          maxFractionDigits="0" /> VND
+                                                                          maxFractionDigits="0" /> ${currency}
                                                     </div>
                                                 </div>
                                             </div>
@@ -647,7 +647,7 @@
                                                 <div class="col-6 text-end">
                                                     <fmt:formatNumber value="${calculationResult.grossAmount}"
                                                                       type="currency" currencySymbol="" maxFractionDigits="0" />
-                                                    VND
+                                                    ${currency}
                                                 </div>
                                             </div>
                                         </div>
@@ -661,7 +661,7 @@
                                                     <div class="col-6 text-end deduction-highlight">
                                                         -
                                                         <fmt:formatNumber value="${totalDeductions}" type="currency"
-                                                                          currencySymbol="" maxFractionDigits="0" /> VND
+                                                                          currencySymbol="" maxFractionDigits="0" /> ${currency}
                                                     </div>
                                                 </div>
                                             </div>
@@ -675,7 +675,7 @@
                                                 <h3 class="mb-0" id="net-salary-amount">
                                                     <fmt:formatNumber value="${calculationResult.netAmount}"
                                                                       type="currency" currencySymbol="" maxFractionDigits="0" />
-                                                    VND
+                                                    ${currency}
                                                 </h3>
                                             </div>
                                         </div>

@@ -192,7 +192,7 @@
                                cellpadding="6">
                             <thead>
                                 <tr>
-                                    <th>Employee ID</th>
+                                    <th>Employee Code</th>
                                     <th>Employee Name</th>
                                     <th>Department</th>
                                     <th>Date</th>
@@ -207,7 +207,7 @@
                             <tbody>
                                 <c:forEach var="att" items="${attendanceList}">
                                     <tr class="attendance-row">
-                                        <td>${att.userId}</td>
+                                        <td>${att.employeeCode}</td>
                                         <td>${att.employeeName}</td>
                                         <td>${att.department}</td>
                                         <td>
