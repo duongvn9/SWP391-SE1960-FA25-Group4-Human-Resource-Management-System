@@ -624,7 +624,8 @@ public class EmploymentContractDao extends BaseDao<EmploymentContract, Long> {
             String approvalStatusFilter,
             String typeFilter,
             int offset,
-            int limit) throws SQLException {
+            int limit,
+            boolean prioritizePending) throws SQLException {
 
         List<group4.hrms.dto.EmploymentContractDto> dtos = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
@@ -671,7 +672,12 @@ public class EmploymentContractDao extends BaseDao<EmploymentContract, Long> {
         }
 
         // Add ordering and pagination
-        sql.append("ORDER BY ec.created_at DESC LIMIT ? OFFSET ?");
+        // If prioritizePending is true (for HRM), pending contracts come first
+        if (prioritizePending) {
+            sql.append("ORDER BY CASE WHEN ec.approval_status = 'pending' THEN 0 ELSE 1 END, ec.created_at DESC LIMIT ? OFFSET ?");
+        } else {
+            sql.append("ORDER BY ec.created_at DESC LIMIT ? OFFSET ?");
+        }
         params.add(limit);
         params.add(offset);
 
