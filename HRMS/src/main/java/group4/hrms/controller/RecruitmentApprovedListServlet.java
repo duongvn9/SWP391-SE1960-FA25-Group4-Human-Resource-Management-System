@@ -82,14 +82,12 @@ public class RecruitmentApprovedListServlet extends HttpServlet {
             return;
         }
         
-        // Parse pagination parameters
-        int page = 1;
-        int pageSize = 6; // 6 items per page
-        String pageStr = request.getParameter("page");
-        if (pageStr != null) {
+        // Get department filter parameter
+        String departmentIdStr = request.getParameter("departmentId");
+        Long departmentIdFilter = null;
+        if (departmentIdStr != null && !departmentIdStr.trim().isEmpty()) {
             try {
-                page = Integer.parseInt(pageStr);
-                if (page < 1) page = 1;
+                departmentIdFilter = Long.parseLong(departmentIdStr);
             } catch (NumberFormatException ignored) {}
         }
         
@@ -97,8 +95,9 @@ public class RecruitmentApprovedListServlet extends HttpServlet {
         filter.setRequestTypeId(rt.getId());
         filter.setStatus("APPROVED");  // Only approved requests
         filter.setScope("all");        // Show all departments
-        filter.setPage(page);          // Current page
-        filter.setPageSize(pageSize);  // 6 items per page
+        filter.setDepartmentId(departmentIdFilter); // Filter by department if specified
+        filter.setPage(1);             // Get all in one page
+        filter.setPageSize(1000);      // Large page size to get all
         
         logger.info("Set up filter: typeId={}, status={}, scope={}", 
                    filter.getRequestTypeId(), filter.getStatus(), filter.getScope());
@@ -131,10 +130,23 @@ public class RecruitmentApprovedListServlet extends HttpServlet {
                 logger.info("Result contains {} requests, {} departments", 
                         (result.getRequests() != null ? result.getRequests().size() : 0),
                         (result.getRequestsByDepartment() != null ? result.getRequestsByDepartment().size() : 0));
-                if (result.getRequestsByDepartment() != null) {
-                    result.getRequestsByDepartment().forEach((dept, requests) -> 
-                            logger.info("Department '{}' has {} requests", dept, requests.size())
+                
+                // Debug: Log each request's department info
+                if (result.getRequests() != null) {
+                    result.getRequests().forEach(req -> 
+                            logger.info("Request ID={}, Title='{}', DepartmentId={}, DepartmentName='{}'", 
+                                    req.getId(), req.getTitle(), req.getDepartmentName(), req.getDepartmentName())
                     );
+                }
+                
+                if (result.getRequestsByDepartment() != null) {
+                    result.getRequestsByDepartment().forEach((dept, requests) -> {
+                        logger.info("Department '{}' has {} requests", dept, requests.size());
+                        requests.forEach(req -> 
+                                logger.info("  - Request ID={}, Title='{}', DepartmentId={}", 
+                                        req.getId(), req.getTitle(), req.getDepartmentName())
+                        );
+                    });
                 }
             }
 
@@ -173,7 +185,7 @@ public class RecruitmentApprovedListServlet extends HttpServlet {
                 }
             }
 
-            // Calculate total items and pages based on filtered results
+            // Calculate total items based on filtered results
             int totalItems = 0;
             if (result != null && result.getRequests() != null) {
                 totalItems = result.getRequests().size();
@@ -183,20 +195,17 @@ public class RecruitmentApprovedListServlet extends HttpServlet {
                         .sum();
             }
             
-            int totalPages = (int) Math.ceil((double) totalItems / pageSize);
-            if (totalPages < 1) totalPages = 1;
+            // Load departments for filter dropdown
+            DepartmentDao departmentDao = new DepartmentDao();
+            request.setAttribute("departments", departmentDao.findAll());
+            request.setAttribute("selectedDepartmentId", departmentIdFilter);
             
-            // Set pagination attributes
-            request.setAttribute("currentPage", page);
-            request.setAttribute("totalPages", totalPages);
-            request.setAttribute("pageSize", pageSize);
             request.setAttribute("totalItems", totalItems);
-            
             request.setAttribute("result", result);
             request.setAttribute("filter", filter);
 
             String jspPath = "/WEB-INF/views/recruitment/recruitment-approved-list.jsp";
-            logger.info("Forwarding to JSP: {} (page {}/{}, {} items)", jspPath, page, totalPages, totalItems);
+            logger.info("Forwarding to JSP: {} ({} items)", jspPath, totalItems);
             request.getRequestDispatcher(jspPath).forward(request, response);
 
         } catch (ServletException | IOException e) {
