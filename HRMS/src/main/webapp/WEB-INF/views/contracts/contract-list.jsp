@@ -455,6 +455,18 @@
                                                                     <i class="fas fa-eye"></i>
                                                                 </button>
 
+                                                                <!-- HR Actions: Replace button for ACTIVE contracts -->
+                                                                <c:if test="${sessionScope.user.positionId == 8 && contract.status == 'active'}">
+                                                                    <button type="button" class="btn btn-sm btn-warning"
+                                                                        title="Replace Contract"
+                                                                        data-contract-id="${contract.id}"
+                                                                        data-contract-no="${contract.contractNo}"
+                                                                        data-employee-name="${contract.userFullName}"
+                                                                        onclick="showReplaceModal(this.getAttribute('data-contract-id'), this.getAttribute('data-contract-no'), this.getAttribute('data-employee-name'))">
+                                                                        <i class="fas fa-exchange-alt"></i>
+                                                                    </button>
+                                                                </c:if>
+
                                                                 <!-- HRM Actions: Approve/Reject for PENDING approval_status -->
                                                                 <c:if
                                                                     test="${sessionScope.user.positionId == 7 && contract.approvalStatus == 'pending'}">
@@ -790,6 +802,42 @@
                     </div>
                 </div>
 
+                <!-- Replace Contract Confirmation Modal -->
+                <div class="modal fade" id="replaceModal" tabindex="-1" aria-labelledby="replaceModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header bg-warning">
+                                <h5 class="modal-title" id="replaceModalLabel">
+                                    <i class="fas fa-exchange-alt me-2"></i>Replace Contract
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Are you sure you want to replace contract <strong id="replaceContractNo"></strong> 
+                                for employee <strong id="replaceEmployeeName"></strong>?</p>
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-info-circle"></i> 
+                                    <strong>Note:</strong>
+                                    <ul class="mb-0 mt-2">
+                                        <li>You will create a new contract for this employee</li>
+                                        <li>The old contract will be <strong>terminated</strong> after the new contract is successfully created</li>
+                                        <li>The old contract will remain in the contract list with "Terminated" status</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary"
+                                    data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-warning" id="confirmReplaceBtn">
+                                    <i class="fas fa-exchange-alt"></i> Proceed to Replace
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <script>
                     // Show approve modal
                     function showApproveModal(contractId, contractNo) {
@@ -910,6 +958,21 @@
                         document.getElementById('deleteContractId').value = contractId;
                         document.getElementById('deleteContractNo').textContent = contractNo;
                         const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+                        modal.show();
+                    }
+
+                    // Show replace modal
+                    function showReplaceModal(contractId, contractNo, employeeName) {
+                        document.getElementById('replaceContractNo').textContent = contractNo;
+                        document.getElementById('replaceEmployeeName').textContent = employeeName;
+                        
+                        // Set up the confirm button to redirect to replace form
+                        const confirmBtn = document.getElementById('confirmReplaceBtn');
+                        confirmBtn.onclick = function() {
+                            window.location.href = '${pageContext.request.contextPath}/contracts/replace?oldContractId=' + contractId;
+                        };
+                        
+                        const modal = new bootstrap.Modal(document.getElementById('replaceModal'));
                         modal.show();
                     }
                 </script>
