@@ -320,16 +320,27 @@
     color: #333;
     border-bottom: 2px solid #ddd;
     white-space: nowrap;
+    text-align: left;
+    border-right: 1px solid rgba(255, 255, 255, 0.1); /* Thêm đường kẻ giữa các cột */
+}
+
+.attendance-table th:last-child {
+    border-right: none; /* Bỏ đường kẻ ở cột cuối */
 }
 
 /* ====== Table Cells ====== */
 .attendance-table td {
     padding: 10px 12px;
     border-bottom: 1px solid #e5e7eb;
+    border-right: 1px solid #f3f4f6; /* Thêm đường kẻ giữa các cột */
     color: #444;
     vertical-align: middle;
     text-overflow: ellipsis;
     overflow: hidden;
+}
+
+.attendance-table td:last-child {
+    border-right: none; /* Bỏ đường kẻ ở cột cuối */
 }
 
 /* ====== Align Header & Data Columns ====== */
@@ -380,16 +391,16 @@
 /* ====== Column Widths (Optional: tùy chỉnh cho đẹp) ====== */
 .attendance-table th:nth-child(1),
 .attendance-table td:nth-child(1) {
-    width: 8%;
-}  /* ID */
+    width: 10%;
+}  /* Employee Code */
 .attendance-table th:nth-child(2),
 .attendance-table td:nth-child(2) {
     width: 15%;
-} /* Name */
+} /* Employee Name */
 .attendance-table th:nth-child(3),
 .attendance-table td:nth-child(3) {
     width: 12%;
-} /* Dept */
+} /* Department */
 .attendance-table th:nth-child(4),
 .attendance-table td:nth-child(4) {
     width: 10%;
@@ -414,7 +425,7 @@
 } /* Period */
 .attendance-table th:nth-child(10),
 .attendance-table td:nth-child(10) {
-    width: 12%;
+    width: 15%;
     text-align:center;
 } /* Actions */
 
@@ -721,25 +732,25 @@
 
     /* Điều chỉnh width cột cho mobile nhỏ */
     .attendance-table th:nth-child(1),
-    .attendance-table td:nth-child(1) { width: 6%; }  /* ID */
+    .attendance-table td:nth-child(1) { width: 10%; }  /* Employee Code */
     .attendance-table th:nth-child(2),
-    .attendance-table td:nth-child(2) { width: 18%; } /* Name */
+    .attendance-table td:nth-child(2) { width: 16%; } /* Employee Name */
     .attendance-table th:nth-child(3),
-    .attendance-table td:nth-child(3) { width: 10%; } /* Dept */
+    .attendance-table td:nth-child(3) { width: 10%; } /* Department */
     .attendance-table th:nth-child(4),
-    .attendance-table td:nth-child(4) { width: 12%; } /* Date */
+    .attendance-table td:nth-child(4) { width: 10%; } /* Date */
     .attendance-table th:nth-child(5),
     .attendance-table td:nth-child(5),
     .attendance-table th:nth-child(6),
-    .attendance-table td:nth-child(6) { width: 9%; }  /* Check-in/out */
+    .attendance-table td:nth-child(6) { width: 8%; }  /* Check-in/out */
     .attendance-table th:nth-child(7),
-    .attendance-table td:nth-child(7) { width: 8%; }  /* Status */
+    .attendance-table td:nth-child(7) { width: 9%; }  /* Status */
     .attendance-table th:nth-child(8),
     .attendance-table td:nth-child(8) { width: 8%; }  /* Source */
     .attendance-table th:nth-child(9),
-    .attendance-table td:nth-child(9) { width: 8%; }  /* Period */
+    .attendance-table td:nth-child(9) { width: 9%; }  /* Period */
     .attendance-table th:nth-child(10),
-    .attendance-table td:nth-child(10) { width: 14%; } /* Actions */
+    .attendance-table td:nth-child(10) { width: 12%; } /* Actions */
 
     /* Modal cho mobile nhỏ */
     .modal-content {

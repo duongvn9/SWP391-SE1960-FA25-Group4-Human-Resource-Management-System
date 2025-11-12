@@ -10,6 +10,7 @@ import java.time.LocalTime;
 public class AttendanceLogDto {
 
     private Long userId;
+    private String employeeCode;
     private String employeeName;
     private String department;
     
@@ -62,6 +63,14 @@ public class AttendanceLogDto {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public String getEmployeeCode() {
+        return employeeCode;
+    }
+
+    public void setEmployeeCode(String employeeCode) {
+        this.employeeCode = employeeCode;
     }
 
     public String getEmployeeName() {
@@ -152,6 +161,7 @@ public class AttendanceLogDto {
     public String toString() {
         return "AttendanceLogDto{"
                 + "employeeId=" + userId
+                + ", employeeCode='" + employeeCode + '\''
                 + ", employeeName='" + employeeName + '\''
                 + ", department='" + department + '\''
                 + ", date=" + date
