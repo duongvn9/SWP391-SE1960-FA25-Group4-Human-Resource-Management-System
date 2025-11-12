@@ -29,7 +29,7 @@ public class RequestListPermissionHelper {
 
     /**
      * Get available scopes for a user based on their job level.
-     * ADMIN (level 1) has NO ACCESS to request system.
+     * ADMIN (level 1) can only see their own requests (like STAFF).
      *
      * @param position User's position (contains job_level)
      * @return Set of available scope strings: "my", "subordinate", "all"
@@ -45,9 +45,10 @@ public class RequestListPermissionHelper {
 
         int jobLevel = position.getJobLevel();
 
-        // ADMIN has NO ACCESS to request system
+        // ADMIN can only see their own requests (like STAFF)
         if (jobLevel == JOB_LEVEL_ADMIN) {
-            return scopes; // Return empty set
+            scopes.add("my");
+            return scopes;
         }
 
         // Everyone else can see their own requests
@@ -68,7 +69,7 @@ public class RequestListPermissionHelper {
 
     /**
      * Get the default scope for a user based on their job level.
-     * ADMIN (level 1) has NO ACCESS to request system.
+     * ADMIN (level 1) defaults to "my" (like STAFF).
      *
      * @param position User's position (contains job_level)
      * @return Default scope string: "my", "subordinate", or "all"
@@ -80,9 +81,9 @@ public class RequestListPermissionHelper {
 
         int jobLevel = position.getJobLevel();
 
-        // ADMIN has NO ACCESS to request system
+        // ADMIN defaults to "my" (like STAFF)
         if (jobLevel == JOB_LEVEL_ADMIN) {
-            return null; // No default scope for admin
+            return "my";
         }
 
         // HR_MANAGER defaults to "all"
@@ -101,7 +102,7 @@ public class RequestListPermissionHelper {
 
     /**
      * Check if a user can export requests based on their job level.
-     * Only HR staff and above can export (ADMIN excluded).
+     * Only HR staff and above can export (ADMIN cannot export).
      *
      * @param position User's position (contains job_level)
      * @return true if user can export, false otherwise
@@ -113,7 +114,7 @@ public class RequestListPermissionHelper {
 
         int jobLevel = position.getJobLevel();
 
-        // ADMIN has NO ACCESS
+        // ADMIN cannot export (only view own requests)
         if (jobLevel == JOB_LEVEL_ADMIN) {
             return false;
         }
@@ -173,7 +174,7 @@ public class RequestListPermissionHelper {
     /**
      * Check if a user can view a specific request.
      * Rules:
-     * - ADMIN has NO ACCESS to request system
+     * - ADMIN can only view their own requests (like STAFF)
      * - User can view their own requests
      * - Managers (DEPT_MANAGER or above) can view subordinate requests
      * - HR staff (HR_STAFF or above) can view all requests
@@ -195,14 +196,14 @@ public class RequestListPermissionHelper {
 
         int jobLevel = position.getJobLevel();
 
-        // ADMIN has NO ACCESS to request system
-        if (jobLevel == JOB_LEVEL_ADMIN) {
-            return false;
-        }
-
-        // User can always view their own requests
+        // User can always view their own requests (including ADMIN)
         if (user.getId().equals(request.getCreatedByUserId())) {
             return true;
+        }
+
+        // ADMIN can only view their own requests (already checked above)
+        if (jobLevel == JOB_LEVEL_ADMIN) {
+            return false;
         }
 
         // HR staff and above can view all requests
@@ -267,7 +268,7 @@ public class RequestListPermissionHelper {
 
         int jobLevel = position.getJobLevel();
 
-        // ADMIN has NO ACCESS to request system
+        // ADMIN cannot approve requests (can only view own requests)
         if (jobLevel == JOB_LEVEL_ADMIN) {
             return false;
         }

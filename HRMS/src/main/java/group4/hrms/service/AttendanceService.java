@@ -45,28 +45,28 @@ public class AttendanceService {
     public static String validateExcelStructure(InputStream inputStream) {
         try (Workbook workbook = new XSSFWorkbook(inputStream)) {
             Sheet sheet = workbook.getSheetAt(0);
-            
+
             // Kiểm tra file rỗng
             if (sheet.getLastRowNum() < 0) {
                 return "Excel file is empty. Please add data to the file.";
             }
-            
+
             // Kiểm tra có header row
             Row headerRow = sheet.getRow(0);
             if (headerRow == null) {
                 return "Excel file must have header line.";
             }
-            
+
             // Kiểm tra số cột trong header
             int numColumns = headerRow.getLastCellNum();
             if (numColumns < 4) {
                 return "The Excel file must have 4 fields: Employee ID, date, check_in, check_out";
             }
-            
+
             if (numColumns > 5) {
                 return "The Excel file has too many fields. The file must have exactly 4 fields in order: Employee ID, date, check_in, check_out";
             }
-            
+
             // Kiểm tra header names (optional - có thể bỏ nếu không cần strict)
             String[] expectedHeaders = {"Employee ID", "date", "check_in", "check_out"};
             for (int i = 0; i < 4; i++) {
@@ -75,15 +75,15 @@ public class AttendanceService {
                     return "Missing column header " + (i + 1) + ". Expectation: " + expectedHeaders[i];
                 }
             }
-            
+
             // Kiểm tra có dữ liệu sau header không
             if (sheet.getLastRowNum() <= 0) {
                 return "Excel file has only header but no data. Please add at least one record.";
             }
-            
+
             // Validation thành công
             return null;
-            
+
         } catch (IOException e) {
             return "Error reading Excel file: " + e.getMessage();
         }
@@ -95,7 +95,7 @@ public class AttendanceService {
         try (Workbook workbook = new XSSFWorkbook(inputStream)) {
             Sheet sheet = workbook.getSheetAt(0);
 
-            int firstRow = sheet.getFirstRowNum() + 1; // Skip header row 
+            int firstRow = sheet.getFirstRowNum() + 1; // Skip header row
             int lastRow = sheet.getLastRowNum();
 
             for (int i = firstRow; i <= lastRow; i++) {
@@ -106,7 +106,7 @@ public class AttendanceService {
 
                 // Kiểm tra xem dòng có dữ liệu thực sự không
                 boolean isEmpty = true;
-                for (int c = 0; c <= 3; c++) { 
+                for (int c = 0; c <= 3; c++) {
                     Cell cell = row.getCell(c);
                     if (cell != null && cell.getCellType() != CellType.BLANK) {
                         String val = cell.toString().trim();
@@ -118,25 +118,25 @@ public class AttendanceService {
                 }
                 if (isEmpty) {
                     continue;
-                }               
-                
+                }
+
                 AttendanceLogDto dto = new AttendanceLogDto();
 
-                dto.setUserId(ExcelUtil.parseLong(row.getCell(0))); 
-                dto.setDate(ExcelUtil.parseDate(row.getCell(1))); 
-                dto.setCheckIn(ExcelUtil.parseTime(row.getCell(2))); 
-                dto.setCheckOut(ExcelUtil.parseTime(row.getCell(3))); 
+                dto.setUserId(ExcelUtil.parseLong(row.getCell(0)));
+                dto.setDate(ExcelUtil.parseDate(row.getCell(1)));
+                dto.setCheckIn(ExcelUtil.parseTime(row.getCell(2)));
+                dto.setCheckOut(ExcelUtil.parseTime(row.getCell(3)));
                 dto.setSource("Excel");
-                
-                if (dto.getUserId() == null && dto.getDate() == null && 
+
+                if (dto.getUserId() == null && dto.getDate() == null &&
                     dto.getCheckIn() == null && dto.getCheckOut() == null) {
-                    continue; 
+                    continue;
                 }
-                
+
                 list.add(dto);
             }
         }
-        
+
         return list;
     }
 
@@ -148,7 +148,7 @@ public class AttendanceService {
                 throw new IOException(structureError);
             }
         }
-        
+
         // Đọc dữ liệu từ file
         try (InputStream inputStream = Files.newInputStream(filePath)) {
             List<AttendanceLogDto> basicLogs = AttendanceService.readAttendanceExcelFile(inputStream);
@@ -156,7 +156,7 @@ public class AttendanceService {
             return enrichAttendanceLogsForPreview(basicLogs);
         }
     }
-    
+
     public static List<AttendanceLogDto> readExcel(Path filePath) throws IOException, SQLException {
         // Validate cấu trúc file trước khi đọc
         try (InputStream validationStream = Files.newInputStream(filePath)) {
@@ -165,7 +165,7 @@ public class AttendanceService {
                 throw new IOException(structureError);
             }
         }
-        
+
         // Đọc dữ liệu từ file
         try (InputStream inputStream = Files.newInputStream(filePath)) {
             List<AttendanceLogDto> basicLogs = AttendanceService.readAttendanceExcelFile(inputStream);
@@ -173,17 +173,17 @@ public class AttendanceService {
             return enrichAttendanceLogsFromDatabase(basicLogs);
         }
     }
-    
+
     public static List<AttendanceLogDto> enrichAttendanceLogsFromDatabase(List<AttendanceLogDto> basicLogs) throws SQLException {
         if (basicLogs == null || basicLogs.isEmpty()) {
             return basicLogs;
         }
-        
+
         // Sử dụng các DAO có sẵn thay vì raw SQL
         UserDao userDao = new UserDao();
         DepartmentDao departmentDao = new DepartmentDao();
         TimesheetPeriodDao timesheetPeriodDao = new TimesheetPeriodDao();
-        
+
         for (AttendanceLogDto dto : basicLogs) {
             // Lấy thông tin employee và department (cả cho valid và invalid logs)
             if (dto.getUserId() != null) {
@@ -192,7 +192,7 @@ public class AttendanceService {
                     User user = userOpt.get();
                     dto.setEmployeeCode(user.getEmployeeCode());
                     dto.setEmployeeName(user.getFullName());
-                    
+
                     // Lấy thông tin department
                     if (user.getDepartmentId() != null) {
                         Optional<Department> deptOpt = departmentDao.findById(user.getDepartmentId());
@@ -211,12 +211,12 @@ public class AttendanceService {
                     dto.setDepartment("Unknown Department");
                 }
             }
-            
+
             // Skip phần còn lại nếu là invalid log (đã có error)
             if (dto.getError() != null) {
                 continue;
             }
-            
+
             // Lấy thông tin period dựa trên date
             if (dto.getDate() != null) {
                 try {
@@ -234,7 +234,7 @@ public class AttendanceService {
                 }
             }
         }
-        
+
         // Tính status cho các bản ghi không có lỗi sau khi enrichment
         for (AttendanceLogDto dto : basicLogs) {
             if (dto.getError() == null && (dto.getCheckIn() != null || dto.getCheckOut() != null)) {
@@ -244,23 +244,23 @@ public class AttendanceService {
                 dto.setStatus("Invalid");
             }
         }
-        
+
         return basicLogs;
     }
-    
+
     public static List<AttendanceLogDto> enrichAttendanceLogsForPreview(List<AttendanceLogDto> basicLogs) throws SQLException {
         if (basicLogs == null || basicLogs.isEmpty()) {
             return basicLogs;
         }
-        
+
         // Sử dụng các DAO có sẵn thay vì raw SQL
         UserDao userDao = new UserDao();
         DepartmentDao departmentDao = new DepartmentDao();
         TimesheetPeriodDao timesheetPeriodDao = new TimesheetPeriodDao();
-        
+
         for (AttendanceLogDto dto : basicLogs) {
             // Enrichment cho TẤT CẢ bản ghi, kể cả có lỗi format
-            
+
             // Lấy thông tin employee và department
             if (dto.getUserId() != null) {
                 Optional<User> userOpt = userDao.findById(dto.getUserId());
@@ -268,7 +268,7 @@ public class AttendanceService {
                     User user = userOpt.get();
                     dto.setEmployeeCode(user.getEmployeeCode());
                     dto.setEmployeeName(user.getFullName());
-                    
+
                     // Lấy thông tin department
                     if (user.getDepartmentId() != null) {
                         Optional<Department> deptOpt = departmentDao.findById(user.getDepartmentId());
@@ -312,7 +312,7 @@ public class AttendanceService {
                 dto.setIsLocked(false);
             }
         }
-        
+
         // Tính status cho TẤT CẢ bản ghi
         for (AttendanceLogDto dto : basicLogs) {
             if (dto.getError() != null) {
@@ -324,15 +324,15 @@ public class AttendanceService {
                 dto.setStatus("Invalid");
             }
         }
-        
+
         return basicLogs;
     }
-    
+
     public static Map<String, List<AttendanceLogDto>> separateValidAndInvalidRecords(List<AttendanceLogDto> allRecords) {
         Map<String, List<AttendanceLogDto>> result = new HashMap<>();
         List<AttendanceLogDto> validRecords = new ArrayList<>();
         List<AttendanceLogDto> invalidRecords = new ArrayList<>();
-        
+
         for (AttendanceLogDto dto : allRecords) {
             if (dto.getError() != null) {
                 invalidRecords.add(dto);
@@ -340,7 +340,7 @@ public class AttendanceService {
                 validRecords.add(dto);
             }
         }
-        
+
         result.put("valid", validRecords);
         result.put("invalid", invalidRecords);
         return result;
@@ -357,34 +357,34 @@ public class AttendanceService {
             return "Invalid";
         }
 
-        LocalTime standardMorningStart = LocalTime.of(8, 0);   
-        LocalTime standardMorningEnd = LocalTime.of(12, 0);  
-        LocalTime standardAfternoonStart = LocalTime.of(13, 0); 
-        LocalTime standardAfternoonEnd = LocalTime.of(17, 0);  
+        LocalTime standardMorningStart = LocalTime.of(8, 0);
+        LocalTime standardMorningEnd = LocalTime.of(12, 0);
+        LocalTime standardAfternoonStart = LocalTime.of(13, 0);
+        LocalTime standardAfternoonEnd = LocalTime.of(17, 0);
 
         int graceMinutes = 10;
-        
+
         // Kiểm tra ngoài giờ làm việc
         // 1. Check-in sau 17h (ca tối/ngoài giờ)
         if (checkIn.isAfter(standardAfternoonEnd)) {
             return "Outside Working Hours";
         }
-        
+
         // 2. Check-in trước 6h sáng (ca đêm/sớm bất thường)
         LocalTime earlyMorningLimit = LocalTime.of(6, 0);
         if (checkIn.isBefore(earlyMorningLimit)) {
             return "Outside Working Hours";
         }
-        
+
         // 3. Cả check-in và check-out đều ngoài khung giờ hành chính
-        boolean checkInOutsideNormal = checkIn.isBefore(standardMorningStart.minusMinutes(30)) || 
+        boolean checkInOutsideNormal = checkIn.isBefore(standardMorningStart.minusMinutes(30)) ||
                                       checkIn.isAfter(standardAfternoonEnd);
-        boolean checkOutOutsideNormal = checkOut.isBefore(standardMorningStart) || 
+        boolean checkOutOutsideNormal = checkOut.isBefore(standardMorningStart) ||
                                        checkOut.isAfter(LocalTime.of(22, 0)); // sau 22h
-        
+
         if (checkInOutsideNormal && checkOutOutsideNormal) {
             return "Outside Working Hours";
-        } 
+        }
 
         // Biến tạm cho leave & OT
         boolean hasAMLeave = false;
@@ -455,7 +455,7 @@ public class AttendanceService {
 
         try {
             RequestDao requestDao = new RequestDao();
-            
+
             // Tìm đơn OT đã duyệt cho ngày đó
             List<Request> otRequests = requestDao.findOTRequestsByUserIdAndDateRange(
                 dto.getUserId(),
@@ -469,11 +469,11 @@ public class AttendanceService {
 
             LocalTime checkIn = dto.getCheckIn();
             LocalTime checkOut = dto.getCheckOut();
-            
+
             // Giờ hành chính chuẩn
-            LocalTime standardMorningStart = LocalTime.of(8, 0);   
-            LocalTime standardMorningEnd = LocalTime.of(12, 0);  
-            LocalTime standardAfternoonStart = LocalTime.of(13, 0); 
+            LocalTime standardMorningStart = LocalTime.of(8, 0);
+            LocalTime standardMorningEnd = LocalTime.of(12, 0);
+            LocalTime standardAfternoonStart = LocalTime.of(13, 0);
             LocalTime standardAfternoonEnd = LocalTime.of(17, 0);
 
             for (Request otRequest : otRequests) {
@@ -482,35 +482,35 @@ public class AttendanceService {
                         // Lấy thông tin từ đơn OT
                         LocalTime otStartTime = LocalTime.parse(otRequest.getOtDetail().getStartTime());
                         LocalTime otEndTime = LocalTime.parse(otRequest.getOtDetail().getEndTime());
-                        
+
                         // Kiểm tra xem bản ghi attendance có nằm trong khung giờ OT không
-                        boolean isWithinOTTimeframe = 
+                        boolean isWithinOTTimeframe =
                             (checkIn.equals(otStartTime) || checkIn.isAfter(otStartTime)) &&
                             (checkOut.equals(otEndTime) || checkOut.isBefore(otEndTime));
-                        
+
                         if (!isWithinOTTimeframe) {
                             continue;
                         }
-                        
+
                         // Kiểm tra xem có dính dáng tới ca làm sáng chiều không
                         // Nếu OT nằm hoàn toàn ngoài giờ hành chính thì mới tính là OT
-                        boolean isOutsideWorkingHours = 
+                        boolean isOutsideWorkingHours =
                             // OT trước giờ làm sáng
                             (otEndTime.isBefore(standardMorningStart) || otEndTime.equals(standardMorningStart)) ||
                             // OT trong giờ nghỉ trưa
                             (otStartTime.equals(standardMorningEnd) && otEndTime.equals(standardAfternoonStart)) ||
                             // OT sau giờ làm chiều
                             (otStartTime.equals(standardAfternoonEnd) || otStartTime.isAfter(standardAfternoonEnd));
-                        
+
                         if (isOutsideWorkingHours) {
                             return true;
                         }
-                        
+
                     } catch (Exception e) {
                     }
                 }
             }
-            
+
         } catch (Exception e) {
             return false;
         }
@@ -550,6 +550,11 @@ public class AttendanceService {
 
             List<AttendanceLog> logs = AttendanceMapper.convertDtoToEntity(dbValidLogs);
             attendanceLogDAO.saveAttendanceLogs(logs);
+
+            // Mark affected payslips as dirty
+            if (dbValidLogs != null && !dbValidLogs.isEmpty()) {
+                markPayslipsDirtyForAttendanceChanges(dbValidLogs, "Excel import");
+            }
 
             req.setAttribute("success", "Imported " + dbValidLogs.size() + " valid attendance logs successfully.");
 
@@ -792,10 +797,10 @@ public class AttendanceService {
         // Xử lý từng nhóm user-date
         for (Map.Entry<String, List<AttendanceLogDto>> entry : logsByUserDate.entrySet()) {
             List<AttendanceLogDto> groupLogs = entry.getValue();
-            
+
             // Bước 2: Tách các cặp IN/OUT thành bản ghi riêng lẻ
             List<IndividualRecord> individualRecords = new ArrayList<>();
-            
+
             for (AttendanceLogDto log : groupLogs) {
                 // Tạo bản ghi IN nếu có checkIn
                 if (log.getCheckIn() != null) {
@@ -805,7 +810,7 @@ public class AttendanceService {
                     inRecord.isCheckIn = true;
                     individualRecords.add(inRecord);
                 }
-                
+
                 // Tạo bản ghi OUT nếu có checkOut
                 if (log.getCheckOut() != null) {
                     IndividualRecord outRecord = new IndividualRecord();
@@ -820,16 +825,16 @@ public class AttendanceService {
                     individualRecords.add(outRecord);
                 }
             }
-            
+
             // Sắp xếp theo thời gian
             individualRecords.sort(Comparator.comparing(r -> r.timestamp));
-            
+
             // Bước 3: Lọc spam (các bản ghi cách nhau <= 2 phút) - chỉ giữ bản ghi sớm nhất
             List<IndividualRecord> filteredRecords = filterSpamRecords(individualRecords);
-            
+
             // Bước 4: Ghép lại theo thứ tự IN-OUT-IN-OUT...
             List<AttendanceLogDto> pairedLogs = pairRecordsInOrder(filteredRecords);
-            
+
             cleanLogs.addAll(pairedLogs);
         }
 
@@ -848,18 +853,18 @@ public class AttendanceService {
         }
 
         List<IndividualRecord> filtered = new ArrayList<>();
-        
+
         // Tìm các nhóm spam
         List<IndividualRecord> currentGroup = new ArrayList<>();
         currentGroup.add(records.get(0));
-        
+
         for (int i = 1; i < records.size(); i++) {
             IndividualRecord current = records.get(i);
             IndividualRecord previous = records.get(i - 1);
-            
+
             // Kiểm tra khoảng cách thời gian <= 2 phút
             long minutesDiff = java.time.Duration.between(previous.timestamp, current.timestamp).toMinutes();
-            
+
             if (minutesDiff <= 2) {
                 // Cùng nhóm spam
                 if (currentGroup.size() == 1) {
@@ -879,13 +884,13 @@ public class AttendanceService {
                     // Không phải spam, thêm vào filtered
                     filtered.add(currentGroup.get(0));
                 }
-                
+
                 // Bắt đầu nhóm mới
                 currentGroup.clear();
                 currentGroup.add(current);
             }
         }
-        
+
         // Xử lý nhóm cuối cùng
         if (currentGroup.size() > 1) {
             // Là nhóm spam - chỉ giữ bản ghi sớm nhất
@@ -894,24 +899,24 @@ public class AttendanceService {
         } else if (currentGroup.size() == 1) {
             filtered.add(currentGroup.get(0));
         }
-        
+
         // Sắp xếp lại filtered theo thời gian
         filtered.sort(Comparator.comparing(r -> r.timestamp));
-        
+
         return filtered;
     }
 
     private static List<AttendanceLogDto> pairRecordsInOrder(List<IndividualRecord> records) {
         List<AttendanceLogDto> result = new ArrayList<>();
-        
+
         if (records.isEmpty()) {
             return result;
         }
-        
+
         // Ghép theo thứ tự: bản ghi đầu là IN, sau đó OUT, sau đó IN, OUT...
         for (int i = 0; i < records.size(); i += 2) {
             AttendanceLogDto dto = new AttendanceLogDto();
-            
+
             // Bản ghi IN (chỉ số chẵn)
             IndividualRecord inRecord = records.get(i);
             dto.setUserId(inRecord.originalLog.getUserId());
@@ -921,12 +926,12 @@ public class AttendanceService {
             dto.setCheckIn(inRecord.timestamp.toLocalTime());
             dto.setSource(inRecord.originalLog.getSource());
             dto.setPeriod(inRecord.originalLog.getPeriod());
-            
+
             // Bản ghi OUT (chỉ số lẻ) nếu có
             if (i + 1 < records.size()) {
                 IndividualRecord outRecord = records.get(i + 1);
                 LocalTime outTime = outRecord.timestamp.toLocalTime();
-                
+
                 // Xử lý trường hợp OUT qua ngày
                 if (outRecord.timestamp.toLocalDate().isAfter(inRecord.timestamp.toLocalDate())) {
                     // Giữ nguyên thời gian OUT nhưng đánh dấu là qua ngày
@@ -935,10 +940,10 @@ public class AttendanceService {
                     dto.setCheckOut(outTime);
                 }
             }
-            
+
             result.add(dto);
         }
-        
+
         return result;
     }
 
@@ -946,5 +951,48 @@ public class AttendanceService {
         AttendanceLogDto originalLog;
         LocalDateTime timestamp;
         boolean isCheckIn;
+    }
+
+    /**
+     * Mark payslips as dirty for attendance changes
+     * This ensures payslips are recalculated when attendance data is updated via Excel import
+     */
+    private static void markPayslipsDirtyForAttendanceChanges(List<AttendanceLogDto> attendanceLogs, String source) {
+        try {
+            PayslipDirtyFlagService dirtyFlagService = new PayslipDirtyFlagService();
+
+            java.util.logging.Logger.getLogger(AttendanceService.class.getName())
+                .info(String.format("Marking payslips dirty for %d attendance changes from %s",
+                    attendanceLogs.size(), source));
+
+            int markedCount = 0;
+            for (AttendanceLogDto log : attendanceLogs) {
+                if (log.getUserId() != null && log.getDate() != null) {
+                    try {
+                        String reason = String.format("Attendance updated via %s", source);
+                        dirtyFlagService.markDirtyForAttendanceChange(
+                            log.getUserId(),
+                            log.getDate(),
+                            reason
+                        );
+                        markedCount++;
+                    } catch (Exception e) {
+                        java.util.logging.Logger.getLogger(AttendanceService.class.getName())
+                            .log(java.util.logging.Level.WARNING,
+                                String.format("Failed to mark payslip dirty for user %d on %s: %s",
+                                    log.getUserId(), log.getDate(), e.getMessage()), e);
+                        // Continue with other records
+                    }
+                }
+            }
+
+            java.util.logging.Logger.getLogger(AttendanceService.class.getName())
+                .info(String.format("Successfully marked %d payslips as dirty", markedCount));
+
+        } catch (Exception e) {
+            java.util.logging.Logger.getLogger(AttendanceService.class.getName())
+                .log(java.util.logging.Level.SEVERE, "Error marking payslips dirty for attendance changes", e);
+            // Don't throw exception to avoid breaking the import operation
+        }
     }
 }
