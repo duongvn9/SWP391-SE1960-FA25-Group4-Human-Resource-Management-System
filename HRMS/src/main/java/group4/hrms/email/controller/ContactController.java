@@ -58,7 +58,7 @@ public class ContactController extends HttpServlet {
         String sent = request.getParameter("sent");
         if ("true".equals(sent)) {
             request.setAttribute("successMessage",
-                    "Cảm ơn bạn đã liên hệ! Chúng tôi sẽ phản hồi sớm nhất có thể.");
+                    "Thank you for contacting us! We will respond as soon as possible.");
         }
 
         // Thêm contact types vào request để hiển thị trong dropdown
@@ -127,7 +127,7 @@ public class ContactController extends HttpServlet {
             // Return success response
             ContactResponseDto responseDto = new ContactResponseDto(
                     savedContact.getId(),
-                    "Cảm ơn bạn đã liên hệ! Chúng tôi sẽ phản hồi sớm nhất có thể.",
+                    "Thank you for contacting us! We will respond as soon as possible.",
                     true);
 
             response.setStatus(HttpServletResponse.SC_OK);
@@ -149,7 +149,7 @@ public class ContactController extends HttpServlet {
 
             ContactResponseDto errorResponse = new ContactResponseDto(
                     null,
-                    "Có lỗi xảy ra. Vui lòng thử lại sau.",
+                    "An error occurred. Please try again later.",
                     false);
 
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -222,7 +222,7 @@ public class ContactController extends HttpServlet {
         } catch (Exception e) {
             logger.error("Error processing contact form: {}", e.getMessage(), e);
             request.setAttribute("errorMessage",
-                    "Có lỗi xảy ra khi gửi tin nhắn. Vui lòng thử lại sau.");
+                    "An error occurred while sending the message. Please try again later.");
             request.setAttribute("contactTypes", ContactType.values());
             request.getRequestDispatcher("/WEB-INF/views/contact.jsp").forward(request, response);
         }

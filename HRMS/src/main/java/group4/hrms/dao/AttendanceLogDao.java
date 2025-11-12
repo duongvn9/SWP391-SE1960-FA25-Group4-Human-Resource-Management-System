@@ -272,6 +272,7 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
 
                     // Không set dto.setId nữa
                     dto.setUserId(rs.getLong("employee_id"));
+                    dto.setEmployeeCode(rs.getString("employee_code"));
                     dto.setEmployeeName(rs.getString("employee_name"));
                     dto.setDepartment(rs.getString("department_name"));
 
@@ -328,6 +329,7 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
         StringBuilder sql = new StringBuilder("""
     SELECT
         u.id AS user_id,
+        u.employee_code,
         u.full_name AS employee_name,
         d.name AS department_name,
         DATE(al.checked_at) AS work_date,
@@ -347,7 +349,7 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
     WHERE al.user_id = ?
 """);
 
-        sql.append(" GROUP BY DATE(al.checked_at), u.id, u.full_name, d.name, tp.name");
+        sql.append(" GROUP BY DATE(al.checked_at), u.id, u.employee_code, u.full_name, d.name, tp.name");
         sql.append(" ORDER BY DATE(al.checked_at) DESC");
 
         if (paged) {
@@ -371,6 +373,7 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
 
                     // Không set dto.setId nữa
                     dto.setUserId(rs.getLong("user_id"));
+                    dto.setEmployeeCode(rs.getString("employee_code"));
                     dto.setEmployeeName(rs.getString("employee_name"));
                     dto.setDepartment(rs.getString("department_name"));
 
@@ -412,6 +415,7 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
         SELECT
             al.id,
             al.user_id,
+            u.employee_code,
             u.full_name AS employee_name,
             d.name AS department_name,
             al.check_type,
@@ -484,6 +488,7 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                     AttendanceLog log = new AttendanceLog();
                     log.setId(rs.getLong("id"));
                     log.setUserId(rs.getLong("user_id"));
+                    log.setEmployeeCode(rs.getString("employee_code"));
                     log.setCheckType(rs.getString("check_type"));
                     Timestamp ts = rs.getTimestamp("checked_at");
                     log.setCheckedAt(ts != null ? ts.toLocalDateTime() : null);
@@ -549,6 +554,7 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                     AttendanceLogDto dto = new AttendanceLogDto();
                     if (inLog != null) {
                         dto.setUserId(inLog.getUserId());
+                        dto.setEmployeeCode(inLog.getEmployeeCode());
                         dto.setEmployeeName(inLog.getEmployeeName());
                         dto.setDepartment(inLog.getDepartmentName());
                         dto.setDate(date);
@@ -560,6 +566,7 @@ public class AttendanceLogDao extends BaseDao<AttendanceLog, Long> {
                     }
                     if (outLog != null) {
                         dto.setUserId(dto.getUserId() != null ? dto.getUserId() : outLog.getUserId());
+                        dto.setEmployeeCode(dto.getEmployeeCode() != null ? dto.getEmployeeCode() : outLog.getEmployeeCode());
                         dto.setEmployeeName(dto.getEmployeeName() != null ? dto.getEmployeeName() : outLog.getEmployeeName());
                         dto.setDepartment(dto.getDepartment() != null ? dto.getDepartment() : outLog.getDepartmentName());
                         dto.setDate(dto.getDate() != null ? dto.getDate() : date);

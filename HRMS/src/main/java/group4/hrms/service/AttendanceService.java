@@ -185,16 +185,12 @@ public class AttendanceService {
         TimesheetPeriodDao timesheetPeriodDao = new TimesheetPeriodDao();
         
         for (AttendanceLogDto dto : basicLogs) {
-            // Chỉ enrichment cho các bản ghi không có lỗi format
-            if (dto.getError() != null) {
-                continue; // Skip bản ghi có lỗi format
-            }
-            
-            // Lấy thông tin employee và department
+            // Lấy thông tin employee và department (cả cho valid và invalid logs)
             if (dto.getUserId() != null) {
                 Optional<User> userOpt = userDao.findById(dto.getUserId());
                 if (userOpt.isPresent()) {
                     User user = userOpt.get();
+                    dto.setEmployeeCode(user.getEmployeeCode());
                     dto.setEmployeeName(user.getFullName());
                     
                     // Lấy thông tin department
@@ -210,9 +206,15 @@ public class AttendanceService {
                     }
                 } else {
                     // Employee không tồn tại - đánh dấu để validation sau này bắt lỗi
+                    dto.setEmployeeCode("Unknown");
                     dto.setEmployeeName("Unknown Employee (ID: " + dto.getUserId() + ")");
                     dto.setDepartment("Unknown Department");
                 }
+            }
+            
+            // Skip phần còn lại nếu là invalid log (đã có error)
+            if (dto.getError() != null) {
+                continue;
             }
             
             // Lấy thông tin period dựa trên date
@@ -264,6 +266,7 @@ public class AttendanceService {
                 Optional<User> userOpt = userDao.findById(dto.getUserId());
                 if (userOpt.isPresent()) {
                     User user = userOpt.get();
+                    dto.setEmployeeCode(user.getEmployeeCode());
                     dto.setEmployeeName(user.getFullName());
                     
                     // Lấy thông tin department
@@ -279,11 +282,13 @@ public class AttendanceService {
                     }
                 } else {
                     // Employee không tồn tại - đánh dấu để validation sau này bắt lỗi
+                    dto.setEmployeeCode("Unknown");
                     dto.setEmployeeName("Unknown Employee (ID: " + dto.getUserId() + ")");
                     dto.setDepartment("Unknown Department");
                 }
             } else {
                 // Nếu userId null, vẫn set thông tin mặc định để hiển thị
+                dto.setEmployeeCode("Invalid");
                 dto.setEmployeeName("Invalid Employee ID");
                 dto.setDepartment("Unknown Department");
             }
@@ -550,6 +555,7 @@ public class AttendanceService {
 
             // Hiển thị invalid logs
             if (!invalidLogsDto.isEmpty()) {
+                invalidLogsDto = enrichAttendanceLogsFromDatabase(invalidLogsDto);
                 int page = 1;
                 String pageParam = req.getParameter("invalidPage");
                 if (pageParam != null) {

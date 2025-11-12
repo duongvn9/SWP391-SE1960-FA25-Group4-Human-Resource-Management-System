@@ -32,11 +32,11 @@ public class AttendanceExportUtil {
         out.write(new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF});
 
         try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8), true)) {
-            writer.println("Employee ID,Employee Name,Department,Date,Check-in,Check-out,Status,Source,Period");
+            writer.println("Employee Code,Employee Name,Department,Date,Check-in,Check-out,Status,Source,Period");
 
             for (AttendanceLogDto dto : list) {
-                writer.printf("%d,%s,%s,%s,%s,%s,%s,%s,%s%n",
-                        dto.getUserId(),
+                writer.printf("%s,%s,%s,%s,%s,%s,%s,%s,%s%n",
+                        escapeCsv(safe(dto.getEmployeeCode())),
                         escapeCsv(safe(dto.getEmployeeName())),
                         escapeCsv(safe(dto.getDepartment())),
                         safe(dto.getDate()),
@@ -67,7 +67,7 @@ public class AttendanceExportUtil {
             Sheet sheet = workbook.createSheet("Attendance Records");
 
             Row header = sheet.createRow(0);
-            String[] columns = {"Employee ID", "Employee Name", "Department", "Date", "Check-in", "Check-out", "Status", "Source", "Period"};
+            String[] columns = {"Employee Code", "Employee Name", "Department", "Date", "Check-in", "Check-out", "Status", "Source", "Period"};
             for (int i = 0; i < columns.length; i++) {
                 Cell cell = header.createCell(i);
                 cell.setCellValue(columns[i]);
@@ -76,7 +76,7 @@ public class AttendanceExportUtil {
             int rowIdx = 1;
             for (AttendanceLogDto dto : list) {
                 Row row = sheet.createRow(rowIdx++);
-                row.createCell(0).setCellValue(dto.getUserId() != null ? dto.getUserId() : 0);
+                row.createCell(0).setCellValue(safe(dto.getEmployeeCode()));
                 row.createCell(1).setCellValue(safe(dto.getEmployeeName()));
                 row.createCell(2).setCellValue(safe(dto.getDepartment()));
                 row.createCell(3).setCellValue(safe(dto.getDate()));
@@ -114,7 +114,7 @@ public class AttendanceExportUtil {
             table.setSpacingAfter(10f);
             table.setWidths(new float[]{2f, 3f, 3f, 3f, 2f, 2f, 2f, 2f, 2f});
 
-            String[] headers = {"Employee ID", "Employee Name", "Department", "Date", "Check-in", "Check-out", "Status", "Source", "Period"};
+            String[] headers = {"Employee Code", "Employee Name", "Department", "Date", "Check-in", "Check-out", "Status", "Source", "Period"};
             for (String h : headers) {
                 PdfPCell headerCell = new PdfPCell(new Phrase(h, headerFont));
                 headerCell.setHorizontalAlignment(Element.ALIGN_CENTER);
@@ -123,7 +123,7 @@ public class AttendanceExportUtil {
             }
 
             for (AttendanceLogDto dto : list) {
-                table.addCell(new Phrase(safe(dto.getUserId()), cellFont));
+                table.addCell(new Phrase(safe(dto.getEmployeeCode()), cellFont));
                 table.addCell(new Phrase(safe(dto.getEmployeeName()), cellFont));
                 table.addCell(new Phrase(safe(dto.getDepartment()), cellFont));
                 table.addCell(new Phrase(safe(dto.getDate()), cellFont));
