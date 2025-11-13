@@ -1040,14 +1040,14 @@ public class PayslipListController extends HttpServlet {
             return "HRM";
         }
 
-        // HR (positionId = 8) only sees their own payslips
+        // HR (positionId = 8) can also manage all payslips like HRM
         if (positionId != null && positionId == 8) {
-            return "EMPLOYEE";
+            return "HRM";
         }
 
         // Fallback: Check position code
         String positionCode = PermissionUtil.getCurrentUserPositionCode(request);
-        if ("HRM".equals(positionCode)) {
+        if ("HRM".equals(positionCode) || "HR".equals(positionCode)) {
             return "HRM";
         }
 
