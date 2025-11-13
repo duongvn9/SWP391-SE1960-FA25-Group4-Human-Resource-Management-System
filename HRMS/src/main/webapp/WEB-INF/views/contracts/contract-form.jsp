@@ -153,7 +153,10 @@
                         <i class="fas fa-exchange-alt"></i> 
                         <strong>Replacing Contract:</strong> ${oldContract.contractNo} 
                         <br><small>The old contract will be terminated after the new contract is successfully created.</small>
+<<<<<<< HEAD
                         <br><small><strong>Note:</strong> The new contract must start from next month onwards.</small>
+=======
+>>>>>>> b8cdc360f359a204c36662de325cbb1083ce2827
                     </div>
                 </c:if>
                 

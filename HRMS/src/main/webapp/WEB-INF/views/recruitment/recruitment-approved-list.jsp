@@ -56,13 +56,45 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             </c:if>
-            
-           
+
+            <!-- Filter Section -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <form method="get" action="${pageContext.request.contextPath}/recruitment/approved" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="departmentFilter" class="form-label">
+                                <i class="fas fa-building me-1"></i>Filter by Department
+                            </label>
+                            <select class="form-select" id="departmentFilter" name="departmentId" onchange="this.form.submit()">
+                                <option value="">All Departments</option>
+                                <c:forEach var="dept" items="${departments}">
+                                    <option value="${dept.id}" ${selectedDepartmentId == dept.id ? 'selected' : ''}>
+                                        <c:out value="${dept.name}"/>
+                                    </option>
+                                </c:forEach>
+                            </select>
+                        </div>
+                        <div class="col-md-8 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="fas fa-filter me-1"></i>Apply Filter
+                            </button>
+                            <a href="${pageContext.request.contextPath}/recruitment/approved" class="btn btn-outline-secondary">
+                                <i class="fas fa-redo me-1"></i>Reset
+                            </a>
+                            <span class="ms-3 text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Showing ${totalItems} request(s)
+                            </span>
+                        </div>
+                    </form>
+                </div>
+            </div>
 
             <!-- Main content card -->
             <div class="card recruitment-card">
-                <div class="card-header">
-                    <h4><i class="fas fa-list me-2"></i>Approved Requests</h4>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="fas fa-list me-2"></i>Approved Requests</h4>
+                    
                 </div>
                 <div class="card-body">
                     <c:choose>
@@ -226,76 +258,6 @@
                     </c:choose>
                 </div>
             </div>
-            
-            <!-- Pagination -->
-            <c:if test="${totalPages > 1}">
-                <nav aria-label="Approved requests pagination" class="mt-4">
-                    <ul class="pagination justify-content-center">
-                        <!-- Previous button -->
-                        <li class="page-item ${currentPage <= 1 ? 'disabled' : ''}">
-                            <a class="page-link" href="?page=${currentPage - 1}">
-                                «
-                            </a>
-                        </li>
-                        
-                        <!-- Smart page numbers with ellipsis -->
-                        <c:set var="startPage" value="${currentPage - 2}" />
-                        <c:set var="endPage" value="${currentPage + 2}" />
-                        
-                        <c:if test="${startPage < 1}">
-                            <c:set var="startPage" value="1" />
-                        </c:if>
-                        
-                        <c:if test="${endPage > totalPages}">
-                            <c:set var="endPage" value="${totalPages}" />
-                        </c:if>
-                        
-                        <!-- First page -->
-                        <c:if test="${startPage > 1}">
-                            <li class="page-item">
-                                <a class="page-link" href="?page=1">
-                                    1
-                                </a>
-                            </li>
-                            <c:if test="${startPage > 2}">
-                                <li class="page-item disabled">
-                                    <span class="page-link">...</span>
-                                </li>
-                            </c:if>
-                        </c:if>
-                        
-                        <!-- Page numbers around current page -->
-                        <c:forEach begin="${startPage}" end="${endPage}" var="page">
-                            <li class="page-item ${currentPage == page ? 'active' : ''}">
-                                <a class="page-link" href="?page=${page}">
-                                    ${page}
-                                </a>
-                            </li>
-                        </c:forEach>
-                        
-                        <!-- Last page -->
-                        <c:if test="${endPage < totalPages}">
-                            <c:if test="${endPage < totalPages - 1}">
-                                <li class="page-item disabled">
-                                    <span class="page-link">...</span>
-                                </li>
-                            </c:if>
-                            <li class="page-item">
-                                <a class="page-link" href="?page=${totalPages}">
-                                    ${totalPages}
-                                </a>
-                            </li>
-                        </c:if>
-                        
-                        <!-- Next button -->
-                        <li class="page-item ${currentPage >= totalPages ? 'disabled' : ''}">
-                            <a class="page-link" href="?page=${currentPage + 1}">
-                                »
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
-            </c:if>
         </div>
 
         <jsp:include page="/WEB-INF/views/layout/dashboard-footer.jsp"/>
@@ -531,13 +493,18 @@
 }
 
 .btn-success {
-    background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
-    box-shadow: 0 4px 15px rgba(86, 171, 47, 0.4);
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+    color: white !important;
+    border: none !important;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4) !important;
+    opacity: 1 !important;
 }
 
 .btn-success:hover {
+    background: linear-gradient(135deg, #218838 0%, #1aa179 100%) !important;
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(86, 171, 47, 0.6);
+    box-shadow: 0 8px 25px rgba(40, 167, 69, 0.6) !important;
+    opacity: 1 !important;
 }
 
 .btn-outline-info {
@@ -646,9 +613,13 @@
     }
 }
 
-/* Smooth transitions */
-* {
+/* Smooth transitions - exclude buttons from global transition */
+*:not(.btn) {
     transition: all 0.3s ease;
+}
+
+.btn {
+    transition: transform 0.3s ease, box-shadow 0.3s ease !important;
 }
 
 /* Custom scrollbar */
