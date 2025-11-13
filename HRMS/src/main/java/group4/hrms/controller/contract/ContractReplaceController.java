@@ -168,8 +168,16 @@ public class ContractReplaceController extends HttpServlet {
             // Validation
             String errorMessage = null;
 
+            // Calculate minimum start date (first day of next month)
+            LocalDate today = LocalDate.now();
+            LocalDate minStartDate = today.plusMonths(1).withDayOfMonth(1);
+
+            // Validation 0: Start date must be from next month onwards (any day)
+            if (startDate.isBefore(minStartDate)) {
+                errorMessage = "Replacement contract must start from next month onwards (from " + minStartDate.toString() + ")";
+            }
             // Validation 1: Ngày bắt đầu phải trước ngày kết thúc
-            if (endDate != null && !startDate.isBefore(endDate)) {
+            else if (endDate != null && !startDate.isBefore(endDate)) {
                 errorMessage = "Start date must be before end date";
             }
             // Validation 2: Nếu loại hợp đồng là indefinite thì không được có end date
