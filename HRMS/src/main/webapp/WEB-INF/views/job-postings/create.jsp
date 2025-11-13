@@ -116,7 +116,7 @@
                                     <input type="text" class="form-control" 
                                            id="jobTitle" name="jobTitle" required
                                            minlength="3" maxlength="255"
-                                           value="${formData != null ? formData.jobTitle : (param.jobTitle != null ? param.jobTitle : requestDetails.positionName)}"
+                                           value="${formData != null ? formData.jobTitle : (param.jobTitle != null ? param.jobTitle : (requestTitle != null ? requestTitle : requestDetails.positionName))}"
                                            data-server-error="${not empty errors.jobTitle ? errors.jobTitle : ''}">
                                     <div class="form-text">Title shown in job listing (3-255 characters)</div>
                                     <div class="invalid-feedback">
@@ -266,11 +266,19 @@
                                 <div class="col-md-4">
                                     <label for="minSalary" class="form-label">Minimum Salary (VND)</label>
                                     <c:set var="currentMinSalary" value="${formData != null ? formData.minSalary : (param.minSalary != null ? param.minSalary : requestDetails.minSalary)}" />
+                                    <c:choose>
+                                        <c:when test="${currentMinSalary != null}">
+                                            <fmt:formatNumber var="formattedMinSalary" value="${currentMinSalary}" pattern="#" groupingUsed="false" />
+                                        </c:when>
+                                        <c:otherwise>
+                                            <c:set var="formattedMinSalary" value="" />
+                                        </c:otherwise>
+                                    </c:choose>
                                     <input type="text" class="form-control ${not empty errors.minSalary ? 'is-invalid' : ''}" 
                                            id="minSalary" name="minSalary"
                                            pattern="[0-9,]+"
-                                           value="${currentMinSalary}"
-                                           data-original-value="${currentMinSalary}"
+                                           value="${formattedMinSalary}"
+                                           data-original-value="${formattedMinSalary}"
                                            placeholder="e.g. 12,000,000">
                                     <div class="form-text">Min: 1,000,000 VND (use commas for thousands)</div>
                                     <div class="invalid-feedback">
@@ -280,11 +288,19 @@
                                 <div class="col-md-4">
                                     <label for="maxSalary" class="form-label">Maximum Salary (VND)</label>
                                     <c:set var="currentMaxSalary" value="${formData != null ? formData.maxSalary : (param.maxSalary != null ? param.maxSalary : requestDetails.maxSalary)}" />
+                                    <c:choose>
+                                        <c:when test="${currentMaxSalary != null}">
+                                            <fmt:formatNumber var="formattedMaxSalary" value="${currentMaxSalary}" pattern="#" groupingUsed="false" />
+                                        </c:when>
+                                        <c:otherwise>
+                                            <c:set var="formattedMaxSalary" value="" />
+                                        </c:otherwise>
+                                    </c:choose>
                                     <input type="text" class="form-control ${not empty errors.maxSalary ? 'is-invalid' : ''}" 
                                            id="maxSalary" name="maxSalary"
                                            pattern="[0-9,]+"
-                                           value="${currentMaxSalary}"
-                                           data-original-value="${currentMaxSalary}"
+                                           value="${formattedMaxSalary}"
+                                           data-original-value="${formattedMaxSalary}"
                                            placeholder="e.g. 15,000,000">
                                     <div class="form-text">Must be greater than min salary (use commas for thousands)</div>
                                     <div class="invalid-feedback">
@@ -302,43 +318,43 @@
                         </div>
                         <div class="card-body">
                             <!-- Description & Requirements -->
-                            <div class="row g-3 mb-3">
-                                <div class="col-12">
-                                    <label for="description" class="form-label">
-                                        Job Description <span class="text-danger">*</span>
-                                    </label>
-                                    <textarea class="form-control ${not empty errors.description ? 'is-invalid' : ''}"
-                                              id="description" name="description" rows="5" required
-                                              maxlength="4000"
-                                              placeholder="Describe the job role, responsibilities, and expectations..."><c:out value="${param.description != null ? param.description : (formData != null ? formData.description : requestDetails.jobSummary)}"/></textarea>
-                                    <div class="form-text">Required (max 4000 characters)</div>
-                                    <div class="invalid-feedback"></div>
-                                        ${not empty errors.description ? errors.description : 'Job description is required and cannot exceed 4000 characters'}
-                                    </div>div>
+                            <div class="mb-3">
+                                <label for="description" class="form-label">
+                                    Job Description <span class="text-danger">*</span>
+                                </label>
+                                <textarea class="form-control ${not empty errors.description ? 'is-invalid' : ''}"
+                                          id="description" name="description" rows="5" required
+                                          maxlength="4000"
+                                          placeholder="Describe the job role, responsibilities, and expectations..."><c:out value="${param.description != null ? param.description : (formData != null ? formData.description : requestDetails.jobSummary)}"/></textarea>
+                                <div class="form-text">Required (max 4000 characters)</div>
+                                <div class="invalid-feedback">
+                                    ${not empty errors.description ? errors.description : 'Job description is required and cannot exceed 4000 characters'}
                                 </div>
-                                <div class="col-12">
-                                    <label for="requirements" class="form-label">
-                                        Requirements <span class="text-danger">*</span>
-                                    </label>
-                                    <textarea class="form-control ${not empty errors.requirements ? 'is-invalid' : ''}"
-                                              id="requirements" name="requirements" rows="5" required
-                                              maxlength="4000"
-                                              placeholder="List required skills, qualifications, and experience..."><c:out value="${formData != null ? formData.requirements : param.requirements}"/></textarea>
-                                    <div class="form-text">Required (max 4000 characters)</div>
-                                    <div class="invalid-feedback">
-                                        ${not empty errors.requirements ? errors.requirements : 'Requirements are required and cannot exceed 4000 characters'}
-                                    </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="requirements" class="form-label">
+                                    Requirements <span class="text-danger">*</span>
+                                </label>
+                                <textarea class="form-control ${not empty errors.requirements ? 'is-invalid' : ''}"
+                                          id="requirements" name="requirements" rows="5" required
+                                          maxlength="4000"
+                                          placeholder="List required skills, qualifications, and experience..."><c:out value="${formData != null ? formData.requirements : param.requirements}"/></textarea>
+                                <div class="form-text">Required (max 4000 characters)</div>
+                                <div class="invalid-feedback">
+                                    ${not empty errors.requirements ? errors.requirements : 'Requirements are required and cannot exceed 4000 characters'}
                                 </div>
-                                <div class="col-12">
-                                    <label for="benefits" class="form-label">Benefits</label>
-                                    <textarea class="form-control ${not empty errors.benefits ? 'is-invalid' : ''}"
-                                              id="benefits" name="benefits" rows="3"
-                                              maxlength="2000"
-                                              placeholder="List employee benefits, perks, and incentives..."><c:out value="${formData != null ? formData.benefits : param.benefits}"/></textarea>
-                                    <div class="form-text">Optional (max 2000 characters)</div>
-                                    <div class="invalid-feedback">
-                                        ${not empty errors.benefits ? errors.benefits : 'Benefits cannot exceed 2000 characters'}
-                                    </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="benefits" class="form-label">Benefits</label>
+                                <textarea class="form-control ${not empty errors.benefits ? 'is-invalid' : ''}"
+                                          id="benefits" name="benefits" rows="3"
+                                          maxlength="2000"
+                                          placeholder="List employee benefits, perks, and incentives..."><c:out value="${formData != null ? formData.benefits : param.benefits}"/></textarea>
+                                <div class="form-text">Optional (max 2000 characters)</div>
+                                <div class="invalid-feedback">
+                                    ${not empty errors.benefits ? errors.benefits : 'Benefits cannot exceed 2000 characters'}
                                 </div>
                             </div>
 
@@ -356,8 +372,8 @@
                                                    required
                                                    maxlength="255"
                                                    readonly
-                                                   placeholder="e.g. Hanoi, Ho Chi Minh City, Remote">
-                                            <div class="form-text">Auto-filled from recruitment request (not editable)</div>
+                                                   placeholder="e.g. Ha Noi">
+                                            <div class="form-text">Auto-filled from recruitment request</div>
                                         </c:when>
                                         <c:otherwise>
                                             <input type="text" class="form-control ${not empty errors.location ? 'is-invalid' : ''}"
@@ -365,12 +381,12 @@
                                                    value="${param.location != null ? param.location : (formData != null ? formData.location : '')}" 
                                                    required
                                                    maxlength="255"
-                                                   placeholder="e.g. Hanoi, Ho Chi Minh City, Remote">
-                                            <div class="form-text">Required (max 255 characters)</div>
+                                                   placeholder="e.g. Ha Noi">
+                                            <div class="form-text">Max 255 characters</div>
                                         </c:otherwise>
                                     </c:choose>
                                     <div class="invalid-feedback">
-                                        ${not empty errors.location ? errors.location : 'Working location is required and cannot exceed 255 characters'}
+                                        ${not empty errors.location ? errors.location : 'Location is required (max 255 characters)'}
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -382,9 +398,9 @@
                                            value="${formData != null ? formData.applicationDeadline : param.applicationDeadline}"
                                            min="<jsp:useBean id='deadline' class='java.util.Date'/><fmt:formatDate value='${deadline}' pattern='yyyy-MM-dd'/>" 
                                            required>
-                                    <div class="form-text">Required (cannot be in the past)</div>
+                                    <div class="form-text">Cannot be in the past</div>
                                     <div class="invalid-feedback">
-                                        ${not empty errors.applicationDeadline ? errors.applicationDeadline : 'Application deadline is required and cannot be in the past'}
+                                        ${not empty errors.applicationDeadline ? errors.applicationDeadline : 'Deadline is required and cannot be in the past'}
                                     </div>
                                 </div>
                             </div>

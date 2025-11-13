@@ -376,6 +376,10 @@
                                 <span class="meta-label">Rejected By</span>
                                 <span class="meta-value">
                                     <c:choose>
+                                        <c:when test="${not empty approverUser}">
+                                            <strong>${approverUser.fullName}</strong>
+                                            <br><small class="text-muted">(${approverAccount.username})</small>
+                                        </c:when>
                                         <c:when test="${not empty approverAccount}">
                                             ${approverAccount.username}
                                         </c:when>
@@ -430,6 +434,10 @@
                                 <span class="meta-label">Approved By</span>
                                 <span class="meta-value">
                                     <c:choose>
+                                        <c:when test="${not empty approverUser}">
+                                            <strong>${approverUser.fullName}</strong>
+                                            <br><small class="text-muted">(${approverAccount.username})</small>
+                                        </c:when>
                                         <c:when test="${not empty approverAccount}">
                                             ${approverAccount.username}
                                         </c:when>
