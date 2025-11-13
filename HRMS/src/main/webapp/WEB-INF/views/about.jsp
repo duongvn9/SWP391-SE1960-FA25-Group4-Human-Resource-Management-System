@@ -118,7 +118,7 @@
             <div class="row">
                 <div class="col-12">
                     <div class="story-image mb-4">
-                        <img src="${pageContext.request.contextPath}/assets/images/Company.jpg" alt="HRMS">
+                        <img src="${pageContext.request.contextPath}/assets/img/aboutUs.jpg" alt="HRMS">
                     </div>
                 </div>
             </div>

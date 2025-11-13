@@ -22,13 +22,13 @@
                 <a href="${pageContext.request.contextPath}/about">About</a>
                 <a href="${pageContext.request.contextPath}/contact">Contact</a>
                 <a href="${pageContext.request.contextPath}/faqs">FAQs</a>
-                <a href="#features">Features</a>
+               
             </div>
             <div class="col-lg-4 col-md-6 mb-4 text-end">
                 <h5>Contact</h5>
                 <a href="mailto:support@hrms.com"><i class="fas fa-envelope me-2"></i>support@hrms.com</a>
-                <a href="tel:+84123456789"><i class="fas fa-phone me-2"></i>+84 123 456 789</a>
-                <a href="#"><i class="fas fa-map-marker-alt me-2"></i>Hanoi, Vietnam</a>
+                <a href="tel:+84123456789"><i class="fas fa-phone me-2"></i>+84 333 180 251</a>
+                <a href="#"><i class="fas fa-map-marker-alt me-2"></i>Hoa Lac, Thach That, Hanoi, Vietnam</a>
             </div>
         </div>
         <div class="footer-bottom">
