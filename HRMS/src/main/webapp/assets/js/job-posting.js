@@ -4,6 +4,41 @@ document.addEventListener('DOMContentLoaded', function() {
     const salaryTypeSelect = document.getElementById('salaryType');
     const minSalaryInput = document.getElementById('minSalary');
     const maxSalaryInput = document.getElementById('maxSalary');
+    
+    // Auto-resize textareas
+    const textareas = document.querySelectorAll('textarea');
+    
+    // Optimized auto-resize function using requestAnimationFrame
+    function autoResize() {
+        requestAnimationFrame(() => {
+            this.style.height = '100px'; // Reset to min height
+            this.style.height = Math.max(this.scrollHeight + 2, 100) + 'px';
+        });
+    }
+    
+    textareas.forEach(function(textarea) {
+        // Allow Enter key in textarea
+        textarea.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.stopPropagation();
+            }
+        });
+        
+        // Debounced resize for better performance
+        let resizeTimeout;
+        const debouncedResize = function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => autoResize.call(this), 10);
+        };
+        
+        // Apply auto-resize on events
+        textarea.addEventListener('input', function() { autoResize.call(this); });
+        textarea.addEventListener('paste', debouncedResize);
+        textarea.addEventListener('cut', debouncedResize);
+        
+        // Initial resize
+        autoResize.call(textarea);
+    });
 
     // Handle salary type changes
     salaryTypeSelect.addEventListener('change', function() {

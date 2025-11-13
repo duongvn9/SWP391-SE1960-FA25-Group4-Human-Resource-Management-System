@@ -335,8 +335,8 @@
                                                         class="form-control ${not empty errors.requirements ? 'is-invalid' : ''}"
                                                         id="requirements" name="requirements" rows="5" required
                                                         maxlength="4000"
-                                                        placeholder="List required skills, qualifications, and experience...">${not empty formData.requirements ? formData.requirements : jobPosting.requirements}</textarea>
-                                                    <div class="form-text">Required (max 4000 characters)</div>
+                                                        placeholder="List required skills, qualifications, and experience...&#10;Example:&#10;- Bachelor's degree in Computer Science&#10;- 3+ years of experience&#10;- Strong communication skills">${not empty formData.requirements ? formData.requirements : jobPosting.requirements}</textarea>
+                                                    <div class="form-text">Required (max 4000 characters). Use Enter to create new lines and dashes (-) for bullet points.</div>
                                                     <div class="invalid-feedback">
                                                         ${not empty errors.requirements ? errors.requirements :
                                                         'Requirements are required and cannot exceed 4000 characters'}
@@ -347,8 +347,8 @@
                                                     <textarea
                                                         class="form-control ${not empty errors.benefits ? 'is-invalid' : ''}"
                                                         id="benefits" name="benefits" rows="3" maxlength="2000"
-                                                        placeholder="List employee benefits, perks, and incentives...">${not empty formData.benefits ? formData.benefits : jobPosting.benefits}</textarea>
-                                                    <div class="form-text">Optional (max 2000 characters)</div>
+                                                        placeholder="List employee benefits, perks, and incentives...&#10;Example:&#10;- Competitive salary&#10;- Health insurance&#10;- Flexible working hours">${not empty formData.benefits ? formData.benefits : jobPosting.benefits}</textarea>
+                                                    <div class="form-text">Optional (max 2000 characters). Use Enter to create new lines and dashes (-) for bullet points.</div>
                                                     <div class="invalid-feedback">
                                                         ${not empty errors.benefits ? errors.benefits : 'Benefits cannot
                                                         exceed 2000 characters'}
@@ -1310,6 +1310,49 @@
                         background-color: #f8f9fa !important;
                     }
                 </style>
+                <script>
+                // Auto-resize textareas for edit form
+                document.addEventListener('DOMContentLoaded', function() {
+                    const textareas = document.querySelectorAll('textarea');
+                    
+                    textareas.forEach(function(textarea) {
+                        // Allow Enter key in textarea
+                        textarea.addEventListener('keydown', function(e) {
+                            if (e.key === 'Enter') {
+                                e.stopPropagation();
+                                // Trigger resize after Enter key
+                                setTimeout(function() {
+                                    autoResize.call(textarea);
+                                }, 0);
+                            }
+                        });
+                        
+                        // Auto-resize function
+                        function autoResize() {
+                            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                            this.style.height = 'auto';
+                            const newHeight = Math.max(this.scrollHeight, 100);
+                            this.style.height = newHeight + 'px';
+                            window.scrollTo(0, scrollTop);
+                        }
+                        
+                        // Apply auto-resize on multiple events
+                        textarea.addEventListener('input', autoResize);
+                        textarea.addEventListener('change', autoResize);
+                        textarea.addEventListener('paste', function() {
+                            setTimeout(autoResize.bind(this), 0);
+                        });
+                        textarea.addEventListener('cut', function() {
+                            setTimeout(autoResize.bind(this), 0);
+                        });
+                        
+                        // Initial resize for existing content
+                        setTimeout(function() {
+                            autoResize.call(textarea);
+                        }, 100);
+                    });
+                });
+                </script>
             </body>
 
             </html>
