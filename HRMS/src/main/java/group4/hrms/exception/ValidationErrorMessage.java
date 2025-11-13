@@ -43,11 +43,12 @@ public class ValidationErrorMessage {
 
     /**
      * Create balance exceeded error message
+     * Supports half-day leave (0.5 days)
      *
      * @param leaveTypeName Name of leave type
-     * @param remainingDays Number of days remaining
-     * @param usedDays Number of days already used
-     * @param requestedDays Number of days requested
+     * @param remainingDays Number of days remaining (supports decimal)
+     * @param usedDays Number of days already used (supports decimal)
+     * @param requestedDays Number of days requested (supports decimal for half-day)
      * @param totalAllowed Total days allowed
      * @return ValidationErrorMessage
      */
@@ -55,7 +56,7 @@ public class ValidationErrorMessage {
             String leaveTypeName,
             double remainingDays,
             double usedDays,
-            int requestedDays,
+            double requestedDays,
             int totalAllowed) {
 
         String message = "Insufficient leave balance";
@@ -64,7 +65,7 @@ public class ValidationErrorMessage {
             "• Total Allowed: %d days\n" +
             "• Already Used: %.1f days\n" +
             "• Remaining: %.1f days\n" +
-            "• You are requesting: %d days\n\n" +
+            "• You are requesting: %.1f days\n\n" +
             "Please reduce the number of days or choose a different leave type.",
             leaveTypeName,
             totalAllowed,
