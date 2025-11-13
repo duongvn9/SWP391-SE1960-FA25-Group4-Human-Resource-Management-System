@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import group4.hrms.dao.AccountDao;
+import group4.hrms.dao.UserDao;
 import group4.hrms.model.Account;
 import group4.hrms.model.JobPosting;
 import group4.hrms.model.User;
@@ -28,6 +29,7 @@ public class JobPostingViewServlet extends HttpServlet {
     private DepartmentService departmentService;
     private PositionService positionService;
     private AccountDao accountDao;
+    private UserDao userDao;
 
     @Override
     public void init() throws ServletException {
@@ -39,8 +41,9 @@ public class JobPostingViewServlet extends HttpServlet {
         Object ps = getServletContext().getAttribute("positionService");
         if (ps instanceof PositionService) this.positionService = (PositionService) ps;
         
-        // Initialize AccountDao directly
+        // Initialize AccountDao and UserDao directly
         this.accountDao = new AccountDao();
+        this.userDao = new UserDao();
     }
 
     @Override
@@ -108,12 +111,23 @@ public class JobPostingViewServlet extends HttpServlet {
             }
             
             // Load approver/rejector information
-            if (accountDao != null && jobPosting.getApprovedByAccountId() != null) {
+            if (accountDao != null && userDao != null && jobPosting.getApprovedByAccountId() != null) {
                 try {
                     Account approver = accountDao.findById(jobPosting.getApprovedByAccountId()).orElse(null);
                     if (approver != null) {
                         request.setAttribute("approverAccount", approver);
                         logger.info("✅ Loaded approver account: {}", approver.getUsername());
+                        
+                        // Load user information to get full name
+                        if (approver.getUserId() != null) {
+                            User approverUser = userDao.findById(approver.getUserId()).orElse(null);
+                            if (approverUser != null) {
+                                request.setAttribute("approverUser", approverUser);
+                                logger.info("✅ Loaded approver user: {}", approverUser.getFullName());
+                            } else {
+                                logger.warn("⚠️ Approver user not found for ID: {}", approver.getUserId());
+                            }
+                        }
                     } else {
                         logger.warn("⚠️ Approver account not found for ID: {}", jobPosting.getApprovedByAccountId());
                     }

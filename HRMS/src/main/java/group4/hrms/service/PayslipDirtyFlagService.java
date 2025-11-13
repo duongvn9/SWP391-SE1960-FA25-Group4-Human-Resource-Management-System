@@ -21,9 +21,11 @@ public class PayslipDirtyFlagService {
     private static final Logger logger = Logger.getLogger(PayslipDirtyFlagService.class.getName());
 
     private final PayslipDao payslipDao;
+    private final PayslipNotificationService notificationService;
 
     public PayslipDirtyFlagService() {
         this.payslipDao = new PayslipDao();
+        this.notificationService = new PayslipNotificationService();
     }
 
     /**
@@ -156,6 +158,7 @@ public class PayslipDirtyFlagService {
 
     /**
      * Bulk mark multiple users' payslips as dirty
+     * NEW: Sends notifications to affected employees
      * Requirements: 8.1, 8.2, 8.3
      *
      * @param userIds List of user IDs
@@ -170,6 +173,21 @@ public class PayslipDirtyFlagService {
         try {
             int markedCount = payslipDao.bulkMarkDirtyByUserIds(userIds, periodStart, periodEnd, reason);
             logger.info(String.format("Successfully marked %d payslips as dirty", markedCount));
+
+            // NEW: Notify affected employees
+            if (markedCount > 0) {
+                try {
+                    notificationService.notifyBulkPayslipRecalculation(
+                        new java.util.HashSet<>(userIds),
+                        periodStart,
+                        periodEnd,
+                        reason
+                    );
+                } catch (Exception e) {
+                    logger.log(Level.WARNING, "Failed to send bulk notifications", e);
+                    // Don't throw - notification failure shouldn't break the operation
+                }
+            }
 
         } catch (SQLException e) {
             logger.log(Level.SEVERE,
@@ -249,6 +267,15 @@ public class PayslipDirtyFlagService {
             if (!marked) {
                 logger.fine(String.format("No payslip found to mark dirty for user %d in period %s to %s",
                                         userId, periodStart, periodEnd));
+            } else {
+                // Notify employee about payslip recalculation
+                try {
+                    notificationService.notifyPayslipRecalculation(userId, periodStart, periodEnd, reason);
+                } catch (Exception e) {
+                    logger.log(Level.WARNING,
+                             String.format("Failed to notify user %d about payslip recalculation", userId), e);
+                    // Don't throw - notification failure shouldn't break the operation
+                }
             }
         } catch (SQLException e) {
             logger.log(Level.SEVERE,
