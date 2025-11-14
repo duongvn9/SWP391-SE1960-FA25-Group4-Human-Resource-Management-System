@@ -4,6 +4,8 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -14,8 +16,11 @@ import group4.hrms.model.Request;
 import jakarta.servlet.http.HttpSession;
 
 /**
- * Session-scope cache for OT Balance.
+ * Application-scope cache for OT Balance.
  * Caches calculated OT balance to avoid repeated database queries.
+ *
+ * IMPORTANT: Cache is now shared across all sessions (application-level)
+ * so when one user's request is approved, all users see the updated balance immediately.
  *
  * OPTIMIZATION: Instead of querying database 7 times for each balance calculation,
  * we query ONCE and calculate all balances in memory.
@@ -23,6 +28,9 @@ import jakarta.servlet.http.HttpSession;
 public class OTBalanceCache {
     private static final Logger logger = Logger.getLogger(OTBalanceCache.class.getName());
     private static final int CACHE_TTL_MINUTES = 5;
+
+    // Application-level cache shared across all sessions
+    private static final Map<String, CachedData<OTBalance>> APPLICATION_CACHE = new ConcurrentHashMap<>();
 
     // Constants for OT limits
     private static final int WEEKLY_LIMIT = 48;
@@ -33,7 +41,10 @@ public class OTBalanceCache {
     /**
      * Get OT balance from cache or calculate if not cached/expired.
      *
-     * @param session HTTP session to store cache
+     * IMPORTANT: Cache is now application-level (shared across all sessions)
+     * instead of session-level, so all users see the same cached data.
+     *
+     * @param session HTTP session (kept for API compatibility, but not used for caching)
      * @param userId user ID
      * @param weekOffset weeks from current week (0 = current, -1 = last week, +1 = next week)
      * @param monthOffset from current month
@@ -47,9 +58,8 @@ public class OTBalanceCache {
         String cacheKey = String.format("otBalance_%d_%d_%d_%d",
                                        userId, weekOffset, monthOffset, yearOffset);
 
-        // Check cache
-        @SuppressWarnings("unchecked")
-        CachedData<OTBalance> cached = (CachedData<OTBalance>) session.getAttribute(cacheKey);
+        // Check application-level cache
+        CachedData<OTBalance> cached = APPLICATION_CACHE.get(cacheKey);
         if (cached != null && !cached.isExpired()) {
             logger.fine(String.format("OT Balance cache HIT: userId=%d, offsets=(%d,%d,%d), remaining=%ds",
                        userId, weekOffset, monthOffset, yearOffset, cached.getRemainingSeconds()));
@@ -59,9 +69,9 @@ public class OTBalanceCache {
         logger.info(String.format("OT Balance cache MISS: userId=%d, offsets=(%d,%d,%d), calculating...",
                    userId, weekOffset, monthOffset, yearOffset));
 
-        // Calculate and cache
+        // Calculate and cache at application level
         OTBalance balance = calculateAllBalances(userId, weekOffset, monthOffset, yearOffset, requestDao);
-        session.setAttribute(cacheKey, new CachedData<>(balance, CACHE_TTL_MINUTES));
+        APPLICATION_CACHE.put(cacheKey, new CachedData<>(balance, CACHE_TTL_MINUTES));
 
         logger.info(String.format("Cached OT Balance: userId=%d, weekly=%.2f, monthly=%.2f, annual=%.2f",
                    userId, balance.getCurrentWeekHours(), balance.getMonthlyHours(), balance.getAnnualHours()));
@@ -199,30 +209,28 @@ public class OTBalanceCache {
      * Invalidate OT balance cache for a user.
      * Call this when user creates/updates/deletes OT request.
      *
-     * @param session HTTP session
+     * IMPORTANT: This now invalidates application-level cache,
+     * affecting ALL users/sessions immediately.
+     *
+     * @param session HTTP session (kept for API compatibility, but not used)
      * @param userId user ID
      */
     public void invalidate(HttpSession session, Long userId) {
-        // Remove all cache entries for this user (all offsets)
-        session.getAttributeNames().asIterator().forEachRemaining(name -> {
-            if (name.startsWith("otBalance_" + userId + "_")) {
-                session.removeAttribute(name);
-            }
-        });
-        logger.info(String.format("Invalidated OT Balance cache for userId=%d", userId));
+        // Remove all cache entries for this user (all offsets) from application cache
+        String prefix = "otBalance_" + userId + "_";
+        APPLICATION_CACHE.keySet().removeIf(key -> key.startsWith(prefix));
+        logger.info(String.format("Invalidated OT Balance cache for userId=%d (application-wide)", userId));
     }
 
     /**
-     * Invalidate all OT balance cache in session.
+     * Invalidate all OT balance cache.
      *
-     * @param session HTTP session
+     * IMPORTANT: This clears the entire application-level cache.
+     *
+     * @param session HTTP session (kept for API compatibility, but not used)
      */
     public void invalidateAll(HttpSession session) {
-        session.getAttributeNames().asIterator().forEachRemaining(name -> {
-            if (name.startsWith("otBalance_")) {
-                session.removeAttribute(name);
-            }
-        });
-        logger.info("Invalidated all OT Balance cache in session");
+        APPLICATION_CACHE.clear();
+        logger.info("Invalidated all OT Balance cache (application-wide)");
     }
 }
