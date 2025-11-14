@@ -13,9 +13,9 @@ import group4.hrms.model.User;
  *
  * Job Level Mapping:
  * - 1: ADMIN (NO ACCESS to request system)
- * - 2: HR_MANAGER (Full access)
- * - 3: HR_STAFF (Full access)
- * - 4: DEPT_MANAGER (Subordinate + own requests)
+ * - 2: HR_MANAGER (Full access - can view all, subordinates, and own requests)
+ * - 3: HR_STAFF (View all + own requests - NO subordinates)
+ * - 4: DEPT_MANAGER (View subordinates + own requests)
  * - 5: STAFF (Own requests only)
  */
 public class RequestListPermissionHelper {
@@ -54,8 +54,9 @@ public class RequestListPermissionHelper {
         // Everyone else can see their own requests
         scopes.add("my");
 
-        // HR_MANAGER, HR_STAFF, DEPT_MANAGER can see subordinate requests
-        if (jobLevel >= JOB_LEVEL_HR_MANAGER && jobLevel <= JOB_LEVEL_DEPT_MANAGER) {
+        // Only HR_MANAGER and DEPT_MANAGER can see subordinate requests
+        // HR_STAFF does NOT have subordinates (only HR_MANAGER creates OT for HR_STAFF)
+        if (jobLevel == JOB_LEVEL_HR_MANAGER || jobLevel == JOB_LEVEL_DEPT_MANAGER) {
             scopes.add("subordinate");
         }
 
@@ -91,8 +92,13 @@ public class RequestListPermissionHelper {
             return "all";
         }
 
-        // HR_STAFF and DEPT_MANAGER default to "subordinate"
-        if (jobLevel >= JOB_LEVEL_HR_STAFF && jobLevel <= JOB_LEVEL_DEPT_MANAGER) {
+        // HR_STAFF defaults to "all" (they don't have subordinates)
+        if (jobLevel == JOB_LEVEL_HR_STAFF) {
+            return "all";
+        }
+
+        // DEPT_MANAGER defaults to "subordinate"
+        if (jobLevel == JOB_LEVEL_DEPT_MANAGER) {
             return "subordinate";
         }
 
