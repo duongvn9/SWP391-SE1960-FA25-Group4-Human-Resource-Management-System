@@ -669,7 +669,7 @@
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title" id="viewUserModalLabel">
-                                <i class="fas fa-user me-2"></i>User Details
+                                <i class="fas fa-user me-2"></i>Employee Details
                             </h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
@@ -965,9 +965,11 @@
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                                 <i class="fas fa-times me-2"></i>Close
                             </button>
-                            <a href="${pageContext.request.contextPath}/employees/accounts" class="btn btn-primary">
-                                <i class="fas fa-list me-2"></i>Go to Account List
-                            </a>
+                            <c:if test="${isAdmin}">
+                                <a href="${pageContext.request.contextPath}/employees/accounts" class="btn btn-primary">
+                                    <i class="fas fa-list me-2"></i>Go to Account List
+                                </a>
+                            </c:if>
                         </div>
                     </div>
                 </div>
