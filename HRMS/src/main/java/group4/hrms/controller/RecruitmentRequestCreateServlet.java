@@ -8,10 +8,8 @@ import group4.hrms.dao.RequestTypeDao;
 import group4.hrms.dto.RecruitmentDetailsDto;
 import group4.hrms.model.Request;
 import group4.hrms.model.RequestType;
-import group4.hrms.util.FileUploadUtil;
 import group4.hrms.util.RecruitmentPermissionHelper;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,7 +20,6 @@ import jakarta.servlet.http.HttpSession;
  * Servlet xử lý việc tạo mới Recruitment Request (chỉ cho MANAGER)
  */
 @WebServlet(name = "RecruitmentRequestCreateServlet", urlPatterns = {"/requests/recruitment/submit"})
-@MultipartConfig // Cần thiết cho file upload
 public class RecruitmentRequestCreateServlet extends HttpServlet {
 
     private final RequestDao requestDao = new RequestDao();
@@ -59,43 +56,20 @@ public class RecruitmentRequestCreateServlet extends HttpServlet {
         }
 
         try {
-            // 1. HANDLE ATTACHMENT: could be multiple files or a drive link (both optional)
-            String attachmentType = req.getParameter("attachmentType"); // 'file' or 'link'
+            // 1. HANDLE ATTACHMENT: Google Drive link only (optional)
             String attachmentPath = null;
-            java.util.List<String> attachmentsList = null;
-            if ("link".equals(attachmentType)) {
-                String driveLink = req.getParameter("driveLink");
-                if (driveLink != null && !driveLink.trim().isEmpty()) {
-                    driveLink = driveLink.trim();
-                    // Validate Google Drive link format if provided
-                    if (!isValidGoogleDriveLink(driveLink)) {
-                        req.setAttribute("error", "Invalid Google Drive link format. Please provide a valid shareable Google Drive link.");
-                        req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
-                        return;
-                    }
-                    attachmentPath = driveLink;
+            String driveLink = req.getParameter("driveLink");
+            if (driveLink != null && !driveLink.trim().isEmpty()) {
+                driveLink = driveLink.trim();
+                // Validate Google Drive link format if provided
+                if (!isValidGoogleDriveLink(driveLink)) {
+                    preserveFormData(req);
+                    setFieldError(req, "driveLink", "Invalid Google Drive link format");
+                    req.setAttribute("error", "Invalid Google Drive link format. Please provide a valid shareable Google Drive link.");
+                    req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
+                    return;
                 }
-                // If driveLink is empty, attachmentPath remains null (which is fine since it's optional)
-            } else {
-                attachmentsList = new java.util.ArrayList<>();
-                try {
-                    for (jakarta.servlet.http.Part p : req.getParts()) {
-                        if (p.getName().equals("attachments") && p.getSize() > 0) {
-                            String stored = FileUploadUtil.saveUploadedFile(p, "recruitments");
-                            if (stored != null) {
-                                attachmentsList.add(stored);
-                            }
-                        }
-                    }
-                } catch (Exception ex) {
-                    throw new ServletException("Failed to upload attachments: " + ex.getMessage(), ex);
-                }
-                if (!attachmentsList.isEmpty()) {
-                    // attachmentPath lưu JSON array
-                    attachmentPath = new com.google.gson.Gson().toJson(attachmentsList);
-                } else {
-                    attachmentPath = null;
-                }
+                attachmentPath = driveLink;
             }
 
             // 2. GÁN DỮ LIỆU VÀO OBJECT CHI TIẾT (RecruitmentDetailsDto)
@@ -105,6 +79,21 @@ public class RecruitmentRequestCreateServlet extends HttpServlet {
 
             // Parse jobLevel as String (DB stores as String: SENIOR, JUNIOR, etc.)
             String jobLevel = req.getParameter("jobLevel");
+            if (jobLevel == null || jobLevel.trim().isEmpty()) {
+                preserveFormData(req);
+                setFieldError(req, "jobLevel", "Job level is required");
+                req.setAttribute("error", "Job level is required");
+                req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
+                return;
+            }
+            // Validate job level value
+            if (!jobLevel.equals("JUNIOR") && !jobLevel.equals("MIDDLE") && !jobLevel.equals("SENIOR")) {
+                preserveFormData(req);
+                setFieldError(req, "jobLevel", "Invalid job level. Must be JUNIOR, MIDDLE, or SENIOR");
+                req.setAttribute("error", "Invalid job level selected");
+                req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
+                return;
+            }
             details.setJobLevel(jobLevel);
 
             // Parse quantity
@@ -113,6 +102,8 @@ public class RecruitmentRequestCreateServlet extends HttpServlet {
                 try {
                     details.setQuantity(Integer.parseInt(quantityStr.trim()));
                 } catch (NumberFormatException nfe) {
+                    preserveFormData(req);
+                    setFieldError(req, "quantity", "Invalid quantity: must be a number");
                     req.setAttribute("error", "Invalid quantity: must be a number");
                     req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
                     return;
@@ -120,7 +111,23 @@ public class RecruitmentRequestCreateServlet extends HttpServlet {
             }
 
             // Set jobType (FULL_TIME, PART_TIME, CONTRACT, etc.)
-            details.setJobType(req.getParameter("jobType"));
+            String jobType = req.getParameter("jobType");
+            if (jobType == null || jobType.trim().isEmpty()) {
+                preserveFormData(req);
+                setFieldError(req, "jobType", "Job type is required");
+                req.setAttribute("error", "Job type is required");
+                req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
+                return;
+            }
+            // Validate job type value
+            if (!jobType.equals("Full-time") && !jobType.equals("Part-time") && !jobType.equals("Internship")) {
+                preserveFormData(req);
+                setFieldError(req, "jobType", "Invalid job type. Must be Full-time, Part-time, or Internship");
+                req.setAttribute("error", "Invalid job type selected");
+                req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
+                return;
+            }
+            details.setJobType(jobType);
             details.setRecruitmentReason(req.getParameter("recruitmentReason"));
 
             // Parse salary fields separately (stored as individual fields in DB)
@@ -130,8 +137,12 @@ public class RecruitmentRequestCreateServlet extends HttpServlet {
 
             if (minSalaryRaw != null && !minSalaryRaw.trim().isEmpty()) {
                 try {
-                    details.setMinSalary(Double.parseDouble(minSalaryRaw.trim()));
+                    // Remove commas before parsing
+                    String cleanedMinSalary = minSalaryRaw.trim().replace(",", "");
+                    details.setMinSalary(Double.parseDouble(cleanedMinSalary));
                 } catch (NumberFormatException nfe) {
+                    preserveFormData(req);
+                    setFieldError(req, "minSalary", "Invalid minimum salary: must be a number");
                     req.setAttribute("error", "Invalid minimum salary: must be a number");
                     req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
                     return;
@@ -140,8 +151,12 @@ public class RecruitmentRequestCreateServlet extends HttpServlet {
 
             if (maxSalaryRaw != null && !maxSalaryRaw.trim().isEmpty()) {
                 try {
-                    details.setMaxSalary(Double.parseDouble(maxSalaryRaw.trim()));
+                    // Remove commas before parsing
+                    String cleanedMaxSalary = maxSalaryRaw.trim().replace(",", "");
+                    details.setMaxSalary(Double.parseDouble(cleanedMaxSalary));
                 } catch (NumberFormatException nfe) {
+                    preserveFormData(req);
+                    setFieldError(req, "maxSalary", "Invalid maximum salary: must be a number");
                     req.setAttribute("error", "Invalid maximum salary: must be a number");
                     req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
                     return;
@@ -154,16 +169,65 @@ public class RecruitmentRequestCreateServlet extends HttpServlet {
             details.setJobSummary(req.getParameter("jobSummary"));
             details.setWorkingLocation(req.getParameter("workingLocation"));
             details.setAttachmentPath(attachmentPath);
-            details.setAttachments(attachmentsList);
 
             // Basic validation (since validate() method is removed)
+            String jobTitle = req.getParameter("jobTitle");
+            if (jobTitle == null || jobTitle.trim().isEmpty()) {
+                preserveFormData(req);
+                setFieldError(req, "jobTitle", "Job title is required");
+                req.setAttribute("error", "Job title is required");
+                req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
+                return;
+            }
+            if (jobTitle.trim().length() < 3 || jobTitle.trim().length() > 100) {
+                preserveFormData(req);
+                setFieldError(req, "jobTitle", "Job title must be between 3 and 100 characters");
+                req.setAttribute("error", "Job title must be between 3 and 100 characters");
+                req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
+                return;
+            }
+            
             if (details.getPositionName() == null || details.getPositionName().trim().isEmpty()) {
+                preserveFormData(req);
+                setFieldError(req, "positionName", "Position name is required");
                 req.setAttribute("error", "Position name is required");
                 req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
                 return;
             }
+            if (details.getPositionName().trim().length() < 3 || details.getPositionName().trim().length() > 100) {
+                preserveFormData(req);
+                setFieldError(req, "positionName", "Position name must be between 3 and 100 characters");
+                req.setAttribute("error", "Position name must be between 3 and 100 characters");
+                req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
+                return;
+            }
+            
+            if (details.getJobSummary() == null || details.getJobSummary().trim().isEmpty()) {
+                preserveFormData(req);
+                setFieldError(req, "jobSummary", "Job summary is required");
+                req.setAttribute("error", "Job summary is required");
+                req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
+                return;
+            }
+            if (details.getJobSummary().trim().length() < 10 || details.getJobSummary().trim().length() > 1000) {
+                preserveFormData(req);
+                setFieldError(req, "jobSummary", "Job summary must be between 10 and 1000 characters");
+                req.setAttribute("error", "Job summary must be between 10 and 1000 characters");
+                req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
+                return;
+            }
+            
             if (details.getQuantity() == null || details.getQuantity() <= 0) {
+                preserveFormData(req);
+                setFieldError(req, "quantity", "Quantity must be greater than 0");
                 req.setAttribute("error", "Quantity must be greater than 0");
+                req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
+                return;
+            }
+            if (details.getQuantity() > 100) {
+                preserveFormData(req);
+                setFieldError(req, "quantity", "Quantity cannot exceed 100");
+                req.setAttribute("error", "Quantity cannot exceed 100");
                 req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
                 return;
             }
@@ -236,9 +300,44 @@ public class RecruitmentRequestCreateServlet extends HttpServlet {
 
         } catch (Exception e) {
             System.err.println("Error in RecruitmentRequestCreateServlet: " + e.getMessage());
-            req.setAttribute("error", "Submission Failed: Invalid input or server error.");
+            e.printStackTrace(); // Print full stack trace for debugging
+            preserveFormData(req);
+            // Show more detailed error message
+            String errorMsg = "Submission Failed: " + (e.getMessage() != null ? e.getMessage() : "Unknown error");
+            req.setAttribute("error", errorMsg);
             req.getRequestDispatcher("/WEB-INF/views/recruitment/recruitment_request.jsp").forward(req, res);
         }
+    }
+
+    /**
+     * Preserve form data to display back to user when there's an error
+     */
+    private void preserveFormData(HttpServletRequest req) {
+        req.setAttribute("formData_jobTitle", req.getParameter("jobTitle"));
+        req.setAttribute("formData_positionName", req.getParameter("positionName"));
+        req.setAttribute("formData_jobSummary", req.getParameter("jobSummary"));
+        req.setAttribute("formData_quantity", req.getParameter("quantity"));
+        req.setAttribute("formData_jobLevel", req.getParameter("jobLevel"));
+        req.setAttribute("formData_jobType", req.getParameter("jobType"));
+        req.setAttribute("formData_recruitmentReason", req.getParameter("recruitmentReason"));
+        req.setAttribute("formData_minSalary", req.getParameter("minSalary"));
+        req.setAttribute("formData_maxSalary", req.getParameter("maxSalary"));
+        req.setAttribute("formData_salaryType", req.getParameter("salaryType"));
+        req.setAttribute("formData_workingLocation", req.getParameter("workingLocation"));
+        req.setAttribute("formData_driveLink", req.getParameter("driveLink"));
+        req.setAttribute("formData_attachmentType", req.getParameter("attachmentType"));
+    }
+    
+    /**
+     * Set field-specific error for display
+     */
+    private void setFieldError(HttpServletRequest req, String fieldName, String errorMessage) {
+        java.util.Map<String, String> errors = (java.util.Map<String, String>) req.getAttribute("errors");
+        if (errors == null) {
+            errors = new java.util.HashMap<>();
+            req.setAttribute("errors", errors);
+        }
+        errors.put(fieldName, errorMessage);
     }
 
     /**

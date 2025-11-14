@@ -86,7 +86,7 @@
 
                                     <form id="recruitmentRequestForm"
                                         action="${pageContext.request.contextPath}/requests/recruitment/submit"
-                                        method="post" enctype="multipart/form-data" novalidate>
+                                        method="post" novalidate>
 
                                         <input type="hidden" name="createdByAccountId"
                                             value="${sessionScope.userAccountId}" />
@@ -97,10 +97,12 @@
                                                 <label class="form-label"><i class="bi bi-briefcase"></i><i
                                                         class="fas fa-briefcase"></i> Job Title <span
                                                         class="text-danger">*</span></label>
-                                                <input type="text" name="jobTitle" id="jobTitle" class="form-control"
-                                                    maxlength="100" required />
+                                                <input type="text" name="jobTitle" id="jobTitle" 
+                                                    class="form-control ${not empty errors.jobTitle ? 'is-invalid' : ''}"
+                                                    maxlength="100" required 
+                                                    value="<c:out value='${formData_jobTitle}'/>" />
                                                 <div class="invalid-feedback">
-                                                    Job title is required (3-100 characters)
+                                                    ${not empty errors.jobTitle ? errors.jobTitle : 'Job title is required (3-100 characters)'}
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
@@ -108,10 +110,12 @@
                                                         class="fas fa-sitemap"></i> Position Name <span
                                                         class="text-danger">*</span></label>
                                                 <input type="text" name="positionName" id="positionName"
-                                                    class="form-control" placeholder="e.g. Software Engineer"
-                                                    maxlength="100" required />
+                                                    class="form-control ${not empty errors.positionName ? 'is-invalid' : ''}" 
+                                                    placeholder="e.g. Software Engineer"
+                                                    maxlength="100" required 
+                                                    value="<c:out value='${formData_positionName}'/>" />
                                                 <div class="invalid-feedback">
-                                                    Position name is required (3-100 characters)
+                                                    ${not empty errors.positionName ? errors.positionName : 'Position name is required (3-100 characters)'}
                                                 </div>
                                             </div>
                                         </div>
@@ -120,11 +124,13 @@
                                                 <i class="bi bi-journal-text"></i><i class="fas fa-file-alt"></i> Job
                                                 Summary <span class="text-danger">*</span>
                                             </label>
-                                            <textarea name="jobSummary" id="jobSummary" class="form-control" rows="3"
+                                            <textarea name="jobSummary" id="jobSummary" 
+                                                class="form-control ${not empty errors.jobSummary ? 'is-invalid' : ''}" 
+                                                rows="3"
                                                 placeholder="Briefly describe what this job entails..." maxlength="1000"
-                                                required></textarea>
+                                                required><c:out value="${formData_jobSummary}"/></textarea>
                                             <div class="invalid-feedback">
-                                                Job summary is required (10-1000 characters)
+                                                ${not empty errors.jobSummary ? errors.jobSummary : 'Job summary is required (10-1000 characters)'}
                                             </div>
                                         </div>
 
@@ -133,38 +139,44 @@
                                                 <label class="form-label"><i class="bi bi-people"></i><i
                                                         class="fas fa-users"></i> Quantity <span
                                                         class="text-danger">*</span></label>
-                                                <input type="number" name="quantity" id="quantity" class="form-control"
-                                                    min="1" max="100" required />
+                                                <input type="number" name="quantity" id="quantity" 
+                                                    class="form-control ${not empty errors.quantity ? 'is-invalid' : ''}"
+                                                    min="1" max="100" required 
+                                                    value="<c:out value='${formData_quantity}'/>" />
                                                 <div class="invalid-feedback">
-                                                    Quantity must be between 1 and 100
+                                                    ${not empty errors.quantity ? errors.quantity : 'Quantity must be between 1 and 100'}
                                                 </div>
                                             </div>
                                             <div class="col-md-4">
                                                 <label class="form-label"><i class="bi bi-layers"></i><i
                                                         class="fas fa-layer-group"></i> Job Level <span
                                                         class="text-danger">*</span></label>
-                                                <select name="jobLevel" id="jobLevel" class="form-select" required>
+                                                <select name="jobLevel" id="jobLevel" 
+                                                    class="form-select ${not empty errors.jobLevel ? 'is-invalid' : ''}" 
+                                                    required>
                                                     <option value="">Select Level</option>
-                                                    <option value="JUNIOR">JUNIOR</option>
-                                                    <option value="MIDDLE">MIDDLE</option>
-                                                    <option value="SENIOR">SENIOR</option>
+                                                    <option value="JUNIOR" ${formData_jobLevel == 'JUNIOR' ? 'selected' : ''}>JUNIOR</option>
+                                                    <option value="MIDDLE" ${formData_jobLevel == 'MIDDLE' ? 'selected' : ''}>MIDDLE</option>
+                                                    <option value="SENIOR" ${formData_jobLevel == 'SENIOR' ? 'selected' : ''}>SENIOR</option>
                                                 </select>
                                                 <div class="invalid-feedback">
-                                                    Please select a job level
+                                                    ${not empty errors.jobLevel ? errors.jobLevel : 'Please select a job level'}
                                                 </div>
                                             </div>
                                             <div class="col-md-4">
                                                 <label class="form-label"><i class="bi bi-clock"></i><i
                                                         class="fas fa-clock"></i> Job Type <span
                                                         class="text-danger">*</span></label>
-                                                <select name="jobType" id="jobType" class="form-select" required>
+                                                <select name="jobType" id="jobType" 
+                                                    class="form-select ${not empty errors.jobType ? 'is-invalid' : ''}" 
+                                                    required>
                                                     <option value="">Select Type</option>
-                                                    <option value="Full-time">Full-time</option>
-                                                    <option value="Part-time">Part-time</option>
-                                                    <option value="Internship">Internship</option>
+                                                    <option value="Full-time" ${formData_jobType == 'Full-time' ? 'selected' : ''}>Full-time</option>
+                                                    <option value="Part-time" ${formData_jobType == 'Part-time' ? 'selected' : ''}>Part-time</option>
+                                                    <option value="Internship" ${formData_jobType == 'Internship' ? 'selected' : ''}>Internship</option>
                                                 </select>
                                                 <div class="invalid-feedback">
-                                                    Please select a job type
+                                                    ${not empty errors.jobType ? errors.jobType : 'Please select a job type'}
                                                 </div>
                                             </div>
                                         </div>
@@ -175,7 +187,7 @@
                                                     class="fas fa-comment"></i> Recruitment Reason</label>
                                             <textarea name="recruitmentReason" id="recruitmentReason"
                                                 class="form-control auto-resize" placeholder="Enter recruitment reason"
-                                                maxlength="500"></textarea>
+                                                maxlength="500"><c:out value="${formData_recruitmentReason}"/></textarea>
                                             <div class="invalid-feedback">
                                                 Recruitment reason cannot exceed 500 characters
                                             </div>
@@ -187,30 +199,38 @@
                                                 <label class="form-label"><i class="bi bi-cash-stack"></i><i
                                                         class="fas fa-money-bill-wave"></i> Min Salary (VND)</label>
                                                 <input type="text" name="minSalary" id="minSalary"
-                                                    class="form-control" placeholder="5,000,000" />
+                                                    class="form-control ${not empty errors.minSalary ? 'is-invalid' : ''}" 
+                                                    placeholder="5,000,000" 
+                                                    value="<c:out value='${formData_minSalary}'/>" />
                                                 <div class="form-text">Min: 1,000,000 VND (use commas)</div>
                                                 <div class="invalid-feedback">
-                                                    Minimum salary must be at least 1,000,000 VND
+                                                    ${not empty errors.minSalary ? errors.minSalary : 'Minimum salary must be at least 1,000,000 VND'}
                                                 </div>
                                             </div>
                                             <div class="col-md-4">
                                                 <label class="form-label"><i class="bi bi-cash"></i><i
                                                         class="fas fa-hand-holding-usd"></i> Max Salary (VND)</label>
                                                 <input type="text" name="maxSalary" id="maxSalary"
-                                                    class="form-control" placeholder="8,000,000" />
+                                                    class="form-control ${not empty errors.maxSalary ? 'is-invalid' : ''}" 
+                                                    placeholder="8,000,000" 
+                                                    value="<c:out value='${formData_maxSalary}'/>" />
                                                 <div class="form-text">Must be greater than min salary</div>
                                                 <div class="invalid-feedback">
-                                                    Maximum salary must be greater than minimum salary
+                                                    ${not empty errors.maxSalary ? errors.maxSalary : 'Maximum salary must be greater than minimum salary'}
                                                 </div>
                                             </div>
                                             <div class="col-md-4">
                                                 <label class="form-label"><i class="bi bi-coin"></i><i
                                                         class="fas fa-coins"></i> Salary Type</label>
-                                                <select name="salaryType" id="salaryType" class="form-select">
-                                                    <option value="Gross">Gross</option>
-                                                    <option value="Net">Net</option>
-                                                    <option value="Negotiable">Negotiable</option>
+                                                <select name="salaryType" id="salaryType" 
+                                                    class="form-select ${not empty errors.salaryType ? 'is-invalid' : ''}">
+                                                    <option value="Gross" ${formData_salaryType == 'Gross' ? 'selected' : ''}>Gross</option>
+                                                    <option value="Net" ${formData_salaryType == 'Net' ? 'selected' : ''}>Net</option>
+                                                    <option value="Negotiable" ${formData_salaryType == 'Negotiable' ? 'selected' : ''}>Negotiable</option>
                                                 </select>
+                                                <div class="invalid-feedback">
+                                                    ${not empty errors.salaryType ? errors.salaryType : 'Please select a salary type'}
+                                                </div>
                                             </div>
                                         </div>
 
@@ -225,53 +245,29 @@
 
                                         <div class="mb-3">
                                             <label class="form-label">
-                                                <i class="bi bi-paperclip"></i><i class="fas fa-paperclip"></i>
-                                                Supporting Documents
+                                                <i class="bi bi-link-45deg"></i><i class="fas fa-link"></i>
+                                                Supporting Documents (Google Drive Link)
                                                 <span class="text-muted">(Optional)</span>
                                             </label>
-                                            <div class="btn-group w-100 mb-3" role="group" aria-label="Attachment Type">
-                                                <input type="radio" class="btn-check" name="attachmentType"
-                                                    id="attachmentTypeFile" value="file" checked autocomplete="off">
-                                                <label class="btn btn-outline-primary" for="attachmentTypeFile">
-                                                    <i class="bi bi-upload me-1"></i><i class="fas fa-upload me-1"></i>
-                                                    Upload File
-                                                </label>
-
-                                                <input type="radio" class="btn-check" name="attachmentType"
-                                                    id="attachmentTypeLink" value="link" autocomplete="off">
-                                                <label class="btn btn-outline-primary" for="attachmentTypeLink">
-                                                    <i class="bi bi-link-45deg me-1"></i><i
-                                                        class="fas fa-link me-1"></i> Google Drive Link
-                                                </label>
+                                            <input type="hidden" name="attachmentType" value="link">
+                                            <input type="text" 
+                                                class="form-control ${not empty errors.driveLink ? 'is-invalid' : ''}" 
+                                                id="driveLink" name="driveLink"
+                                                placeholder="Paste Google Drive link here (e.g., https://drive.google.com/file/d/...) - Optional"
+                                                maxlength="500" 
+                                                value="<c:out value='${formData_driveLink}'/>" />
+                                            <div class="form-text">
+                                                <i class="bi bi-info-circle"></i>
+                                                Paste a shareable Google Drive link to your supporting document (Optional - can be left empty)
                                             </div>
-
-                                            <!-- File Upload Section -->
-                                            <div id="fileUploadSection" class="file-upload-wrapper">
-                                                <input type="file" class="form-control" id="attachments"
-                                                    name="attachments" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx" multiple>
-                                                <div class="form-text">
-                                                    <i class="bi bi-info-circle"></i>
-                                                    Upload supporting documents: PDF, JPG, PNG, DOC, DOCX, TXT, XLS, XLSX, PPT, PPTX (Max 5MB each)
-                                                </div>
-                                                <div id="filePreviewList" class="file-preview-list mt-2"></div>
+                                            <div class="invalid-feedback">
+                                                ${not empty errors.driveLink ? errors.driveLink : 'Invalid Google Drive link format'}
                                             </div>
-
-                                            <!-- Google Drive Link Section -->
-                                            <div id="driveLinkSection" class="drive-link-wrapper d-none">
-                                                <input type="text" class="form-control" id="driveLink" name="driveLink"
-                                                    placeholder="Paste Google Drive link here (e.g., https://drive.google.com/file/d/...) - Optional"
-                                                    maxlength="500" />
-                                                <div class="form-text">
-                                                    <i class="bi bi-info-circle"></i>
-                                                    Paste a shareable Google Drive link to your supporting document
-                                                    (Optional - can be left empty)
-                                                </div>
-                                                <div id="driveLinkPreview" class="alert alert-info mt-2 d-none">
-                                                    <i class="bi bi-link-45deg me-2"></i>
-                                                    <strong>Drive Link:</strong> <span id="driveLinkText"></span>
-                                                    <button type="button" class="btn-close float-end"
-                                                        onclick="clearDriveLink()"></button>
-                                                </div>
+                                            <div id="driveLinkPreview" class="alert alert-info mt-2 d-none">
+                                                <i class="bi bi-link-45deg me-2"></i>
+                                                <strong>Drive Link:</strong> <span id="driveLinkText"></span>
+                                                <button type="button" class="btn-close float-end"
+                                                    onclick="clearDriveLink()"></button>
                                             </div>
                                         </div>
 
@@ -280,6 +276,9 @@
                                             <label class="form-check-label" for="confirmCheck">
                                                 I confirm that the above information is accurate.
                                             </label>
+                                            <div class="invalid-feedback">
+                                                You must confirm that the information is accurate before submitting.
+                                            </div>
                                         </div>
 
                                         <div class="d-flex justify-content-end gap-2">
@@ -303,12 +302,6 @@
 
             <script>
                 document.addEventListener('DOMContentLoaded', function () {
-                    const attachmentTypeFile = document.getElementById('attachmentTypeFile');
-                    const attachmentTypeLink = document.getElementById('attachmentTypeLink');
-                    const fileUploadSection = document.getElementById('fileUploadSection');
-                    const driveLinkSection = document.getElementById('driveLinkSection');
-                    const attachmentsInput = document.getElementById('attachments');
-                    const filePreviewList = document.getElementById('filePreviewList');
                     const driveLink = document.getElementById('driveLink');
                     const driveLinkPreview = document.getElementById('driveLinkPreview');
                     const driveLinkText = document.getElementById('driveLinkText');
@@ -328,6 +321,16 @@
                     
                     // Track which fields user has interacted with
                     const interactedFields = new Set();
+                    
+                    // Confirmation checkbox
+                    const confirmCheck = document.getElementById('confirmCheck');
+                    if (confirmCheck) {
+                        confirmCheck.addEventListener('change', function() {
+                            if (this.checked) {
+                                this.classList.remove('is-invalid');
+                            }
+                        });
+                    }
 
                     // Toggle Tips Section
                     const toggleTipsBtn = document.getElementById('toggleTipsBtn');
@@ -540,83 +543,13 @@
                     autoResizeTextarea.addEventListener('input', resizeTextarea);
                     resizeTextarea();
 
-                    function showFileSection() {
-                        fileUploadSection.classList.remove('d-none');
-                        driveLinkSection.classList.add('d-none');
-                        // enable file input, disable link
-                        attachmentsInput.disabled = false;
-                        driveLink.disabled = true;
+                    // Show preview if there's a saved drive link
+                    const savedDriveLink = driveLink.value;
+                    if (savedDriveLink && savedDriveLink.trim()) {
+                        driveLinkText.textContent = savedDriveLink;
+                        driveLinkPreview.classList.remove('d-none');
+                        driveLinkPreview.classList.add('d-block');
                     }
-
-                    function showLinkSection() {
-                        fileUploadSection.classList.add('d-none');
-                        driveLinkSection.classList.remove('d-none');
-                        attachmentsInput.disabled = true;
-                        driveLink.disabled = false;
-                        // Clear any validation messages
-                        driveLink.setCustomValidity('');
-                    }
-
-                    // initial state
-                    if (attachmentTypeLink.checked) {
-                        showLinkSection();
-                    } else {
-                        showFileSection();
-                    }
-
-                    attachmentTypeFile.addEventListener('change', showFileSection);
-                    attachmentTypeLink.addEventListener('change', showLinkSection);
-
-                    // File preview with size validation
-                    attachmentsInput.addEventListener('change', function (e) {
-                        filePreviewList.innerHTML = '';
-                        const files = Array.from(e.target.files || []);
-                        const maxSize = 5 * 1024 * 1024; // 5MB in bytes
-                        let hasInvalidFile = false;
-
-                        files.forEach((file, idx) => {
-                            const li = document.createElement('div');
-                            const isOverSize = file.size > maxSize;
-
-                            if (isOverSize) {
-                                hasInvalidFile = true;
-                                const fileSizeMB = (file.size / 1024 / 1024).toFixed(2);
-                                li.className = 'd-flex align-items-center mb-1 p-2 border rounded bg-danger bg-opacity-10 border-danger';
-                                li.innerHTML = '<div class="me-2"><i class="bi bi-file-earmark-fill fs-4 text-danger"></i></div>' +
-                                    '<div class="flex-grow-1">' +
-                                    file.name + ' ' +
-                                    '<small class="text-danger">(' + fileSizeMB + ' MB - Exceeds 5MB limit!)</small>' +
-                                    '</div>' +
-                                    '<div><button type="button" class="btn btn-sm btn-outline-danger" data-idx="' + idx + '">Remove</button></div>';
-                            } else {
-                                const fileSizeKB = Math.round(file.size / 1024);
-                                li.className = 'd-flex align-items-center mb-1 p-2 border rounded bg-light';
-                                li.innerHTML = '<div class="me-2"><i class="bi bi-file-earmark-fill fs-4"></i></div>' +
-                                    '<div class="flex-grow-1">' + file.name + ' <small class="text-muted">(' + fileSizeKB + ' KB)</small></div>' +
-                                    '<div><button type="button" class="btn btn-sm btn-outline-danger" data-idx="' + idx + '">Remove</button></div>';
-                            }
-                            filePreviewList.appendChild(li);
-                        });
-
-                        if (hasInvalidFile) {
-                            const warning = document.createElement('div');
-                            warning.className = 'alert alert-danger alert-sm mt-2';
-                            warning.innerHTML = '<i class="bi bi-exclamation-triangle me-2"></i>Some files exceed the 5MB size limit. Please remove them before submitting.';
-                            filePreviewList.appendChild(warning);
-                        }
-
-                        // Remove handler
-                        filePreviewList.querySelectorAll('button[data-idx]').forEach(btn => {
-                            btn.addEventListener('click', function () {
-                                const index = parseInt(this.getAttribute('data-idx'));
-                                const dt = new DataTransfer();
-                                const currentFiles = Array.from(attachmentsInput.files);
-                                currentFiles.forEach((f, i) => { if (i !== index) dt.items.add(f); });
-                                attachmentsInput.files = dt.files;
-                                attachmentsInput.dispatchEvent(new Event('change'));
-                            });
-                        });
-                    });
 
                     // Salary validation
                     function validateSalary() {
@@ -764,35 +697,34 @@
 
                     // Form validation before submit
                     form.addEventListener('submit', function (e) {
+                        // Validate confirmation checkbox
+                        const confirmCheck = document.getElementById('confirmCheck');
+                        if (!confirmCheck.checked) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            confirmCheck.classList.add('is-invalid');
+                            // Scroll to checkbox
+                            confirmCheck.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            return false;
+                        } else {
+                            confirmCheck.classList.remove('is-invalid');
+                        }
+                        
                         // Validate salary
                         if (!validateSalary()) {
                             e.preventDefault();
                             return false;
                         }
 
-                        // Validate file sizes only if file upload is selected
-                        if (attachmentTypeFile.checked) {
-                            const files = Array.from(attachmentsInput.files || []);
-                            const maxSize = 5 * 1024 * 1024; // 5MB
-                            const oversizedFiles = files.filter(f => f.size > maxSize);
-
-                            if (oversizedFiles.length > 0) {
-                                e.preventDefault();
-                                alert('Please remove files that exceed the 5MB size limit before submitting.');
-                                return false;
-                            }
-                        }
-
                         // Validate Google Drive link format if provided
-                        if (attachmentTypeLink.checked) {
-                            const linkValue = driveLink.value.trim();
-                            if (linkValue && !validateGoogleDriveLink(linkValue)) {
-                                e.preventDefault();
-                                alert('Invalid Google Drive link format. Please provide a valid shareable Google Drive link.');
-                                driveLink.focus();
-                                return false;
-                            }
-                            driveLink.setCustomValidity('');
+                        const linkValue = driveLink.value.trim();
+                        if (linkValue && !validateGoogleDriveLink(linkValue)) {
+                            e.preventDefault();
+                            driveLink.classList.add('is-invalid');
+                            driveLink.focus();
+                            return false;
+                        } else {
+                            driveLink.classList.remove('is-invalid');
                         }
                     });
 
