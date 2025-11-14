@@ -154,8 +154,12 @@
                         <strong>Replacing Contract:</strong> ${oldContract.contractNo} 
                         <br><small>The old contract will be terminated after the new contract is successfully created.</small>
 
+
                         <br><small><strong>Note:</strong> The new contract must start from next month onwards.</small>
 
+
+
+                        <br><small><strong>Note:</strong> The new contract must start from next month onwards.</small>
 
                     </div>
                 </c:if>
