@@ -227,7 +227,7 @@ public class ContractReplaceController extends HttpServlet {
                 return;
             }
 
-            // Create new contract with draft status and pending approval
+            // Create new contract with pending approval status
             EmploymentContract newContract = new EmploymentContract();
             newContract.setUserId(oldContract.getUserId());
             newContract.setContractNo(contractNo);
@@ -244,12 +244,13 @@ public class ContractReplaceController extends HttpServlet {
             // Save new contract to database
             contractDao.save(newContract);
 
-            // IMPORTANT: Only terminate old contract AFTER new contract is successfully created
-            contractDao.updateStatus(oldContractId, "terminated");
+            // DO NOT terminate old contract here!
+            // Old contract will remain active until HRM approves the new contract
+            // When approved, old contract's end_date will be automatically updated
 
             response.sendRedirect(request.getContextPath() +
                 "/contracts?success=" + java.net.URLEncoder.encode(
-                    "New contract created and old contract terminated successfully", "UTF-8"));
+                    "Replacement contract created successfully. Waiting for HRM approval.", "UTF-8"));
 
         } catch (Exception e) {
             e.printStackTrace();

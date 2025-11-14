@@ -13,7 +13,6 @@
             <link
                 href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
                 rel="stylesheet" />
-            <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
             <style>
                 /* Fix layout to prevent overlap with sidebar */
                 .main-content {
@@ -239,7 +238,15 @@
                         </div>
                         <div class="card-body">
                             <form action="${pageContext.request.contextPath}/employees/accounts/create" method="post"
-                                id="createAccountForm">
+                                id="createAccountForm" autocomplete="off">
+
+                                <!-- Fake fields to trick browser autocomplete -->
+                                <input type="text" name="fake_username"
+                                    style="position:absolute;top:-9999px;left:-9999px;" tabindex="-1"
+                                    autocomplete="off">
+                                <input type="password" name="fake_password"
+                                    style="position:absolute;top:-9999px;left:-9999px;" tabindex="-1"
+                                    autocomplete="new-password">
 
                                 <!-- User Selection -->
                                 <div class="mb-3">
@@ -270,7 +277,9 @@
                                     </label>
                                     <input type="text" class="form-control" id="username" name="username" required
                                         minlength="3" maxlength="100" pattern="[a-zA-Z0-9._-]+"
-                                        placeholder="Enter username" value="${username != null ? username : ''}">
+                                        placeholder="Enter username" value="${username != null ? username : ''}"
+                                        autocomplete="off" data-lpignore="true" data-form-type="other" readonly
+                                        onfocus="this.removeAttribute('readonly');">
                                     <small class="text-muted">3-100 characters</small>
                                 </div>
 
@@ -307,7 +316,7 @@
                                         <div class="position-relative">
                                             <input type="password" class="form-control" id="password" name="password"
                                                 required maxlength="100" placeholder="Enter password"
-                                                style="padding-right: 40px;">
+                                                style="padding-right: 40px;" autocomplete="new-password">
                                             <i class="fas fa-eye position-absolute" id="togglePassword"
                                                 style="top: 50%; right: 10px; transform: translateY(-50%); cursor: pointer; color: #6c757d;"></i>
                                         </div>
@@ -340,7 +349,8 @@
                                         <div class="position-relative">
                                             <input type="password" class="form-control" id="confirmPassword"
                                                 name="confirmPassword" required maxlength="100"
-                                                placeholder="Re-enter password" style="padding-right: 40px;">
+                                                placeholder="Re-enter password" style="padding-right: 40px;"
+                                                autocomplete="new-password">
                                             <i class="fas fa-eye position-absolute" id="toggleConfirmPassword"
                                                 style="top: 50%; right: 10px; transform: translateY(-50%); cursor: pointer; color: #6c757d;"></i>
                                         </div>
@@ -370,6 +380,20 @@
             <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
             <script>
                 $(document).ready(function () {
+                    // Declare usernameField once at the top
+                    const usernameField = document.getElementById('username');
+                    const form = document.getElementById('createAccountForm');
+
+                    // Clear username if browser autocompletes it with unwanted value
+                    setTimeout(function () {
+                        const selectedUserId = $('#userId').val();
+
+                        // Clear username if it's autocompleted or no user is selected
+                        if (!selectedUserId || usernameField.value === 'admin') {
+                            usernameField.value = '';
+                        }
+                    }, 50);
+
                     // Initialize Select2 with search functionality
                     $('#userId').select2({
                         theme: 'bootstrap-5',
@@ -383,7 +407,7 @@
 
                     // Auto-fill if user is pre-selected or form data exists
                     const selectedUserId = $('#userId').val();
-                    const hasFormUsername = document.getElementById('username').value.trim() !== '';
+                    const hasFormUsername = usernameField.value.trim() !== '';
 
                     if (selectedUserId) {
                         const selectedOption = $('#userId option:selected');
@@ -392,11 +416,14 @@
 
                         // Only auto-fill username if not already filled from session
                         if (employeeCode && !hasFormUsername) {
-                            document.getElementById('username').value = employeeCode.toLowerCase();
+                            usernameField.value = employeeCode.toLowerCase();
                         }
                         if (email) {
                             document.getElementById('emailCompany').value = email;
                         }
+                    } else if (!hasFormUsername) {
+                        // Clear username if no user selected and no form data
+                        usernameField.value = '';
                     }
 
                     // Custom format for dropdown options
@@ -458,7 +485,6 @@
                     }
 
                     // Form validation
-                    const form = document.getElementById('createAccountForm');
                     form.addEventListener('submit', function (event) {
                         if (!form.checkValidity()) {
                             event.preventDefault();
@@ -477,13 +503,21 @@
                             const email = $option.data('email');
 
                             if (employeeCode) {
-                                document.getElementById('username').value = employeeCode.toLowerCase();
+                                usernameField.value = employeeCode.toLowerCase();
+                                // Trigger change event to ensure value is set
+                                usernameField.dispatchEvent(new Event('change'));
                             }
 
                             if (email) {
                                 document.getElementById('emailCompany').value = email;
                             }
                         }
+                    });
+
+                    // Clear username when user selection is cleared
+                    $('#userId').on('select2:clear', function () {
+                        document.getElementById('username').value = '';
+                        document.getElementById('emailCompany').value = '';
                     });
 
                     // Password strength validation function

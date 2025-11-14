@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.HashMap;
@@ -366,7 +367,23 @@ public class UserUpdateServlet extends HttpServlet {
             }
 
             // Update user in database
-            boolean updated = userDao.update(user);
+            boolean updated = false;
+            try {
+                updated = userDao.update(user);
+            } catch (SQLException e) {
+                // Xử lý lỗi duplicate email
+                if (e.getMessage().contains("Duplicate entry") && e.getMessage().contains("email_company")) {
+                    logger.error("Duplicate email detected for user: {}", userId);
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    result.put("success", false);
+                    result.put("message",
+                            "This email is already in use by another employee. Please use a different email.");
+                    response.getWriter().write(gson.toJson(result));
+                    return;
+                }
+                // Throw lại exception khác để catch block bên ngoài xử lý
+                throw e;
+            }
 
             if (updated) {
                 logger.info("User updated successfully: {}", userId);

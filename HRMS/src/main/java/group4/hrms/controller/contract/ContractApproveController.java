@@ -71,14 +71,41 @@ public class ContractApproveController extends HttpServlet {
             if (!contractOpt.isPresent()) {
                 errorMessage = "Contract not found";
             } else {
-                EmploymentContract contract = contractOpt.get();
-                if (!contract.canBeApproved()) {
-                    errorMessage = "Contract cannot be approved. Current status: " + contract.getApprovalStatus();
+                EmploymentContract newContract = contractOpt.get();
+                if (!newContract.canBeApproved()) {
+                    errorMessage = "Contract cannot be approved. Current status: " + newContract.getApprovalStatus();
                 } else {
-                    // Approve the contract with user_id
+                    // Find old active contract of the same employee that overlaps with new contract
+                    // If multiple contracts match, choose the one with the latest start_date (most recent)
+                    java.util.List<EmploymentContract> userContracts = contractDao.findByUserId(newContract.getUserId());
+                    EmploymentContract oldContractToUpdate = null;
+                    
+                    for (EmploymentContract c : userContracts) {
+                        // Find active contract where end_date is null or after new contract's start_date
+                        if ("active".equals(c.getStatus()) && 
+                            !c.getId().equals(newContract.getId()) &&
+                            (c.getEndDate() == null || c.getEndDate().isAfter(newContract.getStartDate()) || c.getEndDate().isEqual(newContract.getStartDate()))) {
+                            
+                            // If this is the first match, or if this contract started later than previous match
+                            if (oldContractToUpdate == null || c.getStartDate().isAfter(oldContractToUpdate.getStartDate())) {
+                                oldContractToUpdate = c;
+                            }
+                        }
+                    }
+                    
+                    // Approve the new contract
                     boolean success = contractDao.approve(contractId, currentUser.getId());
                     if (!success) {
                         errorMessage = "Failed to approve contract";
+                    } else {
+                        // If found old contract, update its end_date to new contract's start_date - 1 day
+                        if (oldContractToUpdate != null) {
+                            java.time.LocalDate newEndDate = newContract.getStartDate().minusDays(1);
+                            oldContractToUpdate.setEndDate(newEndDate);
+                            contractDao.update(oldContractToUpdate);
+                            logger.info("Updated old contract {} end_date to {} for user {}", 
+                                oldContractToUpdate.getId(), newEndDate, newContract.getUserId());
+                        }
                     }
                 }
             }

@@ -26,12 +26,13 @@
                         <jsp:param name="pageTitle" value="Recruitment Request" />
                     </jsp:include>
 
-                    <div class="container-fluid px-4 py-3">
+                    <div class="container-fluid px-4 py-4">
                         <!-- Alert Messages -->
                         <!-- Success Alert -->
                         <c:if test="${not empty success}">
-                            <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
-                                <i class="bi bi-check-circle me-2"></i>
+                            <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+                                <i class="bi bi-check-circle-fill me-2"></i>
+                                <strong>Success!</strong>
                                 <span>
                                     <c:out value="${success}" />
                                 </span>
@@ -40,8 +41,9 @@
                         </c:if>
                         <!-- Error Alert -->
                         <c:if test="${not empty error}">
-                            <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
-                                <i class="bi bi-exclamation-circle me-2"></i>
+                            <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                <strong>Error!</strong>
                                 <span>
                                     <c:out value="${error}" />
                                 </span>
@@ -52,34 +54,34 @@
                         <div class="row g-4">
                             <!-- FORM SECTION -->
                             <div class="col-12">
-                                <div class="card p-4">
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="card p-5">
+                                    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
                                         <h5 class="card-title mb-0">
                                             <i class="bi bi-person-plus-fill"></i>
                                             Create Recruitment Request
                                         </h5>
-                                        <button type="button" class="btn btn-outline-primary btn-sm" id="toggleTipsBtn">
-                                            <i class="bi bi-lightbulb"></i> <span id="tipsBtnText">Show Tips</span>
+                                        <button type="button" class="btn btn-outline-primary" id="toggleTipsBtn">
+                                            <i class="bi bi-lightbulb-fill"></i> <span id="tipsBtnText">Show Tips</span>
                                         </button>
                                     </div>
                                     
                                     <!-- TIPS SECTION (Collapsible) -->
                                     <div id="tipsSection" class="tips-section mb-4" style="display: none;">
-                                        <div class="alert alert-info">
+                                        <div class="alert">
                                             <h6 class="mb-3 d-flex align-items-center fw-bold">
                                                 <i class="bi bi-lightbulb-fill me-2"></i>
-                                                Tips for Better Recruitment Request
+                                                💡 Tips for Better Recruitment Request
                                             </h6>
                                             <ul class="tips-list mb-0">
                                                 <li><i class="bi bi-check-circle-fill text-success me-2"></i> Clearly describe
-                                                    the job responsibilities.</li>
+                                                    the job responsibilities and expectations</li>
                                                 <li><i class="bi bi-check-circle-fill text-success me-2"></i> Double-check
-                                                    required skills and experience.</li>
+                                                    required skills and experience levels</li>
                                                 <li><i class="bi bi-check-circle-fill text-success me-2"></i> Attach supporting
-                                                    documents if available.</li>
+                                                    documents if available (job description, etc.)</li>
                                                 <li><i class="bi bi-check-circle-fill text-success me-2"></i> Provide an
-                                                    accurate salary range.</li>
-                                                <li><i class="bi bi-check-circle-fill text-success me-2"></i> Review all information before submitting.</li>
+                                                    accurate and competitive salary range</li>
+                                                <li><i class="bi bi-check-circle-fill text-success me-2"></i> Review all information carefully before submitting</li>
                                             </ul>
                                         </div>
                                     </div>
@@ -92,23 +94,30 @@
                                             value="${sessionScope.userAccountId}" />
                                         <input type="hidden" name="createdByUserId" value="${sessionScope.userId}" />
 
+                                        <!-- Basic Information Section -->
+                                        <div class="section-header mt-3">
+                                            <i class="bi bi-info-circle-fill"></i>
+                                            <span>Basic Information</span>
+                                        </div>
+
                                         <div class="row mb-3">
-                                            <div class="col-md-6">
-                                                <label class="form-label"><i class="bi bi-briefcase"></i><i
-                                                        class="fas fa-briefcase"></i> Job Title <span
-                                                        class="text-danger">*</span></label>
+                                            <div class="col-md-6 mb-3 mb-md-0">
+                                                <label class="form-label fw-semibold">
+                                                    <i class="bi bi-briefcase me-1"></i>Job Title <span class="text-danger">*</span>
+                                                </label>
                                                 <input type="text" name="jobTitle" id="jobTitle" 
                                                     class="form-control ${not empty errors.jobTitle ? 'is-invalid' : ''}"
                                                     maxlength="100" required 
-                                                    value="<c:out value='${formData_jobTitle}'/>" />
+                                                    value="<c:out value='${formData_jobTitle}'/>" 
+                                                    placeholder="Enter job title" />
                                                 <div class="invalid-feedback">
                                                     ${not empty errors.jobTitle ? errors.jobTitle : 'Job title is required (3-100 characters)'}
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
-                                                <label class="form-label"><i class="bi bi-diagram-3"></i><i
-                                                        class="fas fa-sitemap"></i> Position Name <span
-                                                        class="text-danger">*</span></label>
+                                                <label class="form-label fw-semibold">
+                                                    <i class="bi bi-diagram-3 me-1"></i>Position Name <span class="text-danger">*</span>
+                                                </label>
                                                 <input type="text" name="positionName" id="positionName"
                                                     class="form-control ${not empty errors.positionName ? 'is-invalid' : ''}" 
                                                     placeholder="e.g. Software Engineer"
@@ -120,53 +129,60 @@
                                             </div>
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label">
-                                                <i class="bi bi-journal-text"></i><i class="fas fa-file-alt"></i> Job
-                                                Summary <span class="text-danger">*</span>
+                                            <label class="form-label fw-semibold">
+                                                <i class="bi bi-journal-text me-1"></i>Job Summary <span class="text-danger">*</span>
                                             </label>
                                             <textarea name="jobSummary" id="jobSummary" 
                                                 class="form-control ${not empty errors.jobSummary ? 'is-invalid' : ''}" 
-                                                rows="3"
-                                                placeholder="Briefly describe what this job entails..." maxlength="1000"
+                                                rows="4"
+                                                placeholder="Briefly describe what this job entails..." 
+                                                maxlength="1000"
                                                 required><c:out value="${formData_jobSummary}"/></textarea>
                                             <div class="invalid-feedback">
                                                 ${not empty errors.jobSummary ? errors.jobSummary : 'Job summary is required (10-1000 characters)'}
                                             </div>
                                         </div>
 
+                                        <!-- Position Details Section -->
+                                        <div class="section-header mt-4">
+                                            <i class="bi bi-sliders"></i>
+                                            <span>Position Details</span>
+                                        </div>
+
                                         <div class="row mb-3">
-                                            <div class="col-md-4">
-                                                <label class="form-label"><i class="bi bi-people"></i><i
-                                                        class="fas fa-users"></i> Quantity <span
-                                                        class="text-danger">*</span></label>
+                                            <div class="col-md-4 mb-3 mb-md-0">
+                                                <label class="form-label fw-semibold">
+                                                    <i class="bi bi-people me-1"></i>Quantity <span class="text-danger">*</span>
+                                                </label>
                                                 <input type="number" name="quantity" id="quantity" 
                                                     class="form-control ${not empty errors.quantity ? 'is-invalid' : ''}"
                                                     min="1" max="100" required 
+                                                    placeholder="1-100"
                                                     value="<c:out value='${formData_quantity}'/>" />
                                                 <div class="invalid-feedback">
                                                     ${not empty errors.quantity ? errors.quantity : 'Quantity must be between 1 and 100'}
                                                 </div>
                                             </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label"><i class="bi bi-layers"></i><i
-                                                        class="fas fa-layer-group"></i> Job Level <span
-                                                        class="text-danger">*</span></label>
+                                            <div class="col-md-4 mb-3 mb-md-0">
+                                                <label class="form-label fw-semibold">
+                                                    <i class="bi bi-layers me-1"></i>Job Level <span class="text-danger">*</span>
+                                                </label>
                                                 <select name="jobLevel" id="jobLevel" 
                                                     class="form-select ${not empty errors.jobLevel ? 'is-invalid' : ''}" 
                                                     required>
                                                     <option value="">Select Level</option>
-                                                    <option value="JUNIOR" ${formData_jobLevel == 'JUNIOR' ? 'selected' : ''}>JUNIOR</option>
-                                                    <option value="MIDDLE" ${formData_jobLevel == 'MIDDLE' ? 'selected' : ''}>MIDDLE</option>
-                                                    <option value="SENIOR" ${formData_jobLevel == 'SENIOR' ? 'selected' : ''}>SENIOR</option>
+                                                    <option value="JUNIOR" ${formData_jobLevel == 'JUNIOR' ? 'selected' : ''}>Junior</option>
+                                                    <option value="MIDDLE" ${formData_jobLevel == 'MIDDLE' ? 'selected' : ''}>Middle</option>
+                                                    <option value="SENIOR" ${formData_jobLevel == 'SENIOR' ? 'selected' : ''}>Senior</option>
                                                 </select>
                                                 <div class="invalid-feedback">
                                                     ${not empty errors.jobLevel ? errors.jobLevel : 'Please select a job level'}
                                                 </div>
                                             </div>
                                             <div class="col-md-4">
-                                                <label class="form-label"><i class="bi bi-clock"></i><i
-                                                        class="fas fa-clock"></i> Job Type <span
-                                                        class="text-danger">*</span></label>
+                                                <label class="form-label fw-semibold">
+                                                    <i class="bi bi-clock me-1"></i>Job Type <span class="text-danger">*</span>
+                                                </label>
                                                 <select name="jobType" id="jobType" 
                                                     class="form-select ${not empty errors.jobType ? 'is-invalid' : ''}" 
                                                     required>
@@ -181,47 +197,55 @@
                                             </div>
                                         </div>
 
-                                        <!-- Recruitment Reason - Full Width -->
                                         <div class="mb-3">
-                                            <label class="form-label"><i class="bi bi-chat-text"></i><i
-                                                    class="fas fa-comment"></i> Recruitment Reason</label>
+                                            <label class="form-label fw-semibold">
+                                                <i class="bi bi-chat-text me-1"></i>Recruitment Reason <span class="text-muted">(Optional)</span>
+                                            </label>
                                             <textarea name="recruitmentReason" id="recruitmentReason"
-                                                class="form-control auto-resize" placeholder="Enter recruitment reason"
+                                                class="form-control" 
+                                                rows="3"
+                                                placeholder="Enter recruitment reason (optional)"
                                                 maxlength="500"><c:out value="${formData_recruitmentReason}"/></textarea>
-                                            <div class="invalid-feedback">
-                                                Recruitment reason cannot exceed 500 characters
-                                            </div>
+                                            <div class="form-text text-muted">Max 500 characters</div>
                                         </div>
 
-                                        <!-- Salary Information Row -->
+                                        <!-- Compensation Section -->
+                                        <div class="section-header mt-4">
+                                            <i class="bi bi-currency-dollar"></i>
+                                            <span>Compensation & Benefits</span>
+                                        </div>
+
                                         <div class="row mb-3">
-                                            <div class="col-md-4">
-                                                <label class="form-label"><i class="bi bi-cash-stack"></i><i
-                                                        class="fas fa-money-bill-wave"></i> Min Salary (VND)</label>
+                                            <div class="col-md-4 mb-3 mb-md-0">
+                                                <label class="form-label fw-semibold">
+                                                    <i class="bi bi-cash-stack me-1"></i>Min Salary (VND) <span class="text-muted">(Optional)</span>
+                                                </label>
                                                 <input type="text" name="minSalary" id="minSalary"
                                                     class="form-control ${not empty errors.minSalary ? 'is-invalid' : ''}" 
                                                     placeholder="5,000,000" 
                                                     value="<c:out value='${formData_minSalary}'/>" />
-                                                <div class="form-text">Min: 1,000,000 VND (use commas)</div>
+                                                <div class="form-text text-muted small">Min: 1,000,000 VND</div>
                                                 <div class="invalid-feedback">
                                                     ${not empty errors.minSalary ? errors.minSalary : 'Minimum salary must be at least 1,000,000 VND'}
                                                 </div>
                                             </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label"><i class="bi bi-cash"></i><i
-                                                        class="fas fa-hand-holding-usd"></i> Max Salary (VND)</label>
+                                            <div class="col-md-4 mb-3 mb-md-0">
+                                                <label class="form-label fw-semibold">
+                                                    <i class="bi bi-cash me-1"></i>Max Salary (VND) <span class="text-muted">(Optional)</span>
+                                                </label>
                                                 <input type="text" name="maxSalary" id="maxSalary"
                                                     class="form-control ${not empty errors.maxSalary ? 'is-invalid' : ''}" 
-                                                    placeholder="8,000,000" 
+                                                    placeholder="15,000,000" 
                                                     value="<c:out value='${formData_maxSalary}'/>" />
-                                                <div class="form-text">Must be greater than min salary</div>
+                                                <div class="form-text text-muted small">Must be > min salary</div>
                                                 <div class="invalid-feedback">
                                                     ${not empty errors.maxSalary ? errors.maxSalary : 'Maximum salary must be greater than minimum salary'}
                                                 </div>
                                             </div>
                                             <div class="col-md-4">
-                                                <label class="form-label"><i class="bi bi-coin"></i><i
-                                                        class="fas fa-coins"></i> Salary Type</label>
+                                                <label class="form-label fw-semibold">
+                                                    <i class="bi bi-coin me-1"></i>Salary Type
+                                                </label>
                                                 <select name="salaryType" id="salaryType" 
                                                     class="form-select ${not empty errors.salaryType ? 'is-invalid' : ''}">
                                                     <option value="Gross" ${formData_salaryType == 'Gross' ? 'selected' : ''}>Gross</option>
@@ -234,38 +258,42 @@
                                             </div>
                                         </div>
 
-                                        <div class="mb-3">
-                                            <label class="form-label"><i class="bi bi-geo-alt"></i><i
-                                                    class="fas fa-map-marker-alt"></i> Working Location <span
-                                                    class="text-danger">*</span></label>
-                                            <input type="text" name="workingLocation" id="workingLocation" 
-                                                   class="form-control" value="Ha Noi" readonly 
-                                                   style="background-color: #f8f9fa; cursor: not-allowed;" />
+                                        <!-- Additional Information Section -->
+                                        <div class="section-header mt-4">
+                                            <i class="bi bi-file-earmark-text"></i>
+                                            <span>Additional Information</span>
                                         </div>
 
                                         <div class="mb-3">
-                                            <label class="form-label">
-                                                <i class="bi bi-link-45deg"></i><i class="fas fa-link"></i>
-                                                Supporting Documents (Google Drive Link)
-                                                <span class="text-muted">(Optional)</span>
+                                            <label class="form-label fw-semibold">
+                                                <i class="bi bi-geo-alt me-1"></i>Working Location <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="text" name="workingLocation" id="workingLocation" 
+                                                   class="form-control" value="Ha Noi" readonly 
+                                                   style="background-color: #f8f9fa; cursor: not-allowed;" />
+                                            <div class="form-text text-muted small">Default location</div>
+                                        </div>
+
+                                        <div class="mb-4">
+                                            <label class="form-label fw-semibold">
+                                                <i class="bi bi-link-45deg me-1"></i>Supporting Documents <span class="text-muted">(Optional)</span>
                                             </label>
                                             <input type="hidden" name="attachmentType" value="link">
                                             <input type="text" 
                                                 class="form-control ${not empty errors.driveLink ? 'is-invalid' : ''}" 
                                                 id="driveLink" name="driveLink"
-                                                placeholder="Paste Google Drive link here (e.g., https://drive.google.com/file/d/...) - Optional"
+                                                placeholder="https://drive.google.com/file/d/..."
                                                 maxlength="500" 
                                                 value="<c:out value='${formData_driveLink}'/>" />
-                                            <div class="form-text">
-                                                <i class="bi bi-info-circle"></i>
-                                                Paste a shareable Google Drive link to your supporting document (Optional - can be left empty)
+                                            <div class="form-text text-muted small">
+                                                <i class="bi bi-info-circle me-1"></i>Paste a shareable Google Drive link (optional)
                                             </div>
                                             <div class="invalid-feedback">
                                                 ${not empty errors.driveLink ? errors.driveLink : 'Invalid Google Drive link format'}
                                             </div>
                                             <div id="driveLinkPreview" class="alert alert-info mt-2 d-none">
                                                 <i class="bi bi-link-45deg me-2"></i>
-                                                <strong>Drive Link:</strong> <span id="driveLinkText"></span>
+                                                <strong>Link:</strong> <span id="driveLinkText"></span>
                                                 <button type="button" class="btn-close float-end"
                                                     onclick="clearDriveLink()"></button>
                                             </div>
@@ -274,20 +302,21 @@
                                         <div class="form-check mb-4">
                                             <input class="form-check-input" type="checkbox" id="confirmCheck" required>
                                             <label class="form-check-label" for="confirmCheck">
-                                                I confirm that the above information is accurate.
+                                                <i class="bi bi-shield-check me-2"></i>
+                                                I confirm that the above information is accurate and complete.
                                             </label>
                                             <div class="invalid-feedback">
                                                 You must confirm that the information is accurate before submitting.
                                             </div>
                                         </div>
 
-                                        <div class="d-flex justify-content-end gap-2">
+                                        <div class="d-flex justify-content-end gap-3 pt-3 border-top">
                                             <button type="button" class="btn btn-light"
                                                 onclick="window.location='${pageContext.request.contextPath}/dashboard';">
-                                                <i class="bi bi-x-lg"></i> Cancel
+                                                <i class="bi bi-x-circle me-2"></i> Cancel
                                             </button>
                                             <button type="submit" class="btn btn-primary">
-                                                <i class="bi bi-send-fill"></i> Submit Request
+                                                <i class="bi bi-send-fill me-2"></i> Submit Request
                                             </button>
                                         </div>
                                     </form>
@@ -458,49 +487,7 @@
                         }
                     }
                     
-                    // Character counter for textareas
-                    function setupCharCounter(element) {
-                        const maxLength = element.maxLength;
-                        if (maxLength && maxLength > 0) {
-                            const counter = document.createElement('div');
-                            counter.className = 'char-counter';
-                            counter.style.fontSize = '0.875rem';
-                            counter.style.marginTop = '0.25rem';
-                            counter.style.textAlign = 'right';
-                            
-                            function updateCounter() {
-                                const length = element.value.length;
-                                counter.textContent = length + '/' + maxLength + ' characters';
-                                
-                                if (length > maxLength * 0.9) {
-                                    counter.style.color = '#dc3545';
-                                    counter.style.fontWeight = 'bold';
-                                } else if (length > maxLength * 0.75) {
-                                    counter.style.color = '#ffc107';
-                                    counter.style.fontWeight = '500';
-                                } else {
-                                    counter.style.color = '#6c757d';
-                                    counter.style.fontWeight = 'normal';
-                                }
-                                
-                                if (length > maxLength) {
-                                    counter.textContent += ' (Over limit!)';
-                                    counter.style.color = '#dc3545';
-                                    counter.style.fontWeight = 'bold';
-                                }
-                            }
-                            
-                            element.parentNode.appendChild(counter);
-                            element.addEventListener('input', updateCounter);
-                            updateCounter();
-                        }
-                    }
-                    
-                    // Setup character counters
-                    if (jobTitleInput) setupCharCounter(jobTitleInput);
-                    if (positionNameInput) setupCharCounter(positionNameInput);
-                    if (jobSummaryInput) setupCharCounter(jobSummaryInput);
-                    if (recruitmentReasonInput) setupCharCounter(recruitmentReasonInput);
+                    // Character counter removed
                     
                     // Add event listeners to track field interactions (exclude salary fields)
                     document.querySelectorAll('.form-control, .form-select').forEach(field => {
