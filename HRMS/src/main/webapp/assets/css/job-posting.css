@@ -171,6 +171,48 @@ input[type="number"].form-control {
 
 /* Custom styling for textareas */
 textarea.form-control {
-    resize: vertical;
-    min-height: 100px;
+    resize: vertical !important; /* Allow manual vertical resize */
+    min-height: 100px !important;
+    max-width: 100% !important; /* Ensure full width */
+    width: 100% !important; /* Full width */
+    overflow-y: hidden !important; /* Hide scrollbar for auto-resize */
+    overflow-x: hidden !important; /* Hide horizontal scrollbar */
+    overflow-wrap: break-word !important; /* Break long words */
+    word-wrap: break-word !important; /* Break long words */
+    word-break: break-word !important; /* Break long words */
+    white-space: pre-wrap !important; /* Preserve line breaks and wrap text */
+    box-sizing: border-box !important; /* Include padding in height calculation */
+    field-sizing: content; /* Modern CSS auto-resize (Chrome 123+) */
+}
+
+/* Preserve line breaks in displayed content */
+.section-content {
+    white-space: pre-line; /* Preserve line breaks but collapse multiple spaces */
+    word-wrap: break-word; /* Break long words if needed */
+}
+
+/* Ensure textareas in forms preserve formatting */
+#requirements,
+#benefits,
+#description {
+    font-family: inherit; /* Use same font as other inputs */
+    line-height: 1.5; /* Better readability */
+}
+
+
+/* Force textarea to use full width and wrap text properly */
+#requirements,
+#benefits, 
+#description {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 100% !important;
+    white-space: pre-wrap !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+}
+
+/* Remove any cols attribute effect */
+textarea[cols] {
+    width: 100% !important;
 }

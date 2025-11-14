@@ -48,6 +48,17 @@
             const endDateInput = document.getElementById('endDate');
             const contractTypeSelect = document.getElementById('contractType');
             const isEditMode = <c:out value="${not empty contract}" default="false"/>;
+            const isReplaceMode = <c:out value="${isReplaceMode}" default="false"/>;
+            
+            // Set minimum start date for replace mode (first day of next month)
+            if (isReplaceMode && startDateInput) {
+                const today = new Date();
+                const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+                const yyyy = nextMonth.getFullYear();
+                const mm = String(nextMonth.getMonth() + 1).padStart(2, '0');
+                const minDate = yyyy + '-' + mm + '-01';
+                startDateInput.setAttribute('min', minDate);
+            }
             
             // Handle contract type change (only for create mode)
             if (!isEditMode && contractTypeSelect) {
@@ -142,6 +153,10 @@
                         <i class="fas fa-exchange-alt"></i> 
                         <strong>Replacing Contract:</strong> ${oldContract.contractNo} 
                         <br><small>The old contract will be terminated after the new contract is successfully created.</small>
+<<<<<<< HEAD
+                        <br><small><strong>Note:</strong> The new contract must start from next month onwards.</small>
+=======
+>>>>>>> b8cdc360f359a204c36662de325cbb1083ce2827
                     </div>
                 </c:if>
                 

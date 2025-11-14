@@ -51,16 +51,42 @@
 
                         <div class="row g-4">
                             <!-- FORM SECTION -->
-                            <div class="col-lg-8">
+                            <div class="col-12">
                                 <div class="card p-4">
-                                    <h5 class="card-title mb-4">
-                                        <i class="bi bi-person-plus-fill"></i>
-                                        Create Recruitment Request
-                                    </h5>
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h5 class="card-title mb-0">
+                                            <i class="bi bi-person-plus-fill"></i>
+                                            Create Recruitment Request
+                                        </h5>
+                                        <button type="button" class="btn btn-outline-primary btn-sm" id="toggleTipsBtn">
+                                            <i class="bi bi-lightbulb"></i> <span id="tipsBtnText">Show Tips</span>
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- TIPS SECTION (Collapsible) -->
+                                    <div id="tipsSection" class="tips-section mb-4" style="display: none;">
+                                        <div class="alert alert-info">
+                                            <h6 class="mb-3 d-flex align-items-center fw-bold">
+                                                <i class="bi bi-lightbulb-fill me-2"></i>
+                                                Tips for Better Recruitment Request
+                                            </h6>
+                                            <ul class="tips-list mb-0">
+                                                <li><i class="bi bi-check-circle-fill text-success me-2"></i> Clearly describe
+                                                    the job responsibilities.</li>
+                                                <li><i class="bi bi-check-circle-fill text-success me-2"></i> Double-check
+                                                    required skills and experience.</li>
+                                                <li><i class="bi bi-check-circle-fill text-success me-2"></i> Attach supporting
+                                                    documents if available.</li>
+                                                <li><i class="bi bi-check-circle-fill text-success me-2"></i> Provide an
+                                                    accurate salary range.</li>
+                                                <li><i class="bi bi-check-circle-fill text-success me-2"></i> Review all information before submitting.</li>
+                                            </ul>
+                                        </div>
+                                    </div>
 
                                     <form id="recruitmentRequestForm"
                                         action="${pageContext.request.contextPath}/requests/recruitment/submit"
-                                        method="post" enctype="multipart/form-data">
+                                        method="post" enctype="multipart/form-data" novalidate>
 
                                         <input type="hidden" name="createdByAccountId"
                                             value="${sessionScope.userAccountId}" />
@@ -73,6 +99,9 @@
                                                         class="text-danger">*</span></label>
                                                 <input type="text" name="jobTitle" id="jobTitle" class="form-control"
                                                     maxlength="100" required />
+                                                <div class="invalid-feedback">
+                                                    Job title is required (3-100 characters)
+                                                </div>
                                             </div>
                                             <div class="col-md-6">
                                                 <label class="form-label"><i class="bi bi-diagram-3"></i><i
@@ -81,6 +110,9 @@
                                                 <input type="text" name="positionName" id="positionName"
                                                     class="form-control" placeholder="e.g. Software Engineer"
                                                     maxlength="100" required />
+                                                <div class="invalid-feedback">
+                                                    Position name is required (3-100 characters)
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="mb-3">
@@ -91,6 +123,9 @@
                                             <textarea name="jobSummary" id="jobSummary" class="form-control" rows="3"
                                                 placeholder="Briefly describe what this job entails..." maxlength="1000"
                                                 required></textarea>
+                                            <div class="invalid-feedback">
+                                                Job summary is required (10-1000 characters)
+                                            </div>
                                         </div>
 
                                         <div class="row mb-3">
@@ -100,6 +135,9 @@
                                                         class="text-danger">*</span></label>
                                                 <input type="number" name="quantity" id="quantity" class="form-control"
                                                     min="1" max="100" required />
+                                                <div class="invalid-feedback">
+                                                    Quantity must be between 1 and 100
+                                                </div>
                                             </div>
                                             <div class="col-md-4">
                                                 <label class="form-label"><i class="bi bi-layers"></i><i
@@ -111,6 +149,9 @@
                                                     <option value="MIDDLE">MIDDLE</option>
                                                     <option value="SENIOR">SENIOR</option>
                                                 </select>
+                                                <div class="invalid-feedback">
+                                                    Please select a job level
+                                                </div>
                                             </div>
                                             <div class="col-md-4">
                                                 <label class="form-label"><i class="bi bi-clock"></i><i
@@ -122,43 +163,54 @@
                                                     <option value="Part-time">Part-time</option>
                                                     <option value="Internship">Internship</option>
                                                 </select>
+                                                <div class="invalid-feedback">
+                                                    Please select a job type
+                                                </div>
                                             </div>
                                         </div>
 
-                                        <div class="row mb-3">
-                                            <div class="col-md-6">
-                                                <label class="form-label"><i class="bi bi-chat-text"></i><i
-                                                        class="fas fa-comment"></i> Recruitment Reason</label>
-                                                <textarea name="recruitmentReason" id="recruitmentReason"
-                                                    class="form-control" rows="2" placeholder="Enter recruitment reason"
-                                                    maxlength="500"></textarea>
+                                        <!-- Recruitment Reason - Full Width -->
+                                        <div class="mb-3">
+                                            <label class="form-label"><i class="bi bi-chat-text"></i><i
+                                                    class="fas fa-comment"></i> Recruitment Reason</label>
+                                            <textarea name="recruitmentReason" id="recruitmentReason"
+                                                class="form-control auto-resize" placeholder="Enter recruitment reason"
+                                                maxlength="500"></textarea>
+                                            <div class="invalid-feedback">
+                                                Recruitment reason cannot exceed 500 characters
                                             </div>
-                                            <div class="col-md-6">
-                                                <div class="row">
-                                                    <div class="col-md-4">
-                                                        <label class="form-label"><i class="bi bi-cash-stack"></i><i
-                                                                class="fas fa-money-bill-wave"></i> Min Salary</label>
-                                                        <input type="number" name="minSalary" id="minSalary"
-                                                            class="form-control" placeholder="5000000" min="1000000"
-                                                            step="100000" />
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <label class="form-label"><i class="bi bi-cash"></i><i
-                                                                class="fas fa-hand-holding-usd"></i> Max Salary</label>
-                                                        <input type="number" name="maxSalary" id="maxSalary"
-                                                            class="form-control" placeholder="8000000" min="1000000"
-                                                            step="100000" />
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <label class="form-label"><i class="bi bi-coin"></i><i
-                                                                class="fas fa-coins"></i> Salary Type</label>
-                                                        <select name="salaryType" id="salaryType" class="form-select">
-                                                            <option value="Gross">Gross</option>
-                                                            <option value="Net">Net</option>
-                                                            <option value="Negotiable">Negotiable</option>
-                                                        </select>
-                                                    </div>
+                                        </div>
+
+                                        <!-- Salary Information Row -->
+                                        <div class="row mb-3">
+                                            <div class="col-md-4">
+                                                <label class="form-label"><i class="bi bi-cash-stack"></i><i
+                                                        class="fas fa-money-bill-wave"></i> Min Salary (VND)</label>
+                                                <input type="text" name="minSalary" id="minSalary"
+                                                    class="form-control" placeholder="5,000,000" />
+                                                <div class="form-text">Min: 1,000,000 VND (use commas)</div>
+                                                <div class="invalid-feedback">
+                                                    Minimum salary must be at least 1,000,000 VND
                                                 </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label"><i class="bi bi-cash"></i><i
+                                                        class="fas fa-hand-holding-usd"></i> Max Salary (VND)</label>
+                                                <input type="text" name="maxSalary" id="maxSalary"
+                                                    class="form-control" placeholder="8,000,000" />
+                                                <div class="form-text">Must be greater than min salary</div>
+                                                <div class="invalid-feedback">
+                                                    Maximum salary must be greater than minimum salary
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label"><i class="bi bi-coin"></i><i
+                                                        class="fas fa-coins"></i> Salary Type</label>
+                                                <select name="salaryType" id="salaryType" class="form-select">
+                                                    <option value="Gross">Gross</option>
+                                                    <option value="Net">Net</option>
+                                                    <option value="Negotiable">Negotiable</option>
+                                                </select>
                                             </div>
                                         </div>
 
@@ -242,33 +294,6 @@
                                     </form>
                                 </div>
                             </div>
-                            <!-- TIPS SECTION -->
-                            <div class="col-lg-4">
-                                <div class="card p-4 tips-card">
-                                    <h6 class="mb-3 d-flex align-items-center text-primary fw-bold">
-                                        <i class="bi bi-lightbulb-fill me-2"></i>
-                                        Tips for Better Recruitment Request
-                                    </h6>
-                                    <ul class="tips-list mb-0">
-                                        <li><i class="bi bi-check-circle-fill text-success me-2"></i> Clearly describe
-                                            the job responsibilities.</li>
-                                        <li><i class="bi bi-check-circle-fill text-success me-2"></i> Double-check
-                                            required skills and experience.</li>
-                                        <li><i class="bi bi-check-circle-fill text-success me-2"></i> Attach supporting
-                                            documents if available.</li>
-                                        <li><i class="bi bi-check-circle-fill text-success me-2"></i> Provide an
-                                            accurate salary range.</li>
-                                        <li><i class="bi bi-check-circle-fill text-success me-2"></i> Confirm all
-                                            information before submitting.</li>
-                                        <li><i class="bi bi-check-circle-fill text-success me-2"></i> Explicitly State
-                                            the Recruitment Purpose: Clarify whether this is a new position (due to
-                                            growth/new projects) or a replacement position.</li>
-                                    </ul>
-                                </div>
-                            </div>
-
-
-
                         </div>
                     </div>
 
@@ -290,6 +315,230 @@
                     const minSalaryInput = document.getElementById('minSalary');
                     const maxSalaryInput = document.getElementById('maxSalary');
                     const form = document.getElementById('recruitmentRequestForm');
+                    
+                    // Form fields for validation
+                    const jobTitleInput = document.getElementById('jobTitle');
+                    const positionNameInput = document.getElementById('positionName');
+                    const jobSummaryInput = document.getElementById('jobSummary');
+                    const quantityInput = document.getElementById('quantity');
+                    const jobLevelInput = document.getElementById('jobLevel');
+                    const jobTypeInput = document.getElementById('jobType');
+                    const recruitmentReasonInput = document.getElementById('recruitmentReason');
+                    const salaryTypeInput = document.getElementById('salaryType');
+                    
+                    // Track which fields user has interacted with
+                    const interactedFields = new Set();
+
+                    // Toggle Tips Section
+                    const toggleTipsBtn = document.getElementById('toggleTipsBtn');
+                    const tipsSection = document.getElementById('tipsSection');
+                    const tipsBtnText = document.getElementById('tipsBtnText');
+                    
+                    toggleTipsBtn.addEventListener('click', function() {
+                        if (tipsSection.style.display === 'none') {
+                            tipsSection.style.display = 'block';
+                            tipsBtnText.textContent = 'Hide Tips';
+                        } else {
+                            tipsSection.style.display = 'none';
+                            tipsBtnText.textContent = 'Show Tips';
+                        }
+                    });
+
+                    // ========== VALIDATION FUNCTIONS ==========
+                    
+                    // Number formatting functions
+                    function formatNumber(num) {
+                        if (!num) return '';
+                        const intNum = Math.floor(parseFloat(num));
+                        return intNum.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                    }
+                    
+                    function parseNumber(str) {
+                        if (!str) return null;
+                        const cleaned = str.replace(/,/g, '');
+                        const parsed = parseInt(cleaned, 10);
+                        return isNaN(parsed) ? null : parsed;
+                    }
+                    
+                    // Validate text field
+                    function validateTextField(element, minLength, maxLength, fieldName) {
+                        if (!element) return true;
+                        
+                        const value = element.value.trim();
+                        element.setCustomValidity('');
+                        
+                        if (element.hasAttribute('required') && value.length === 0) {
+                            element.setCustomValidity(fieldName + ' is required');
+                            return false;
+                        }
+                        
+                        if (minLength > 0 && value.length > 0 && value.length < minLength) {
+                            element.setCustomValidity(fieldName + ' must be at least ' + minLength + ' characters');
+                            return false;
+                        }
+                        
+                        if (maxLength > 0 && value.length > maxLength) {
+                            element.setCustomValidity(fieldName + ' cannot exceed ' + maxLength + ' characters');
+                            return false;
+                        }
+                        
+                        return true;
+                    }
+                    
+                    // Validate quantity
+                    function validateQuantity() {
+                        if (!quantityInput) return true;
+                        
+                        const quantity = parseInt(quantityInput.value);
+                        quantityInput.setCustomValidity('');
+                        
+                        if (isNaN(quantity) || quantity < 1) {
+                            quantityInput.setCustomValidity('Quantity must be at least 1');
+                            return false;
+                        }
+                        
+                        if (quantity > 100) {
+                            quantityInput.setCustomValidity('Quantity cannot exceed 100');
+                            return false;
+                        }
+                        
+                        return true;
+                    }
+                    
+                    // Validate dropdown
+                    function validateDropdown(element, fieldName) {
+                        if (!element) return true;
+                        
+                        const value = element.value.trim();
+                        element.setCustomValidity('');
+                        
+                        if (element.hasAttribute('required') && value === '') {
+                            element.setCustomValidity(fieldName + ' must be selected');
+                            return false;
+                        }
+                        
+                        return true;
+                    }
+                    
+                    // Validate field on blur
+                    function validateFieldOnBlur(field) {
+                        if (!field || !interactedFields.has(field.id)) return;
+                        
+                        // Clear previous validation state
+                        field.classList.remove('is-invalid', 'is-valid');
+                        
+                        let isValid = true;
+                        
+                        // Run custom validations based on field type
+                        if (field.id === 'jobTitle') {
+                            isValid = validateTextField(field, 3, 100, 'Job title');
+                        } else if (field.id === 'positionName') {
+                            isValid = validateTextField(field, 3, 100, 'Position name');
+                        } else if (field.id === 'jobSummary') {
+                            isValid = validateTextField(field, 10, 1000, 'Job summary');
+                        } else if (field.id === 'recruitmentReason') {
+                            isValid = validateTextField(field, 0, 500, 'Recruitment reason');
+                        } else if (field.id === 'quantity') {
+                            isValid = validateQuantity();
+                        } else if (field.id === 'jobLevel' || field.id === 'jobType') {
+                            isValid = validateDropdown(field, field.id === 'jobLevel' ? 'Job level' : 'Job type');
+                        }
+                        
+                        // Check HTML5 validity after custom validation
+                        if (isValid) {
+                            isValid = field.checkValidity();
+                        }
+                        
+                        // Only show invalid state if field is actually invalid
+                        if (!isValid) {
+                            field.classList.add('is-invalid');
+                        }
+                    }
+                    
+                    // Character counter for textareas
+                    function setupCharCounter(element) {
+                        const maxLength = element.maxLength;
+                        if (maxLength && maxLength > 0) {
+                            const counter = document.createElement('div');
+                            counter.className = 'char-counter';
+                            counter.style.fontSize = '0.875rem';
+                            counter.style.marginTop = '0.25rem';
+                            counter.style.textAlign = 'right';
+                            
+                            function updateCounter() {
+                                const length = element.value.length;
+                                counter.textContent = length + '/' + maxLength + ' characters';
+                                
+                                if (length > maxLength * 0.9) {
+                                    counter.style.color = '#dc3545';
+                                    counter.style.fontWeight = 'bold';
+                                } else if (length > maxLength * 0.75) {
+                                    counter.style.color = '#ffc107';
+                                    counter.style.fontWeight = '500';
+                                } else {
+                                    counter.style.color = '#6c757d';
+                                    counter.style.fontWeight = 'normal';
+                                }
+                                
+                                if (length > maxLength) {
+                                    counter.textContent += ' (Over limit!)';
+                                    counter.style.color = '#dc3545';
+                                    counter.style.fontWeight = 'bold';
+                                }
+                            }
+                            
+                            element.parentNode.appendChild(counter);
+                            element.addEventListener('input', updateCounter);
+                            updateCounter();
+                        }
+                    }
+                    
+                    // Setup character counters
+                    if (jobTitleInput) setupCharCounter(jobTitleInput);
+                    if (positionNameInput) setupCharCounter(positionNameInput);
+                    if (jobSummaryInput) setupCharCounter(jobSummaryInput);
+                    if (recruitmentReasonInput) setupCharCounter(recruitmentReasonInput);
+                    
+                    // Add event listeners to track field interactions (exclude salary fields)
+                    document.querySelectorAll('.form-control, .form-select').forEach(field => {
+                        // Skip salary fields as they have special handling
+                        if (field.id === 'minSalary' || field.id === 'maxSalary') {
+                            return;
+                        }
+                        
+                        field.addEventListener('focus', function() {
+                            if (!interactedFields.has(this.id)) {
+                                interactedFields.add(this.id);
+                            }
+                        });
+                        
+                        field.addEventListener('input', function() {
+                            if (this.classList.contains('is-invalid')) {
+                                this.classList.remove('is-invalid');
+                            }
+                        });
+                        
+                        field.addEventListener('blur', function() {
+                            validateFieldOnBlur(this);
+                        });
+                        
+                        field.addEventListener('change', function() {
+                            if (this.tagName.toLowerCase() === 'select') {
+                                validateFieldOnBlur(this);
+                            }
+                        });
+                    });
+                    
+                    // Auto-resize textarea for recruitment reason
+                    const autoResizeTextarea = document.getElementById('recruitmentReason');
+                    
+                    function resizeTextarea() {
+                        autoResizeTextarea.style.height = 'auto';
+                        autoResizeTextarea.style.height = autoResizeTextarea.scrollHeight + 'px';
+                    }
+                    
+                    autoResizeTextarea.addEventListener('input', resizeTextarea);
+                    resizeTextarea();
 
                     function showFileSection() {
                         fileUploadSection.classList.remove('d-none');
@@ -371,19 +620,24 @@
 
                     // Salary validation
                     function validateSalary() {
-                        const minVal = parseFloat(minSalaryInput.value);
-                        const maxVal = parseFloat(maxSalaryInput.value);
+                        const minVal = parseNumber(minSalaryInput.value);
+                        const maxVal = parseNumber(maxSalaryInput.value);
 
                         // Reset custom validity
                         minSalaryInput.setCustomValidity('');
                         maxSalaryInput.setCustomValidity('');
+
+                        // If both are empty, it's valid (optional fields)
+                        if (!minVal && !maxVal) {
+                            return true;
+                        }
 
                         if (minVal && minVal < 1000000) {
                             minSalaryInput.setCustomValidity('Minimum salary must be at least 1,000,000 VND');
                             return false;
                         }
 
-                        if (minVal && maxVal && maxVal < minVal) {
+                        if (minVal && maxVal && maxVal <= minVal) {
                             maxSalaryInput.setCustomValidity('Maximum salary must be greater than minimum salary');
                             return false;
                         }
@@ -391,8 +645,96 @@
                         return true;
                     }
 
-                    minSalaryInput.addEventListener('input', validateSalary);
-                    maxSalaryInput.addEventListener('input', validateSalary);
+                    // Salary formatting and validation with special handling
+                    if (minSalaryInput) {
+                        // Track interaction
+                        minSalaryInput.addEventListener('focus', function() {
+                            if (!interactedFields.has(this.id)) {
+                                interactedFields.add(this.id);
+                            }
+                        });
+                        
+                        // Only allow numbers and commas
+                        minSalaryInput.addEventListener('input', function() {
+                            // Remove invalid characters
+                            this.value = this.value.replace(/[^0-9,]/g, '');
+                            
+                            // Clear invalid state while typing
+                            if (this.classList.contains('is-invalid')) {
+                                this.classList.remove('is-invalid');
+                            }
+                        });
+                        
+                        // Format and validate on blur
+                        minSalaryInput.addEventListener('blur', function() {
+                            const value = parseNumber(this.value);
+                            if (value) {
+                                this.value = formatNumber(value);
+                            }
+                            
+                            // Validate if field has been interacted with
+                            if (interactedFields.has(this.id)) {
+                                const minVal = parseNumber(this.value);
+                                const maxVal = parseNumber(maxSalaryInput.value);
+                                
+                                this.setCustomValidity('');
+                                this.classList.remove('is-invalid');
+                                
+                                if (minVal && minVal < 1000000) {
+                                    this.setCustomValidity('Minimum salary must be at least 1,000,000 VND');
+                                    this.classList.add('is-invalid');
+                                } else if (minVal && maxVal && minVal >= maxVal) {
+                                    this.setCustomValidity('Minimum salary must be less than maximum salary');
+                                    this.classList.add('is-invalid');
+                                }
+                            }
+                        });
+                    }
+                    
+                    if (maxSalaryInput) {
+                        // Track interaction
+                        maxSalaryInput.addEventListener('focus', function() {
+                            if (!interactedFields.has(this.id)) {
+                                interactedFields.add(this.id);
+                            }
+                        });
+                        
+                        // Only allow numbers and commas
+                        maxSalaryInput.addEventListener('input', function() {
+                            // Remove invalid characters
+                            this.value = this.value.replace(/[^0-9,]/g, '');
+                            
+                            // Clear invalid state while typing
+                            if (this.classList.contains('is-invalid')) {
+                                this.classList.remove('is-invalid');
+                            }
+                        });
+                        
+                        // Format and validate on blur
+                        maxSalaryInput.addEventListener('blur', function() {
+                            const value = parseNumber(this.value);
+                            if (value) {
+                                this.value = formatNumber(value);
+                            }
+                            
+                            // Validate if field has been interacted with
+                            if (interactedFields.has(this.id)) {
+                                const minVal = parseNumber(minSalaryInput.value);
+                                const maxVal = parseNumber(this.value);
+                                
+                                this.setCustomValidity('');
+                                this.classList.remove('is-invalid');
+                                
+                                if (maxVal && maxVal < 1000000) {
+                                    this.setCustomValidity('Maximum salary must be at least 1,000,000 VND');
+                                    this.classList.add('is-invalid');
+                                } else if (minVal && maxVal && maxVal <= minVal) {
+                                    this.setCustomValidity('Maximum salary must be greater than minimum salary');
+                                    this.classList.add('is-invalid');
+                                }
+                            }
+                        });
+                    }
 
                     // Google Drive link validation
                     function validateGoogleDriveLink(link) {

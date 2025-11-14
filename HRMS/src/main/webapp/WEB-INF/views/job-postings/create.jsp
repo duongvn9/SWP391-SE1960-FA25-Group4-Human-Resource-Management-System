@@ -325,6 +325,7 @@
                                 <textarea class="form-control ${not empty errors.description ? 'is-invalid' : ''}"
                                           id="description" name="description" rows="5" required
                                           maxlength="4000"
+                                          wrap="soft"
                                           placeholder="Describe the job role, responsibilities, and expectations..."><c:out value="${param.description != null ? param.description : (formData != null ? formData.description : requestDetails.jobSummary)}"/></textarea>
                                 <div class="form-text">Required (max 4000 characters)</div>
                                 <div class="invalid-feedback">
@@ -339,8 +340,9 @@
                                 <textarea class="form-control ${not empty errors.requirements ? 'is-invalid' : ''}"
                                           id="requirements" name="requirements" rows="5" required
                                           maxlength="4000"
-                                          placeholder="List required skills, qualifications, and experience..."><c:out value="${formData != null ? formData.requirements : param.requirements}"/></textarea>
-                                <div class="form-text">Required (max 4000 characters)</div>
+                                          wrap="soft"
+                                          placeholder="List required skills, qualifications, and experience...&#10;Example:&#10;- Bachelor's degree in Computer Science&#10;- 3+ years of experience&#10;- Strong communication skills"><c:out value="${formData != null ? formData.requirements : param.requirements}"/></textarea>
+                                <div class="form-text">Required (max 4000 characters). Use Enter to create new lines and dashes (-) for bullet points.</div>
                                 <div class="invalid-feedback">
                                     ${not empty errors.requirements ? errors.requirements : 'Requirements are required and cannot exceed 4000 characters'}
                                 </div>
@@ -351,8 +353,9 @@
                                 <textarea class="form-control ${not empty errors.benefits ? 'is-invalid' : ''}"
                                           id="benefits" name="benefits" rows="3"
                                           maxlength="2000"
-                                          placeholder="List employee benefits, perks, and incentives..."><c:out value="${formData != null ? formData.benefits : param.benefits}"/></textarea>
-                                <div class="form-text">Optional (max 2000 characters)</div>
+                                          wrap="soft"
+                                          placeholder="List employee benefits, perks, and incentives...&#10;Example:&#10;- Competitive salary&#10;- Health insurance&#10;- Flexible working hours"><c:out value="${formData != null ? formData.benefits : param.benefits}"/></textarea>
+                                <div class="form-text">Optional (max 2000 characters). Use Enter to create new lines and dashes (-) for bullet points.</div>
                                 <div class="invalid-feedback">
                                     ${not empty errors.benefits ? errors.benefits : 'Benefits cannot exceed 2000 characters'}
                                 </div>
@@ -1035,9 +1038,9 @@
                 });
             });
             
-            // Prevent form submission on Enter key (except in submit button)
+            // Prevent form submission on Enter key (except in submit button and textarea)
             form.addEventListener('keydown', function(event) {
-                if (event.key === 'Enter' && event.target.type !== 'submit') {
+                if (event.key === 'Enter' && event.target.type !== 'submit' && event.target.tagName !== 'TEXTAREA') {
                     event.preventDefault();
                 }
             });

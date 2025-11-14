@@ -315,7 +315,7 @@
                                         </a>
                                     </li>
 
-                                    <c:if test="${sessionScope.user.positionId == 7}">
+                                    <c:if test="${sessionScope.user.positionId == 7 || sessionScope.user.positionId == 8}">
                                         <li>
                                             <a href="${pageContext.request.contextPath}/payslips" class="nav-link">
                                                 <i class="fas fa-list"></i><span>Payslip List</span>
