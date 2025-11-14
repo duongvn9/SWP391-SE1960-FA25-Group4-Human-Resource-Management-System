@@ -115,6 +115,7 @@
         }
 
         .job-breadcrumb {
+            margin-top: 30px;
             margin-bottom: 20px;
         }
 
@@ -839,20 +840,16 @@
                                 <i class="fas fa-file-alt section-icon"></i>
                                 <h3>Job Description</h3>
                             </div>
-                            <div class="section-content">
-                                <c:out value="${job.description}" escapeXml="false" />
-                            </div>
+                            <div class="section-content" style="white-space: pre-line;"><c:out value="${job.description}" escapeXml="false" /></div>
                         </div>
 
                         <!-- Key Responsibilities Section -->
                         <div class="content-section">
                             <div class="section-header">
                                 <i class="fas fa-tasks section-icon"></i>
-                                <h3>Key Responsibilities</h3>
+                                <h3>Requirement</h3>
                             </div>
-                            <div class="section-content">
-                                <c:out value="${job.requirements}" escapeXml="false" />
-                            </div>
+                            <div class="section-content" style="white-space: pre-line;"><c:out value="${job.requirements}" escapeXml="false" /></div>
                         </div>
 
                         <!-- Benefits Section -->
@@ -861,9 +858,7 @@
                                 <i class="fas fa-gift section-icon"></i>
                                 <h3>Benefits & Perks</h3>
                             </div>
-                            <div class="section-content">
-                                <c:out value="${job.benefits}" escapeXml="false" />
-                            </div>
+                            <div class="section-content" style="white-space: pre-line;"><c:out value="${job.benefits}" escapeXml="false" /></div>
                         </div>
 
                         <!-- Working Environment Section -->
