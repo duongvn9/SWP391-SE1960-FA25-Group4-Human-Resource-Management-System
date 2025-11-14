@@ -552,4 +552,35 @@ public class JobPostingServiceImpl implements JobPostingService {
             throw new RuntimeException("Failed to publish job posting", e);
         }
     }
+    
+    @Override
+    public void unpublish(long id, long unpublisherId) {
+        logger.info("Attempting to unpublish job posting: id={}, unpublisherId={}", id, unpublisherId);
+        
+        try {
+            JobPosting jobPosting = jobPostingDao.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Job posting not found: " + id));
+                    
+            if (!"PUBLISHED".equals(jobPosting.getStatus())) {
+                throw new IllegalStateException("Job posting must be in PUBLISHED state to unpublish");
+            }
+            
+            logger.info("Unpublishing job posting from PUBLISHED to APPROVED: id={}", id);
+            
+            // Change status back to APPROVED
+            jobPosting.setStatus("APPROVED");
+            // Clear published information
+            jobPosting.setPublishedByAccountId(null);
+            jobPosting.setPublishedAt(null);
+            jobPosting.setUpdatedAt(LocalDateTime.now());
+            
+            jobPostingDao.update(jobPosting);
+            
+            logger.info("Successfully unpublished job posting: id={}", id);
+            
+        } catch (SQLException e) {
+            logger.error("Database error while unpublishing job posting: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to unpublish job posting", e);
+        }
+    }
 }
