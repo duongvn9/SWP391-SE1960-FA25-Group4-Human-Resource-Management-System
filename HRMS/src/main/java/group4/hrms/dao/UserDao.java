@@ -367,7 +367,7 @@ public class UserDao {
     /**
      * Cập nhật user
      */
-    public boolean update(User user) {
+    public boolean update(User user) throws SQLException {
         if (user == null || user.getId() == null) {
             logger.warn("Dữ liệu user không hợp lệ để cập nhật");
             return false;
@@ -398,6 +398,7 @@ public class UserDao {
             }
         } catch (SQLException e) {
             logger.error("Lỗi khi cập nhật user ID: " + user.getId(), e);
+            throw e; // Throw exception để servlet xử lý
         }
 
         return false;
