@@ -392,6 +392,16 @@ public class ApproveRequestController extends HttpServlet {
             // Return response
             if (success) {
                 logger.info(String.format("User %d %s request %d", currentUser.getId(), action, requestId));
+
+                // IMPORTANT: Invalidate cache after successful approval/rejection
+                // This ensures users see updated balances immediately
+                try {
+                    invalidateCacheForRequest(session, req);
+                } catch (Exception cacheError) {
+                    logger.warning("Error invalidating cache: " + cacheError.getMessage());
+                    // Don't fail the request if cache invalidation fails
+                }
+
                 out.print("{\"success\": true, \"message\": \"" + message + "\"}");
             } else {
                 logger.warning(String.format("Failed to %s request %d by user %d", action, requestId, currentUser.getId()));
@@ -1075,6 +1085,47 @@ public class ApproveRequestController extends HttpServlet {
 
         } catch (Exception e) {
             logger.log(Level.WARNING, "Error updating appealStatus in JSON for request: " + request.getId(), e);
+        }
+    }
+
+    /**
+     * Invalidate cache for the affected user after request approval/rejection
+     * This ensures users see updated OT and Leave balances immediately
+     *
+     * @param session HTTP session
+     * @param request The request that was approved/rejected
+     */
+    private void invalidateCacheForRequest(HttpSession session, Request request) {
+        if (request == null || request.getRequestTypeId() == null) {
+            return;
+        }
+
+        Long affectedUserId = request.getCreatedByUserId();
+        if (affectedUserId == null) {
+            return;
+        }
+
+        try {
+            // Invalidate OT cache for OVERTIME_REQUEST (type_id = 7)
+            if (request.getRequestTypeId() == 7L) {
+                group4.hrms.cache.OTFormCacheManager otCacheManager = new group4.hrms.cache.OTFormCacheManager();
+                otCacheManager.invalidateForUser(session, affectedUserId);
+                logger.info("Invalidated OT cache for user: " + affectedUserId);
+            }
+
+            // Invalidate Leave cache for LEAVE_REQUEST (type_id = 6)
+            if (request.getRequestTypeId() == 6L) {
+                group4.hrms.cache.LeaveFormCacheManager leaveCacheManager = new group4.hrms.cache.LeaveFormCacheManager();
+                leaveCacheManager.invalidateForUser(session, affectedUserId);
+                logger.info("Invalidated Leave cache for user: " + affectedUserId);
+            }
+
+            // Note: Appeal requests (type_id = 8) don't have balance cache to invalidate
+            // Recruitment requests (type_id = 9) don't have balance cache to invalidate
+
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error invalidating cache for user " + affectedUserId, e);
+            // Don't throw - cache invalidation failure shouldn't block the approval
         }
     }
 }

@@ -291,6 +291,16 @@ public class LeaveRequestController extends HttpServlet {
 
             logger.info("Leave request created successfully with ID: " + requestId);
 
+            // IMPORTANT: Invalidate leave balance cache after creating request
+            try {
+                group4.hrms.cache.LeaveFormCacheManager cacheManager = new group4.hrms.cache.LeaveFormCacheManager();
+                cacheManager.invalidateForUser(session, user.getId());
+                logger.info("Invalidated leave balance cache for userId: " + user.getId());
+            } catch (Exception cacheError) {
+                logger.warning("Error invalidating cache: " + cacheError.getMessage());
+                // Continue - cache invalidation failure shouldn't block request creation
+            }
+
             // Handle attachments - both file uploads and external links
             try {
                 AttachmentService attachmentService = new AttachmentService();

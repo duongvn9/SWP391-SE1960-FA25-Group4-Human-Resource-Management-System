@@ -80,7 +80,7 @@ public class UserDao {
             FROM users u
             LEFT JOIN departments d ON u.department_id = d.id
             LEFT JOIN positions p ON u.position_id = p.id
-            WHERE u.department_id = ? AND u.status = 'active'
+            WHERE u.department_id = ?
             ORDER BY u.full_name
             """;
 
@@ -496,9 +496,7 @@ public class UserDao {
         if (positionId != null) {
             sql.append(" AND u.position_id = ?");
         }
-        if (status != null && !status.trim().isEmpty()) {
-            sql.append(" AND u.status = ?");
-        }
+        // Status filter removed - not used anymore
         if (gender != null && !gender.trim().isEmpty()) {
             sql.append(" AND u.gender = ?");
         }
@@ -579,9 +577,7 @@ public class UserDao {
         if (positionId != null) {
             sql.append(" AND u.position_id = ?");
         }
-        if (status != null && !status.trim().isEmpty()) {
-            sql.append(" AND u.status = ?");
-        }
+        // Status filter removed - not used anymore
         if (gender != null && !gender.trim().isEmpty()) {
             sql.append(" AND u.gender = ?");
         }
@@ -606,9 +602,7 @@ public class UserDao {
             if (positionId != null) {
                 ps.setLong(paramIndex++, positionId);
             }
-            if (status != null && !status.trim().isEmpty()) {
-                ps.setString(paramIndex++, status.trim());
-            }
+            // Status filter removed - not used anymore
             if (gender != null && !gender.trim().isEmpty()) {
                 ps.setString(paramIndex++, gender.trim());
             }
@@ -697,9 +691,7 @@ public class UserDao {
         if (positionId != null) {
             sql.append(" AND u.position_id = ?");
         }
-        if (status != null && !status.trim().isEmpty()) {
-            sql.append(" AND u.status = ?");
-        }
+        // Status filter removed - not used anymore
         if (gender != null && !gender.trim().isEmpty()) {
             sql.append(" AND u.gender = ?");
         }
@@ -732,9 +724,7 @@ public class UserDao {
             if (positionId != null) {
                 ps.setLong(paramIndex++, positionId);
             }
-            if (status != null && !status.trim().isEmpty()) {
-                ps.setString(paramIndex++, status.trim());
-            }
+            // Status filter removed - not used anymore
             if (gender != null && !gender.trim().isEmpty()) {
                 ps.setString(paramIndex++, gender.trim());
             }
@@ -866,10 +856,10 @@ public class UserDao {
 
     /**
      * Get subordinates (employees with lower job_level) for a manager
-     * - If user is DEPT_MANAGER: only get employees in same department with lower
-     * job_level
-     * - If user is HR_MANAGER/HR_STAFF/ADMIN: get all employees with lower
-     * job_level across all departments
+     * - If user is DEPT_MANAGER: only get STAFF (job_level 5) in same department
+     * - If user is HR_MANAGER: only get HR_STAFF (job_level 3) across all departments
+     * - If user is HR_STAFF: NO subordinates (only HR_MANAGER can create OT for HR_STAFF)
+     * - If user is ADMIN: NO subordinates (ADMIN is just a regular employee)
      *
      * @param userId The manager's user ID
      * @return List of subordinate users
@@ -886,20 +876,19 @@ public class UserDao {
                 LEFT JOIN departments d ON u.department_id = d.id
                 LEFT JOIN positions p ON u.position_id = p.id
                 WHERE u.id != ?
-                  AND u.status = 'ACTIVE'
-                  AND p.job_level > (
-                      SELECT p2.job_level
-                      FROM users u2
-                      JOIN positions p2 ON u2.position_id = p2.id
-                      WHERE u2.id = ?
-                  )
                   AND (
-                      -- If manager is DEPT_MANAGER, only show same department
-                      (SELECT p2.code FROM users u2 JOIN positions p2 ON u2.position_id = p2.id WHERE u2.id = ?) = 'DEPT_MANAGER'
-                      AND u.department_id = (SELECT department_id FROM users WHERE id = ?)
+                      -- If manager is DEPT_MANAGER, only show STAFF in same department
+                      (
+                          (SELECT p2.code FROM users u2 JOIN positions p2 ON u2.position_id = p2.id WHERE u2.id = ?) = 'DEPT_MANAGER'
+                          AND u.department_id = (SELECT department_id FROM users WHERE id = ?)
+                          AND p.job_level = 5
+                      )
                       OR
-                      -- If manager is HR/ADMIN, show all departments
-                      (SELECT p2.code FROM users u2 JOIN positions p2 ON u2.position_id = p2.id WHERE u2.id = ?) IN ('ADMIN', 'HR_MANAGER', 'HR_STAFF')
+                      -- If manager is HR_MANAGER, only show HR_STAFF (job_level 3)
+                      (
+                          (SELECT p2.code FROM users u2 JOIN positions p2 ON u2.position_id = p2.id WHERE u2.id = ?) = 'HR_MANAGER'
+                          AND p.job_level = 3
+                      )
                   )
                 ORDER BY d.name, p.job_level, u.full_name
                 """;
@@ -911,7 +900,6 @@ public class UserDao {
             ps.setLong(2, userId);
             ps.setLong(3, userId);
             ps.setLong(4, userId);
-            ps.setLong(5, userId);
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -935,12 +923,11 @@ public class UserDao {
      * This method is optimized for filtering requests by subordinate scope.
      *
      * Logic:
-     * - For DEPT_MANAGER (job_level 4): Returns users in same department with
-     * higher job_level (5 = STAFF)
-     * - For HR_STAFF/HR_MANAGER/ADMIN (job_level 1-3): Returns all users with
-     * higher job_level across all departments
+     * - For DEPT_MANAGER (job_level 4): Returns STAFF (job_level 5) in same department only
+     * - For HR_MANAGER (job_level 2): Returns only HR_STAFF (job_level 3) across all departments
+     * - For HR_STAFF (job_level 3): Returns EMPTY list (HR_STAFF has no subordinates)
+     * - For ADMIN (job_level 1): Returns EMPTY list (ADMIN is just a regular employee)
      * - Excludes the manager themselves
-     * - Only includes active users
      *
      * @param managerId User ID of the manager
      * @return List of subordinate user IDs
@@ -958,22 +945,19 @@ public class UserDao {
                 FROM users u
                 JOIN positions p ON u.position_id = p.id
                 WHERE u.id != ?
-                  AND u.status = 'active'
-                  AND p.job_level > (
-                      SELECT p2.job_level
-                      FROM users u2
-                      JOIN positions p2 ON u2.position_id = p2.id
-                      WHERE u2.id = ?
-                  )
                   AND (
-                      -- If manager is DEPT_MANAGER (job_level 4), only show same department
+                      -- If manager is DEPT_MANAGER (job_level 4), only show STAFF in same department
                       (
                           (SELECT p2.job_level FROM users u2 JOIN positions p2 ON u2.position_id = p2.id WHERE u2.id = ?) = 4
                           AND u.department_id = (SELECT department_id FROM users WHERE id = ?)
+                          AND p.job_level = 5
                       )
                       OR
-                      -- If manager is HR/ADMIN (job_level 1-3), show all departments
-                      (SELECT p2.job_level FROM users u2 JOIN positions p2 ON u2.position_id = p2.id WHERE u2.id = ?) < 4
+                      -- If manager is HR_MANAGER (job_level 2), only show HR_STAFF (job_level 3)
+                      (
+                          (SELECT p2.job_level FROM users u2 JOIN positions p2 ON u2.position_id = p2.id WHERE u2.id = ?) = 2
+                          AND p.job_level = 3
+                      )
                   )
                 """;
 
@@ -984,7 +968,6 @@ public class UserDao {
             ps.setLong(2, managerId);
             ps.setLong(3, managerId);
             ps.setLong(4, managerId);
-            ps.setLong(5, managerId);
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
