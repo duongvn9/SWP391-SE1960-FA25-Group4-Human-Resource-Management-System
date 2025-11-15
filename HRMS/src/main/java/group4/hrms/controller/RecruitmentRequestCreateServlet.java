@@ -3,9 +3,11 @@ package group4.hrms.controller;
 import java.io.IOException;
 import java.time.LocalDateTime;
 
+import group4.hrms.dao.AttachmentDao;
 import group4.hrms.dao.RequestDao;
 import group4.hrms.dao.RequestTypeDao;
 import group4.hrms.dto.RecruitmentDetailsDto;
+import group4.hrms.model.Attachment;
 import group4.hrms.model.Request;
 import group4.hrms.model.RequestType;
 import group4.hrms.util.RecruitmentPermissionHelper;
@@ -24,6 +26,7 @@ public class RecruitmentRequestCreateServlet extends HttpServlet {
 
     private final RequestDao requestDao = new RequestDao();
     private final RequestTypeDao requestTypeDao = new RequestTypeDao();
+    private final AttachmentDao attachmentDao = new AttachmentDao();
     private final group4.hrms.dao.UserDao userDao = new group4.hrms.dao.UserDao();
 
     @Override
@@ -289,6 +292,28 @@ public class RecruitmentRequestCreateServlet extends HttpServlet {
             request.setUpdatedAt(LocalDateTime.now());
 
             requestDao.save(request);
+
+            // 4. LƯU GOOGLE DRIVE LINK VÀO BẢNG ATTACHMENTS (nếu có)
+            if (attachmentPath != null && !attachmentPath.trim().isEmpty()) {
+                try {
+                    Attachment attachment = new Attachment();
+                    attachment.setOwnerType("REQUEST");
+                    attachment.setOwnerId(request.getId());
+                    attachment.setAttachmentType("LINK");
+                    attachment.setExternalUrl(attachmentPath);
+                    attachment.setOriginalName("Recruitment Supporting Document");
+                    attachment.setContentType("application/link");
+                    attachment.setSizeBytes(0L);
+                    attachment.setUploadedByAccountId(accountId);
+                    attachment.setCreatedAt(LocalDateTime.now());
+                    
+                    attachmentDao.save(attachment);
+                    System.out.println("✓ Saved Google Drive link to attachments table: " + attachmentPath);
+                } catch (Exception e) {
+                    System.err.println("Warning: Failed to save attachment to database: " + e.getMessage());
+                    // Don't fail the whole request if attachment save fails
+                }
+            }
 
             sendNotificationToHRAndHRM(req, request);
             // Truyền thông báo thành công và forward về trang create
