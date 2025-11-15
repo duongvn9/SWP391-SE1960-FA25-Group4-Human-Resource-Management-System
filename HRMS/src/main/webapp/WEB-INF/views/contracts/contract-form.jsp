@@ -151,16 +151,8 @@
                 <c:if test="${isReplaceMode && not empty oldContract}">
                     <div class="alert alert-warning mb-4">
                         <i class="fas fa-exchange-alt"></i> 
-                        <strong>Replacing Contract:</strong> ${oldContract.contractNo} 
-                        <br><small>The old contract will be terminated after the new contract is successfully created.</small>
-
-
+                        <strong>Replacing Contract:</strong> ${oldContract.contractNo}
                         <br><small><strong>Note:</strong> The new contract must start from next month onwards.</small>
-
-
-
-                        <br><small><strong>Note:</strong> The new contract must start from next month onwards.</small>
-
                     </div>
                 </c:if>
                 
@@ -231,24 +223,37 @@
                         <!-- Start Date -->
                         <div class="col-md-6 mb-3">
                             <label for="startDate" class="form-label">Start Date <span class="text-danger">*</span></label>
+                            <c:set var="canEditDates" value="${empty contract || contract.approvalStatus == 'pending' || contract.approvalStatus == 'rejected'}" />
                             <input type="date" class="form-control" id="startDate" name="startDate" 
-                                   value="${displayData.startDate}" required ${not empty contract ? 'readonly' : ''}>
-                            <c:if test="${not empty contract}">
-                                <small class="text-muted">Start date cannot be changed after contract creation</small>
-                            </c:if>
+                                   value="${displayData.startDate}" required ${canEditDates ? '' : 'readonly'}>
+                            <c:choose>
+                                <c:when test="${canEditDates}">
+                                    <small class="text-muted">
+                                        <c:if test="${not empty contract}">Can be edited while contract is pending or rejected</c:if>
+                                    </small>
+                                </c:when>
+                                <c:otherwise>
+                                    <small class="text-muted">Start date cannot be changed after contract is approved</small>
+                                </c:otherwise>
+                            </c:choose>
                         </div>
                         
                         <!-- End Date -->
                         <div class="col-md-6 mb-3">
                             <label for="endDate" class="form-label">End Date</label>
                             <input type="date" class="form-control" id="endDate" name="endDate" 
-                                   value="${displayData.endDate}" ${not empty contract ? 'readonly' : ''}>
-                            <c:if test="${empty contract}">
-                                <small class="text-muted">Leave empty for indefinite contracts</small>
-                            </c:if>
-                            <c:if test="${not empty contract}">
-                                <small class="text-muted">End date cannot be changed after contract creation</small>
-                            </c:if>
+                                   value="${displayData.endDate}" ${canEditDates ? '' : 'readonly'}>
+                            <c:choose>
+                                <c:when test="${empty contract}">
+                                    <small class="text-muted">Leave empty for indefinite contracts</small>
+                                </c:when>
+                                <c:when test="${canEditDates}">
+                                    <small class="text-muted">Can be edited while contract is pending or rejected</small>
+                                </c:when>
+                                <c:otherwise>
+                                    <small class="text-muted">End date cannot be changed after contract is approved</small>
+                                </c:otherwise>
+                            </c:choose>
                         </div>
                     </div>
                     

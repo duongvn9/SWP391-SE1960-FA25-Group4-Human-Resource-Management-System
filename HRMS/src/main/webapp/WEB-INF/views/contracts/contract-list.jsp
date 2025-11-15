@@ -819,11 +819,12 @@
                                 for employee <strong id="replaceEmployeeName"></strong>?</p>
                                 <div class="alert alert-warning">
                                     <i class="fas fa-info-circle"></i> 
-                                    <strong>Note:</strong>
+                                    <strong>Important:</strong>
                                     <ul class="mb-0 mt-2">
-                                        <li>You will create a new contract for this employee</li>
-                                        <li>The old contract will be <strong>terminated</strong> after the new contract is successfully created</li>
-                                        <li>The old contract will remain in the contract list with "Terminated" status</li>
+                                        <li>The new contract will be created with <strong>"Pending"</strong> approval status</li>
+                                        <li>When HRM approves, the old contract's end date will be set to the day before the new contract starts</li>
+                                        <li>The old contract will remain <strong>active</strong> until the new contract's start date</li>
+                                        <li>This action cannot be undone</li>
                                     </ul>
                                 </div>
                             </div>
