@@ -87,4 +87,13 @@ public interface JobPostingService {
      * @throws IllegalStateException if job posting is not in APPROVED state
      */
     void publish(long id, long publisherId, LocalDate publishDate);
+    
+    /**
+     * Unpublish a published job posting (HRM only)
+     * Changes status from PUBLISHED back to APPROVED
+     * @param id The job posting ID
+     * @param unpublisherId The account ID of the unpublisher
+     * @throws IllegalStateException if job posting is not in PUBLISHED state
+     */
+    void unpublish(long id, long unpublisherId);
 }

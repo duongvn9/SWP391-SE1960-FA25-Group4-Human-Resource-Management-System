@@ -361,6 +361,17 @@
                                                                         <i class="fas fa-globe"></i> Publish
                                                                     </button>
                                                                 </c:if>
+
+                                                                <!-- Unpublish button for HR Manager (position_id = 7) when status is PUBLISHED -->
+                                                                <c:if
+                                                                    test="${sessionScope.user != null && sessionScope.user.positionId == 7 && job.status == 'PUBLISHED'}">
+                                                                    <button type="button" class="btn btn-sm btn-secondary"
+                                                                        onclick="unpublishJobPosting('${job.id}')"
+                                                                        data-bs-toggle="tooltip"
+                                                                        title="Unpublish Job Posting">
+                                                                        <i class="fas fa-eye-slash"></i> Unpublish
+                                                                    </button>
+                                                                </c:if>
                                                             </c:if>
                                                         </div>
                                                     </td>
@@ -600,6 +611,47 @@
                         </div>
                     </div>
 
+                    <!-- Unpublish Modal -->
+                    <div class="modal fade" id="unpublishModal" tabindex="-1" aria-labelledby="unpublishModalLabel"
+                        aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header bg-secondary text-white">
+                                    <h5 class="modal-title" id="unpublishModalLabel">
+                                        <i class="fas fa-eye-slash me-2"></i>Unpublish Job Posting
+                                    </h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <form method="post" action="${pageContext.request.contextPath}/job-posting/unpublish">
+                                    <div class="modal-body">
+                                        <input type="hidden" name="csrfToken" value="${csrfToken}" />
+                                        <input type="hidden" name="id" id="unpublishJobId" />
+                                        <div class="text-center py-3">
+                                            <i class="fas fa-eye-slash text-secondary fa-4x mb-3"></i>
+                                            <p class="mb-0">Are you sure you want to unpublish this job posting?</p>
+                                            <small class="text-muted d-block mt-2">
+                                                This will remove the job posting from the public careers page and change its status back to "Approved".
+                                            </small>
+                                        </div>
+                                        <div class="alert alert-warning mb-0 mt-3">
+                                            <i class="fas fa-exclamation-triangle me-2"></i>
+                                            <small>Candidates will no longer be able to view or apply for this position on the public page.</small>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                            <i class="fas fa-times me-1"></i>Cancel
+                                        </button>
+                                        <button type="submit" class="btn btn-warning">
+                                            <i class="fas fa-eye-slash me-1"></i>Unpublish Now
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Dashboard Footer -->
                     <jsp:include page="../layout/dashboard-footer.jsp" />
                 </div>
@@ -609,6 +661,7 @@
                     const approveModal = new bootstrap.Modal(document.getElementById('approveModal'));
                     const rejectModal = new bootstrap.Modal(document.getElementById('rejectModal'));
                     const publishModal = new bootstrap.Modal(document.getElementById('publishModal'));
+                    const unpublishModal = new bootstrap.Modal(document.getElementById('unpublishModal'));
 
                     function approveJobPosting(id) {
                         document.getElementById('approveJobId').value = id;
@@ -623,6 +676,11 @@
                     function publishJobPosting(id) {
                         document.getElementById('publishJobId').value = id;
                         publishModal.show();
+                    }
+
+                    function unpublishJobPosting(id) {
+                        document.getElementById('unpublishJobId').value = id;
+                        unpublishModal.show();
                     }
 
                     // Add hover effect to action buttons
